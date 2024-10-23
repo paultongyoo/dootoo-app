@@ -51,7 +51,8 @@ export default function RootLayout() {
           headerStyle: {
             backgroundColor: "#FAF3E0"
           },
-          headerTitle: props => <MainLogo/>,
+          headerTitle: '',
+          headerLeft: props => <MainLogo/>,
           headerRight: props => <MainProfileIcon/>,
           headerBackTitleVisible: false
         }}
