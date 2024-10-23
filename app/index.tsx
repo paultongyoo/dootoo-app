@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, Pressable, TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput } from "react-native";
+import { Platform, Text, View, StyleSheet, Pressable, TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput } from "react-native";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useFocusEffect } from 'expo-router';
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
@@ -12,13 +12,13 @@ import Reanimated, {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
+import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
 
 export default function Index() {
   const swipeableRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState();
   const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
-  const [itemEditingText, setItemEditingText] = useState();
   const [parsedTasks, setParsedTasks] =  useState();
   const [permissionResponse, requestPermission] = Audio.usePermissions();
   const [refreshKey, setRefreshKey] = useState(0);
@@ -26,12 +26,24 @@ export default function Index() {
   var retryCount = 0;
   const inputFieldIndex = useRef(-1);
   const inputValueRef = useRef('');
+  const bannerAdId = __DEV__ ? 
+    TestIds.ADAPTIVE_BANNER : 
+      (Platform.OS === 'ios' ? "ca-app-pub-6723010005352574/5609444195" : 
+                               "ca-app-pub-6723010005352574/8538859865");
+  const bannerRef = useRef<BannerAd>(null);
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
     strict: false
   });
 
+  useForeground(() => {
+    Platform.OS === 'ios' && bannerRef.current?.load();
+  })
+
+  const initializeMobileAds = async () => {
+    const adapterStatuses = await mobileAds().initialize();
+}
 
   const generateStubData = () => {
     return {
@@ -149,6 +161,12 @@ export default function Index() {
     setParsedTasks(savedItems);
   };
 
+  useEffect(() => {
+    console.log("Initializing mobile ads...");
+    initializeMobileAds();
+    console.log("Initialization complete.");
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       loadItemsFromLocalStorage();
@@ -172,7 +190,6 @@ export default function Index() {
   /********************** END Audio Recording CODE **** BEGIN View Code *****/
 
   const handleItemTextTap = (itemText, index) => {
-    setItemEditingText(itemText);
     setItemIdxToEdit(index);
   }
 
@@ -456,6 +473,7 @@ export default function Index() {
               <Text style={[styles.footerButtonTitle, { color: '#3E2723'}]}>Clear</Text>
             </Pressable> : <></>
           }
+            <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
           </View>
       </View>
     </TouchableWithoutFeedback>

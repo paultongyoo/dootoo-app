@@ -7,8 +7,7 @@ const styles = StyleSheet.create({
   mainLogoContainer: {
     flexDirection: 'row',
     position: 'relative',
-    bottom: -4,
-    fontFamily: 'inter'
+    bottom: -4
   },
   mainLogoPart: {
     fontSize: 28
