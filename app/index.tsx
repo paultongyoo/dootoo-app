@@ -193,6 +193,19 @@ export default function Index() {
 
   useEffect(() => {
     saveItemsToLocalStorage();
+    if (parsedTasks && parsedTasks.length == 0) {
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true
+        }).start();
+    } else {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 0,
+        useNativeDriver: true
+      }).start();
+    }
   }, [parsedTasks]);
 
   /********************** END Audio Recording CODE **** BEGIN View Code *****/
@@ -237,6 +250,8 @@ export default function Index() {
     setParsedTasks(updatedTasks);
     setRefreshKey((prevKey) => prevKey + 1);
   }
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const styles = StyleSheet.create({
     container: {
@@ -489,10 +504,11 @@ export default function Index() {
                 </Swipeable>
               }
             /> : 
-              <View style={styles.emptyListContainer}>
+              <Animated.View style={[{opacity: fadeAnim }, styles.emptyListContainer]}>
                 <Text style={styles.emptyListContainer_words}>what do you gotta do?</Text>
                 <Image style={styles.emptyListContainer_arrow} source={require("../assets/images/sketch_arrow_556B2F.png")}/>
-              </View>
+              </Animated.View>
+
               }
                   { (errorMsg) ?
             <View style={styles.errorTextContainer}>
