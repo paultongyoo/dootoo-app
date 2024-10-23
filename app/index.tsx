@@ -1,4 +1,4 @@
-import { Platform, Text, View, StyleSheet, Pressable, TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput } from "react-native";
+import { Platform, Image, Text, View, StyleSheet, Pressable, TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput } from "react-native";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useFocusEffect } from 'expo-router';
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
@@ -259,6 +259,10 @@ export default function Index() {
       alignItems: 'center',
       justifyContent: 'center'
     },
+    footerButtonImage: {
+      height: 60,
+      width: 60
+    },
     footerButtonTitle: {
       fontWeight: 'bold',
       color: 'white',
@@ -468,7 +472,9 @@ export default function Index() {
             { (loading) ? 
                 <View style={styles.loadingAnim}>
                   <ActivityIndicator size={"large"} color="white" /> 
-                </View> : (recording) ? <Text style={styles.footerButtonTitle}>Stop</Text> : <Text style={styles.footerButtonTitle}>Record</Text> }
+                </View> : (recording) ? 
+                    <Text style={styles.footerButtonTitle}>Stop</Text> : 
+                    <Image style={styles.footerButtonImage} source={require("../assets/images/microphone_white.png")}/> }
             </Pressable>
           { (parsedTasks && parsedTasks.length > 0) ?
             <Pressable 
