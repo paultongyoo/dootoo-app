@@ -297,7 +297,9 @@ export default function Index() {
       padding: 5
     },
     loadingAnim: {
-      margin: 10
+      margin: 10,
+      position: 'relative',
+      left: 1
     },
     itemContainer: {
       flexDirection: 'row', // Lays out children horizontally
