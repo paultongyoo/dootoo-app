@@ -45,7 +45,8 @@ const styles = StyleSheet.create({
     borderLeftWidth: 1,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#3E2723'
+    borderColor: '#3E2723',
+    alignItems: 'center'
   },
   profileDrawerCloseContainer: {
     position: 'absolute',
@@ -56,6 +57,23 @@ const styles = StyleSheet.create({
     opacity: 0.4,
     height: 32,
     width: 30
+  },
+  profileDrawerProfileIconContainer: {
+    position: 'relative',
+    top: 100,
+    //backgroundColor: 'red',
+    alignItems: 'center'
+  },
+  profileDrawerProfileIcon: {
+    height: 150,
+    width: 150,
+    //backgroundColor: 'yellow'
+  },
+  profileDrawerProfileNameContainer: {
+    
+  },
+  profileDrawerProfileNameText: {
+    fontSize: 20
   }
 });
 
@@ -98,6 +116,12 @@ function ProfileDrawer({ navigation }) {
                  onPress={() => navigation.closeDrawer()}>
         <Image style={styles.profileDrawerCloseIcon} source={require('../assets/images/cancel_icon_black.png')} />
       </Pressable>
+      <View style={styles.profileDrawerProfileIconContainer}>
+        <Image style={styles.profileDrawerProfileIcon} source={require('../assets/images/profile_icon_green.png')} />
+        <View style={styles.profileDrawerProfileNameContainer}>
+          <Text style={styles.profileDrawerProfileNameText}>Thoughtswork13409</Text>
+        </View>
+      </View>
     </View>
   );
 }
