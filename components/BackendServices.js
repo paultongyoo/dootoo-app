@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { Platform } from 'react-native';
 import RNFS from 'react-native-fs';
 import { Buffer } from 'buffer';
 
