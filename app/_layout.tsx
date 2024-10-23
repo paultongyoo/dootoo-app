@@ -38,6 +38,24 @@ const styles = StyleSheet.create({
   profileIcon: {
     height: 40,
     width: 40
+  },
+  profileDrawerContainer: {
+    backgroundColor: '#FAF3E0',
+    flex: 1,
+    borderLeftWidth: 1,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#3E2723'
+  },
+  profileDrawerCloseContainer: {
+    position: 'absolute',
+    right: 20,
+    top: 40
+  },
+  profileDrawerCloseIcon: {
+    opacity: 0.4,
+    height: 32,
+    width: 30
   }
 });
 
@@ -45,6 +63,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer 
+        drawerContent={(props) => <ProfileDrawer {...props} />}
         screenOptions={
         {
           drawerPosition: 'right',
@@ -69,5 +88,16 @@ export default function RootLayout() {
         }
       }/>
     </GestureHandlerRootView>
+  );
+}
+
+function ProfileDrawer({ navigation }) {
+  return (
+    <View style={styles.profileDrawerContainer}>
+      <Pressable style={styles.profileDrawerCloseContainer}
+                 onPress={() => navigation.closeDrawer()}>
+        <Image style={styles.profileDrawerCloseIcon} source={require('../assets/images/cancel_icon_black.png')} />
+      </Pressable>
+    </View>
   );
 }
