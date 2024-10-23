@@ -1,4 +1,5 @@
-import { Platform, Image, Text, View, StyleSheet, Pressable, TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput } from "react-native";
+import { Platform, Image, Text, View, StyleSheet, Pressable, Animated,
+         TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput } from "react-native";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useFocusEffect } from 'expo-router';
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
@@ -302,6 +303,25 @@ export default function Index() {
       fontSize: 20,
       color: 'blue'
     },
+    emptyListContainer: {
+      flex: 1,
+      //flexDirection: 'row',
+      //backgroundColor: 'yellow',
+      justifyContent: 'center',
+      paddingLeft: 20
+    },
+    emptyListContainer_words: {
+      fontSize: 60
+    },
+    emptyListContainer_arrow: {
+      position: 'absolute',
+      bottom: -20,
+      right: 50,
+      height: 300,
+      width: 100,
+      opacity: 0.4,
+      transform: [{ rotate: '10deg'}]
+    },
     taskContainer: {
       flex: 1,
       marginTop: 10,
@@ -414,7 +434,7 @@ export default function Index() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
           <View  style={styles.taskContainer}>
-            { parsedTasks ? 
+            { parsedTasks && parsedTasks!.length > 0 ? 
               <DraggableFlatList
                 data={parsedTasks}
                 extraData={refreshKey}
@@ -468,7 +488,12 @@ export default function Index() {
                   </ScaleDecorator>
                 </Swipeable>
               }
-            /> : <Text></Text> }
+            /> : 
+              <View style={styles.emptyListContainer}>
+                <Text style={styles.emptyListContainer_words}>what do you gotta do?</Text>
+                <Image style={styles.emptyListContainer_arrow} source={require("../assets/images/sketch_arrow_556B2F.png")}/>
+              </View>
+              }
                   { (errorMsg) ?
             <View style={styles.errorTextContainer}>
               <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
