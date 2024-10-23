@@ -241,7 +241,11 @@ export default function Index() {
     footerContainer: {
       backgroundColor: '#FAF3E0',
       alignItems: 'center',
-      height: 100
+      height: 140
+    },
+    bannerAdContainer: {
+      position: 'absolute',
+      bottom: 40
     },
     footerButton: {
       height: 100,
@@ -250,7 +254,7 @@ export default function Index() {
       borderColor: '#3E2723',
       borderWidth: 1,
       position: 'absolute',
-      bottom: 75,
+      bottom: 120,
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center'
@@ -473,7 +477,9 @@ export default function Index() {
               <Text style={[styles.footerButtonTitle, { color: '#3E2723'}]}>Clear</Text>
             </Pressable> : <></>
           }
-            <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
+            <View style={styles.bannerAdContainer}>
+              <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
+            </View>
           </View>
       </View>
     </TouchableWithoutFeedback>
