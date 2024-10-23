@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Image } from "react-native";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 
@@ -14,6 +14,14 @@ const styles = StyleSheet.create({
   },
   secondLogoPart: {
     color: "#A23E48"
+  },
+  mainProfileIconContainer: {
+    position: 'relative',
+    bottom: -4
+  },
+  profileIcon: {
+    height: 40,
+    width: 40
   }
 });
 
@@ -27,6 +35,14 @@ function MainLogo() {
   );
 }
 
+function MainProfileIcon() {
+  return (
+    <View style={styles.mainProfileIconContainer}>
+      <Image style={styles.profileIcon} source={require('../assets/images/profile_icon_green.png')} />
+    </View>
+  );
+}
+
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -36,6 +52,7 @@ export default function RootLayout() {
             backgroundColor: "#FAF3E0"
           },
           headerTitle: props => <MainLogo/>,
+          headerRight: props => <MainProfileIcon/>,
           headerBackTitleVisible: false
         }}
       />
