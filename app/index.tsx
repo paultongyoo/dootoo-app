@@ -154,6 +154,13 @@ export default function Index() {
     deleteFile(fileUri);
   }
 
+  const cancelRecording = async() => {
+    console.log("Cancelling recording...");
+    const fileUri  = await stopRecording();
+    console.log("Deleting file..");
+    deleteFile(fileUri);
+  }
+
   const loadItemsFromLocalStorage = async() => {
     console.log("Loading items from disk...");
     const savedItems = await loadItems();
@@ -259,16 +266,24 @@ export default function Index() {
       alignItems: 'center',
       justifyContent: 'center'
     },
-    footerButtonImage: {
+    footerButtonImage_Record: {
       height: 60,
       width: 60
+    },
+    footerButtonImage_Restart: {
+      height: 49,
+      width: 49
+    },
+    footerButtonImage_Cancel: {
+      height: 49,
+      width: 49
     },
     footerButtonTitle: {
       fontWeight: 'bold',
       color: 'white',
       fontSize: 20
     },
-    stubButton: {
+    cancelButton: {
       backgroundColor: '#FAF3E0',
       left: 34
     },
@@ -463,11 +478,13 @@ export default function Index() {
             </View>}
           </View>  
           <View style={styles.footerContainer}>
-            {/* <Pressable 
-                style={[styles.footerButton, styles.stubButton]}
-                onPress={loadStubData}>
-                <Text style={[styles.footerButtonTitle, { color: '#3E2723'}]}>Stub</Text>
-            </Pressable> */}
+            { recording ? 
+              <Pressable 
+                  style={[styles.footerButton, styles.cancelButton]}
+                  onPress={cancelRecording}>
+                  <Image style={styles.footerButtonImage_Cancel} source={require("../assets/images/cancel_icon_black.png")}/>
+              </Pressable>
+              : <></>  }
             <Pressable 
                 style={[styles.footerButton, (recording) ? styles.stopRecordButton : styles.recordButton]}
                 onPress={recording ? processRecording : startRecording}>
@@ -476,13 +493,13 @@ export default function Index() {
                   <ActivityIndicator size={"large"} color="white" /> 
                 </View> : (recording) ? 
                     <Text style={styles.footerButtonTitle}>Stop</Text> : 
-                    <Image style={styles.footerButtonImage} source={require("../assets/images/microphone_white.png")}/> }
+                    <Image style={styles.footerButtonImage_Record} source={require("../assets/images/microphone_white.png")}/> }
             </Pressable>
           { (parsedTasks && parsedTasks.length > 0) ?
             <Pressable 
                 style={[styles.footerButton, styles.clearButton]}
                 onPress={() => { setParsedTasks([])}}>
-              <Text style={[styles.footerButtonTitle, { color: '#3E2723'}]}>Clear</Text>
+              <Image style={styles.footerButtonImage_Restart} source={require("../assets/images/restart_icon_black.png")}/>
             </Pressable> : <></>
           }
             <View style={styles.bannerAdContainer}>
