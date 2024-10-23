@@ -177,9 +177,15 @@ export default function Index() {
 
   useFocusEffect(
     useCallback(() => {
+
+      // Load items from LocalStorage (if any)
       loadItemsFromLocalStorage();
     }, [])
   );
+
+  const initializeUsername = async() => {
+    initalizeUser();
+  };
 
   const saveItemsToLocalStorage = async() => {
     if (parsedTasks != undefined) {

@@ -1,8 +1,9 @@
-import { Stack, Link, router } from "expo-router";
-import { useRef } from "react";
 import { View, Text, StyleSheet, Image, Pressable } from "react-native";
+import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
+import { initalizeUser, getUsername } from '../components/LocalStorage.js';
+
 
 
 const styles = StyleSheet.create({
@@ -110,6 +111,17 @@ export default function RootLayout() {
 }
 
 function ProfileDrawer({ navigation }) {
+  const [username, setUsername] = useState('');
+  const loadUsername = async() => {
+    const loadedUsername = await getUsername();
+    setUsername(loadedUsername);
+  }
+
+  useEffect(() => {
+    initalizeUser();
+    loadUsername();
+  }, []);
+
   return (
     <View style={styles.profileDrawerContainer}>
       <Pressable style={styles.profileDrawerCloseContainer}
@@ -119,7 +131,7 @@ function ProfileDrawer({ navigation }) {
       <View style={styles.profileDrawerProfileIconContainer}>
         <Image style={styles.profileDrawerProfileIcon} source={require('../assets/images/profile_icon_green.png')} />
         <View style={styles.profileDrawerProfileNameContainer}>
-          <Text style={styles.profileDrawerProfileNameText}>Thoughtswork13409</Text>
+          <Text style={styles.profileDrawerProfileNameText}>{username}</Text>
         </View>
       </View>
     </View>

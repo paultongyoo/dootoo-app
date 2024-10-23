@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { faker } from '@faker-js/faker';
 
 const ITEM_LIST_KEY = "item_list";
+const USERNAME_KEY = "username";
 
 export const saveItems = async (item_list_obj) => {
   if (item_list_obj === undefined) {
@@ -30,4 +32,37 @@ export const loadItems = async() => {
     } catch (e) {
         console.log("Error reading item list", e);
     }
+}
+
+export const initalizeUser = async() => {
+  try {  
+    const username = await AsyncStorage.getItem(USERNAME_KEY);
+    if (username) {
+        return username;
+    } else {
+        console.log("No username, creating and saving new...");
+        const newName = faker.internet.userName();
+        console.log("Username created: " + newName);
+        console.log("Saving username to disk...");
+        await AsyncStorage.setItem(USERNAME_KEY, newName);
+        console.log("Save complete.");
+        return newName;
+    }
+  } catch (e) {
+      console.log("Error reading or saving user name", e);
+  }
+}
+
+export const getUsername = async() => {
+  try {  
+    const username = await AsyncStorage.getItem(USERNAME_KEY);
+    if (username) {
+        return username;
+    } else {
+        console.log("No username present, was it initialized?");
+        return null;
+    }
+  } catch (e) {
+      console.log("Error reading username", e);
+  }
 }
