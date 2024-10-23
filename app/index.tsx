@@ -1,7 +1,9 @@
 import { Text, View, StyleSheet, Pressable, TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput } from "react-native";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useFocusEffect } from 'expo-router';
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
-import { transcribeAudioToTasks } from '../components/BackendServices';
+import { transcribeAudioToTasks } from '../components/BackendServices.js';
+import { saveItems, loadItems } from '../components/LocalStorage.js';
 import RNFS from 'react-native-fs';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -139,6 +141,33 @@ export default function Index() {
     console.log("Finished parsing file, deleting...");
     deleteFile(fileUri);
   }
+
+  const loadItemsFromLocalStorage = async() => {
+    console.log("Loading items from disk...");
+    const savedItems = await loadItems();
+    console.log(`Loaded ${savedItems.length} items from disk`);
+    setParsedTasks(savedItems);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadItemsFromLocalStorage();
+    }, [])
+  );
+
+  const saveItemsToLocalStorage = async() => {
+    if (parsedTasks != undefined) {
+      console.log("Saving items to local storage...");
+
+      // Whenever parsedTasks changes, save it to local storage
+      await saveItems(parsedTasks);
+      console.log("Save successful.");
+    }
+  };
+
+  useEffect(() => {
+    saveItemsToLocalStorage();
+  }, [parsedTasks]);
 
   /********************** END Audio Recording CODE **** BEGIN View Code *****/
 
