@@ -58,7 +58,7 @@ export const initalizeUser = async() => {
         await AsyncStorage.setItem(USERNAME_KEY, newName);
         await AsyncStorage.setItem(ANON_ID_KEY, newAnonId);
         console.log("Save complete.");
-        return { name: newName, id: newAnonId };
+        return { name: newName, anonymousId: newAnonId };
     }
   } catch (e) {
       console.log("Error reading or saving user name", e);

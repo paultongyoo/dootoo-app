@@ -131,14 +131,9 @@ export default function RootLayout() {
 }
 
 function ProfileDrawer({ navigation }) {
-  const {setDootooItems} = useContext(UserContext);
-  const [username, setUsername] = useState('');
-  const [anonymousId, setAnonymousId] = useState('');
-  const loadUsername = async() => {
-    const userData = await getUser();
-    setUsername(userData.name);
-    setAnonymousId(userData.anonymousId);
-  }
+  const {setDootooItems, 
+         username, setUsername, 
+         anonymousId, setAnonymousId} = useContext(UserContext);
 
   const loadUserdata = async() => {
     const userData = await initalizeUser();
@@ -155,7 +150,7 @@ function ProfileDrawer({ navigation }) {
     setUsername('');
     setAnonymousId('');
     setDootooItems([]);
-    navigation.closeDrawer();
+    loadUserdata();
   };
 
   const showConfirmationPrompt = () => {
