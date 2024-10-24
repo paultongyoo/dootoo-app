@@ -7,7 +7,7 @@ const ITEM_LIST_KEY = "item_list";
 const USERNAME_KEY = "username";
 const ANON_ID_KEY = "anonymous_id";
 
-export const saveItems = async (item_list_obj) => {
+export const saveItemsToLocalStorage = async (item_list_obj) => {
   if (item_list_obj === undefined) {
     console.log("saveItems called with undefined parameter, exiting...");
     return;

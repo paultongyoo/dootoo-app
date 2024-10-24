@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback, useContext } from "react";
 import { useFocusEffect } from 'expo-router';
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
 import { transcribeAudioToTasks, loadItems } from '../components/BackendServices.js';
-import { saveItems } from '../components/LocalStorage.js';
+import { saveItemsToLocalStorage } from '../components/LocalStorage.js';
 import { UserContext } from '../components/UserContext.js';
 import RNFS from 'react-native-fs';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
@@ -51,11 +51,11 @@ export default function Index() {
   const generateStubData = () => {
     return {
       tasks: [
-        { name: 'Clean my room', isChild: false},
-        { name: 'Make my bed', isChild: true},
-        { name: 'Organize my desk', isChild: true},
-        { name: 'Dust my shelves', isChild: true},
-        { name: 'Clean out my closet', isChild: true}
+        { item_text: 'Clean my room', is_child: false},
+        { item_text: 'Make my bed', is_child: true},
+        { item_text: 'Organize my desk', is_child: true},
+        { item_text: 'Dust my shelves', is_child: true},
+        { item_text: 'Clean out my closet', is_child: true}
       ]
     };
   }
@@ -171,12 +171,12 @@ export default function Index() {
     setDootooItems(savedItems);
   };
 
-  const saveItemsToLocalStorage = async() => {
+  const saveItems = async() => {
     if (dootooItems != undefined) {
-      console.log("Saving items to local storage...");
+      console.log("Saving items...");
 
       // Whenever dootooItems changes, save it to local storage
-      await saveItems(dootooItems);
+      await saveItemsToLocalStorage(dootooItems);
       console.log("Save successful.");
 
       if (dootooItems && dootooItems.length == 0) {
@@ -203,7 +203,7 @@ export default function Index() {
 
   useEffect(() => {
     if (initialLoad) {
-      saveItemsToLocalStorage();
+      saveItems();
     } else {
       console.log("UseEffect called before initial load completed, skipping..");
     }
@@ -239,13 +239,13 @@ export default function Index() {
 
   const handleMakeParent = (index : number) => {
     var updatedTasks = [...dootooItems];
-    updatedTasks![index].isChild = false;
+    updatedTasks![index].is_child = false;
     setDootooItems(updatedTasks);
   }
 
   const handleMakeChild = (index : number) => {
     var updatedTasks = [...dootooItems];
-    updatedTasks![index].isChild = true;
+    updatedTasks![index].is_child = true;
     setDootooItems(updatedTasks);
   }
 
@@ -414,7 +414,7 @@ export default function Index() {
             <Text>Delete</Text>
           </Pressable>
         </Reanimated.View>
-        { (dootooItems![index].isChild) ? 
+        { (dootooItems![index].is_child) ? 
           <Reanimated.View style={[styles.itemSwipeAction, styles.action_MakeParent]}>
             <Pressable 
               onPress={() => handleMakeParent(index) }>
@@ -430,7 +430,7 @@ export default function Index() {
   const renderLeftActions = (progress : SharedValue<number>, dragX : SharedValue<number>, index : number) => {
     return (
       <>
-        { (!dootooItems![index].isChild) ? 
+        { (!dootooItems![index].is_child) ? 
           <Reanimated.View style={[styles.itemSwipeAction, styles.action_MakeParent]}>
             <Pressable 
               onPress={() => handleMakeChild(index) }>
@@ -470,7 +470,7 @@ export default function Index() {
                   >
                   <ScaleDecorator>
                     <View style={styles.itemContainer}>
-                      { (item.isChild) ?
+                      { (item.is_child) ?
                         <View style={styles.childItemSpacer}></View> 
                         : <></>
                       }
@@ -480,7 +480,7 @@ export default function Index() {
                             <TextInput
                               multiline={false}
                               style={styles.itemTextInput}
-                              defaultValue={item.name}
+                              defaultValue={item.item_text}
                               onChangeText={(text) => { 
                                 inputFieldIndex.current = getIndex() || -1;
                                 inputValueRef.current = text;
@@ -491,8 +491,8 @@ export default function Index() {
                           <Pressable 
                             onLongPress={drag}
                             disabled={isActive}
-                            onPress={() => handleItemTextTap(item.name, getIndex()) }>
-                            <Text style={styles.taskTitle}>{item.name}</Text>
+                            onPress={() => handleItemTextTap(item.item_text, getIndex()) }>
+                            <Text style={styles.taskTitle}>{item.item_text}</Text>
                           </Pressable>
                         }
                       </View>
