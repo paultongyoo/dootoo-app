@@ -138,9 +138,14 @@ function ProfileDrawer({ navigation }) {
     setAnonymousId(userData.anonymousId);
   }
 
+  const loadUserdata = async() => {
+    const userData = await initalizeUser();
+    setUsername(userData.name);
+    setAnonymousId(userData?.anonymousId);
+  }
+
   useEffect(() => {
-    initalizeUser();
-    loadUsername();
+    loadUserdata();
   }, []);
 
   const handleResetAllData = () => {
