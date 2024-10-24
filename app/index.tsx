@@ -148,9 +148,9 @@ export default function Index() {
     setLoading(false);
 
     if (dootooItems && dootooItems.length > 0) {
-      setDootooItems(dootooItems.concat(response.tasks));
+      setDootooItems(dootooItems.concat(response));
     } else {
-      setDootooItems(response.tasks);
+      setDootooItems(response);
     }
     
     console.log("Finished parsing file, deleting...");
