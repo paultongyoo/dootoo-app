@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { faker } from '@faker-js/faker';
 import uuid from 'react-native-uuid';
+import { uniqueNamesGenerator, adjectives, animals, NumberDictionary } from 'unique-names-generator';
 
 const ITEM_LIST_KEY = "item_list";
 const USERNAME_KEY = "username";
@@ -19,7 +19,7 @@ export const saveItems = async (item_list_obj) => {
     console.log("Error saving item list", e);
   }
   console.log(`Saved list with ${item_list_obj.length} items to disk`);
-}
+};
 
 export const loadItems = async() => {
     try {  
@@ -35,7 +35,7 @@ export const loadItems = async() => {
     } catch (e) {
         console.log("Error reading item list", e);
     }
-}
+};
 
 export const initalizeUser = async() => {
   try {  
@@ -51,7 +51,7 @@ export const initalizeUser = async() => {
         // If username doesn't exist, assume we're at first launch
         // so initialize user name and anonymous UUID
         console.log("No username, creating and saving new username and anonymous ID...");
-        const newName = faker.internet.userName();
+        const newName = generateUsername();
         const newAnonId = uuid.v4(); 
         console.log(`Username created ${newName} with Anon ID ${newAnonId}`);
         console.log("Saving new user data to disk...");
@@ -63,7 +63,18 @@ export const initalizeUser = async() => {
   } catch (e) {
       console.log("Error reading or saving user name", e);
   }
-}
+};
+
+const generateUsername = () => {
+  const numberDictionary = NumberDictionary.generate({ min: 100, max: 999 });
+  const characterName = uniqueNamesGenerator({
+    dictionaries: [adjectives, animals, numberDictionary],
+      length: 3,
+      separator: '',
+      style: 'capital'
+    });
+  return characterName;
+};
 
 export const getUser = async() => {
   try {  
@@ -78,7 +89,7 @@ export const getUser = async() => {
   } catch (e) {
       console.log("Error reading username", e);
   }
-}
+};
 
 export const resetAllData = async () => {
   try {
