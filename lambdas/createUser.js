@@ -17,7 +17,7 @@ export const handler = async (event) => {
       console.log("Saving new user data to disk...");
       await saveUser(newName, newAnonId) 
         .then(async () => {
-        await prisma.$disconnect()
+          await prisma.$disconnect()
         })
         .catch(async (e) => {
           console.error(e)
