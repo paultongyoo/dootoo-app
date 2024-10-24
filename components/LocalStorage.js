@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createUser } from '../components/BackendServices.js';
+
+// WARNING:  Cyclical ref between LocalStorage -> BackendServices -> LocalStorage -- do not initialize variables in either file!
+import { createUser } from './BackendServices.js';
 
 const ITEM_LIST_KEY = "item_list";
 const USERNAME_KEY = "username";
@@ -18,22 +20,6 @@ export const saveItems = async (item_list_obj) => {
     console.log("Error saving item list", e);
   }
   console.log(`Saved list with ${item_list_obj.length} items to disk`);
-};
-
-export const loadItems = async() => {
-    try {  
-        const item_list_str = await AsyncStorage.getItem(ITEM_LIST_KEY);
-        if (item_list_str) {
-            const item_list_obj = JSON.parse(item_list_str);
-            console.log(`Loaded list with ${item_list_obj.length} items from disk.`);
-            return item_list_obj;
-        } else {
-            console.log("No list found in local storage, returning empty list");
-            return [];
-        }
-    } catch (e) {
-        console.log("Error reading item list", e);
-    }
 };
 
 export const initalizeUser = async() => {
@@ -62,6 +48,21 @@ export const initalizeUser = async() => {
     }
   } catch (e) {
       console.log("Error reading or saving user name", e);
+  }
+};
+
+export const getLocalAnonId = async() => {
+  try {  
+      const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
+      if (localAnonId) {
+          console.log(`Retrieved local anon ID ${localAnonId}`);
+          return localAnonId;
+      } else {
+          console.log("No local anonId found, unexpected?  Returning null...");
+          return null;
+      }
+  } catch (e) {
+      console.log("Error reading local anon Id list", e);
   }
 };
 

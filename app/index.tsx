@@ -3,8 +3,8 @@ import { Platform, Image, Text, View, StyleSheet, Pressable, Animated,
 import { useState, useRef, useEffect, useCallback, useContext } from "react";
 import { useFocusEffect } from 'expo-router';
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
-import { transcribeAudioToTasks } from '../components/BackendServices.js';
-import { saveItems, loadItems } from '../components/LocalStorage.js';
+import { transcribeAudioToTasks, loadItems } from '../components/BackendServices.js';
+import { saveItems } from '../components/LocalStorage.js';
 import { UserContext } from '../components/UserContext.js';
 import RNFS from 'react-native-fs';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
@@ -164,10 +164,10 @@ export default function Index() {
     deleteFile(fileUri);
   }
 
-  const loadItemsFromLocalStorage = async() => {
-    console.log("Loading items from disk...");
+  const loadItemsFromBackend = async() => {
+    console.log("Loading items from backend...");
     const savedItems = await loadItems();
-    console.log(`Loaded ${savedItems.length} items from disk`);
+    console.log(`Loaded ${savedItems.length} items from backend`);
     setDootooItems(savedItems);
   };
 
@@ -197,7 +197,7 @@ export default function Index() {
 
   useEffect(() => {
     initializeMobileAds();
-    loadItemsFromLocalStorage();
+    loadItemsFromBackend();
     setInitialLoad(true);
   }, []);
 
