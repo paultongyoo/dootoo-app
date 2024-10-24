@@ -1,9 +1,9 @@
 import { View, Text, StyleSheet, Image, Pressable, Alert } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
 import { initalizeUser, getUser, resetAllData } from '../components/LocalStorage.js';
-import { UserProvider } from '../components/UserContext.js';
+import { UserProvider, UserContext } from '../components/UserContext.js';
 
 const styles = StyleSheet.create({
   headerContainer: {
@@ -131,6 +131,7 @@ export default function RootLayout() {
 }
 
 function ProfileDrawer({ navigation }) {
+  const {setDootooItems} = useContext(UserContext);
   const [username, setUsername] = useState('');
   const [anonymousId, setAnonymousId] = useState('');
   const loadUsername = async() => {
@@ -142,7 +143,7 @@ function ProfileDrawer({ navigation }) {
   const loadUserdata = async() => {
     const userData = await initalizeUser();
     setUsername(userData.name);
-    setAnonymousId(userData?.anonymousId);
+    setAnonymousId(userData.anonymousId);
   }
 
   useEffect(() => {
@@ -153,6 +154,7 @@ function ProfileDrawer({ navigation }) {
     resetAllData();
     setUsername('');
     setAnonymousId('');
+    setDootooItems([]);
     navigation.closeDrawer();
   };
 
