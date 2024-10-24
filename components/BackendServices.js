@@ -3,6 +3,8 @@ import RNFS from 'react-native-fs';
 import { Buffer } from 'buffer';
 
 const BACKEND_TRANSCRIPTION_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/transcribeAudioToTasks_Dev';
+const BACKEND_CREATEUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev';
+
 
 export const transcribeAudioToTasks = async (fileUri) => {
 
@@ -32,5 +34,15 @@ export const transcribeAudioToTasks = async (fileUri) => {
   } catch (error) {
     console.error('Error calling API:', error);
     return `Modified file URI: ${modifiedFileUri} | File length: ${fileData.length} | Binary Data Length: ${binaryData.length} | ${error.message} | ${JSON.stringify(error)}`;
+  }
+};
+
+export const createUser = async () => {
+  try {
+    const response = await axios.post(BACKEND_CREATEUSER_URL);
+    console.log("Retreived new user from backend: " + JSON.stringify(response.data.body));
+    return response.data.body;
+  } catch (error) {
+    console.error('Error calling create User API:', error);
   }
 };
