@@ -7,7 +7,7 @@ const ANON_ID_KEY = "anonymous_id";
 const CREATEUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev';
 const LOADITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItems_Dev';
 
-export const saveItemsToLocalStorage = async (item_list_obj) => {
+export const saveItems = async (item_list_obj) => {
   if (item_list_obj === undefined) {
     console.log("saveItems called with undefined parameter, exiting...");
     return;

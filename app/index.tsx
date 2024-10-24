@@ -3,7 +3,7 @@ import { Platform, Image, Text, View, StyleSheet, Pressable, Animated,
 import { useState, useRef, useEffect, useContext } from "react";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
 import { transcribeAudioToTasks } from '../components/BackendServices';
-import { saveItemsToLocalStorage, loadItems } from '../components/Storage';
+import { saveItems, loadItems } from '../components/Storage';
 import { UserContext } from '../components/UserContext.js';
 import RNFS from 'react-native-fs';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
@@ -170,12 +170,12 @@ export default function Index() {
     setDootooItems(savedItems);
   };
 
-  const saveItems = async() => {
+  const handleSaveItems = async() => {
     if (dootooItems != undefined) {
       console.log("Saving items...");
 
       // Whenever dootooItems changes, save it to local storage
-      await saveItemsToLocalStorage(dootooItems);
+      await saveItems(dootooItems);
       console.log("Save successful.");
 
       if (dootooItems && dootooItems.length == 0) {
@@ -191,6 +191,8 @@ export default function Index() {
           useNativeDriver: true
         }).start();
       }
+    } else {
+      console.log("dootooItems is undefined ... unexpected?");
     }
   };
 
@@ -202,7 +204,7 @@ export default function Index() {
 
   useEffect(() => {
     if (initialLoad) {
-      saveItems();
+      handleSaveItems();
     } else {
       console.log("UseEffect called before initial load completed, skipping..");
     }
