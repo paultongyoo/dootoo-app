@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet, Image, Pressable } from "react-native";
+import { View, Text, StyleSheet, Image, Pressable, Alert } from "react-native";
 import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
-import { initalizeUser, getUsername } from '../components/LocalStorage.js';
+import { initalizeUser, getUser, resetAllData } from '../components/LocalStorage.js';
 
 
 
@@ -75,6 +75,25 @@ const styles = StyleSheet.create({
   },
   profileDrawerProfileNameText: {
     fontSize: 20
+  },
+  privacyContainer: {
+    position: 'absolute',
+    bottom: 70
+  },
+  anonIdDisplayContainer: {
+    alignItems: 'center',
+    width: 190,
+    paddingBottom: 10
+  }, 
+  anonIdDisplayText: {
+    textAlign: 'center'
+  }, 
+  deleteDataLinkContainer: {
+    alignItems: 'center'
+  },
+  deleteDataLinkText: {
+    color: "#A23E48",
+    textDecorationLine: 'underline'
   }
 });
 
@@ -112,15 +131,46 @@ export default function RootLayout() {
 
 function ProfileDrawer({ navigation }) {
   const [username, setUsername] = useState('');
+  const [anonymousId, setAnonymousId] = useState('');
   const loadUsername = async() => {
-    const loadedUsername = await getUsername();
-    setUsername(loadedUsername);
+    const userData = await getUser();
+    setUsername(userData.name);
+    setAnonymousId(userData.anonymousId);
   }
 
   useEffect(() => {
     initalizeUser();
     loadUsername();
   }, []);
+
+  const handleResetAllData = () => {
+    resetAllData();
+    setUsername('');
+    setAnonymousId('');
+    navigation.closeDrawer();
+  };
+
+  const showConfirmationPrompt = () => {
+    Alert.alert(
+      'Are you sure?', // Title of the alert
+      'This will delete all data stored by dootoo and generate a new username and anonymous ID for you.', // Message of the alert
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Data Deletion Cancel Pressed'),
+          style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
+        },
+        {
+          text: 'OK',
+          onPress: () => {
+            console.log('Data Deletion OK Pressed');
+            handleResetAllData();
+          },
+        },
+      ],
+      { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+    );
+  };
 
   return (
     <View style={styles.profileDrawerContainer}>
@@ -132,6 +182,17 @@ function ProfileDrawer({ navigation }) {
         <Image style={styles.profileDrawerProfileIcon} source={require('../assets/images/profile_icon_green.png')} />
         <View style={styles.profileDrawerProfileNameContainer}>
           <Text style={styles.profileDrawerProfileNameText}>{username}</Text>
+        </View>
+      </View>
+      <View style={styles.privacyContainer}>
+        <View style={styles.anonIdDisplayContainer}>
+          <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
+          <Text style={styles.anonIdDisplayText}>{anonymousId}</Text>
+        </View>
+        <View style={styles.deleteDataLinkContainer}>
+          <Pressable onPress={showConfirmationPrompt}>
+            <Text style={styles.deleteDataLinkText}>Delete My Data</Text>
+          </Pressable>
         </View>
       </View>
     </View>
