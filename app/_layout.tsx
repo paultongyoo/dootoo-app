@@ -1,9 +1,9 @@
 import { View, Text, StyleSheet, Image, Pressable, Alert } from "react-native";
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useContext } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
-import { initalizeUser, resetAllData } from '../components/LocalStorage.js';
-import { UserProvider, UserContext } from '../components/UserContext.js';
+import { initalizeUser, resetAllData } from '../components/Storage';
+import { UserProvider, UserContext } from '../components/UserContext';
 
 const styles = StyleSheet.create({
   headerContainer: {

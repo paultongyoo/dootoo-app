@@ -1,11 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// WARNING:  Cyclical ref between LocalStorage -> BackendServices -> LocalStorage -- do not initialize variables in either file!
-import { createUser } from './BackendServices.js';
+import axios from 'axios';
 
 const ITEM_LIST_KEY = "item_list";
 const USERNAME_KEY = "username";
 const ANON_ID_KEY = "anonymous_id";
+const CREATEUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev';
+const LOADITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItems_Dev';
 
 export const saveItemsToLocalStorage = async (item_list_obj) => {
   if (item_list_obj === undefined) {
@@ -72,5 +72,35 @@ export const resetAllData = async () => {
     console.log('All storage cleared');
   } catch (e) {
     console.error('Failed to clear AsyncStorage', e);
+  }
+};
+
+export const createUser = async () => {
+  try {
+    const response = await axios.post(CREATEUSER_URL);
+    console.log("Retreived new user from backend: " + JSON.stringify(response.data.body));
+    return response.data.body;
+  } catch (error) {
+    console.error('Error calling create User API:', error);
+  }
+};
+
+export const loadItems = async () => {
+  try {
+
+    const localAnonId = await getLocalAnonId();
+    if (!localAnonId) {
+      console.log("Received null local anon Id, aborting loadItems!");
+      return [];
+    }
+    const response = await axios.post(LOADITEMS_URL,
+      {
+        anonymous_id : localAnonId
+      }
+    );
+    console.log(`Retrieved ${response.data.body.length} items from backend: ${JSON.stringify(response.data.body)}`);
+    return response.data.body;
+  } catch (error) {
+    console.error('Error calling loadItems API:', error);
   }
 };

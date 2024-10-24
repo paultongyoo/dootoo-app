@@ -1,10 +1,9 @@
 import { Platform, Image, Text, View, StyleSheet, Pressable, Animated,
          TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput } from "react-native";
-import { useState, useRef, useEffect, useCallback, useContext } from "react";
-import { useFocusEffect } from 'expo-router';
+import { useState, useRef, useEffect, useContext } from "react";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
-import { transcribeAudioToTasks, loadItems } from '../components/BackendServices.js';
-import { saveItemsToLocalStorage } from '../components/LocalStorage.js';
+import { transcribeAudioToTasks } from '../components/BackendServices';
+import { saveItemsToLocalStorage, loadItems } from '../components/Storage';
 import { UserContext } from '../components/UserContext.js';
 import RNFS from 'react-native-fs';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
