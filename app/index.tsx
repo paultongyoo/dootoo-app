@@ -1,10 +1,11 @@
 import { Platform, Image, Text, View, StyleSheet, Pressable, Animated,
          TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput } from "react-native";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useContext } from "react";
 import { useFocusEffect } from 'expo-router';
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
 import { transcribeAudioToTasks } from '../components/BackendServices.js';
 import { saveItems, loadItems } from '../components/LocalStorage.js';
+import { UserContext } from '../components/UserContext.js';
 import RNFS from 'react-native-fs';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -16,13 +17,14 @@ import Reanimated, {
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
 
 export default function Index() {
+  const { dootooItems, setDootooItems } = useContext(UserContext);
+  const [initialLoad, setInitialLoad] = useState(false);
+
   const swipeableRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState();
   const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
-  const [parsedTasks, setParsedTasks] =  useState();
   const [permissionResponse, requestPermission] = Audio.usePermissions();
-  const [refreshKey, setRefreshKey] = useState(0);
   const [errorMsg, setErrorMsg] = useState();
   var retryCount = 0;
   const inputFieldIndex = useRef(-1);
@@ -80,7 +82,7 @@ export default function Index() {
       console.log('Recording started');
       setErrorMsg(undefined);   // Clear error message if no error
     } catch (err) {
-      if (retryCount < 3) {
+      if (retryCount < 5) {
         console.log("Retry count less than 3, trying to startRecording again...");
         startRecording();
         retryCount += 1;
@@ -130,10 +132,10 @@ export default function Index() {
     setLoading(true);
     const response = generateStubData();
     setLoading(false);
-    if (parsedTasks && parsedTasks.length > 0) {
-      setParsedTasks(parsedTasks.concat(response.tasks));
+    if (dootooItems && dootooItems.length > 0) {
+      setDootooItems(dootooItems.concat(response.tasks));
     } else {
-      setParsedTasks(response.tasks);
+      setDootooItems(response.tasks);
     }
   }
 
@@ -145,10 +147,10 @@ export default function Index() {
     console.log("Received response: " + JSON.stringify(response));
     setLoading(false);
 
-    if (parsedTasks && parsedTasks.length > 0) {
-      setParsedTasks(parsedTasks.concat(response.tasks));
+    if (dootooItems && dootooItems.length > 0) {
+      setDootooItems(dootooItems.concat(response.tasks));
     } else {
-      setParsedTasks(response.tasks);
+      setDootooItems(response.tasks);
     }
     
     console.log("Finished parsing file, deleting...");
@@ -166,53 +168,46 @@ export default function Index() {
     console.log("Loading items from disk...");
     const savedItems = await loadItems();
     console.log(`Loaded ${savedItems.length} items from disk`);
-    setParsedTasks(savedItems);
-  };
-
-  useEffect(() => {
-    console.log("Initializing mobile ads...");
-    initializeMobileAds();
-    console.log("Initialization complete.");
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-
-      // Load items from LocalStorage (if any)
-      loadItemsFromLocalStorage();
-    }, [])
-  );
-
-  const initializeUsername = async() => {
-    initalizeUser();
+    setDootooItems(savedItems);
   };
 
   const saveItemsToLocalStorage = async() => {
-    if (parsedTasks != undefined) {
+    if (dootooItems != undefined) {
       console.log("Saving items to local storage...");
 
-      // Whenever parsedTasks changes, save it to local storage
-      await saveItems(parsedTasks);
+      // Whenever dootooItems changes, save it to local storage
+      await saveItems(dootooItems);
       console.log("Save successful.");
-    }
-  };
 
-  useEffect(() => {
-    saveItemsToLocalStorage();
-    if (parsedTasks && parsedTasks.length == 0) {
+      if (dootooItems && dootooItems.length == 0) {
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 200,
           useNativeDriver: true
         }).start();
-    } else {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 0,
-        useNativeDriver: true
-      }).start();
+      } else {
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true
+        }).start();
+      }
     }
-  }, [parsedTasks]);
+  };
+
+  useEffect(() => {
+    initializeMobileAds();
+    loadItemsFromLocalStorage();
+    setInitialLoad(true);
+  }, []);
+
+  useEffect(() => {
+    if (initialLoad) {
+      saveItemsToLocalStorage();
+    } else {
+      console.log("UseEffect called before initial load completed, skipping..");
+    }
+  }, [dootooItems]);
 
   /********************** END Audio Recording CODE **** BEGIN View Code *****/
 
@@ -227,34 +222,31 @@ export default function Index() {
       const currentValue = inputValueRef.current;
       console.log("Text changed to: " + currentValue);
 
-      var updatedTasks = parsedTasks;
+      var updatedTasks = [...dootooItems];
       updatedTasks![index].name = currentValue;
-      setParsedTasks(updatedTasks);
+      setDootooItems(updatedTasks);
     } else {
       console.log(`Previous field ${inputFieldIndex.current} exited with no change, ignoring blur`);
     }
   }
 
   const handleItemDelete = (index : number) => {
-    var updatedTasks = parsedTasks;
+    var updatedTasks = [...dootooItems];
     updatedTasks!.splice(index, 1);
-    setParsedTasks(updatedTasks);
+    setDootooItems(updatedTasks);
     setItemIdxToEdit(-1);
-    setRefreshKey((prevKey) => prevKey + 1);
   }
 
   const handleMakeParent = (index : number) => {
-    var updatedTasks = parsedTasks;
+    var updatedTasks = [...dootooItems];
     updatedTasks![index].isChild = false;
-    setParsedTasks(updatedTasks);
-    setRefreshKey((prevKey) => prevKey + 1);
+    setDootooItems(updatedTasks);
   }
 
   const handleMakeChild = (index : number) => {
-    var updatedTasks = parsedTasks;
+    var updatedTasks = [...dootooItems];
     updatedTasks![index].isChild = true;
-    setParsedTasks(updatedTasks);
-    setRefreshKey((prevKey) => prevKey + 1);
+    setDootooItems(updatedTasks);
   }
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -422,7 +414,7 @@ export default function Index() {
             <Text>Delete</Text>
           </Pressable>
         </Reanimated.View>
-        { (parsedTasks![index].isChild) ? 
+        { (dootooItems![index].isChild) ? 
           <Reanimated.View style={[styles.itemSwipeAction, styles.action_MakeParent]}>
             <Pressable 
               onPress={() => handleMakeParent(index) }>
@@ -438,7 +430,7 @@ export default function Index() {
   const renderLeftActions = (progress : SharedValue<number>, dragX : SharedValue<number>, index : number) => {
     return (
       <>
-        { (!parsedTasks![index].isChild) ? 
+        { (!dootooItems![index].isChild) ? 
           <Reanimated.View style={[styles.itemSwipeAction, styles.action_MakeParent]}>
             <Pressable 
               onPress={() => handleMakeChild(index) }>
@@ -455,11 +447,10 @@ export default function Index() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
           <View  style={styles.taskContainer}>
-            { parsedTasks && parsedTasks!.length > 0 ? 
+            { dootooItems && dootooItems!.length > 0 ? 
               <DraggableFlatList
-                data={parsedTasks}
-                extraData={refreshKey}
-                onDragEnd={({ data }) => setParsedTasks(data)}
+                data={dootooItems}
+                onDragEnd={({ data }) => setDootooItems(data)}
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={({item, getIndex, drag, isActive}) => 
                 <Swipeable
@@ -542,10 +533,10 @@ export default function Index() {
                     <Text style={styles.footerButtonTitle}>Stop</Text> : 
                     <Image style={styles.footerButtonImage_Record} source={require("../assets/images/microphone_white.png")}/> }
             </Pressable>
-          { (parsedTasks && parsedTasks.length > 0) ?
+          { (dootooItems && dootooItems.length > 0) ?
             <Pressable 
                 style={[styles.footerButton, styles.clearButton]}
-                onPress={() => { setParsedTasks([])}}>
+                onPress={() => { setDootooItems([])}}>
               <Image style={styles.footerButtonImage_Restart} source={require("../assets/images/restart_icon_black.png")}/>
             </Pressable> : <></>
           }

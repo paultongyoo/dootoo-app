@@ -13,6 +13,7 @@ export const saveItems = async (item_list_obj) => {
   }
   try {  
     const item_list_str = JSON.stringify(item_list_obj);
+    console.log("String to save to disk: " + item_list_str);
     await AsyncStorage.setItem(ITEM_LIST_KEY, item_list_str);
   } catch (e) {
     console.log("Error saving item list", e);

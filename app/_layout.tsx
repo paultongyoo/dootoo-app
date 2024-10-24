@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
 import { initalizeUser, getUser, resetAllData } from '../components/LocalStorage.js';
-
-
+import { UserProvider } from '../components/UserContext.js';
 
 const styles = StyleSheet.create({
   headerContainer: {
@@ -100,31 +99,33 @@ const styles = StyleSheet.create({
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Drawer 
-        drawerContent={(props) => <ProfileDrawer {...props} />}
-        screenOptions={
-        {
-          drawerPosition: 'right',
-          header: ({ navigation, route, options }) => { 
-            return (
-              <View style={styles.headerContainer}>
-                <View style={styles.headerLeftContainer}>
-                    <View style={styles.mainLogoContainer}>
-                    <Text style={styles.mainLogoPart}>doo</Text>
-                    <Text style={[styles.mainLogoPart, styles.secondLogoPart]}>too</Text>
+      <UserProvider>
+        <Drawer 
+          drawerContent={(props) => <ProfileDrawer {...props} />}
+          screenOptions={
+          {
+            drawerPosition: 'right',
+            header: ({ navigation, route, options }) => { 
+              return (
+                <View style={styles.headerContainer}>
+                  <View style={styles.headerLeftContainer}>
+                      <View style={styles.mainLogoContainer}>
+                      <Text style={styles.mainLogoPart}>doo</Text>
+                      <Text style={[styles.mainLogoPart, styles.secondLogoPart]}>too</Text>
+                    </View>
                   </View>
-                </View>
-                <View style={styles.headerRightContainer}>
-                  <Pressable style={styles.mainProfileIconContainer}
-                             onPress={() => navigation.openDrawer()}>
-                    <Image style={styles.profileIcon} source={require('../assets/images/profile_icon_green.png')} />
-                  </Pressable>
-                </View>
-            </View>
-            );
+                  <View style={styles.headerRightContainer}>
+                    <Pressable style={styles.mainProfileIconContainer}
+                              onPress={() => navigation.openDrawer()}>
+                      <Image style={styles.profileIcon} source={require('../assets/images/profile_icon_green.png')} />
+                    </Pressable>
+                  </View>
+              </View>
+              );
+            }
           }
-        }
-      }/>
+        }/>
+      </UserProvider>
     </GestureHandlerRootView>
   );
 }
