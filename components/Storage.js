@@ -7,6 +7,26 @@ const ANON_ID_KEY = "anonymous_id";
 const CREATEUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev';
 const LOADITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItems_Dev';
 const SAVEITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev';
+const DELETEALLITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/deleteAllItems_Dev';
+
+export const deleteAllItems = async () => {
+  try {  
+    console.log("Deleting all items on backend...");
+    const localAnonId = await getLocalAnonId();
+    const deletedItemsCount = await axios.post(DELETEALLITEMS_URL,
+      {
+        anonymous_id : localAnonId
+      }
+    );
+    if (deletedItemsCount >= 0) {
+      console.log(`Deleted ${deletedItemsCount} items on backend`);
+    } else {
+      console.log("Delete count returned -1, potential error!");
+    }
+  } catch (e) {
+    console.log("Error deleting all items", e);
+  }
+};
 
 export const saveItems = async (item_list_obj) => {
   if (item_list_obj === undefined) {
@@ -112,8 +132,9 @@ export const loadItems = async () => {
         anonymous_id : localAnonId
       }
     );
-    console.log(`Retrieved ${response.data.body.length} items from backend: ${JSON.stringify(response.data.body)}`);
-    return response.data.body;
+    const item_array = JSON.parse(response.data.body);
+    console.log(`Retrieved ${item_array.length} items from backend: ${JSON.stringify(item_array)}`);
+    return item_array;
   } catch (error) {
     console.error('Error calling loadItems API:', error);
   }
