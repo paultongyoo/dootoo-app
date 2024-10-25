@@ -7,26 +7,6 @@ const ANON_ID_KEY = "anonymous_id";
 const CREATEUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev';
 const LOADITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItems_Dev';
 const SAVEITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev';
-const DELETEALLITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/deleteAllItems_Dev';
-
-export const deleteAllItems = async () => {
-  try {  
-    console.log("Deleting all items on backend...");
-    const localAnonId = await getLocalAnonId();
-    const deletedItemsCount = await axios.post(DELETEALLITEMS_URL,
-      {
-        anonymous_id : localAnonId
-      }
-    );
-    if (deletedItemsCount >= 0) {
-      console.log(`Deleted ${deletedItemsCount} items on backend`);
-    } else {
-      console.log("Delete count returned -1, potential error!");
-    }
-  } catch (e) {
-    console.log("Error deleting all items", e);
-  }
-};
 
 export const saveItems = async (item_list_obj) => {
   if (item_list_obj === undefined) {
