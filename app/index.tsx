@@ -224,7 +224,7 @@ export default function Index() {
       console.log("Text changed to: " + currentValue);
 
       var updatedTasks = [...dootooItems];
-      updatedTasks![index].name = currentValue;
+      updatedTasks![index].item_text = currentValue;
       setDootooItems(updatedTasks);
     } else {
       console.log(`Previous field ${inputFieldIndex.current} exited with no change, ignoring blur`);
