@@ -447,7 +447,7 @@ export default function Index() {
   const showComingSoon = () => {
     Alert.alert(
       'Feature Coming Soon', // Title of the alert
-      'Stay tuned! :-)', // Message of the alert 
+      'Stay tuned!', // Message of the alert 
     );
   }
 
