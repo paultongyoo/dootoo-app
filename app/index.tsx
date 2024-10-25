@@ -1,4 +1,4 @@
-import { Platform, Image, Text, View, StyleSheet, Pressable, Animated,
+import { Platform, Image, Text, View, StyleSheet, Pressable, Animated, Alert,
          TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput } from "react-native";
 import { useState, useRef, useEffect, useContext } from "react";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
@@ -444,6 +444,13 @@ export default function Index() {
     );
   };
 
+  const showComingSoon = () => {
+    Alert.alert(
+      'Feature Coming Soon', // Title of the alert
+      'Stay tuned! :-)', // Message of the alert 
+    );
+  }
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
@@ -475,7 +482,7 @@ export default function Index() {
                         <View style={styles.childItemSpacer}></View> 
                         : <></>
                       }
-                      <View style={styles.itemCircleOpen}></View>
+                      <Pressable style={styles.itemCircleOpen} onPress={showComingSoon}></Pressable>
                       <View style={styles.itemNameContainer}>
                         { (itemIdxToEdit == getIndex()) ?
                             <TextInput
