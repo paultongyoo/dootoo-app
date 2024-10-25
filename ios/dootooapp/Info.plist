@@ -48,9 +48,11 @@
       <true/>
     </dict>
     <key>NSMicrophoneUsageDescription</key>
-    <string>So that we can hear what you gotta do!</string>
+    <string>${PRODUCT_NAME} does not store your voice on our servers.  See our Privacy Policy to learn how your voice is used.</string>
     <key>NSUserActivityTypes</key>
     <array>
+      <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
+      <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
     </array>

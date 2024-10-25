@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, Pressable, Alert } from "react-native";
+import { View, Text, StyleSheet, Image, Pressable, Alert, Platform } from "react-native";
 import { useEffect, useContext } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
@@ -8,7 +8,7 @@ import { UserProvider, UserContext } from '../components/UserContext';
 const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: '#FAF3E0',
-    height: 75
+    height: (Platform.OS == 'ios') ? 100 : 75
   },
   headerLeftContainer: {
     position: 'absolute',
