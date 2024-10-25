@@ -16,7 +16,8 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.thoughtswork.dootoo",
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": ["audio"],
+        "UIStatusBarStyle": "UIStatusBarStyleDarkContent"
       }
     },
     "android": {
