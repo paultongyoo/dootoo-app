@@ -28,6 +28,15 @@ const saveItems = async(anonymous_id, items_str) => {
         return -1;
     }
 
+    // Delete all existing items first (to handle removed items) TODO: Improve me
+    await prisma.item.deleteMany({
+        where: { 
+           user: {
+            id: user.id
+           } 
+        }
+    });
+
     var itemSaveCount = 0;
     var items_arr = JSON.parse(items_str);
     for (var i = 0; i < items_arr.length; i++) {
