@@ -6,6 +6,7 @@ const USERNAME_KEY = "username";
 const ANON_ID_KEY = "anonymous_id";
 const CREATEUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev';
 const LOADITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItems_Dev';
+const SAVEITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev';
 
 export const saveItems = async (item_list_obj) => {
   if (item_list_obj === undefined) {
@@ -14,12 +15,25 @@ export const saveItems = async (item_list_obj) => {
   }
   try {  
     const item_list_str = JSON.stringify(item_list_obj);
-    console.log("String to save to disk: " + item_list_str);
+    console.log("String to save: " + item_list_str);
+
+    console.log("Saving to local storage...");
     await AsyncStorage.setItem(ITEM_LIST_KEY, item_list_str);
+    console.log("Local storage save complete.");
+
+    console.log("Saving to backend...");
+    const localAnonId = await getLocalAnonId();
+    await axios.post(SAVEITEMS_URL,
+      {
+        anonymous_id : localAnonId,
+        items_str: item_list_str
+      }
+    );
+    console.log("Backend save complete.");
   } catch (e) {
     console.log("Error saving item list", e);
   }
-  console.log(`Saved list with ${item_list_obj.length} items to disk`);
+  console.log(`Saved list with ${item_list_obj.length} items.`);
 };
 
 export const initalizeUser = async() => {
