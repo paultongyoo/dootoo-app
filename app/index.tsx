@@ -372,7 +372,8 @@ export default function Index() {
       paddingTop: 10,
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
-      flex: 1
+      flex: 1,
+      flexDirection: 'row'
     },
     itemTextInput: {
       fontSize: 16,
@@ -403,6 +404,24 @@ export default function Index() {
     errorText: {
       color: 'red',
       fontSize: 10
+    },
+    itemNameSpaceFiller: {
+      flex: 1
+    },
+    similarCountContainer: {
+      //backgroundColor: 'red',
+      paddingRight: 15,
+      flexDirection: 'row'
+    },
+    similarCountText: {
+      fontSize: 15,
+      position: 'relative',
+      top: 3
+    },
+    similarCountIcon: {
+      width: 28,
+      height: 28,
+      opacity: 0.6
     }
   });
 
@@ -502,6 +521,13 @@ export default function Index() {
                             onPress={() => handleItemTextTap(item.item_text, getIndex()) }>
                             <Text style={styles.taskTitle}>{item.item_text}</Text>
                           </Pressable>
+                        }
+                        { (item.similar_count && item.similar_count > 0) ?<>
+                          <View style={styles.itemNameSpaceFiller}></View>
+                          <View style={styles.similarCountContainer}>
+                            <Text style={styles.similarCountText}>{item.similar_count}</Text>
+                            <Image style={styles.similarCountIcon} source={require("../assets/images/person_icon_556B2F.png")} />
+                          </View></> : <></>
                         }
                       </View>
                     </View>
