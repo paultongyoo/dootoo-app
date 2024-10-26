@@ -190,7 +190,7 @@ function ProfileDrawer({ navigation }) {
       <View style={styles.privacyContainer}>
         <View style={styles.anonIdDisplayContainer}>
           <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
-          <Text style={styles.anonIdDisplayText}>{anonymousId}</Text>
+          <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId}</Text>
         </View>
         <View style={styles.deleteDataLinkContainer}>
           <Pressable onPress={showConfirmationPrompt}>
