@@ -317,6 +317,11 @@ export default function Index() {
       fontSize: 20,
       color: 'blue'
     },
+    initialLoadAnimContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center'
+    },
     emptyListContainer: {
       flex: 1,
       //flexDirection: 'row',
@@ -473,7 +478,11 @@ export default function Index() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
-          { (!initialLoad) ? <ActivityIndicator size={"large"} color="black" /> : <></> }
+          { (!initialLoad) ? 
+            <View style={styles.initialLoadAnimContainer}>
+              <ActivityIndicator size={"large"} color="white" /> 
+            </View>
+              : <></> }
           <View  style={styles.taskContainer}>
             { dootooItems && dootooItems!.length > 0 ? 
               <DraggableFlatList
