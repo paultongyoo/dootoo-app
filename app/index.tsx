@@ -416,7 +416,7 @@ export default function Index() {
     similarCountText: {
       fontSize: 15,
       position: 'relative',
-      top: 3
+      top: 4
     },
     similarCountIcon: {
       width: 28,
