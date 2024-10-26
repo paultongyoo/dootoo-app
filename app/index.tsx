@@ -473,6 +473,7 @@ export default function Index() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
+          { (!initialLoad) ? <ActivityIndicator size={"large"} color="black" /> : <></> }
           <View  style={styles.taskContainer}>
             { dootooItems && dootooItems!.length > 0 ? 
               <DraggableFlatList
