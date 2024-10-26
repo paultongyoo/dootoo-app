@@ -69,6 +69,8 @@ const saveItems = async(anonymous_id, items_str) => {
         console.log(item); 
 
         // Retrieve embedding for task and insert into table
+        // TODO: Improve this:  This currently  for tasks on every save, even those who've calculated 
+        //       embeddings in the past.
         console.log(`Begin retrieval and storing of embedding for item ${item.id}...`);
         const embedding_response = await axios.post(
             "http://ip-172-31-28-150.us-east-2.compute.internal:8000/embed",
