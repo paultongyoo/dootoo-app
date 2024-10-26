@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
@@ -10,7 +11,7 @@ export const handler = async (event) => {
             console.error(e)
             await prisma.$disconnect()
         });
-  console.log(`Returned item save count: ${itemSaveCount}`);
+  console.log(`Returned item save count: ${itemSaveCount}`);  // TODO: itemSaveCount becomes undefined
   const response = {
     statusCode: (itemSaveCount >= 0) ? 200 : 400,
     body: itemSaveCount,
@@ -66,6 +67,21 @@ const saveItems = async(anonymous_id, items_str) => {
             }
         });
         console.log(item); 
+
+        // Retrieve embedding for task and insert into table
+        console.log(`Begin retrieval and storing of embedding for item ${item.id}...`);
+        const embedding_response = await axios.post(
+            "http://ip-172-31-28-150.us-east-2.compute.internal:8000/embed",
+            { text: array_item.item_text }
+          );
+        const embedding = embedding_response.data.embedding;
+        console.log("Embedding: " + embedding);
+        const embeddingArray = embedding.join(',');
+        console.log("Embedding Array: " + embeddingArray);
+        await prisma.$executeRawUnsafe(`UPDATE "Item" SET embedding = '[` + 
+            embeddingArray + `]'::vector WHERE id = ` + item.id + `;`);
+        console.log("End retreival and storage complete ..");
+
         itemSaveCount += 1;
     }
     return itemSaveCount;
