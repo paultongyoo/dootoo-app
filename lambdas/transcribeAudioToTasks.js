@@ -46,35 +46,48 @@ export const handler = async (event) => {
 
   var object_from_chat = JSON.parse(completion.choices[0].message.content);
   var item_array = object_from_chat.tasks;
-  for (var i = 0; i < item_array.length; i++) {
-    const item = item_array[i];
 
-    item.task_id = uuidv4();
+  // Retrieve user id to filter out similar tasks from same user
+  console.log("Attempting user ID lookup for anonymous_id: " + event.headers.anonymous_id);
+  const user = await prisma.user.findUnique({
+      where: { anonymous_id: event.headers.anonymous_id}
+  });
+  console.log(user);
+  if (user) {
+    for (var i = 0; i < item_array.length; i++) {
+      const item = item_array[i];
 
-    // Obtain embedding for item text
-    console.log(`Begin retrieval and storing of embedding for recorded item ...`);
-    const embedding_response = await axios.post(
-        "http://ip-172-31-28-150.us-east-2.compute.internal:8000/embed",
-        { text: item.item_text }
-      );
-    const embedding = embedding_response.data.embedding;
-    console.log("Embedding: " + embedding);
-    const embeddingArray = embedding.join(',');
+      item.task_id = uuidv4();
 
-    // Execute query to count how many similar items
-    const num_close_embeddings = await prisma.$queryRawUnsafe(
-      `SELECT COUNT(DISTINCT user_id) FROM "Item" WHERE 0.4 > embedding <-> '[` + 
-      embeddingArray + `]'::vector;`);
+      // Obtain embedding for item text
+      console.log(`Begin retrieval and storing of embedding for recorded item ...`);
+      const embedding_response = await axios.post(
+          "http://ip-172-31-28-150.us-east-2.compute.internal:8000/embed",
+          { text: item.item_text }
+        );
+      const embedding = embedding_response.data.embedding;
+      console.log("Embedding: " + embedding);
+      const embeddingArray = embedding.join(',');
 
-    console.log("num close embeddings return: " + num_close_embeddings[0].count);
-    // append count to item object
-    item_array[i].similar_count = Number(num_close_embeddings[0].count + ''); // Hack workaround to convert BigInt 
-    console.log("Updated Item: " + item_array[i]);
+      // Execute query to count how many similar items
+      const num_close_embeddings = await prisma.$queryRawUnsafe(
+        `SELECT COUNT(DISTINCT user_id) FROM "Item" WHERE 0.4 > embedding <-> '[` + 
+        embeddingArray + `]'::vector AND user_id <> ` + user.id + `;`);
 
+      console.log("num close embeddings return: " + num_close_embeddings[0].count);
+      // append count to item object
+      item_array[i].similar_count = Number(num_close_embeddings[0].count + ''); // Hack workaround to convert BigInt 
+      console.log("Updated Item: " + item_array[i]);
+    }
+  } else {
+    console.log("Could not find user, unexpected!!");
+    return {
+      statusCode: 500,
+      body: 'Could not find user in DB'
+    };
   }
 
   console.log("Final Output: ", item_array);
-
 
   const response = {
     statusCode: 200,

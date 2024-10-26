@@ -4,7 +4,8 @@ import { Buffer } from 'buffer';
 
 const BACKEND_TRANSCRIPTION_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/transcribeAudioToTasks_Dev';
 
-export const transcribeAudioToTasks = async (fileUri) => {
+export const transcribeAudioToTasks = async (fileUri, anonymous_id) => {
+  console.log("Entering transcribeAudiToTasks with anonymous Id: " + anonymous_id);
 
   // Read the file as a binary base64 string
   const fileData = await RNFS.readFile(fileUri, 'base64');
@@ -24,6 +25,7 @@ export const transcribeAudioToTasks = async (fileUri) => {
       binaryData,
       {
         headers: {
+          'anonymous_id': anonymous_id,
           'Content-Type': `audio/${fileExtension}`
         },
       }

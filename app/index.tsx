@@ -16,7 +16,7 @@ import Reanimated, {
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
 
 export default function Index() {
-  const { dootooItems, setDootooItems } = useContext(UserContext);
+  const { dootooItems, setDootooItems, anonymousId } = useContext(UserContext);
   const [initialLoad, setInitialLoad] = useState(false);
 
   const swipeableRef = useRef(null);
@@ -107,7 +107,7 @@ export default function Index() {
   }
 
   const callBackendTranscribeService = async (fileUri: string) => {
-      return await transcribeAudioToTasks(fileUri);
+      return await transcribeAudioToTasks(fileUri, anonymousId);
   }
 
   const deleteFile = async (fileUri : string) => {

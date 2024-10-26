@@ -29,7 +29,7 @@ export const handler = async (event) => {
       // Execute query to count how many similar items
       const num_close_embeddings = await prisma.$queryRawUnsafe(
         `SELECT COUNT(DISTINCT user_id) FROM "Item" WHERE id <> ` + item.id + ` AND 0.4 > embedding <-> '[` + 
-      embeddingArray + `]'::vector;`);
+      embeddingArray + `]'::vector AND user_id <> ` + user.id + `;`);
 
       console.log("num close embeddings return: " + num_close_embeddings[0].count);
       // append count to item object
