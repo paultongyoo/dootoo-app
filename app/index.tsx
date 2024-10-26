@@ -526,6 +526,7 @@ export default function Index() {
                             />           
                           :
                           <Pressable 
+                            style={{ flex: 1 }}
                             onLongPress={drag}
                             disabled={isActive}
                             onPress={() => handleItemTextTap(item.item_text, getIndex()) }>
@@ -533,7 +534,6 @@ export default function Index() {
                           </Pressable>
                         }
                         { (item.similar_count && item.similar_count > 0) ?<>
-                          <View style={styles.itemNameSpaceFiller}></View>
                           <View style={styles.similarCountContainer}>
                             <Text style={styles.similarCountText}>{item.similar_count}</Text>
                             <Image style={styles.similarCountIcon} source={require("../assets/images/person_icon_556B2F.png")} />
