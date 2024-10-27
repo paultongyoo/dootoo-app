@@ -224,7 +224,7 @@ export default function Index() {
 
     Keyboard.dismiss();
 
-    if (inputFieldIndex.current == index) {
+    if (index != -1 && (inputFieldIndex.current == index)) {
       const currentValue = inputValueRef.current;
       console.log("Text changed to: " + currentValue);
 
@@ -393,6 +393,7 @@ export default function Index() {
     itemTextInput: {
       fontSize: 16,
       padding: 5,
+      paddingRight: 25,
       flex: 1
     },
     itemSwipeAction: {
