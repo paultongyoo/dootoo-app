@@ -315,7 +315,7 @@ export default function Index() {
     },
     clearButton: {
       backgroundColor: '#FAF3E0',
-      left: 285
+      left: 269
     },
     link: {
       fontWeight: 'bold',
