@@ -380,6 +380,7 @@ export default function Index() {
       marginLeft: 15,
       paddingBottom: 10,
       paddingTop: 10,
+      paddingRight: 15,
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
       flex: 1,
