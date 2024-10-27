@@ -486,7 +486,14 @@ export default function Index() {
   }
 
   return (
-    <TouchableWithoutFeedback onPress={() => { handleBlur(itemIdxToEdit); setItemIdxToEdit(-1); Keyboard.dismiss(); setRefreshKey((prevKey) => prevKey + 1)}} >
+    <TouchableWithoutFeedback onPress={() => {
+        if (Keyboard.isVisible()) {
+          Keyboard.dismiss();
+        }
+        handleBlur(itemIdxToEdit); 
+        setItemIdxToEdit(-1); 
+        setRefreshKey((prevKey) => prevKey + 1)
+      }} >
       <View style={styles.container}>
         {/* <View>
           <Text>initialLoad: {JSON.stringify(initialLoad)}</Text>
