@@ -23,6 +23,7 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState();
   const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [permissionResponse, requestPermission] = Audio.usePermissions();
   const [errorMsg, setErrorMsg] = useState();
   var retryCount = 0;
@@ -81,8 +82,7 @@ export default function Index() {
       console.log('Recording started');
       setErrorMsg(undefined);   // Clear error message if no error
     } catch (err) {
-      if (retryCount < 5) {
-        console.log("Retry count less than 3, trying to startRecording again...");
+      if (retryCount < 99999999999) { // TODO: Resolve this hack to prevent the "recorder not prepared error"
         startRecording();
         retryCount += 1;
       } else {
@@ -145,6 +145,7 @@ export default function Index() {
     //const response =  generateStubData(); 
     console.log("Received response: " + JSON.stringify(response));
     setLoading(false);
+    setItemIdxToEdit(-1);
 
     if (dootooItems && dootooItems.length > 0) {
       setDootooItems(dootooItems.concat(response));
@@ -197,6 +198,7 @@ export default function Index() {
   };
 
   useEffect(() => {
+    setInitialLoad(false);
     initializeMobileAds();
     loadItemsFromBackend();
     setInitialLoad(true);
@@ -218,6 +220,9 @@ export default function Index() {
 
   const handleBlur = (index) => { 
     console.log(`Inside handleBlur for index ${index}`);
+    setItemIdxToEdit(-1);
+
+    Keyboard.dismiss();
 
     if (inputFieldIndex.current == index) {
       const currentValue = inputValueRef.current;
@@ -380,9 +385,14 @@ export default function Index() {
       flex: 1,
       flexDirection: 'row'
     },
+    itemNamePressable: { 
+      flex: 1, 
+      width: '100%'
+    },
     itemTextInput: {
       fontSize: 16,
-      padding: 5
+      padding: 5,
+      flex: 1
     },
     itemSwipeAction: {
       width: 50,
@@ -476,9 +486,16 @@ export default function Index() {
   }
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <TouchableWithoutFeedback onPress={() => { handleBlur(itemIdxToEdit); setItemIdxToEdit(-1); Keyboard.dismiss(); setRefreshKey((prevKey) => prevKey + 1)}} >
       <View style={styles.container}>
-          { (!initialLoad) ? 
+        {/* <View>
+          <Text>initialLoad: {JSON.stringify(initialLoad)}</Text>
+          <Text>itemIdxToEdit: {JSON.stringify(itemIdxToEdit)}</Text>
+          <Text>inputFieldIndex.current: {JSON.stringify(inputFieldIndex.current)}</Text>
+          <Text>inputValueRef.current: {JSON.stringify(inputValueRef.current)}</Text>
+          <Text>refreshKey: {JSON.stringify(refreshKey)}</Text>
+        </View> */}
+          { (initialLoad == false) ? 
             <View style={styles.initialLoadAnimContainer}>
               <ActivityIndicator size={"large"} color="white" /> 
             </View>
@@ -518,15 +535,16 @@ export default function Index() {
                               multiline={false}
                               style={styles.itemTextInput}
                               defaultValue={item.item_text}
+                              autoFocus={true}
                               onChangeText={(text) => { 
-                                inputFieldIndex.current = getIndex() || -1;
+                                inputFieldIndex.current = getIndex();
                                 inputValueRef.current = text;
                               }}
                               onBlur={() => handleBlur(getIndex())}
                             />           
                           :
                           <Pressable 
-                            style={{ flex: 1 }}
+                            style={styles.itemNamePressable}
                             onLongPress={drag}
                             disabled={isActive}
                             onPress={() => handleItemTextTap(item.item_text, getIndex()) }>
