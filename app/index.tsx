@@ -167,33 +167,26 @@ export default function Index() {
   const loadItemsFromBackend = async() => {
     console.log("Loading items from backend...");
     const savedItems = await loadItems();
-    console.log(`Loaded ${savedItems.length} items from backend`);
+    console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} items from backend`);  
+    setInitialLoad(true);
     setDootooItems(savedItems);
   };
 
   const handleSaveItems = async() => {
-    if (dootooItems != undefined) {
-      console.log("Saving items...");
 
-      // Whenever dootooItems changes, save it to local storage
+    if (dootooItems == undefined || dootooItems.length == 0) {
+      console.log("Calling saveItems with empty list (expecting backend to clear items for user.");
+      await saveItems([]);
+    } else {
+      console.log(`Passing ${dootooItems.length} to saveItems method...`);
       await saveItems(dootooItems);
       console.log("Save successful.");
+    }
 
-      if (dootooItems && dootooItems.length == 0) {
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true
-        }).start();
-      } else {
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 0,
-          useNativeDriver: true
-        }).start();
-      }
+    if (dootooItems && dootooItems.length == 0) {
+      ctaAnimation.start();
     } else {
-      console.log("dootooItems is undefined ... unexpected?");
+      ctaAnimation.stop();
     }
   };
 
@@ -201,7 +194,6 @@ export default function Index() {
     setInitialLoad(false);
     initializeMobileAds();
     loadItemsFromBackend();
-    setInitialLoad(true);
   }, []);
 
   useEffect(() => {
@@ -255,7 +247,102 @@ export default function Index() {
     setDootooItems(updatedTasks);
   }
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const showClearListConfirmationPrompt = () => {
+    Alert.alert(
+      'Clear your list?', // Title of the alert
+      'This deletes all items in your list and can\'t be undone.', // Message of the alert
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('List Clear Pressed'),
+          style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
+        },
+        {
+          text: 'Yes',
+          onPress: () => {
+            console.log('List Clear OK Pressed');
+            setDootooItems([]);
+          },
+        },
+      ],
+      { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+    );
+  };
+
+  //const fadeAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnimTasks = useRef(new Animated.Value(1)).current;
+  const fadeAnimGoals = useRef(new Animated.Value(0.1)).current;
+  const fadeAnimDreams = useRef(new Animated.Value(0.1)).current;
+  const fadeAnimChallenges = useRef(new Animated.Value(0.1)).current;
+  //const wordCycle = Animated.loop(
+  const ctaAnimation = Animated.sequence([
+      Animated.parallel([
+        Animated.timing(fadeAnimTasks, {
+          toValue: 1,
+          duration: 750,
+          useNativeDriver: true
+        }),
+        // Animated.timing(fadeAnimChallenges, {
+        //   toValue: 0.1,
+        //   duration: 1500,
+        //   useNativeDriver: true
+        // }),
+      ]),
+      Animated.parallel([
+        Animated.timing(fadeAnimGoals, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true
+        }),
+        // Animated.timing(fadeAnimTasks, {
+        //   toValue: 0.1,
+        //   duration: 1500,
+        //   useNativeDriver: true
+        // }),
+      ]),
+      Animated.parallel([
+        Animated.timing(fadeAnimDreams, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true
+        }),
+        // Animated.timing(fadeAnimGoals, {
+        //   toValue: 0.1,
+        //   duration: 1500,
+        //   useNativeDriver: true
+        // }),
+      ]),
+      Animated.parallel([
+        Animated.timing(fadeAnimChallenges, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true
+        }),
+        // Animated.timing(fadeAnimDreams, {
+        //   toValue: 0.1,
+        //   duration: 1500,
+        //   useNativeDriver: true
+        // }),
+      ]),
+      Animated.timing(fadeAnimChallenges, {
+        toValue: 1,
+        duration: 3000,
+        useNativeDriver: true
+      }),
+      Animated.parallel([
+        Animated.timing(fadeAnimTasks, {
+          toValue: 1,
+          duration: 750,
+          useNativeDriver: true
+        }),
+        // Animated.timing(fadeAnimChallenges, {
+        //   toValue: 0.1,
+        //   duration: 1500,
+        //   useNativeDriver: true
+        // }),
+      ]),
+    ]);
+  //);
 
   const styles = StyleSheet.create({
     container: {
@@ -335,16 +422,16 @@ export default function Index() {
       paddingLeft: 20
     },
     emptyListContainer_words: {
-      fontSize: 60
+      fontSize: 50
     },
     emptyListContainer_arrow: {
       position: 'absolute',
-      bottom: -20,
-      right: 50,
-      height: 300,
-      width: 100,
+      bottom: -9,
+      right: 100,
+      height: 150,
+      width: 50,
       opacity: 0.4,
-      transform: [{ rotate: '10deg'}]
+      transform: [{ rotate: '18deg'}]
     },
     taskContainer: {
       flex: 1,
@@ -474,7 +561,7 @@ export default function Index() {
     return (
       <>
         { (!dootooItems![index].is_child) ? 
-          <Reanimated.View style={[styles.itemSwipeAction, styles.action_MakeParent]}>
+          <Reanimated.View style={[styles.itemSwipeAction]}>
             <Pressable 
               onPress={() => handleMakeChild(index) }>
                             <Image style={styles.swipeActionIcon_ident} source={require("../assets/images/left_indent_3E2723.png")}/>
@@ -513,7 +600,7 @@ export default function Index() {
         </View> */}
           { (initialLoad == false) ? 
             <View style={styles.initialLoadAnimContainer}>
-              <ActivityIndicator size={"large"} color="white" /> 
+              <ActivityIndicator size={"large"} color="black" /> 
             </View>
               : <></> }
           <View  style={styles.taskContainer}>
@@ -578,12 +665,23 @@ export default function Index() {
                   </ScaleDecorator>
                 </Swipeable>
               }
-            /> : 
-              <Animated.View style={[{opacity: fadeAnim }, styles.emptyListContainer]}>
-                <Text style={styles.emptyListContainer_words}>what do you gotta do?</Text>
+            /> : (initialLoad == true) ?
+              <Animated.View style={styles.emptyListContainer}>
+                <Text style={styles.emptyListContainer_words}>what are your</Text>
+                <Animated.View style={[{opacity: fadeAnimTasks }]}>
+                  <Text style={[styles.emptyListContainer_words, {color: '#556B2F'}]}>tasks?</Text>
+                </Animated.View>
+                <Animated.View style={[{opacity: fadeAnimGoals }]}>
+                  <Text style={[styles.emptyListContainer_words, {color: '#556B2F'}]}>goals?</Text>
+                </Animated.View>
+                <Animated.View style={[{opacity: fadeAnimDreams }]}>
+                  <Text style={[styles.emptyListContainer_words, {color: '#556B2F'}]}>dreams?</Text>
+                </Animated.View>
+                <Animated.View style={[{opacity: fadeAnimChallenges }]}>
+                  <Text style={[styles.emptyListContainer_words, {color: '#556B2F'}]}>challenges?</Text>
+                </Animated.View>
                 <Image style={styles.emptyListContainer_arrow} source={require("../assets/images/sketch_arrow_556B2F.png")}/>
-              </Animated.View>
-
+              </Animated.View> : <></>
               }
                   { (errorMsg) ?
             <View style={styles.errorTextContainer}>
@@ -611,13 +709,13 @@ export default function Index() {
                     <Text style={styles.footerButtonTitle}>Stop</Text> : 
                     <Image style={styles.footerButtonImage_Record} source={require("../assets/images/microphone_white.png")}/> }
             </Pressable>
-          { (dootooItems && dootooItems.length > 0) ?
+          {/* { (dootooItems && dootooItems.length > 0) ?
             <Pressable 
                 style={[styles.footerButton, styles.clearButton]}
-                onPress={() => { setDootooItems([])}}>
+                onPress={showClearListConfirmationPrompt}>
               <Image style={styles.footerButtonImage_Restart} source={require("../assets/images/restart_icon_black.png")}/>
             </Pressable> : <></>
-          }
+          } */}
             <View style={styles.bannerAdContainer}>
               <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
             </View>
