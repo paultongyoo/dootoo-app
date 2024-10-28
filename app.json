@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "dootoo-app",
-    "slug": "dootoo-app",
+    "name": "dootoo",
+    "slug": "dootoo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
