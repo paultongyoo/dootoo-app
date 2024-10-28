@@ -4,6 +4,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
 import { initalizeUser, resetAllData } from '../components/Storage';
 import { UserProvider, UserContext } from '../components/UserContext';
+import Toast from 'react-native-toast-message';
+import toastConfig from '../components/ToastConfig';
 
 const styles = StyleSheet.create({
   headerContainer: {
@@ -126,6 +128,7 @@ export default function RootLayout() {
           }
         }/>
       </UserProvider>
+      <Toast config={toastConfig} />
     </GestureHandlerRootView>
   );
 }

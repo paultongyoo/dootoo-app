@@ -14,6 +14,7 @@ import Reanimated, {
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
+import Toast from 'react-native-toast-message';
 
 export default function Index() {
   const { dootooItems, setDootooItems, anonymousId } = useContext(UserContext);
@@ -34,6 +35,8 @@ export default function Index() {
       (Platform.OS === 'ios' ? "ca-app-pub-6723010005352574/5609444195" : 
                                "ca-app-pub-6723010005352574/8538859865");
   const bannerRef = useRef<BannerAd>(null);
+  const recordButtonScaleAnim = useRef(new Animated.Value(1)).current;
+
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
@@ -147,16 +150,27 @@ export default function Index() {
     setLoading(false);
     setItemIdxToEdit(-1);
 
-    if (dootooItems && dootooItems.length > 0) {
+    if (dootooItems && response && response.length > 0) {
       setDootooItems(dootooItems.concat(response));
-    } else {
-      setDootooItems(response);
-    }
 
-    // Scroll to bottom of list to ensure added items are visible
-    if (itemFlatList.current) {
-      itemFlatList.current.scrollToEnd({ animated: true });
-    }
+      // Display Toast
+      Toast.show({
+        type: 'undoableToast',
+        text1: `Added ${response.length} item${(response.length > 1) ? 's' : ''}.`,
+        position: 'bottom',
+        bottomOffset: 240,
+        props: { onUndoPress: () => Alert.alert(
+          'Undo your recording?', // Title of the alert
+          'This will revert those items....')}
+      });
+
+      // Scroll to bottom of list to ensure added items are visible
+      if (itemFlatList.current) {
+        itemFlatList.current.scrollToEnd({ animated: true });
+      }
+    } /*else {
+      setDootooItems(response);
+    }*/
     
     console.log("Finished parsing file, deleting...");
     deleteFile(fileUri);
@@ -199,6 +213,15 @@ export default function Index() {
     setInitialLoad(false);
     initializeMobileAds();
     loadItemsFromBackend();
+
+    // Uncomment to style
+    // Toast.show({
+    //   type: 'undoableToast',
+    //   text1: `Added many new items.`,
+    //   position: 'bottom',
+    //   bottomOffset: 240,
+    //   autoHide: false
+    // });
   }, []);
 
   useEffect(() => {
@@ -585,6 +608,20 @@ export default function Index() {
     );
   }
 
+  const recordButton_handlePressIn = () => {
+    Animated.spring(recordButtonScaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const recordButton_handlePressOut = () => {
+    Animated.spring(recordButtonScaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
   return (
     <TouchableWithoutFeedback onPress={() => {
         if (Keyboard.isVisible()) {
@@ -706,16 +743,19 @@ export default function Index() {
                   <Image style={styles.footerButtonImage_Cancel} source={require("../assets/images/cancel_icon_black.png")}/>
               </Pressable>
               : <></>  }
-            <Pressable 
-                style={[styles.footerButton, (recording) ? styles.stopRecordButton : styles.recordButton]}
-                onPress={recording ? processRecording : startRecording}>
-            { (loading) ? 
-                <View style={styles.loadingAnim}>
-                  <ActivityIndicator size={"large"} color="white" /> 
-                </View> : (recording) ? 
-                    <Text style={styles.footerButtonTitle}>Stop</Text> : 
-                    <Image style={styles.footerButtonImage_Record} source={require("../assets/images/microphone_white.png")}/> }
-            </Pressable>
+            <Animated.View style={[{ transform: [{ scale: recordButtonScaleAnim }] }, styles.footerButton, ((recording) ? styles.stopRecordButton : styles.recordButton)]}>
+              <Pressable
+                  onPress={recording ? processRecording : startRecording}
+                  onPressIn={recordButton_handlePressIn}
+                  onPressOut={recordButton_handlePressOut}>
+              { (loading) ? 
+                  <View style={styles.loadingAnim}>
+                    <ActivityIndicator size={"large"} color="white" /> 
+                  </View> : (recording) ? 
+                      <Text style={styles.footerButtonTitle}>Stop</Text> : 
+                      <Image style={styles.footerButtonImage_Record} source={require("../assets/images/microphone_white.png")}/> }
+              </Pressable>
+            </Animated.View>
           {/* { (dootooItems && dootooItems.length > 0) ?
             <Pressable 
                 style={[styles.footerButton, styles.clearButton]}
