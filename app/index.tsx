@@ -601,13 +601,14 @@ export default function Index() {
             <View style={styles.initialLoadAnimContainer}>
               <ActivityIndicator size={"large"} color="black" /> 
             </View>
-              : <></> }
+              : 
           <View  style={styles.taskContainer}>
             { dootooItems && dootooItems!.length > 0 ? 
               <DraggableFlatList
                 data={dootooItems}
                 onDragEnd={({ data }) => setDootooItems(data)}
                 keyExtractor={(item, index) => index.toString()}
+                ListFooterComponent={<View style={{ height: 100 }} />}
                 renderItem={({item, getIndex, drag, isActive}) => 
                 <Swipeable
                     key={Math.random()}
@@ -690,6 +691,7 @@ export default function Index() {
               <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
             </View>}
           </View>  
+          }
           <View style={styles.footerContainer}>
             { recording ? 
               <Pressable 
