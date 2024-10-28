@@ -425,14 +425,14 @@ export default function Index() {
       flex: 1
     },
     similarCountContainer: {
-      //backgroundColor: 'red',
+
+      justifyContent: 'center',
+      alignItems: 'center',
       paddingRight: 15,
       flexDirection: 'row'
     },
     similarCountText: {
-      fontSize: 15,
-      position: 'relative',
-      top: 4
+      fontSize: 15
     },
     similarCountIcon: {
       width: 28,
