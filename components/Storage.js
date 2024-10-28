@@ -15,7 +15,7 @@ export const saveItems = async (item_list_obj) => {
   }
   try {  
     const item_list_str = JSON.stringify(item_list_obj);
-    console.log("String to save: " + item_list_str);
+    //console.log("String to save: " + item_list_str);
 
     console.log("Saving to local storage...");
     await AsyncStorage.setItem(ITEM_LIST_KEY, item_list_str);
