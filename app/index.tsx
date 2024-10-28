@@ -18,7 +18,7 @@ import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react
 export default function Index() {
   const { dootooItems, setDootooItems, anonymousId } = useContext(UserContext);
   const [initialLoad, setInitialLoad] = useState(false);
-
+  const itemFlatList = useRef(null);
   const swipeableRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState();
@@ -151,6 +151,11 @@ export default function Index() {
       setDootooItems(dootooItems.concat(response));
     } else {
       setDootooItems(response);
+    }
+
+    // Scroll to bottom of list to ensure added items are visible
+    if (itemFlatList.current) {
+      itemFlatList.current.scrollToEnd({ animated: true });
     }
     
     console.log("Finished parsing file, deleting...");
@@ -605,6 +610,7 @@ export default function Index() {
           <View  style={styles.taskContainer}>
             { dootooItems && dootooItems!.length > 0 ? 
               <DraggableFlatList
+                ref={itemFlatList}
                 data={dootooItems}
                 onDragEnd={({ data }) => setDootooItems(data)}
                 keyExtractor={(item, index) => index.toString()}
