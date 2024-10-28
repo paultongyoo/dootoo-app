@@ -50,13 +50,6 @@ export const handler = async (event) => {
         retrievedItems[i].similar_count = Number(num_close_embeddings[0].count + ''); // Hack workaround to convert BigInt 
         console.log("Updated Item: " + retrievedItems[i]);
 
-        const response = {
-          statusCode: 200,
-          body: JSON.stringify(retrievedItems)
-        };
-        console.log("Response returned: " + retrievedItems);
-        await prisma.$disconnect();
-        return response;
       } catch (error) {
         console.error('Error encrypting or decrypting:', error);
         return {
@@ -65,4 +58,11 @@ export const handler = async (event) => {
         };
       }
     }
+    const response = {
+      statusCode: 200,
+      body: JSON.stringify(retrievedItems)
+    };
+    console.log("Response returned: " + retrievedItems);
+    await prisma.$disconnect();
+    return response;
 };

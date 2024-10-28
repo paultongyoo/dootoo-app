@@ -167,26 +167,26 @@ export default function Index() {
   const loadItemsFromBackend = async() => {
     console.log("Loading items from backend...");
     const savedItems = await loadItems();
-    console.log(`Loaded ${savedItems.length} items from backend`);
+    console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} items from backend`);  
     setInitialLoad(true);
     setDootooItems(savedItems);
   };
 
   const handleSaveItems = async() => {
-    if (dootooItems != undefined) {
-      console.log("Saving items...");
 
-      // Whenever dootooItems changes, save it to local storage
+    if (dootooItems == undefined || dootooItems.length == 0) {
+      console.log("Calling saveItems with empty list (expecting backend to clear items for user.");
+      await saveItems([]);
+    } else {
+      console.log(`Passing ${dootooItems.length} to saveItems method...`);
       await saveItems(dootooItems);
       console.log("Save successful.");
+    }
 
-      if (dootooItems && dootooItems.length == 0) {
-        ctaAnimation.start();
-      } else {
-        ctaAnimation.stop();
-      }
+    if (dootooItems && dootooItems.length == 0) {
+      ctaAnimation.start();
     } else {
-      console.log("dootooItems is undefined ... unexpected?");
+      ctaAnimation.stop();
     }
   };
 
