@@ -168,6 +168,7 @@ export default function Index() {
     console.log("Loading items from backend...");
     const savedItems = await loadItems();
     console.log(`Loaded ${savedItems.length} items from backend`);
+    setInitialLoad(true);
     setDootooItems(savedItems);
   };
 
@@ -193,7 +194,6 @@ export default function Index() {
     setInitialLoad(false);
     initializeMobileAds();
     loadItemsFromBackend();
-    setInitialLoad(true);
   }, []);
 
   useEffect(() => {
@@ -600,7 +600,7 @@ export default function Index() {
         </View> */}
           { (initialLoad == false) ? 
             <View style={styles.initialLoadAnimContainer}>
-              <ActivityIndicator size={"large"} color="white" /> 
+              <ActivityIndicator size={"large"} color="black" /> 
             </View>
               : <></> }
           <View  style={styles.taskContainer}>
@@ -665,7 +665,7 @@ export default function Index() {
                   </ScaleDecorator>
                 </Swipeable>
               }
-            /> : 
+            /> : (initialLoad == true) ?
               <Animated.View style={styles.emptyListContainer}>
                 <Text style={styles.emptyListContainer_words}>what are your</Text>
                 <Animated.View style={[{opacity: fadeAnimTasks }]}>
@@ -681,7 +681,7 @@ export default function Index() {
                   <Text style={[styles.emptyListContainer_words, {color: '#556B2F'}]}>challenges?</Text>
                 </Animated.View>
                 <Image style={styles.emptyListContainer_arrow} source={require("../assets/images/sketch_arrow_556B2F.png")}/>
-              </Animated.View>
+              </Animated.View> : <></>
               }
                   { (errorMsg) ?
             <View style={styles.errorTextContainer}>
