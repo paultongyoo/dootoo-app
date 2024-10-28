@@ -434,8 +434,7 @@ export default function Index() {
       transform: [{ rotate: '18deg'}]
     },
     taskContainer: {
-      flex: 1,
-      paddingTop: 10
+      flex: 1
     },
     taskTitle: {
       fontSize: 16,
