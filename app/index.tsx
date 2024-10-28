@@ -380,7 +380,6 @@ export default function Index() {
       marginLeft: 15,
       paddingBottom: 10,
       paddingTop: 10,
-      paddingRight: 15,
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
       flex: 1,
@@ -397,7 +396,7 @@ export default function Index() {
       flex: 1
     },
     itemSwipeAction: {
-      width: 50,
+      width: 70,
       justifyContent: 'center',
       alignItems: 'center',
       flexDirection: 'row',
@@ -439,6 +438,14 @@ export default function Index() {
       width: 28,
       height: 28,
       opacity: 0.6
+    },
+    swipeActionIcon_trash: {
+      height: 30,
+      width: 30
+    },
+    swipeActionIcon_ident: {
+      height: 30,
+      width: 30 
     }
   });
 
@@ -448,14 +455,14 @@ export default function Index() {
         <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
           <Pressable 
             onPress={() => handleItemDelete(index) }>
-            <Text>Delete</Text>
+            <Image style={styles.swipeActionIcon_trash} source={require("../assets/images/trash_icon_white.png")}/>
           </Pressable>
         </Reanimated.View>
         { (dootooItems![index].is_child) ? 
-          <Reanimated.View style={[styles.itemSwipeAction, styles.action_MakeParent]}>
+          <Reanimated.View style={[styles.itemSwipeAction]}>
             <Pressable 
               onPress={() => handleMakeParent(index) }>
-              <Text>Make Parent</Text>
+              <Image style={styles.swipeActionIcon_ident} source={require("../assets/images/left_outdent_3E2723.png")}/>
             </Pressable>
           </Reanimated.View>
         : <></>
@@ -471,7 +478,8 @@ export default function Index() {
           <Reanimated.View style={[styles.itemSwipeAction, styles.action_MakeParent]}>
             <Pressable 
               onPress={() => handleMakeChild(index) }>
-              <Text>Make Child</Text>
+                            <Image style={styles.swipeActionIcon_ident} source={require("../assets/images/left_indent_3E2723.png")}/>
+
             </Pressable>
           </Reanimated.View>
         : <></>
