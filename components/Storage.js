@@ -113,7 +113,7 @@ export const loadItems = async () => {
       }
     );
     const item_array = JSON.parse(response.data.body);
-    console.log(`Retrieved ${item_array.length} items from backend: ${JSON.stringify(item_array)}`);
+    console.log(`Retrieved ${item_array.length} items from backend.`);
     return item_array;
   } catch (error) {
     console.error('Error calling loadItems API:', error);
