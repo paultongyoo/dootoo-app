@@ -425,7 +425,6 @@ export default function Index() {
       flex: 1
     },
     similarCountContainer: {
-
       justifyContent: 'center',
       alignItems: 'center',
       paddingRight: 15,
