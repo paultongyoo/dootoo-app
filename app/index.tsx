@@ -435,7 +435,7 @@ export default function Index() {
     },
     taskContainer: {
       flex: 1,
-      marginTop: 10,
+      paddingTop: 10
     },
     taskTitle: {
       fontSize: 16,
