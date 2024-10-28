@@ -255,6 +255,28 @@ export default function Index() {
     setDootooItems(updatedTasks);
   }
 
+  const showClearListConfirmationPrompt = () => {
+    Alert.alert(
+      'Clear your list?', // Title of the alert
+      'This deletes all items in your list and can\'t be undone.', // Message of the alert
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('List Clear Pressed'),
+          style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
+        },
+        {
+          text: 'Yes',
+          onPress: () => {
+            console.log('List Clear OK Pressed');
+            setDootooItems([]);
+          },
+        },
+      ],
+      { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+    );
+  };
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const styles = StyleSheet.create({
@@ -614,7 +636,7 @@ export default function Index() {
           { (dootooItems && dootooItems.length > 0) ?
             <Pressable 
                 style={[styles.footerButton, styles.clearButton]}
-                onPress={() => { setDootooItems([])}}>
+                onPress={showClearListConfirmationPrompt}>
               <Image style={styles.footerButtonImage_Restart} source={require("../assets/images/restart_icon_black.png")}/>
             </Pressable> : <></>
           }
