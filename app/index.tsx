@@ -653,6 +653,7 @@ export default function Index() {
                 data={dootooItems}
                 onDragEnd={({ data }) => setDootooItems(data)}
                 keyExtractor={(item, index) => index.toString()}
+                ListHeaderComponent={<View style={{ height: 4 }} />}
                 ListFooterComponent={<View style={{ height: 200 }} />}
                 renderItem={({item, getIndex, drag, isActive}) => 
                 <Swipeable
