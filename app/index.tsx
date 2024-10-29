@@ -651,7 +651,7 @@ export default function Index() {
                 data={dootooItems}
                 onDragEnd={({ data }) => setDootooItems(data)}
                 keyExtractor={(item, index) => index.toString()}
-                ListFooterComponent={<View style={{ height: 100 }} />}
+                ListFooterComponent={<View style={{ height: 200 }} />}
                 renderItem={({item, getIndex, drag, isActive}) => 
                 <Swipeable
                     key={Math.random()}
