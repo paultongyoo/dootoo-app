@@ -271,6 +271,7 @@ export default function Index() {
   }
 
   const handleItemDelete = (index : number) => {
+    setLastRecordedCount(0);
     var updatedTasks = [...dootooItems];
     updatedTasks!.splice(index, 1);
     setDootooItems(updatedTasks);
@@ -278,18 +279,21 @@ export default function Index() {
   }
 
   const handleMakeParent = (index : number) => {
+    setLastRecordedCount(0);
     var updatedTasks = [...dootooItems];
     updatedTasks![index].is_child = false;
     setDootooItems(updatedTasks);
   }
 
   const handleMakeChild = (index : number) => {
+    setLastRecordedCount(0);
     var updatedTasks = [...dootooItems];
     updatedTasks![index].is_child = true;
     setDootooItems(updatedTasks);
   }
 
   const handleDoneClick = (index : number) => {
+    setLastRecordedCount(0);
     console.log("Done clicked for item index: " + index);
     var updatedTasks = [...dootooItems];
     updatedTasks![index].is_done = !updatedTasks![index].is_done;
@@ -465,6 +469,10 @@ export default function Index() {
       textAlign: 'left',
       padding: 5
     },
+    taskTitle_isDone: {
+      color: '#556B2F',
+      textDecorationLine: 'line-through'
+    },
     loadingAnim: {
       margin: 10,
       position: 'relative',
@@ -482,6 +490,9 @@ export default function Index() {
       borderWidth: 2,
       backgroundColor: 'white',
       marginLeft: 15
+    },
+    itemCircleOpen_isDone: {
+      backgroundColor: '#556B2F50'
     },
     childItemSpacer: {
       width: 20
@@ -665,7 +676,7 @@ export default function Index() {
                         <View style={styles.childItemSpacer}></View> 
                         : <></>
                       }
-                      <Pressable style={styles.itemCircleOpen} onPress={() => handleDoneClick(getIndex())}></Pressable>
+                      <Pressable style={[styles.itemCircleOpen, item.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(getIndex())}></Pressable>
                       <View style={styles.itemNameContainer}>
                         { (itemIdxToEdit == getIndex()) ?
                             <TextInput
@@ -685,7 +696,7 @@ export default function Index() {
                             onLongPress={drag}
                             disabled={isActive}
                             onPress={() => handleItemTextTap(item.item_text, getIndex()) }>
-                            <Text style={styles.taskTitle}>{item.item_text}</Text>
+                            <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.item_text}</Text>
                           </Pressable>
                         }
                         { (item.similar_count && item.similar_count > 0) ?<>
