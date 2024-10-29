@@ -653,7 +653,10 @@ export default function Index() {
               <DraggableFlatList
                 ref={itemFlatList}
                 data={dootooItems}
-                onDragEnd={({ data }) => setDootooItems(data)}
+                onDragEnd={({ data }) => {
+                  setLastRecordedCount(0);
+                  setDootooItems(data)
+                }}
                 keyExtractor={(item, index) => index.toString()}
                 ListHeaderComponent={<View style={{ height: 4 }} />}
                 ListFooterComponent={<View style={{ height: 200 }} />}
