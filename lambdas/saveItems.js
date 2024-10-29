@@ -69,7 +69,7 @@ const saveItems = async(anonymous_id, items_str) => {
                     item_text: encryptedString,
                     is_child: array_item.is_child,
                     rank_idx: i,
-                    is_done: false  // item.is_done TODO: Save done status
+                    is_done: array_item.is_done 
                 },
                 update: { 
                     task_id: array_item.task_id,
@@ -79,7 +79,7 @@ const saveItems = async(anonymous_id, items_str) => {
                     item_text: encryptedString,
                     is_child: array_item.is_child,
                     rank_idx: i,
-                    is_done: false // item.is_done TODO: Save done status
+                    is_done: array_item.is_done
                 }
             });
             console.log(item); 
