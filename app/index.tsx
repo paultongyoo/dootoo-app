@@ -609,12 +609,14 @@ export default function Index() {
 
   return (
     <TouchableWithoutFeedback onPress={() => {
-        if (Keyboard.isVisible()) {
-          Keyboard.dismiss();
+        if (itemIdxToEdit != -1) {
+          if (Keyboard.isVisible()) {
+            Keyboard.dismiss();
+          }
+          handleBlur(itemIdxToEdit); 
+          setItemIdxToEdit(-1); 
+          setRefreshKey((prevKey) => prevKey + 1)
         }
-        handleBlur(itemIdxToEdit); 
-        setItemIdxToEdit(-1); 
-        setRefreshKey((prevKey) => prevKey + 1)
       }} >
       <View style={styles.container}>
         {/* <View>
