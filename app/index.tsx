@@ -688,6 +688,7 @@ export default function Index() {
                               defaultValue={item.item_text}
                               autoFocus={true}
                               onChangeText={(text) => { 
+                                setLastRecordedCount(0);
                                 inputFieldIndex.current = getIndex();
                                 inputValueRef.current = text;
                               }}
