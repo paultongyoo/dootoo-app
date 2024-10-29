@@ -147,13 +147,15 @@ export default function Index() {
     const fileUri  = await stopRecording();
     const response = await callBackendTranscribeService(fileUri); 
     //const response =  generateStubData(); 
-    console.log("Received response: " + JSON.stringify(response));
+    console.log(`Transcribed audio into ${response.length} items.`);
     setLoading(false);
     setItemIdxToEdit(-1);
 
     if (dootooItems && response && response.length > 0) {
       setLastRecordedCount(response.length);  // Set for future toast undo potential
-      setDootooItems(dootooItems.concat(response));
+
+      var updatedItems = response.concat(dootooItems);
+      setDootooItems(updatedItems);
     }
     
     console.log("Finished parsing file, deleting...");
@@ -206,9 +208,9 @@ export default function Index() {
         // If we're inside here, we were called after recording new items
 
         // Scroll to bottom of list to ensure added items are visible (can be noop if list becomes empty)
-        if (itemFlatList.current) {
-          itemFlatList.current.scrollToEnd({ animated: true });
-        }
+        // if (itemFlatList.current) {
+        //   itemFlatList.current.scrollToEnd({ animated: true });
+        // }
 
         // Display Toast
         Toast.show({
@@ -219,10 +221,10 @@ export default function Index() {
           props: { onUndoPress: () => {
 
             // Remove the items just added to the list
-            console.log(`Undoing recording op; removing last ${lastRecordedCount} item(s).`);
+            console.log(`Undoing recording op; removing first ${lastRecordedCount} item(s).`);
             var updatedItems = [...dootooItems];
             console.log("dootooItems length: " + dootooItems.length);
-            updatedItems.splice(dootooItems.length - lastRecordedCount, lastRecordedCount);
+            updatedItems.splice(0, lastRecordedCount);
             console.log("List to update now has " + updatedItems.length + " in it.");
             setLastRecordedCount(0);
             setDootooItems(updatedItems);          
