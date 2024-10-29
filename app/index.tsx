@@ -199,9 +199,16 @@ export default function Index() {
     loadItemsFromBackend();
   }, []);
 
+   // This is expected to be called on any item change, reorder, deletion, etc
   useEffect(() => {
     if (initialLoad) {
       if (lastRecordedCount > 0) {
+        // If we're inside here, we were called after recording new items
+
+        // Scroll to bottom of list to ensure added items are visible (can be noop if list becomes empty)
+        if (itemFlatList.current) {
+          itemFlatList.current.scrollToEnd({ animated: true });
+        }
 
         // Display Toast
         Toast.show({
@@ -217,20 +224,15 @@ export default function Index() {
             console.log("dootooItems length: " + dootooItems.length);
             updatedItems.splice(dootooItems.length - lastRecordedCount, lastRecordedCount);
             console.log("List to update now has " + updatedItems.length + " in it.");
+            setLastRecordedCount(0);
             setDootooItems(updatedItems);          
           }}
-        });
-
-        handleSaveItems();
-        setLastRecordedCount(0);
-
-        // Scroll to bottom of list to ensure added items are visible (can be noop if list becomes empty)
-        if (itemFlatList.current) {
-          itemFlatList.current.scrollToEnd({ animated: true });
-        }
+        }); 
       } else {
         Toast.hide();
       }
+
+      handleSaveItems();
 
     } else {
       console.log("UseEffect called before initial load completed, skipping..");
@@ -282,6 +284,13 @@ export default function Index() {
   const handleMakeChild = (index : number) => {
     var updatedTasks = [...dootooItems];
     updatedTasks![index].is_child = true;
+    setDootooItems(updatedTasks);
+  }
+
+  const handleDoneClick = (index : number) => {
+    console.log("Done clicked for item index: " + index);
+    var updatedTasks = [...dootooItems];
+    updatedTasks![index].is_done = !updatedTasks![index].is_done;
     setDootooItems(updatedTasks);
   }
 
@@ -586,13 +595,6 @@ export default function Index() {
     );
   };
 
-  const showComingSoon = () => {
-    Alert.alert(
-      'Feature Coming Soon', // Title of the alert
-      'Stay tuned!', // Message of the alert 
-    );
-  }
-
   const recordButton_handlePressIn = () => {
     Animated.spring(recordButtonScaleAnim, {
       toValue: 0.95,
@@ -638,7 +640,7 @@ export default function Index() {
                 data={dootooItems}
                 onDragEnd={({ data }) => setDootooItems(data)}
                 keyExtractor={(item, index) => index.toString()}
-                ListFooterComponent={<View style={{ height: 400 }} />}
+                ListFooterComponent={<View style={{ height: 200 }} />}
                 renderItem={({item, getIndex, drag, isActive}) => 
                 <Swipeable
                     key={Math.random()}
@@ -661,7 +663,7 @@ export default function Index() {
                         <View style={styles.childItemSpacer}></View> 
                         : <></>
                       }
-                      <Pressable style={styles.itemCircleOpen} onPress={showComingSoon}></Pressable>
+                      <Pressable style={styles.itemCircleOpen} onPress={() => handleDoneClick(getIndex())}></Pressable>
                       <View style={styles.itemNameContainer}>
                         { (itemIdxToEdit == getIndex()) ?
                             <TextInput
