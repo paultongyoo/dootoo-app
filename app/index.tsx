@@ -229,6 +229,8 @@ export default function Index() {
           }}
         }); 
       } else {
+
+        // This call has to be in this "main UI thread" in order to work
         Toast.hide();
       }
 
@@ -725,11 +727,11 @@ export default function Index() {
           </View>  
           }
           <View style={styles.footerContainer}>
-              <Pressable 
+              {/* <Pressable 
                   style={[styles.footerButton, styles.cancelButton]}
                   onPress={() => Toast.hide()}>
                   <Text>Hide Toast</Text>
-              </Pressable>
+              </Pressable> */}
             { recording ? 
               <Pressable 
                   style={[styles.footerButton, styles.cancelButton]}
