@@ -36,6 +36,7 @@ export default function Index() {
                                "ca-app-pub-6723010005352574/8538859865");
   const bannerRef = useRef<BannerAd>(null);
   const recordButtonScaleAnim = useRef(new Animated.Value(1)).current;
+  const [lastRecordedCount, setLastRecordedCount] = useState(0);
 
 
   configureReanimatedLogger({
@@ -143,6 +144,7 @@ export default function Index() {
 
   const processRecording = async () => {
     setLoading(true);
+    setLastRecordedCount(0);
     const fileUri  = await stopRecording();
     const response = await callBackendTranscribeService(fileUri); 
     //const response =  generateStubData(); 
@@ -151,26 +153,9 @@ export default function Index() {
     setItemIdxToEdit(-1);
 
     if (dootooItems && response && response.length > 0) {
+      setLastRecordedCount(response.length);  // Set for future toast undo potential
       setDootooItems(dootooItems.concat(response));
-
-      // Display Toast
-      Toast.show({
-        type: 'undoableToast',
-        text1: `Added ${response.length} item${(response.length > 1) ? 's' : ''}.`,
-        position: 'bottom',
-        bottomOffset: 240,
-        props: { onUndoPress: () => Alert.alert(
-          'Undo your recording?', // Title of the alert
-          'This will revert those items....')}
-      });
-
-      // Scroll to bottom of list to ensure added items are visible
-      if (itemFlatList.current) {
-        itemFlatList.current.scrollToEnd({ animated: true });
-      }
-    } /*else {
-      setDootooItems(response);
-    }*/
+    }
     
     console.log("Finished parsing file, deleting...");
     deleteFile(fileUri);
@@ -227,6 +212,33 @@ export default function Index() {
   useEffect(() => {
     if (initialLoad) {
       handleSaveItems();
+
+      if (lastRecordedCount > 0) {
+
+        // Display Toast
+        Toast.show({
+          type: 'undoableToast',
+          text1: `Added ${lastRecordedCount} item${(lastRecordedCount > 1) ? 's' : ''}.`,
+          position: 'bottom',
+          bottomOffset: 240,
+          props: { onUndoPress: () => {
+
+            // Remove the items just added to the list
+            console.log(`Undoing recording op; removing last ${lastRecordedCount} item(s).`);
+            var updatedItems = [...dootooItems];
+            console.log("dootooItems length: " + dootooItems.length);
+            updatedItems.splice(dootooItems.length - lastRecordedCount, lastRecordedCount);
+            console.log("List to update now has " + updatedItems.length + " in it.");
+            setDootooItems(updatedItems);          
+          }}
+        });
+
+        // Scroll to bottom of list to ensure added items are visible (can be noop if list becomes empty)
+        if (itemFlatList.current) {
+          itemFlatList.current.scrollToEnd({ animated: true });
+        }
+      }
+
     } else {
       console.log("UseEffect called before initial load completed, skipping..");
     }

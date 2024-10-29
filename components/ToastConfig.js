@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
-import { BaseToast, ErrorToast } from 'react-native-toast-message';
+import { Toast } from 'react-native-toast-message';
 
 const toastConfig = {
   undoableToast: ({ text1 = '', props }) => (
