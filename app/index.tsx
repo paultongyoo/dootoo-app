@@ -144,7 +144,6 @@ export default function Index() {
 
   const processRecording = async () => {
     setLoading(true);
-    setLastRecordedCount(0);
     const fileUri  = await stopRecording();
     const response = await callBackendTranscribeService(fileUri); 
     //const response =  generateStubData(); 
@@ -198,21 +197,10 @@ export default function Index() {
     setInitialLoad(false);
     initializeMobileAds();
     loadItemsFromBackend();
-
-    // // Uncomment to style
-    // Toast.show({
-    //   type: 'undoableToast',
-    //   text1: `Added many new items.`,
-    //   position: 'bottom',
-    //   bottomOffset: 240,
-    //   autoHide: false
-    // });
   }, []);
 
   useEffect(() => {
     if (initialLoad) {
-      handleSaveItems();
-
       if (lastRecordedCount > 0) {
 
         // Display Toast
@@ -233,10 +221,15 @@ export default function Index() {
           }}
         });
 
+        handleSaveItems();
+        setLastRecordedCount(0);
+
         // Scroll to bottom of list to ensure added items are visible (can be noop if list becomes empty)
         if (itemFlatList.current) {
           itemFlatList.current.scrollToEnd({ animated: true });
         }
+      } else {
+        Toast.hide();
       }
 
     } else {
@@ -246,6 +239,13 @@ export default function Index() {
 
   /********************** END Audio Recording CODE **** BEGIN View Code *****/
 
+  const handleToastHide = () => {
+    console.log("Inside toastHide")
+    const anyReturnVal = Toast.hide();
+    console.log("Any return val: " + anyReturnVal);
+    console.log("Exitting toastHide")
+  }
+
   const handleItemTextTap = (itemText, index) => {
     setItemIdxToEdit(index);
   }
@@ -253,8 +253,6 @@ export default function Index() {
   const handleBlur = (index) => { 
     console.log(`Inside handleBlur for index ${index}`);
     setItemIdxToEdit(-1);
-
-    Keyboard.dismiss();
 
     if (index != -1 && (inputFieldIndex.current == index)) {
       const currentValue = inputValueRef.current;
@@ -321,48 +319,28 @@ export default function Index() {
           toValue: 1,
           duration: 750,
           useNativeDriver: true
-        }),
-        // Animated.timing(fadeAnimChallenges, {
-        //   toValue: 0.1,
-        //   duration: 1500,
-        //   useNativeDriver: true
-        // }),
+        })
       ]),
       Animated.parallel([
         Animated.timing(fadeAnimGoals, {
           toValue: 1,
           duration: 1500,
           useNativeDriver: true
-        }),
-        // Animated.timing(fadeAnimTasks, {
-        //   toValue: 0.1,
-        //   duration: 1500,
-        //   useNativeDriver: true
-        // }),
+        })
       ]),
       Animated.parallel([
         Animated.timing(fadeAnimDreams, {
           toValue: 1,
           duration: 1500,
           useNativeDriver: true
-        }),
-        // Animated.timing(fadeAnimGoals, {
-        //   toValue: 0.1,
-        //   duration: 1500,
-        //   useNativeDriver: true
-        // }),
+        })
       ]),
       Animated.parallel([
         Animated.timing(fadeAnimChallenges, {
           toValue: 1,
           duration: 1500,
           useNativeDriver: true
-        }),
-        // Animated.timing(fadeAnimDreams, {
-        //   toValue: 0.1,
-        //   duration: 1500,
-        //   useNativeDriver: true
-        // }),
+        })
       ]),
       Animated.timing(fadeAnimChallenges, {
         toValue: 1,
@@ -374,13 +352,8 @@ export default function Index() {
           toValue: 1,
           duration: 750,
           useNativeDriver: true
-        }),
-        // Animated.timing(fadeAnimChallenges, {
-        //   toValue: 0.1,
-        //   duration: 1500,
-        //   useNativeDriver: true
-        // }),
-      ]),
+        })
+      ])
     ]);
   //);
 
@@ -748,6 +721,11 @@ export default function Index() {
           </View>  
           }
           <View style={styles.footerContainer}>
+              <Pressable 
+                  style={[styles.footerButton, styles.cancelButton]}
+                  onPress={() => Toast.hide()}>
+                  <Text>Hide Toast</Text>
+              </Pressable>
             { recording ? 
               <Pressable 
                   style={[styles.footerButton, styles.cancelButton]}
@@ -768,13 +746,6 @@ export default function Index() {
                       <Image style={styles.footerButtonImage_Record} source={require("../assets/images/microphone_white.png")}/> }
               </Pressable>
             </Animated.View>
-          {/* { (dootooItems && dootooItems.length > 0) ?
-            <Pressable 
-                style={[styles.footerButton, styles.clearButton]}
-                onPress={showClearListConfirmationPrompt}>
-              <Image style={styles.footerButtonImage_Restart} source={require("../assets/images/restart_icon_black.png")}/>
-            </Pressable> : <></>
-          } */}
             <View style={styles.bannerAdContainer}>
               <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
             </View>
