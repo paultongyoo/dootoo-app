@@ -199,7 +199,7 @@ export default function Index() {
     initializeMobileAds();
     loadItemsFromBackend();
 
-    // Uncomment to style
+    // // Uncomment to style
     // Toast.show({
     //   type: 'undoableToast',
     //   text1: `Added many new items.`,
@@ -663,7 +663,7 @@ export default function Index() {
                 data={dootooItems}
                 onDragEnd={({ data }) => setDootooItems(data)}
                 keyExtractor={(item, index) => index.toString()}
-                ListFooterComponent={<View style={{ height: 200 }} />}
+                ListFooterComponent={<View style={{ height: 400 }} />}
                 renderItem={({item, getIndex, drag, isActive}) => 
                 <Swipeable
                     key={Math.random()}

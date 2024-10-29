@@ -6,7 +6,7 @@ const toastConfig = {
   undoableToast: ({ text1 = '', props }) => (
     <View style={{ 
         height: 60,
-        width: 300,
+        width: 275,
         justifyContent: 'center',
         alignItems: 'center',
         borderLeftColor: '#556B2F', 
