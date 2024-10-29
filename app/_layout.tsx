@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, Pressable, Alert, Platform } from "react-native";
+import { View, Text, StyleSheet, Image, Pressable, Alert, Platform, Linking } from "react-native";
 import { useEffect, useContext } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
@@ -95,6 +95,14 @@ const styles = StyleSheet.create({
   deleteDataLinkText: {
     color: "#A23E48",
     textDecorationLine: 'underline'
+  }, 
+  feedbackLinkContainer: {
+    paddingTop: 20,
+    alignItems: 'center'
+  },
+  feedbackLinkText: {
+    color: "#556B2F",
+    textDecorationLine: 'underline'
   }
 });
 
@@ -178,6 +186,18 @@ function ProfileDrawer({ navigation }) {
     );
   };
 
+  const sendEmail = () => {
+    const email = 'contact@thoughtswork.co'; // Replace with the desired email address
+    const subject = `Feedback from User ${anonymousId}`; // Optional: add a subject
+    const body = '';
+    
+    // Construct the mailto URL
+    const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  
+    // Use Linking API to open email client
+    Linking.openURL(url).catch(err => console.error('Error opening email client:', err));
+  };
+
   return (
     <View style={styles.profileDrawerContainer}>
       <Pressable style={styles.profileDrawerCloseContainer}
@@ -198,6 +218,11 @@ function ProfileDrawer({ navigation }) {
         <View style={styles.deleteDataLinkContainer}>
           <Pressable onPress={showConfirmationPrompt}>
             <Text style={styles.deleteDataLinkText}>Delete My Data</Text>
+          </Pressable>
+        </View>
+        <View style={styles.feedbackLinkContainer}>
+          <Pressable onPress={sendEmail}>
+            <Text style={styles.feedbackLinkText}>Email Feedback</Text>
           </Pressable>
         </View>
       </View>
