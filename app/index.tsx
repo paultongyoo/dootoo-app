@@ -735,7 +735,7 @@ export default function Index() {
                   <Image style={styles.footerButtonImage_Cancel} source={require("../assets/images/cancel_icon_black.png")}/>
               </Pressable>
               : <></>  }
-            <Animated.View style={[{ transform: [{ scale: recordButtonScaleAnim }] }, styles.footerButton, ((recording) ? styles.stopRecordButton : styles.recordButton)]}>
+            <Animated.View style={[{ transform: [{ scale: recordButtonScaleAnim }] }, styles.footerButton, ((recording || loading) ? styles.stopRecordButton : styles.recordButton)]}>
               <Pressable
                   onPress={recording ? processRecording : startRecording}
                   onPressIn={recordButton_handlePressIn}
