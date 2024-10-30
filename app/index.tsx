@@ -275,9 +275,54 @@ export default function Index() {
   const handleItemDelete = (index : number) => {
     setLastRecordedCount(0);
     var updatedTasks = [...dootooItems];
-    updatedTasks!.splice(index, 1);
-    setDootooItems(updatedTasks);
-    setItemIdxToEdit(-1);
+
+    // If the item is a parent and has one or more children, ask user if they want to remove all children too
+    if (!dootooItems[index].is_child && ((index + 1) <= (dootooItems.length-1)) && dootooItems[index+1].is_child) {
+        
+      // Count how many subtasks this item has
+      var numSubtasks = 0;
+      for (var idx = index+1; idx < dootooItems.length; idx++) {
+        if (dootooItems[idx].is_child == true) {
+          numSubtasks += 1;
+        } else {
+          break;
+        }
+      }
+      Alert.alert(
+          `Item Has ${numSubtasks} Subtask${numSubtasks > 1 ? 's' : ''}`, 
+          `Do you want to delete its subtask${numSubtasks > 1 ? 's' : ''} too?`,
+          [
+            {
+              text: 'Yes',
+              onPress: () => {
+
+                // Remove the item and its subtasks
+                updatedTasks!.splice(index, 1 + numSubtasks);
+                setDootooItems(updatedTasks);
+                setItemIdxToEdit(-1);
+              }
+            },
+            {
+              text: 'No',
+              onPress: () => {
+
+                // Just remove the item
+                updatedTasks!.splice(index, 1);
+                setDootooItems(updatedTasks);
+                setItemIdxToEdit(-1);
+              }
+            }
+          ],
+          { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+        );
+    } else {
+
+      // Just remove the item
+      updatedTasks!.splice(index, 1);
+      setDootooItems(updatedTasks);
+      setItemIdxToEdit(-1);
+    }
+ 
   }
 
   const handleMakeParent = (index : number) => {
