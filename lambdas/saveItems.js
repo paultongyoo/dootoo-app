@@ -34,13 +34,15 @@ const saveItems = async(anonymous_id, items_str) => {
         return -1;
     }
 
-    // Delete all existing items first (to handle removed items) TODO: Improve me
-    await prisma.item.deleteMany({
+    // Update all existing items to is_deleted:true first (to handle removed items) 
+    //TODO: Improve me
+    await prisma.item.updateMany({
         where: { 
            user: {
             id: user.id
            } 
-        }
+        },
+        data: { is_deleted: true }
     });
 
     var itemSaveCount = 0;
@@ -69,7 +71,8 @@ const saveItems = async(anonymous_id, items_str) => {
                     item_text: encryptedString,
                     is_child: array_item.is_child,
                     rank_idx: i,
-                    is_done: array_item.is_done 
+                    is_done: array_item.is_done,
+                    is_deleted: array_item.is_deleted // Assumed false if exist in str
                 },
                 update: { 
                     task_id: array_item.task_id,
@@ -79,7 +82,8 @@ const saveItems = async(anonymous_id, items_str) => {
                     item_text: encryptedString,
                     is_child: array_item.is_child,
                     rank_idx: i,
-                    is_done: array_item.is_done
+                    is_done: array_item.is_done,
+                    is_deleted: array_item.is_deleted // Assumed false if exist in str
                 }
             });
             console.log(item); 
