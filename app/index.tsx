@@ -596,7 +596,7 @@ export default function Index() {
   const renderLeftActions = (progress : SharedValue<number>, dragX : SharedValue<number>, index : number) => {
     return (
       <>
-        { (!dootooItems![index].is_child) ? 
+        { (!dootooItems![index].is_child && (index != 0) && (!dootooItems[index-1].is_done)) ? 
           <Reanimated.View style={[styles.itemSwipeAction]}>
             <Pressable 
               onPress={() => handleMakeChild(index) }>
