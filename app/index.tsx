@@ -290,7 +290,7 @@ export default function Index() {
       }
       Alert.alert(
           `Item Has ${numSubtasks} Subtask${numSubtasks > 1 ? 's' : ''}`, 
-          `Do you want to delete its subtask${numSubtasks > 1 ? 's' : ''} too?`,
+          `Deleting this item will delete its subtasks too.  Continue?`,
           [
             {
               text: 'Yes',
@@ -303,14 +303,8 @@ export default function Index() {
               }
             },
             {
-              text: 'No',
-              onPress: () => {
-
-                // Just remove the item
-                updatedTasks!.splice(index, 1);
-                setDootooItems(updatedTasks);
-                setItemIdxToEdit(-1);
-              }
+              text: 'Cancel',
+              style: 'cancel'
             }
           ],
           { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
@@ -322,7 +316,6 @@ export default function Index() {
       setDootooItems(updatedTasks);
       setItemIdxToEdit(-1);
     }
- 
   }
 
   const handleMakeParent = (index : number) => {
