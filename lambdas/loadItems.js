@@ -13,7 +13,11 @@ export const handler = async (event) => {
     console.log(user);
     const retrievedItems = await prisma.item.findMany({
         where: { 
-            user: { id: user.id }
+            user: { id: user.id },
+            is_deleted: false
+        },
+        orderBy: {
+          rank_idx: 'asc'
         }
     });
 
