@@ -181,7 +181,8 @@ function ProfileDrawer({ navigation }) {
          username, setUsername, 
          anonymousId, setAnonymousId,
          taskCount, setTaskCount,
-         doneCount, setDoneCount
+         doneCount, setDoneCount,
+         setLastRecordedCount
         } = useContext(UserContext);
 
   const loadUserdata = async() => {
@@ -200,6 +201,7 @@ function ProfileDrawer({ navigation }) {
     resetAllData();
     setUsername('');
     setAnonymousId('');
+    setLastRecordedCount(0);
     setDootooItems([]);
     loadUserdata();
   };

@@ -17,7 +17,8 @@ import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react
 import Toast from 'react-native-toast-message';
 
 export default function Index() {
-  const { dootooItems, setDootooItems, anonymousId } = useContext(UserContext);
+  const { dootooItems, setDootooItems, anonymousId,
+          lastRecordedCount, setLastRecordedCount } = useContext(UserContext);
   const [initialLoad, setInitialLoad] = useState(false);
   const itemFlatList = useRef(null);
   const swipeableRef = useRef(null);
@@ -36,8 +37,6 @@ export default function Index() {
                                "ca-app-pub-6723010005352574/8538859865");
   const bannerRef = useRef<BannerAd>(null);
   const recordButtonScaleAnim = useRef(new Animated.Value(1)).current;
-  const [lastRecordedCount, setLastRecordedCount] = useState(0);
-
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
