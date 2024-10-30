@@ -61,8 +61,9 @@ const styles = StyleSheet.create({
     width: 30
   },
   profileDrawerProfileIconContainer: {
-    position: 'relative',
-    top: 100,
+    marginTop: 100,
+    // position: 'relative',
+    // top: 100,
     //backgroundColor: 'red',
     alignItems: 'center'
   },
@@ -103,6 +104,40 @@ const styles = StyleSheet.create({
   feedbackLinkText: {
     color: "#556B2F",
     textDecorationLine: 'underline'
+  },
+  statsContainer: {
+    flexDirection: 'row',
+  },
+  statContainer: {
+    alignItems: 'center',
+    paddingTop: 20,
+    paddingRight: 30,
+    paddingLeft: 30
+  },
+  statIconContainer: {
+    paddingTop: 20,
+    paddingBottom: 10
+  },
+  statIconTask: {
+    width: 26, 
+    height: 26, 
+    borderRadius: 13, // Half of the width and height for a perfect circle
+    borderColor: 'black',
+    borderWidth: 2,
+    backgroundColor: 'white'
+  },
+  statIconTask_Done: {
+    backgroundColor: '#556B2F50'
+  },
+  statNumber: {
+    fontWeight: 'bold',
+    fontSize: 30,
+    color: "#556B2F"
+  },
+  statName: {
+    fontWeight: 'normal',
+    fontSize: 18,
+    paddingTop: 5
   }
 });
 
@@ -142,19 +177,24 @@ export default function RootLayout() {
 }
 
 function ProfileDrawer({ navigation }) {
-  const {setDootooItems, 
+  const {dootooItems, setDootooItems, 
          username, setUsername, 
-         anonymousId, setAnonymousId} = useContext(UserContext);
+         anonymousId, setAnonymousId,
+         taskCount, setTaskCount,
+         doneCount, setDoneCount
+        } = useContext(UserContext);
 
   const loadUserdata = async() => {
     const userData = await initalizeUser();
     setUsername(userData.name);
     setAnonymousId(userData.anonymousId);
+    setTaskCount(userData.taskCount || 0);
+    setDoneCount(userData.doneCount || 0);
   }
 
   useEffect(() => {
     loadUserdata();
-  }, []);
+  }, [dootooItems]);
 
   const handleResetAllData = () => {
     resetAllData();
@@ -208,6 +248,22 @@ function ProfileDrawer({ navigation }) {
         <Image style={styles.profileDrawerProfileIcon} source={require('../assets/images/profile_icon_green.png')} />
         <View style={styles.profileDrawerProfileNameContainer}>
           <Text style={styles.profileDrawerProfileNameText}>{username}</Text>
+        </View>
+      </View>
+      <View style={styles.statsContainer}>
+        <View style={styles.statContainer}>
+          <View style={styles.statIconContainer}>
+            <View style={[styles.statIconTask]}></View>
+          </View>
+          <Text style={styles.statNumber}>{taskCount}</Text>
+          <Text style={styles.statName}>Things</Text>
+        </View>
+        <View style={styles.statContainer}>
+          <View style={styles.statIconContainer}>
+            <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
+          </View>
+          <Text style={styles.statNumber}>{doneCount}</Text>
+          <Text style={styles.statName}>Done</Text>
         </View>
       </View>
       <View style={styles.privacyContainer}>

@@ -5,6 +5,7 @@ const ITEM_LIST_KEY = "item_list";
 const USERNAME_KEY = "username";
 const ANON_ID_KEY = "anonymous_id";
 const CREATEUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev';
+const LOADUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadUser_Dev';
 const LOADITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItems_Dev';
 const SAVEITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev';
 
@@ -43,8 +44,14 @@ export const initalizeUser = async() => {
     const username = await AsyncStorage.getItem(USERNAME_KEY);
     const anonId = await AsyncStorage.getItem(ANON_ID_KEY);
     if (username) {
-        console.log(`Returning existing user data: ${username} ${anonId}`);
-        return { name: username, anonymousId: anonId };
+        console.log(`Loading existing user data: ${username} ${anonId}`);
+        const existingUser = await loadUser(anonId);
+        return { 
+          name: username, 
+          anonymousId: anonId, 
+          taskCount: existingUser.taskCount, 
+          doneCount: existingUser.doneCount 
+        };
     } else {
 
         // If username doesn't exist, assume we're at first launch
@@ -96,6 +103,18 @@ export const createUser = async () => {
     return response.data.body;
   } catch (error) {
     console.error('Error calling create User API:', error);
+  }
+};
+
+export const loadUser = async (anonymous_id) => {
+  try {
+    const response = await axios.post(LOADUSER_URL, {
+      anonymous_id: anonymous_id
+    });
+    console.log("Retreived user from backend: " + JSON.stringify(response.data.body));
+    return response.data.body;
+  } catch (error) {
+    console.error('Error calling load User API:', error);
   }
 };
 
