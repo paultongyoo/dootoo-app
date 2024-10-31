@@ -24,11 +24,12 @@ export const handler = async (event) => {
         console.log("User Task Count: " + loadedUser.taskCount);
         
         // Count user's completed tasks 
-        loadedUser.doneCount = await prisma.item_Done.count({
+        loadedUser.doneCount = await prisma.item.count({
           where: {
               user: {
                   id: loadedUser.id
-              }
+              },
+              is_done: true
           }
         });
         console.log("User Task Done Count: " + loadedUser.doneCount);
