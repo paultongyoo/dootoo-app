@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, Image, ActivityIndicator,
          Pressable, Alert, Platform, Linking } from "react-native";
 import { useEffect, useContext } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StatusBar } from 'expo-status-bar';
 import { Drawer } from 'expo-router/drawer';
 import { UserProvider, UserContext } from '../components/UserContext';
 import Toast from 'react-native-toast-message';
@@ -143,6 +144,7 @@ const styles = StyleSheet.create({
 
 export default function RootLayout() {
   return (
+    <>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <UserProvider>
         <Drawer 
@@ -173,6 +175,8 @@ export default function RootLayout() {
       </UserProvider>
       <Toast config={toastConfig} />
     </GestureHandlerRootView>
+    <StatusBar style="dark" />
+    </>
   );
 }
 
