@@ -41,6 +41,7 @@ export default function Index() {
   const fadeAnimGoals = useRef(new Animated.Value(0.1)).current;
   const fadeAnimDreams = useRef(new Animated.Value(0.1)).current;
   const fadeAnimChallenges = useRef(new Animated.Value(0.1)).current;
+  const [isAnimating, setIsAnimating] = useState(false);
   
   const ctaAnimation = Animated.sequence([
       Animated.timing(fadeAnimGoals, {
@@ -218,7 +219,10 @@ export default function Index() {
     updateUserCounts(anonymousId);
 
     if (dootooItems && dootooItems.length == 0) {
-      ctaAnimation.start();
+      if (isAnimating == false) {
+        ctaAnimation.start(() => setIsAnimating(false));
+        setIsAnimating(true);
+      }
     } else {
       ctaAnimation.stop();
     }
@@ -229,6 +233,10 @@ export default function Index() {
     initializeMobileAds();
     initializeLocalUser();
     loadItemsFromBackend();
+    if (isAnimating == false) {
+      ctaAnimation.start(() => setIsAnimating(false));
+      setIsAnimating(true);
+    }
   }, []);
 
    // This is expected to be called on any item change, reorder, deletion, etc
