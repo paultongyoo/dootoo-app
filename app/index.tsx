@@ -371,54 +371,32 @@ export default function Index() {
   };
 
   //const fadeAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnimTasks = useRef(new Animated.Value(1)).current;
   const fadeAnimGoals = useRef(new Animated.Value(0.1)).current;
   const fadeAnimDreams = useRef(new Animated.Value(0.1)).current;
   const fadeAnimChallenges = useRef(new Animated.Value(0.1)).current;
-  //const wordCycle = Animated.loop(
+  
   const ctaAnimation = Animated.sequence([
-      Animated.parallel([
-        Animated.timing(fadeAnimTasks, {
-          toValue: 1,
-          duration: 750,
-          useNativeDriver: true
-        })
-      ]),
-      Animated.parallel([
-        Animated.timing(fadeAnimGoals, {
-          toValue: 1,
-          duration: 1500,
-          useNativeDriver: true
-        })
-      ]),
-      Animated.parallel([
-        Animated.timing(fadeAnimDreams, {
-          toValue: 1,
-          duration: 1500,
-          useNativeDriver: true
-        })
-      ]),
-      Animated.parallel([
-        Animated.timing(fadeAnimChallenges, {
-          toValue: 1,
-          duration: 1500,
-          useNativeDriver: true
-        })
-      ]),
+      Animated.timing(fadeAnimGoals, {
+        toValue: 1,
+        duration: 1500,
+        useNativeDriver: true
+      }),
+      Animated.timing(fadeAnimDreams, {
+        toValue: 1,
+        duration: 1500,
+        useNativeDriver: true
+      }),
+      Animated.timing(fadeAnimChallenges, {
+        toValue: 1,
+        duration: 1500,
+        useNativeDriver: true
+      }),
       Animated.timing(fadeAnimChallenges, {
         toValue: 1,
         duration: 3000,
         useNativeDriver: true
-      }),
-      Animated.parallel([
-        Animated.timing(fadeAnimTasks, {
-          toValue: 1,
-          duration: 750,
-          useNativeDriver: true
-        })
-      ])
+      })
     ]);
-  //);
 
   const styles = StyleSheet.create({
     container: {
@@ -766,7 +744,7 @@ export default function Index() {
             /> : (initialLoad == true) ?
               <Animated.View style={styles.emptyListContainer}>
                 <Text style={styles.emptyListContainer_words}>what are your</Text>
-                <Animated.View style={[{opacity: fadeAnimTasks }]}>
+                <Animated.View>
                   <Text style={[styles.emptyListContainer_words, {color: '#556B2F'}]}>tasks?</Text>
                 </Animated.View>
                 <Animated.View style={[{opacity: fadeAnimGoals }]}>
