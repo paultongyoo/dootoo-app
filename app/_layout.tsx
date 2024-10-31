@@ -241,14 +241,14 @@ function ProfileDrawer({ navigation }) {
           <View style={styles.statIconContainer}>
             <View style={[styles.statIconTask]}></View>
           </View>
-          <Text style={styles.statNumber}>{taskCount}</Text>
+          <Text style={styles.statNumber}>{taskCount || '0'}</Text>
           <Text style={styles.statName}>Things</Text>
         </View>
         <View style={styles.statContainer}>
           <View style={styles.statIconContainer}>
             <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
           </View>
-          <Text style={styles.statNumber}>{doneCount}</Text>
+          <Text style={styles.statNumber}>{doneCount || '0'}</Text>
           <Text style={styles.statName}>Done</Text>
         </View>
       </View>
