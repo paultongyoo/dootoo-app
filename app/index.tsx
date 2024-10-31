@@ -3,7 +3,7 @@ import { Platform, Image, Text, View, StyleSheet, Pressable, Animated, Alert,
 import { useState, useRef, useEffect, useContext } from "react";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
 import { transcribeAudioToTasks } from '../components/BackendServices';
-import { saveItems, loadItems, initalizeUser, loadUser } from '../components/Storage';
+import { saveItems, loadItems, loadUser } from '../components/Storage';
 import { UserContext } from '../components/UserContext.js';
 import RNFS from 'react-native-fs';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
@@ -17,10 +17,10 @@ import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react
 import Toast from 'react-native-toast-message';
 
 export default function Index() {
-  const { dootooItems, setDootooItems, username, anonymousId,
-          setUsername, setAnonymousId,
+  const { dootooItems, setDootooItems, anonymousId,
           setTaskCount, setDoneCount,
-          lastRecordedCount, setLastRecordedCount } = useContext(UserContext);
+          lastRecordedCount, setLastRecordedCount, 
+          initializeLocalUser } = useContext(UserContext);
   const [initialLoad, setInitialLoad] = useState(false);
   const itemFlatList = useRef(null);
   const swipeableRef = useRef(null);
@@ -180,13 +180,6 @@ export default function Index() {
 
   const handleSaveItems = async() => {
 
-    // If anonymousId is blank at this point, user deleted their data -- re-initialize local user.
-    if (anonymousId == null || anonymousId.length == 0) {
-      console.log("Initializing Local User inside handleSaveItems...")
-      await initializeLocalUser(); // TODO fix null username/anonymousId after this call!!
-      console.log(`Initializing Local User inside handleSaveItems Done.  Username: ${username} AnonId: ${anonymousId}`);
-    }
-
     if (dootooItems == undefined || dootooItems.length == 0) {
       console.log("Calling saveItems with empty list (expecting backend to clear items for user.");
       await saveItems([]);
@@ -257,15 +250,6 @@ export default function Index() {
       console.log("UseEffect called before initial load completed, skipping..");
     }
   }, [dootooItems]);
-
-  const initializeLocalUser = async() => {
-    const userData = await initalizeUser();
-    console.log("Result of initializeUser call: " + JSON.stringify(userData));
-    setUsername(userData.name);
-    setAnonymousId(userData.anonymousId);
-    setTaskCount((userData.taskCount) ? userData.taskCount : 0);
-    setDoneCount((userData.taskCount) ? userData.taskCount : 0);
-  }
 
   /********************** END Audio Recording CODE **** BEGIN View Code *****/
 

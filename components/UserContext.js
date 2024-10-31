@@ -1,5 +1,5 @@
 import { createContext, useState } from 'react';
-import { resetAllData } from '../components/Storage';
+import { initalizeUser, resetAllData } from '../components/Storage';
 
 // Create the context
 export const UserContext = createContext();
@@ -13,12 +13,18 @@ export const UserProvider = ({ children }) => {
     const [dootooItems, setDootooItems] = useState([]);
     const [lastRecordedCount, setLastRecordedCount] = useState(0);
 
+    const initializeLocalUser = async() => {
+      const userData = await initalizeUser();
+      console.log("Result of initializeUser call: " + JSON.stringify(userData));
+      setUsername(userData.name);
+      setAnonymousId(userData.anonymousId);
+      setTaskCount((userData.taskCount) ? userData.taskCount : 0);
+      setDoneCount((userData.taskCount) ? userData.taskCount : 0);
+    }
+
     const resetUserContext = async () => {
       await resetAllData();
-      setUsername('');
-      setAnonymousId('');
-      setTaskCount(0);
-      setDoneCount(0);
+      await initializeLocalUser(); 
       setLastRecordedCount(0);
       setDootooItems([]);
     };
@@ -31,7 +37,8 @@ export const UserProvider = ({ children }) => {
             lastRecordedCount, setLastRecordedCount,
             taskCount, setTaskCount,
             doneCount, setDoneCount,
-            resetUserContext
+            resetUserContext,
+            initializeLocalUser
              }}>
           {children}
         </UserContext.Provider>
