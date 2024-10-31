@@ -15,6 +15,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
 import Toast from 'react-native-toast-message';
+import { Fireworks } from 'react-native-fiesta';
 
 export default function Index() {
   const { dootooItems, setDootooItems, anonymousId,
@@ -30,6 +31,7 @@ export default function Index() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [permissionResponse, requestPermission] = Audio.usePermissions();
   const [errorMsg, setErrorMsg] = useState();
+  const [allItemsDone, setAllItemsDone] = useState(false);
   var retryCount = 0;
   const inputFieldIndex = useRef(-1);
   const inputValueRef = useRef('');
@@ -39,6 +41,33 @@ export default function Index() {
                                "ca-app-pub-6723010005352574/8538859865");
   const bannerRef = useRef<BannerAd>(null);
   const recordButtonScaleAnim = useRef(new Animated.Value(1)).current;
+  const fadeAnimGoals = useRef(new Animated.Value(0.1)).current;
+  const fadeAnimDreams = useRef(new Animated.Value(0.1)).current;
+  const fadeAnimChallenges = useRef(new Animated.Value(0.1)).current;
+  
+  const ctaAnimation = Animated.sequence([
+      Animated.timing(fadeAnimGoals, {
+        toValue: 1,
+        duration: 1500,
+        useNativeDriver: true
+      }),
+      Animated.timing(fadeAnimDreams, {
+        toValue: 1,
+        duration: 1500,
+        useNativeDriver: true
+      }),
+      Animated.timing(fadeAnimChallenges, {
+        toValue: 1,
+        duration: 1500,
+        useNativeDriver: true
+      }),
+      Animated.timing(fadeAnimChallenges, {
+        toValue: 1,
+        duration: 3000,
+        useNativeDriver: true
+      })
+    ]);
+
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
@@ -199,6 +228,19 @@ export default function Index() {
       ctaAnimation.start();
     } else {
       ctaAnimation.stop();
+    }
+
+    // Display fireworks if list is non empty and all items are done!
+    var areAllItemsDone = true;
+    if (dootooItems && dootooItems.length > 0) {
+      for (var i = 0; i < dootooItems.length; i++) {
+        var currItem = dootooItems[i];
+        if (!currItem.is_done) {
+          areAllItemsDone = false;
+          break;
+        }
+      }
+      setAllItemsDone(areAllItemsDone);
     }
   };
 
@@ -370,33 +412,7 @@ export default function Index() {
     );
   };
 
-  //const fadeAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnimGoals = useRef(new Animated.Value(0.1)).current;
-  const fadeAnimDreams = useRef(new Animated.Value(0.1)).current;
-  const fadeAnimChallenges = useRef(new Animated.Value(0.1)).current;
-  
-  const ctaAnimation = Animated.sequence([
-      Animated.timing(fadeAnimGoals, {
-        toValue: 1,
-        duration: 1500,
-        useNativeDriver: true
-      }),
-      Animated.timing(fadeAnimDreams, {
-        toValue: 1,
-        duration: 1500,
-        useNativeDriver: true
-      }),
-      Animated.timing(fadeAnimChallenges, {
-        toValue: 1,
-        duration: 1500,
-        useNativeDriver: true
-      }),
-      Animated.timing(fadeAnimChallenges, {
-        toValue: 1,
-        duration: 3000,
-        useNativeDriver: true
-      })
-    ]);
+
 
   const styles = StyleSheet.create({
     container: {
@@ -799,6 +815,7 @@ export default function Index() {
             </View>
           </View>
       </View>
+      {(allItemsDone) ? <Fireworks/> : <></>}
     </TouchableWithoutFeedback>
     
   );
