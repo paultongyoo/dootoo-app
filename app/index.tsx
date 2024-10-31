@@ -15,7 +15,6 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
 import Toast from 'react-native-toast-message';
-import { Fireworks } from 'react-native-fiesta';
 
 export default function Index() {
   const { dootooItems, setDootooItems, anonymousId,
@@ -815,7 +814,6 @@ export default function Index() {
             </View>
           </View>
       </View>
-      {(allItemsDone) ? <Fireworks/> : <></>}
     </TouchableWithoutFeedback>
     
   );
