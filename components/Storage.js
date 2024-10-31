@@ -22,8 +22,8 @@ export const saveItems = async (item_list_obj) => {
     await AsyncStorage.setItem(ITEM_LIST_KEY, item_list_str);
     console.log("Local storage save complete.");
 
-    console.log("Saving to backend...");
     const localAnonId = await getLocalAnonId();
+    console.log("Saving to backend for anon Id: " + localAnonId);
     await axios.post(SAVEITEMS_URL,
       {
         anonymous_id : localAnonId,
@@ -64,7 +64,7 @@ export const initalizeUser = async() => {
         console.log("Saving new user data to localStorage...");
         await AsyncStorage.setItem(USERNAME_KEY, newName);
         await AsyncStorage.setItem(ANON_ID_KEY, newAnonId);
-        console.log("Save complete.");
+        console.log("localStorage new user save complete.");
         return { name: newName, anonymousId: newAnonId };
     }
   } catch (e) {
@@ -99,7 +99,7 @@ export const resetAllData = async () => {
 export const createUser = async () => {
   try {
     const response = await axios.post(CREATEUSER_URL);
-    console.log("Retreived new user from backend: " + JSON.stringify(response.data.body));
+    console.log("Retrieved new user from backend: " + JSON.stringify(response.data.body));
     return response.data.body;
   } catch (error) {
     console.error('Error calling create User API:', error);
@@ -111,7 +111,7 @@ export const loadUser = async (anonymous_id) => {
     const response = await axios.post(LOADUSER_URL, {
       anonymous_id: anonymous_id
     });
-    console.log("Retreived user from backend: " + JSON.stringify(response.data.body));
+    console.log("Retrieved user from backend: " + JSON.stringify(response.data.body));
     return response.data.body;
   } catch (error) {
     console.error('Error calling load User API:', error);
