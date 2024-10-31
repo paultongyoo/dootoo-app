@@ -1,5 +1,5 @@
 import { createContext, useState } from 'react';
-import { initalizeUser, resetAllData } from '../components/Storage';
+import { initalizeUser, resetAllData, loadUser } from '../components/Storage';
 
 // Create the context
 export const UserContext = createContext();
@@ -18,8 +18,14 @@ export const UserProvider = ({ children }) => {
       console.log("Result of initializeUser call: " + JSON.stringify(userData));
       setUsername(userData.name);
       setAnonymousId(userData.anonymousId);
-      setTaskCount((userData.taskCount) ? userData.taskCount : 0);
-      setDoneCount((userData.taskCount) ? userData.taskCount : 0);
+      updateUserCounts(userData.anonymousId);
+    }
+
+    const updateUserCounts = async(anonymousId) => {
+      console.log("Updating user counts for anonymousId: " + anonymousId);
+      const updatedUser = await loadUser(anonymousId);
+      setTaskCount(updatedUser.taskCount);
+      setDoneCount(updatedUser.doneCount);
     }
 
     const resetUserContext = async () => {
@@ -38,7 +44,8 @@ export const UserProvider = ({ children }) => {
             taskCount, setTaskCount,
             doneCount, setDoneCount,
             resetUserContext,
-            initializeLocalUser
+            initializeLocalUser,
+            updateUserCounts
              }}>
           {children}
         </UserContext.Provider>

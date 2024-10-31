@@ -18,9 +18,8 @@ import Toast from 'react-native-toast-message';
 
 export default function Index() {
   const { dootooItems, setDootooItems, anonymousId,
-          setTaskCount, setDoneCount,
           lastRecordedCount, setLastRecordedCount, 
-          initializeLocalUser } = useContext(UserContext);
+          initializeLocalUser, updateUserCounts } = useContext(UserContext);
   const [initialLoad, setInitialLoad] = useState(false);
   const itemFlatList = useRef(null);
   const swipeableRef = useRef(null);
@@ -30,7 +29,6 @@ export default function Index() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [permissionResponse, requestPermission] = Audio.usePermissions();
   const [errorMsg, setErrorMsg] = useState();
-  const [allItemsDone, setAllItemsDone] = useState(false);
   var retryCount = 0;
   const inputFieldIndex = useRef(-1);
   const inputValueRef = useRef('');
@@ -217,29 +215,12 @@ export default function Index() {
       console.log("Save successful.");
     }
 
-    // Update user counts
-    console.log("Updating user counts for anonymousId: " + anonymousId);
-    const updatedUser = await loadUser(anonymousId);
-    setTaskCount(updatedUser.taskCount);
-    setDoneCount(updatedUser.doneCount);
+    updateUserCounts(anonymousId);
 
     if (dootooItems && dootooItems.length == 0) {
       ctaAnimation.start();
     } else {
       ctaAnimation.stop();
-    }
-
-    // Display fireworks if list is non empty and all items are done!
-    var areAllItemsDone = true;
-    if (dootooItems && dootooItems.length > 0) {
-      for (var i = 0; i < dootooItems.length; i++) {
-        var currItem = dootooItems[i];
-        if (!currItem.is_done) {
-          areAllItemsDone = false;
-          break;
-        }
-      }
-      setAllItemsDone(areAllItemsDone);
     }
   };
 
