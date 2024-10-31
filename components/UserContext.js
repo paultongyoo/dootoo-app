@@ -1,4 +1,5 @@
 import { createContext, useState } from 'react';
+import { resetAllData } from '../components/Storage';
 
 // Create the context
 export const UserContext = createContext();
@@ -12,6 +13,16 @@ export const UserProvider = ({ children }) => {
     const [dootooItems, setDootooItems] = useState([]);
     const [lastRecordedCount, setLastRecordedCount] = useState(0);
 
+    const resetUserContext = async () => {
+      await resetAllData();
+      setUsername('');
+      setAnonymousId('');
+      setTaskCount(0);
+      setDoneCount(0);
+      setLastRecordedCount(0);
+      setDootooItems([]);
+    };
+
     return (
         <UserContext.Provider value={{ 
             username, setUsername,
@@ -19,7 +30,8 @@ export const UserProvider = ({ children }) => {
             dootooItems, setDootooItems,
             lastRecordedCount, setLastRecordedCount,
             taskCount, setTaskCount,
-            doneCount, setDoneCount
+            doneCount, setDoneCount,
+            resetUserContext
              }}>
           {children}
         </UserContext.Provider>

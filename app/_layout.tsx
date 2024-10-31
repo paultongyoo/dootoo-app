@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet, Image, Pressable, Alert, Platform, Linking } from "react-native";
+import { View, Text, StyleSheet, Image, ActivityIndicator,
+         Pressable, Alert, Platform, Linking } from "react-native";
 import { useEffect, useContext } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
-import { initalizeUser, resetAllData } from '../components/Storage';
 import { UserProvider, UserContext } from '../components/UserContext';
 import Toast from 'react-native-toast-message';
 import toastConfig from '../components/ToastConfig';
@@ -177,21 +177,10 @@ export default function RootLayout() {
 }
 
 function ProfileDrawer({ navigation }) {
-  const {dootooItems, setDootooItems, 
-         username, setUsername, 
-         anonymousId, setAnonymousId,
-         taskCount, 
-         doneCount, 
-         setLastRecordedCount
+  const {username, anonymousId, 
+         taskCount, doneCount,
+         resetUserContext
         } = useContext(UserContext);
-
-  const handleResetAllData = () => {
-    resetAllData();
-    setUsername('');
-    setAnonymousId('');
-    setLastRecordedCount(0);
-    setDootooItems([]);
-  };
 
   const showConfirmationPrompt = () => {
     Alert.alert(
@@ -207,7 +196,7 @@ function ProfileDrawer({ navigation }) {
           text: 'OK',
           onPress: () => {
             console.log('Data Deletion OK Pressed');
-            handleResetAllData();
+            resetUserContext();
           },
         },
       ],
@@ -236,7 +225,11 @@ function ProfileDrawer({ navigation }) {
       <View style={styles.profileDrawerProfileIconContainer}>
         <Image style={styles.profileDrawerProfileIcon} source={require('../assets/images/profile_icon_green.png')} />
         <View style={styles.profileDrawerProfileNameContainer}>
+        { (!username || username.length == 0) ? 
+            <ActivityIndicator size={"large"} color="black" /> 
+          : 
           <Text style={styles.profileDrawerProfileNameText}>{username}</Text>
+        }
         </View>
       </View>
       <View style={styles.statsContainer}>

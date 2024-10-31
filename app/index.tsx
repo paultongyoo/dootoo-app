@@ -17,7 +17,7 @@ import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react
 import Toast from 'react-native-toast-message';
 
 export default function Index() {
-  const { dootooItems, setDootooItems, anonymousId,
+  const { dootooItems, setDootooItems, username, anonymousId,
           setUsername, setAnonymousId,
           setTaskCount, setDoneCount,
           lastRecordedCount, setLastRecordedCount } = useContext(UserContext);
@@ -180,6 +180,13 @@ export default function Index() {
 
   const handleSaveItems = async() => {
 
+    // If anonymousId is blank at this point, user deleted their data -- re-initialize local user.
+    if (anonymousId == null || anonymousId.length == 0) {
+      console.log("Initializing Local User inside handleSaveItems...")
+      await initializeLocalUser(); // TODO fix null username/anonymousId after this call!!
+      console.log(`Initializing Local User inside handleSaveItems Done.  Username: ${username} AnonId: ${anonymousId}`);
+    }
+
     if (dootooItems == undefined || dootooItems.length == 0) {
       console.log("Calling saveItems with empty list (expecting backend to clear items for user.");
       await saveItems([]);
@@ -190,7 +197,7 @@ export default function Index() {
     }
 
     // Update user counts
-    console.log("Updating user counts...");
+    console.log("Updating user counts for anonymousId: " + anonymousId);
     const updatedUser = await loadUser(anonymousId);
     setTaskCount(updatedUser.taskCount);
     setDoneCount(updatedUser.doneCount);
@@ -204,8 +211,8 @@ export default function Index() {
 
   useEffect(() => {
     setInitialLoad(false);
-    initializeLocalUser();
     initializeMobileAds();
+    initializeLocalUser();
     loadItemsFromBackend();
   }, []);
 
@@ -253,10 +260,11 @@ export default function Index() {
 
   const initializeLocalUser = async() => {
     const userData = await initalizeUser();
+    console.log("Result of initializeUser call: " + JSON.stringify(userData));
     setUsername(userData.name);
     setAnonymousId(userData.anonymousId);
-    setTaskCount(userData.taskCount || 0);
-    setDoneCount(userData.doneCount || 0);
+    setTaskCount((userData.taskCount) ? userData.taskCount : 0);
+    setDoneCount((userData.taskCount) ? userData.taskCount : 0);
   }
 
   /********************** END Audio Recording CODE **** BEGIN View Code *****/
