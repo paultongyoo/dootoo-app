@@ -180,22 +180,10 @@ function ProfileDrawer({ navigation }) {
   const {dootooItems, setDootooItems, 
          username, setUsername, 
          anonymousId, setAnonymousId,
-         taskCount, setTaskCount,
-         doneCount, setDoneCount,
+         taskCount, 
+         doneCount, 
          setLastRecordedCount
         } = useContext(UserContext);
-
-  const loadUserdata = async() => {
-    const userData = await initalizeUser();
-    setUsername(userData.name);
-    setAnonymousId(userData.anonymousId);
-    setTaskCount(userData.taskCount || 0);
-    setDoneCount(userData.doneCount || 0);
-  }
-
-  useEffect(() => {
-    loadUserdata();
-  }, [dootooItems]);
 
   const handleResetAllData = () => {
     resetAllData();
@@ -203,7 +191,6 @@ function ProfileDrawer({ navigation }) {
     setAnonymousId('');
     setLastRecordedCount(0);
     setDootooItems([]);
-    loadUserdata();
   };
 
   const showConfirmationPrompt = () => {

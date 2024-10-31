@@ -3,7 +3,7 @@ import { Platform, Image, Text, View, StyleSheet, Pressable, Animated, Alert,
 import { useState, useRef, useEffect, useContext } from "react";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
 import { transcribeAudioToTasks } from '../components/BackendServices';
-import { saveItems, loadItems } from '../components/Storage';
+import { saveItems, loadItems, initalizeUser, loadUser } from '../components/Storage';
 import { UserContext } from '../components/UserContext.js';
 import RNFS from 'react-native-fs';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
@@ -18,6 +18,8 @@ import Toast from 'react-native-toast-message';
 
 export default function Index() {
   const { dootooItems, setDootooItems, anonymousId,
+          setUsername, setAnonymousId,
+          setTaskCount, setDoneCount,
           lastRecordedCount, setLastRecordedCount } = useContext(UserContext);
   const [initialLoad, setInitialLoad] = useState(false);
   const itemFlatList = useRef(null);
@@ -187,6 +189,12 @@ export default function Index() {
       console.log("Save successful.");
     }
 
+    // Update user counts
+    console.log("Updating user counts...");
+    const updatedUser = await loadUser(anonymousId);
+    setTaskCount(updatedUser.taskCount);
+    setDoneCount(updatedUser.doneCount);
+
     if (dootooItems && dootooItems.length == 0) {
       ctaAnimation.start();
     } else {
@@ -196,6 +204,7 @@ export default function Index() {
 
   useEffect(() => {
     setInitialLoad(false);
+    initializeLocalUser();
     initializeMobileAds();
     loadItemsFromBackend();
   }, []);
@@ -241,6 +250,14 @@ export default function Index() {
       console.log("UseEffect called before initial load completed, skipping..");
     }
   }, [dootooItems]);
+
+  const initializeLocalUser = async() => {
+    const userData = await initalizeUser();
+    setUsername(userData.name);
+    setAnonymousId(userData.anonymousId);
+    setTaskCount(userData.taskCount || 0);
+    setDoneCount(userData.doneCount || 0);
+  }
 
   /********************** END Audio Recording CODE **** BEGIN View Code *****/
 
