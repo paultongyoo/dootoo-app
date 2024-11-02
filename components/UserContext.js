@@ -21,11 +21,10 @@ export const UserProvider = ({ children }) => {
       updateUserCounts(userData.anonymousId);
     }
 
-    const updateUserCounts = async(anonymousId) => {
-      console.log("Updating user counts for anonymousId: " + anonymousId);
-      const updatedUser = await loadUser(anonymousId);
-      setTaskCount(updatedUser.taskCount);
-      setDoneCount(updatedUser.doneCount);
+    const updateUserCounts = async() => {
+      const localUser = await loadUser();
+      setTaskCount(localUser.taskCountStr);
+      setDoneCount(localUser.doneCountStr);
     }
 
     const resetUserContext = async () => {

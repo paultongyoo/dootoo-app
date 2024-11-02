@@ -1,18 +1,13 @@
-import { v4 as uuidv4 } from 'uuid';
-import { uniqueNamesGenerator, adjectives, animals, NumberDictionary } from 'unique-names-generator';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 export const handler = async (event) => {
-  
-  // Creates new user and anonymous ID and returns back to client
-  try {  
+    try {  
 
-      const newName = generateUsername();
-      console.log(`Username created ${newName}`);
-      const newAnonId = uuidv4();
-      console.log(`Anon ID created ${newAnonId}`);
+      const newName = event.username;
+      const newAnonId = event.anonymous_id;
+      console.log("Retrieved username and anonymousId from client: " + newName + " " + newAnonId);
       
       console.log("Saving new user data to disk...");
       await saveUser(newName, newAnonId) 
@@ -31,7 +26,7 @@ export const handler = async (event) => {
       };
       return response;
   } catch (e) {
-      console.log("Error generating or saving user data", e);
+      console.log("Error saving user data", e);
   }
 };
 
@@ -42,15 +37,4 @@ const saveUser = async(username, anonymousId) => {
       anonymous_id : anonymousId
     }
   });
-};
-
-const generateUsername = () => {
-  const numberDictionary = NumberDictionary.generate({ min: 100, max: 999 });
-  const characterName = uniqueNamesGenerator({
-    dictionaries: [adjectives, animals, numberDictionary],
-      length: 3,
-      separator: '',
-      style: 'capital'
-    });
-  return characterName;
 };
