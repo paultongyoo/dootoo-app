@@ -32,8 +32,8 @@ export const initalizeUser = async() => {
   try {  
 
     // Populate user vars with what's in local storage, if anything
-    const username = await AsyncStorage.getItem(USERNAME_KEY);
-    const anonId = await AsyncStorage.getItem(ANON_ID_KEY);
+    var username = await AsyncStorage.getItem(USERNAME_KEY);
+    var anonId = await AsyncStorage.getItem(ANON_ID_KEY);
     var doneCountStr = '-1';
     var tipCountStr = '-1';
     
