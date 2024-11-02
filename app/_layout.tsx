@@ -117,7 +117,9 @@ const styles = StyleSheet.create({
   },
   statIconContainer: {
     paddingTop: 20,
-    paddingBottom: 10
+    paddingBottom: 20,
+    height: 60,
+    justifyContent: 'center'
   },
   statIconTask: {
     width: 26, 
@@ -129,6 +131,11 @@ const styles = StyleSheet.create({
   },
   statIconTask_Done: {
     backgroundColor: '#556B2F50'
+  },
+  statIcon_Tips: {
+    height: 35,
+    width: 55,
+    opacity: 0.5
   },
   statNumber: {
     fontWeight: 'bold',
@@ -182,7 +189,7 @@ export default function RootLayout() {
 
 function ProfileDrawer({ navigation }) {
   const {username, anonymousId, 
-         taskCount, doneCount,
+         doneCount, tipCount,
          resetUserContext
         } = useContext(UserContext);
 
@@ -239,17 +246,17 @@ function ProfileDrawer({ navigation }) {
       <View style={styles.statsContainer}>
         <View style={styles.statContainer}>
           <View style={styles.statIconContainer}>
-            <View style={[styles.statIconTask]}></View>
-          </View>
-          <Text style={styles.statNumber}>{taskCount || '0'}</Text>
-          <Text style={styles.statName}>Things</Text>
-        </View>
-        <View style={styles.statContainer}>
-          <View style={styles.statIconContainer}>
             <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
           </View>
           <Text style={styles.statNumber}>{doneCount || '0'}</Text>
           <Text style={styles.statName}>Done</Text>
+        </View>
+        <View style={styles.statContainer}>
+          <View style={styles.statIconContainer}>
+              <Image style={styles.statIcon_Tips} source={require('../assets/images/give_icon_556B2F.png')}/>
+          </View>
+          <Text style={styles.statNumber}>{tipCount || '0'}</Text>
+          <Text style={styles.statName}>Tips</Text>
         </View>
       </View>
       <View style={styles.privacyContainer}>

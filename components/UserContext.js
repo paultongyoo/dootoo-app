@@ -8,8 +8,8 @@ export const UserContext = createContext();
 export const UserProvider = ({ children }) => {
     const [username, setUsername] = useState('');
     const [anonymousId, setAnonymousId] = useState('');
-    const [taskCount, setTaskCount] = useState(0);
     const [doneCount, setDoneCount] = useState(0);
+    const [tipCount, setTipCount] = useState(0);
     const [dootooItems, setDootooItems] = useState([]);
     const [lastRecordedCount, setLastRecordedCount] = useState(0);
 
@@ -23,8 +23,8 @@ export const UserProvider = ({ children }) => {
 
     const updateUserCounts = async() => {
       const localUser = await loadUser();
-      setTaskCount(localUser.taskCountStr);
       setDoneCount(localUser.doneCountStr);
+      setTipCount(localUser.taskCountStr);
     }
 
     const resetUserContext = async () => {
@@ -40,8 +40,8 @@ export const UserProvider = ({ children }) => {
             anonymousId, setAnonymousId,
             dootooItems, setDootooItems,
             lastRecordedCount, setLastRecordedCount,
-            taskCount, setTaskCount,
             doneCount, setDoneCount,
+            tipCount, setTipCount,
             resetUserContext,
             initializeLocalUser,
             updateUserCounts

@@ -3,7 +3,7 @@ import { Platform, Image, Text, View, StyleSheet, Pressable, Animated, Alert,
 import { useState, useRef, useEffect, useContext } from "react";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
 import { transcribeAudioToTasks } from '../components/BackendServices';
-import { saveItems, loadItems, loadUser } from '../components/Storage';
+import { saveItems, loadItems } from '../components/Storage';
 import { UserContext } from '../components/UserContext.js';
 import RNFS from 'react-native-fs';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
