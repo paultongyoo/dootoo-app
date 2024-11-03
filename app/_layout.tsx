@@ -130,12 +130,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'white'
   },
   statIconTask_Done: {
-    backgroundColor: '#556B2F50'
+    backgroundColor: '#556B2F70'
   },
   statIcon_Tips: {
     height: 35,
-    width: 55,
-    opacity: 0.5
+    width: 55
   },
   statNumber: {
     fontWeight: 'bold',
