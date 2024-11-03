@@ -342,8 +342,10 @@ export default function Index() {
               text: 'Yes',
               onPress: () => {
 
-                // Remove the item and its subtasks
-                updatedTasks!.splice(index, 1 + numSubtasks);
+                // Mark the item and its subtasks as is_deleted: true
+                for (var i = index; i <= index + numSubtasks; i++) {
+                  updatedTasks[i].is_deleted = true;
+                }
                 setDootooItems(updatedTasks);
                 setItemIdxToEdit(-1);
               }
@@ -357,8 +359,8 @@ export default function Index() {
         );
     } else {
 
-      // Just remove the item
-      updatedTasks!.splice(index, 1);
+      // Just mark the item as deleted
+      updatedTasks[index].is_deleted = true;
       setDootooItems(updatedTasks);
       setItemIdxToEdit(-1);
     }
@@ -688,7 +690,7 @@ export default function Index() {
             { dootooItems && dootooItems!.length > 0 ? 
               <DraggableFlatList
                 ref={itemFlatList}
-                data={dootooItems}
+                data={dootooItems.filter(item => !item.is_deleted)}
                 onDragEnd={({ data }) => {
                   setLastRecordedCount(0);
                   setDootooItems(data)
