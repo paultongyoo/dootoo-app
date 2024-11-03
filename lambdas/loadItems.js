@@ -4,7 +4,6 @@ const prisma = new PrismaClient();
 
 import AWS from 'aws-sdk';
 const kms = new AWS.KMS();
-const ITEMS_KEY_ID = process.env.ITEMS_KEY_ID;
 
 export const handler = async (event) => {
     const user = await prisma.user.findUnique({
