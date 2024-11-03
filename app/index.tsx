@@ -38,12 +38,18 @@ export default function Index() {
                                "ca-app-pub-6723010005352574/8538859865");
   const bannerRef = useRef<BannerAd>(null);
   const recordButtonScaleAnim = useRef(new Animated.Value(1)).current;
+  const fadeCTA = useRef(new Animated.Value(0)).current;
   const fadeAnimGoals = useRef(new Animated.Value(0.1)).current;
   const fadeAnimDreams = useRef(new Animated.Value(0.1)).current;
   const fadeAnimChallenges = useRef(new Animated.Value(0.1)).current;
   const [isAnimating, setIsAnimating] = useState(false);
   
   const ctaAnimation = Animated.sequence([
+      Animated.timing(fadeCTA, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true
+      }),
       Animated.delay(1000),
       Animated.timing(fadeAnimGoals, {
         toValue: 1,
@@ -748,7 +754,7 @@ export default function Index() {
                 </Swipeable>
               }
             /> : (initialLoad == true) ?
-              <Animated.View style={styles.emptyListContainer}>
+              <Animated.View style={[styles.emptyListContainer, { opacity: fadeCTA }]}>
                 <Text style={styles.emptyListContainer_words}>what are your</Text>
                 <Animated.View>
                   <Text style={[styles.emptyListContainer_words, {color: '#556B2F'}]}>tasks?</Text>
