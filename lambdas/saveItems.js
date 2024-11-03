@@ -8,25 +8,21 @@ const kms = new AWS.KMS();
 const ITEMS_KEY_ID = process.env.ITEMS_KEY_ID;
 
 export const handler = async (event) => {
-  const itemSaveCount = await saveItems(event.anonymous_id, event.items_str)
-    .then(async () => {
-            await prisma.$disconnect()
-        })
-        .catch(async (e) => {
-            console.error(e)
-            await prisma.$disconnect()
-        });
-  console.log(`Returned item save count: ${itemSaveCount}`);  // TODO: itemSaveCount becomes undefined
+  const user = await saveItems(event.anonymous_id, event.items_str);
+  const updatedUser = await refreshUpdatedCounts(user);
+  console.log("Returning updatedUser: " + JSON.stringify(updatedUser));
   const response = {
-    statusCode: (itemSaveCount >= 0) ? 200 : 400,
-    body: itemSaveCount
+    statusCode: 200,
+    body: JSON.stringify(updatedUser)
   };
+  await prisma.$disconnect()
   return response;
 };
 
 const saveItems = async(anonymous_id, items_str) => {
+    var user = null;
     try {
-        const user = await prisma.user.findUnique({
+        user = await prisma.user.findUnique({
             where: { anonymous_id: anonymous_id}
         });
         console.log(user);
@@ -95,18 +91,32 @@ const saveItems = async(anonymous_id, items_str) => {
                 itemSaveCount += 1;
             } catch (error) {
                 console.error('Error encrypting or decrypting:', error);
-                return {
-                    statusCode: 500,
-                    body: JSON.stringify({ error: 'Encryption/Decryption failed' })
-                };
+                return null;
             }
         }
     } catch (error) {
         console.error('Unexpected Prisma error', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: 'Unexpected Prisma error' })
-        };
-    }
-    return itemSaveCount;
+        return null;
+    } 
+    console.log("Inside saveItems - checking user obj: " + user);
+    return user;
+}
+
+const refreshUpdatedCounts = async(loadedUser) => {
+    console.log("User loaded: " + JSON.stringify(loadedUser));
+
+    // Count user's completed tasks 
+    loadedUser.doneCount = await prisma.item.count({
+        where: {
+            user: {
+                id: loadedUser.id
+            },
+            is_done: true
+        }
+    });
+    console.log("User Task Done Count: " + loadedUser.doneCount);
+
+    // TODO: Count user's tips
+    
+    return loadedUser;
 }

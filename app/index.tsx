@@ -42,7 +42,6 @@ export default function Index() {
   const fadeAnimGoals = useRef(new Animated.Value(0.1)).current;
   const fadeAnimDreams = useRef(new Animated.Value(0.1)).current;
   const fadeAnimChallenges = useRef(new Animated.Value(0.1)).current;
-  const [isAnimating, setIsAnimating] = useState(false);
   
   const ctaAnimation = Animated.sequence([
       Animated.timing(fadeCTA, {
@@ -214,32 +213,22 @@ export default function Index() {
       console.log("Skipping backend item load as user is new.");
     }
     setInitialLoad(true);
-    if (isAnimating == false) {
-      ctaAnimation.start(() => setIsAnimating(false));
-      setIsAnimating(true);
-    }
+    ctaAnimation.start();
   };
 
   const handleSaveItems = async() => {
-
-    if (dootooItems == undefined || dootooItems.length == 0) {
-      console.log("Calling saveItems with empty list (expecting backend to clear items for user.");
-      await saveItems([]);
-    } else {
+    console.log("handleSaveItems called with dootooitems length: " + dootooItems.length);
+    ctaAnimation.reset();
+    
+    if (dootooItems && dootooItems.length > 0) {
       console.log(`Passing ${dootooItems.length} to saveItems method...`);
-      await saveItems(dootooItems);
+      await saveItems(dootooItems, () => updateUserCountContext());
       console.log("Save successful.");
     }
 
-    updateUserCountContext();
-
-    if (dootooItems && dootooItems.length == 0) {
-      if (isAnimating == false) {
-        ctaAnimation.start(() => setIsAnimating(false));
-        setIsAnimating(true);
-      }
-    } else {
-      ctaAnimation.stop();
+    var nonDeletedItems = dootooItems.filter(item => !item.is_deleted);
+    if (nonDeletedItems && nonDeletedItems.length == 0) {
+        ctaAnimation.start();
     }
   };
 
@@ -318,6 +307,7 @@ export default function Index() {
   }
 
   const handleItemDelete = (index : number) => {
+    console.log("Entering handle delete item...");
     setLastRecordedCount(0);
     var updatedTasks = [...dootooItems];
 
@@ -358,11 +348,14 @@ export default function Index() {
         );
     } else {
 
+      console.log("Deleting sole item...");
+
       // Just mark the item as deleted
       updatedTasks[index].is_deleted = true;
       setDootooItems(updatedTasks);
       setItemIdxToEdit(-1);
     }
+    console.log("Exiting handle delete item...");
   }
 
   const handleMakeParent = (index : number) => {
@@ -686,7 +679,7 @@ export default function Index() {
             </View>
               : 
           <View  style={styles.taskContainer}>
-            { dootooItems && dootooItems!.length > 0 ? 
+            { dootooItems && dootooItems.filter(item => !item.is_deleted)!.length > 0 ? 
               <DraggableFlatList
                 ref={itemFlatList}
                 data={dootooItems.filter(item => !item.is_deleted)}

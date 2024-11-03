@@ -15,7 +15,7 @@ const LOADUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev
 const LOADITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItems_Dev';
 const SAVEITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev';
 
-export const saveItems = async (item_list_obj) => {
+export const saveItems = async (item_list_obj, callback) => {
   if (item_list_obj === undefined) {
     console.log("saveItems called with undefined parameter, exiting...");
     return;
@@ -23,12 +23,14 @@ export const saveItems = async (item_list_obj) => {
 
   // Local data is the source of truth for the app (most reliable and lowest latency)
   await saveItemsLocally(item_list_obj);
-  await updateLocalUserCounts(item_list_obj);
 
-  // Asyncronously save to backend to enable community features. 
+  // Asyncronously save to backend to enable community features and refresh user counts.
   // Ensure all UI data uses only locally stored data and is not reliant on real-time backend state.
-  saveItemsToBackend(item_list_obj);
-};
+  saveItemsToBackend(item_list_obj, (updatedUser) => {
+    updateLocalUserCounts(updatedUser)
+    callback();
+  });
+}
 
 export const initalizeUser = async() => {
   try {  
@@ -118,18 +120,23 @@ export const resetAllData = async () => {
 
 // ******** BEGIN Non-EXPORTED METHODS *********
 
-// TODO: Update this to account for pre-existing done/tips in DB
-const updateLocalUserCounts = async(item_list_obj) => {
+// Update this to account for pre-existing done/tips in DB
+const updateLocalUserCounts = async(updatedUser) => {
   try {
-    var doneCount = 0;
-    var tipCount = 0;
-    for (var i = 0; i < item_list_obj.length; i++) {
-      var currItem = item_list_obj[i];
-      if (currItem.is_done) doneCount += 1;
-      if (currItem.has_tip) tipCount += 1;
+    var doneCount = -1;
+    var tipCount = -1;
+    if (updatedUser) {
+      console.log("Inside updateLocalUserCounts: " + JSON.stringify(updatedUser));
+      doneCount = updatedUser.doneCount;
+      tipCount = updatedUser.tipCount;
+    } else {
+      // Assume called on first launch / new user
+      doneCount = 0;
+      tipCount = 0;
     }
     await AsyncStorage.setItem(DONE_COUNT_KEY, `${doneCount}`);
     await AsyncStorage.setItem(TIP_COUNT_KEY, `${tipCount}`);
+    console.log(`Updated local counts: Done Count (${doneCount}) Tip Count (${tipCount})`);
   } catch (e) {
     console.log("Error updated user counts in local storage.", e);
   }
@@ -166,18 +173,30 @@ const createUser = async () => {
   }
 };
 
-const saveItemsToBackend = async(item_list_obj) => {
+const saveItemsToBackend = async(item_list_obj, callback) => {
+  if (!item_list_obj || item_list_obj.length == 0) {
+    console.log("saveItemsToBackend called with empty list, aborting backend call!");
+    return null;
+  }
+
   try {
 
     const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
     console.log("Saving to backend for anon Id: " + localAnonId);
-    await axios.post(SAVEITEMS_URL,
+    const response = await axios.post(SAVEITEMS_URL,
       {
         anonymous_id: localAnonId,
         items_str: JSON.stringify(item_list_obj)
       }
     );
+    const updatedUser = JSON.parse(response.data.body);
     console.log(`Saved list to backend storage with ${item_list_obj.length} items.`);
+    console.log(`User returned with save operation: ${JSON.stringify(updatedUser)}`);
+    
+    if (callback) {
+      callback(updatedUser);
+    }
+
   } catch (e) {
     console.log("Error saving item list to backend", e);
   }
