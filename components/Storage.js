@@ -11,6 +11,7 @@ const ANON_ID_KEY = "user_anonymous_id";
 const ITEM_LIST_KEY = "item_list";
 
 const CREATEUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev';
+const LOADUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadUser_Dev';
 const LOADITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItems_Dev';
 const SAVEITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev';
 
@@ -22,6 +23,7 @@ export const saveItems = async (item_list_obj) => {
 
   // Local data is the source of truth for the app (most reliable and lowest latency)
   await saveItemsLocally(item_list_obj);
+  await updateLocalUserCounts(item_list_obj);
 
   // Asyncronously save to backend to enable community features. 
   // Ensure all UI data uses only locally stored data and is not reliant on real-time backend state.
@@ -47,6 +49,11 @@ export const initalizeUser = async() => {
         tipCountStr = userData.tipCountStr;
         isNewUser = true;
     } else {
+
+      // Syncronously retrieve existing user's done and tip counts from backend
+      // because they can count historical items not currently listed in local storage
+
+
       doneCountStr = await AsyncStorage.getItem(DONE_COUNT_KEY);
       tipCountStr = await AsyncStorage.getItem(TIP_COUNT_KEY);
       isNewUser = false;
@@ -54,8 +61,8 @@ export const initalizeUser = async() => {
     return { 
       name: username, 
       anonymousId: anonId, 
-      doneCount: doneCountStr,
-      tipCount: tipCountStr,
+      doneCountStr: doneCountStr,
+      tipCountStr: tipCountStr,
       isNew: isNewUser
     };
   } catch (e) {
@@ -63,7 +70,7 @@ export const initalizeUser = async() => {
   }
 };
 
-export const loadUser = async() => {
+export const loadLocalUser = async() => {
   try {
     const loadedUser  = {
       username: await AsyncStorage.getItem(USERNAME_KEY),
@@ -110,6 +117,23 @@ export const resetAllData = async () => {
 };
 
 // ******** BEGIN Non-EXPORTED METHODS *********
+
+// TODO: Update this to account for pre-existing done/tips in DB
+const updateLocalUserCounts = async(item_list_obj) => {
+  try {
+    var doneCount = 0;
+    var tipCount = 0;
+    for (var i = 0; i < item_list_obj.length; i++) {
+      var currItem = item_list_obj[i];
+      if (currItem.is_done) doneCount += 1;
+      if (currItem.has_tip) tipCount += 1;
+    }
+    await AsyncStorage.setItem(DONE_COUNT_KEY, `${doneCount}`);
+    await AsyncStorage.setItem(TIP_COUNT_KEY, `${tipCount}`);
+  } catch (e) {
+    console.log("Error updated user counts in local storage.", e);
+  }
+}
 
 const createUser = async () => {
 
@@ -164,20 +188,9 @@ const saveItemsLocally = async(item_list_obj) => {
     console.log("Saving to local storage...");
     const item_list_str = JSON.stringify(item_list_obj);
     await AsyncStorage.setItem(ITEM_LIST_KEY, item_list_str);
-    console.log(`Saved list to local storage with ${item_list_obj.length} items.`);
-
-    var doneCount = 0;
-    var tipCount = 0;
-    for (var i = 0; i < item_list_obj.length; i++) {
-      var currItem = item_list_obj[i];
-      if (currItem.is_done) doneCount += 1;
-      if (currItem.has_tip) tipCount += 1;
-    }
-    await AsyncStorage.setItem(DONE_COUNT_KEY, `${doneCount}`);
-    await AsyncStorage.setItem(TIP_COUNT_KEY, `${tipCount}`);
-
+    console.log(`Saved list to local storage with ${item_list_obj.length} items.`)
   } catch (e) {
-    console.log("Error saving list or user counts to local storage.", e);
+    console.log("Error saving list to local storage.", e);
   }
 }
 

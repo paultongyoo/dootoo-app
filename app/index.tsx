@@ -19,7 +19,7 @@ import Toast from 'react-native-toast-message';
 export default function Index() {
   const { dootooItems, setDootooItems, anonymousId,
           lastRecordedCount, setLastRecordedCount, 
-          initializeLocalUser, updateUserCounts } = useContext(UserContext);
+          initializeLocalUser, updateUserCountContext } = useContext(UserContext);
   const [initialLoad, setInitialLoad] = useState(false);
   const itemFlatList = useRef(null);
   const swipeableRef = useRef(null);
@@ -231,7 +231,7 @@ export default function Index() {
       console.log("Save successful.");
     }
 
-    updateUserCounts(anonymousId);
+    updateUserCountContext();
 
     if (dootooItems && dootooItems.length == 0) {
       if (isAnimating == false) {
