@@ -15,13 +15,12 @@ export const UserProvider = ({ children }) => {
 
     const initializeLocalUser = async(callback) => {
       const userData = await initalizeUser();
-      console.log("Result of initializeUser call: " + JSON.stringify(userData));
       setUsername(userData.name);
       setAnonymousId(userData.anonymousId);
       updateUserCounts(userData.anonymousId);
 
       if (callback) {
-        callback();
+        callback(userData.isNew);
       }
     }
 

@@ -204,11 +204,15 @@ export default function Index() {
     deleteFile(fileUri);
   }
 
-  const loadItemsFromBackend = async() => {
-    console.log("Loading items from backend...");
-    const savedItems = await loadItems();
-    console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} items from backend`);  
-    setDootooItems(savedItems);
+  const loadItemsFromBackend = async(isNew : boolean) => {
+    if (!isNew) {
+      console.log("Loading items from backend for existing user...");
+      const savedItems = await loadItems();
+      console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} items from backend`);  
+      setDootooItems(savedItems);
+    } else {
+      console.log("Skipping backend item load as user is new.");
+    }
     setInitialLoad(true);
     if (isAnimating == false) {
       ctaAnimation.start(() => setIsAnimating(false));
@@ -242,8 +246,8 @@ export default function Index() {
   useEffect(() => {
     setInitialLoad(false);
     initializeMobileAds();
-    initializeLocalUser(() => {
-      loadItemsFromBackend();
+    initializeLocalUser((isNew) => {
+      loadItemsFromBackend(isNew);
     });
   }, []);
 

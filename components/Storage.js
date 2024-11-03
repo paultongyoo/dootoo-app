@@ -34,6 +34,7 @@ export const initalizeUser = async() => {
     // Populate user vars with what's in local storage, if anything
     var username = await AsyncStorage.getItem(USERNAME_KEY);
     var anonId = await AsyncStorage.getItem(ANON_ID_KEY);
+    var isNewUser = null;
     var doneCountStr = '-1';
     var tipCountStr = '-1';
     
@@ -44,15 +45,18 @@ export const initalizeUser = async() => {
         anonId = userData.anonymousId;
         doneCountStr = userData.doneCountStr;
         tipCountStr = userData.tipCountStr;
+        isNewUser = true;
     } else {
       doneCountStr = await AsyncStorage.getItem(DONE_COUNT_KEY);
       tipCountStr = await AsyncStorage.getItem(TIP_COUNT_KEY);
+      isNewUser = false;
     }
     return { 
       name: username, 
       anonymousId: anonId, 
       doneCount: doneCountStr,
-      tipCount: tipCountStr
+      tipCount: tipCountStr,
+      isNew: isNewUser
     };
   } catch (e) {
       console.log("initializeUser: Error reading user data:", e);
