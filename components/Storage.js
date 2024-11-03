@@ -51,7 +51,6 @@ export const initalizeUser = async() => {
     return { 
       name: username, 
       anonymousId: anonId, 
-      taskCount: 0, // TODO: Deprecate after Profile UX updated to display done & tip counts
       doneCount: doneCountStr,
       tipCount: tipCountStr
     };
@@ -129,10 +128,10 @@ const createUser = async () => {
     saveUserToBackend(newUsername, newAnonymousId);
     
     return { 
-      username: newUsername, 
+      name: newUsername, 
       anonymousId: newAnonymousId, 
-      doneCount: doneCountStr, 
-      tipCount: tipCountStr 
+      doneCountStr: doneCountStr, 
+      tipCountStr: tipCountStr 
     }
   } catch (error) {
     console.error('Error calling create User API:', error);

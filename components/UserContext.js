@@ -13,12 +13,16 @@ export const UserProvider = ({ children }) => {
     const [dootooItems, setDootooItems] = useState([]);
     const [lastRecordedCount, setLastRecordedCount] = useState(0);
 
-    const initializeLocalUser = async() => {
+    const initializeLocalUser = async(callback) => {
       const userData = await initalizeUser();
       console.log("Result of initializeUser call: " + JSON.stringify(userData));
       setUsername(userData.name);
       setAnonymousId(userData.anonymousId);
       updateUserCounts(userData.anonymousId);
+
+      if (callback) {
+        callback();
+      }
     }
 
     const updateUserCounts = async() => {

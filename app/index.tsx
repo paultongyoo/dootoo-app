@@ -44,6 +44,7 @@ export default function Index() {
   const [isAnimating, setIsAnimating] = useState(false);
   
   const ctaAnimation = Animated.sequence([
+      Animated.delay(1000),
       Animated.timing(fadeAnimGoals, {
         toValue: 1,
         duration: 1500,
@@ -201,8 +202,12 @@ export default function Index() {
     console.log("Loading items from backend...");
     const savedItems = await loadItems();
     console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} items from backend`);  
-    setInitialLoad(true);
     setDootooItems(savedItems);
+    setInitialLoad(true);
+    if (isAnimating == false) {
+      ctaAnimation.start(() => setIsAnimating(false));
+      setIsAnimating(true);
+    }
   };
 
   const handleSaveItems = async() => {
@@ -231,12 +236,9 @@ export default function Index() {
   useEffect(() => {
     setInitialLoad(false);
     initializeMobileAds();
-    initializeLocalUser();
-    loadItemsFromBackend();
-    if (isAnimating == false) {
-      ctaAnimation.start(() => setIsAnimating(false));
-      setIsAnimating(true);
-    }
+    initializeLocalUser(() => {
+      loadItemsFromBackend();
+    });
   }, []);
 
    // This is expected to be called on any item change, reorder, deletion, etc
