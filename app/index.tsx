@@ -246,7 +246,7 @@ export default function Index() {
   useEffect(() => {
     setInitialLoad(false);
     initializeMobileAds();
-    initializeLocalUser((isNew) => {
+    initializeLocalUser((isNew : boolean) => {
       loadItemsFromBackend(isNew);
     });
   }, []);
@@ -256,11 +256,6 @@ export default function Index() {
     if (initialLoad) {
       if (lastRecordedCount > 0) {
         // If we're inside here, we were called after recording new items
-
-        // Scroll to bottom of list to ensure added items are visible (can be noop if list becomes empty)
-        // if (itemFlatList.current) {
-        //   itemFlatList.current.scrollToEnd({ animated: true });
-        // }
 
         // Display Toast
         Toast.show({
@@ -302,11 +297,11 @@ export default function Index() {
     console.log("Exitting toastHide")
   }
 
-  const handleItemTextTap = (itemText, index) => {
+  const handleItemTextTap = (itemText : string, index : number) => {
     setItemIdxToEdit(index);
   }
 
-  const handleBlur = (index) => { 
+  const handleBlur = (index : number) => { 
     console.log(`Inside handleBlur for index ${index}`);
     setItemIdxToEdit(-1);
 
