@@ -17,14 +17,14 @@ export const UserProvider = ({ children }) => {
       const userData = await initalizeUser();
       setUsername(userData.name);
       setAnonymousId(userData.anonymousId);
-      updateUserCounts(userData.anonymousId);
+      updateUserCountDisplay(userData.anonymousId);
 
       if (callback) {
         callback(userData.isNew);
       }
     }
 
-    const updateUserCounts = async() => {
+    const updateUserCountDisplay = async() => {
       const localUser = await loadUser();
       setDoneCount(localUser.doneCountStr);
       setTipCount(localUser.taskCountStr);
@@ -47,7 +47,7 @@ export const UserProvider = ({ children }) => {
             tipCount, setTipCount,
             resetUserContext,
             initializeLocalUser,
-            updateUserCounts
+            updateUserCounts: updateUserCountDisplay
              }}>
           {children}
         </UserContext.Provider>

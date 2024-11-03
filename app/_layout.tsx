@@ -77,7 +77,9 @@ const styles = StyleSheet.create({
     
   },
   profileDrawerProfileNameText: {
-    fontSize: 20
+    fontSize: 20,
+    paddingLeft: 20,
+    paddingRight: 20
   },
   privacyContainer: {
     position: 'absolute',
