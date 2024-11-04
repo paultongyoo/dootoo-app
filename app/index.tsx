@@ -219,7 +219,7 @@ export default function Index() {
   const handleSaveItems = async() => {
     console.log("handleSaveItems called with dootooitems length: " + dootooItems.length);
     ctaAnimation.reset();
-    
+
     if (dootooItems && dootooItems.length > 0) {
       console.log(`Passing ${dootooItems.length} to saveItems method...`);
       await saveItems(dootooItems, () => updateUserCountContext());
@@ -598,6 +598,16 @@ export default function Index() {
     swipeActionIcon_ident: {
       height: 30,
       width: 30 
+    },
+    giveTipContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingRight: 15,
+      flexDirection: 'row'
+    },
+    giveTipIcon: {
+      height: 28,
+      width: 50
     }
   });
 
@@ -736,11 +746,16 @@ export default function Index() {
                             <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.item_text}</Text>
                           </Pressable>
                         }
-                        { (item.similar_count && item.similar_count > 0) ?<>
-                          <View style={styles.similarCountContainer}>
-                            <Text style={styles.similarCountText}>{item.similar_count}</Text>
-                            <Image style={styles.similarCountIcon} source={require("../assets/images/person_icon_556B2F.png")} />
-                          </View></> : <></>
+                        { (!item.is_done) ? 
+                              (item.similar_count && item.similar_count > 0) ?
+                              <View style={styles.similarCountContainer}>
+                                <Text style={styles.similarCountText}>{item.similar_count}</Text>
+                                <Image style={styles.similarCountIcon} source={require("../assets/images/person_icon_556B2F.png")} />
+                              </View> : <></>
+                          : <Pressable style={styles.giveTipContainer}
+                                onPress={() => Alert.alert("Coming Soon!")}>
+                                <Image style={styles.giveTipIcon} source={require("../assets/images/give_icon_556B2F.png")} />
+                            </Pressable>
                         }
                       </View>
                     </View>
