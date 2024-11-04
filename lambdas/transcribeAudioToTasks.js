@@ -39,7 +39,7 @@ export const handler = async (event) => {
       {"role": "system", 
         "content": "Identify the main tasks and sub tasks described in the input text, ordering each sub task after each main task in the list. "  +
                    "Only identify a task as a sub task if the input refers to the task as part of another task.  " +
-                   "Reply in the following JSON format: { tasks: [<array of task objects of the format { item_text: '<task name>', is_child: <false if task is main task, true otherwise>}]"},
+                   "Reply in the following JSON format: { tasks: [<array of task objects of the format { text: '<task name>', is_child: <false if task is main task, true otherwise>}]"},
       {"role": "user", "content": transcribedText }
     ], response_format: { "type": "json_object" }
   });
@@ -63,7 +63,7 @@ export const handler = async (event) => {
       console.log(`Begin retrieval and storing of embedding for recorded item ...`);
       const embedding_response = await axios.post(
           "http://ip-172-31-28-150.us-east-2.compute.internal:8000/embed",
-          { text: item.item_text }
+          { text: item.text }
         );
       const embedding = embedding_response.data.embedding;
       console.log("Embedding: " + embedding);

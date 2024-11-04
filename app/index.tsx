@@ -89,11 +89,11 @@ export default function Index() {
   const generateStubData = () => {
     return {
       tasks: [
-        { item_text: 'Clean my room', is_child: false},
-        { item_text: 'Make my bed', is_child: true},
-        { item_text: 'Organize my desk', is_child: true},
-        { item_text: 'Dust my shelves', is_child: true},
-        { item_text: 'Clean out my closet', is_child: true}
+        { text: 'Clean my room', is_child: false},
+        { text: 'Make my bed', is_child: true},
+        { text: 'Organize my desk', is_child: true},
+        { text: 'Dust my shelves', is_child: true},
+        { text: 'Clean out my closet', is_child: true}
       ]
     };
   }
@@ -299,7 +299,7 @@ export default function Index() {
       console.log("Text changed to: " + currentValue);
 
       var updatedTasks = [...dootooItems];
-      updatedTasks![index].item_text = currentValue;
+      updatedTasks![index].text = currentValue;
       setDootooItems(updatedTasks);
     } else {
       console.log(`Previous field ${inputFieldIndex.current} exited with no change, ignoring blur`);
@@ -728,7 +728,7 @@ export default function Index() {
                             <TextInput
                               multiline={false}
                               style={styles.itemTextInput}
-                              defaultValue={item.item_text}
+                              defaultValue={item.text}
                               autoFocus={true}
                               onChangeText={(text) => { 
                                 setLastRecordedCount(0);
@@ -742,8 +742,8 @@ export default function Index() {
                             style={styles.itemNamePressable}
                             onLongPress={drag}
                             disabled={isActive}
-                            onPress={() => handleItemTextTap(item.item_text, getIndex()) }>
-                            <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.item_text}</Text>
+                            onPress={() => handleItemTextTap(item.text, getIndex()) }>
+                            <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
                           </Pressable>
                         }
                         { (!item.is_done) ? 

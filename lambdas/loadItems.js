@@ -27,17 +27,17 @@ export const handler = async (event) => {
 
         // Decrypt item text
         const decryptParams = {
-          CiphertextBlob: Buffer.from(item.item_text, 'base64')
+          CiphertextBlob: Buffer.from(item.text, 'base64')
         };
         const decryptedData = await kms.decrypt(decryptParams).promise();
         const decryptedString = decryptedData.Plaintext.toString('utf-8');
-        item.item_text = decryptedString;   // Replace with plaintext string for display in app
+        item.text = decryptedString;   // Replace with plaintext string for display in app
 
         // Obtain embedding for item text
         console.log(`Begin count of similar items to item ${item.id}...`);
         const embedding_response = await axios.post(
             "http://ip-172-31-28-150.us-east-2.compute.internal:8000/embed",
-            { text: item.item_text }
+            { text: item.text }
           );
         const embedding = embedding_response.data.embedding;
         console.log("Embedding: " + embedding);

@@ -41,7 +41,7 @@ const saveItems = async(anonymous_id, items_str) => {
                 // Encrypt the string
                 const encryptParams = {
                 KeyId: ITEMS_KEY_ID,
-                Plaintext: Buffer.from(array_item.item_text)
+                Plaintext: Buffer.from(array_item.text)
                 };
                 const encryptedData = await kms.encrypt(encryptParams).promise();
                 const encryptedString = encryptedData.CiphertextBlob.toString('base64');
@@ -54,7 +54,7 @@ const saveItems = async(anonymous_id, items_str) => {
                         user: {
                             connect: { id: user.id }
                         },
-                        item_text: encryptedString,
+                        text: encryptedString,
                         is_child: array_item.is_child,
                         rank_idx: i,
                         is_done: array_item.is_done,
@@ -65,7 +65,7 @@ const saveItems = async(anonymous_id, items_str) => {
                         user: {
                             connect: { id: user.id }
                         },
-                        item_text: encryptedString,
+                        text: encryptedString,
                         is_child: array_item.is_child,
                         rank_idx: i,
                         is_done: array_item.is_done,
@@ -78,7 +78,7 @@ const saveItems = async(anonymous_id, items_str) => {
                 console.log(`Begin retrieval and storing of embedding for item ${item.id}...`);
                 const embedding_response = await axios.post(
                     "http://ip-172-31-28-150.us-east-2.compute.internal:8000/embed",
-                    { text: array_item.item_text }
+                    { text: array_item.text }
                 );
                 const embedding = embedding_response.data.embedding;
                 console.log("Embedding: " + embedding);
