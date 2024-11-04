@@ -1,11 +1,11 @@
 import { createContext, useState } from 'react';
-import { initalizeUser, resetAllData, loadLocalUser } from '../components/Storage';
+import { initalizeUser, resetAllData, loadLocalUser } from './Storage';
 
 // Create the context
-export const UserContext = createContext();
+export const AppContext = createContext();
 
 // Create a provider component
-export const UserProvider = ({ children }) => {
+export const AppProvider = ({ children }) => {
     const [username, setUsername] = useState('');
     const [anonymousId, setAnonymousId] = useState('');
     const [doneCount, setDoneCount] = useState(0);
@@ -38,7 +38,7 @@ export const UserProvider = ({ children }) => {
     };
 
     return (
-        <UserContext.Provider value={{ 
+        <AppContext.Provider value={{ 
             username, setUsername,
             anonymousId, setAnonymousId,
             dootooItems, setDootooItems,
@@ -50,6 +50,6 @@ export const UserProvider = ({ children }) => {
             updateUserCountContext
              }}>
           {children}
-        </UserContext.Provider>
+        </AppContext.Provider>
       );
 };

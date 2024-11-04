@@ -4,7 +4,7 @@ import { useEffect, useContext } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { Drawer } from 'expo-router/drawer';
-import { UserProvider, UserContext } from '../components/UserContext';
+import { AppProvider, AppContext } from '../components/AppContext';
 import Toast from 'react-native-toast-message';
 import toastConfig from '../components/ToastConfig';
 import { useSegments } from 'expo-router';
@@ -168,7 +168,7 @@ export default function RootLayout() {
   return (
     <>
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <UserProvider>
+      <AppProvider>
         <Drawer 
           drawerContent={(props) => <ProfileDrawer {...props} />}
           screenOptions={
@@ -201,7 +201,7 @@ export default function RootLayout() {
             }
           }
         }/>
-      </UserProvider>
+      </AppProvider>
       <Toast config={toastConfig} />
     </GestureHandlerRootView>
     <StatusBar style="dark" />
@@ -213,7 +213,7 @@ function ProfileDrawer({ navigation }) {
   const {username, anonymousId, 
          doneCount, tipCount,
          resetUserContext
-        } = useContext(UserContext);
+        } = useContext(AppContext);
 
   const showConfirmationPrompt = () => {
     Alert.alert(

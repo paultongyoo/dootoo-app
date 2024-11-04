@@ -1,12 +1,9 @@
-import { Platform, Image, Text, View, StyleSheet, Pressable, Animated, Alert,
+import { Image, Text, View, StyleSheet, Pressable, Animated, Alert,
          TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput } from "react-native";
 import { useState, useRef, useEffect, useContext } from "react";
 import { router } from 'expo-router';
-import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
-import { transcribeAudioToTasks } from '../components/BackendServices';
 import { saveItems, loadItems } from '../components/Storage';
-import { UserContext } from '../components/UserContext.js';
-import RNFS from 'react-native-fs';
+import { AppContext } from '../components/AppContext';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, {
@@ -14,31 +11,20 @@ import Reanimated, {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
-import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
+import DootooFooter from '../components/DootooFooter';
 import Toast from 'react-native-toast-message';
 
 export default function Index() {
-  const { dootooItems, setDootooItems, anonymousId,
+  const { dootooItems, setDootooItems,
           lastRecordedCount, setLastRecordedCount, 
-          initializeLocalUser, updateUserCountContext } = useContext(UserContext);
+          initializeLocalUser, updateUserCountContext } = useContext(AppContext);
   const [initialLoad, setInitialLoad] = useState(false);
   const itemFlatList = useRef(null);
   const swipeableRef = useRef(null);
-  const [loading, setLoading] = useState(false);
-  const [recording, setRecording] = useState();
   const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [permissionResponse, requestPermission] = Audio.usePermissions();
   const [errorMsg, setErrorMsg] = useState();
-  var retryCount = 0;
   const inputFieldIndex = useRef(-1);
   const inputValueRef = useRef('');
-  const bannerAdId = __DEV__ ? 
-    TestIds.ADAPTIVE_BANNER : 
-      (Platform.OS === 'ios' ? "ca-app-pub-6723010005352574/5609444195" : 
-                               "ca-app-pub-6723010005352574/8538859865");
-  const bannerRef = useRef<BannerAd>(null);
-  const recordButtonScaleAnim = useRef(new Animated.Value(1)).current;
   const fadeCTA = useRef(new Animated.Value(0)).current;
   const fadeAnimGoals = useRef(new Animated.Value(0.1)).current;
   const fadeAnimDreams = useRef(new Animated.Value(0.1)).current;
@@ -79,131 +65,6 @@ export default function Index() {
     strict: false
   });
 
-  useForeground(() => {
-    Platform.OS === 'ios' && bannerRef.current?.load();
-  })
-
-  const initializeMobileAds = async () => {
-    const adapterStatuses = await mobileAds().initialize();
-}
-
-  const generateStubData = () => {
-    return {
-      tasks: [
-        { text: 'Clean my room', is_child: false},
-        { text: 'Make my bed', is_child: true},
-        { text: 'Organize my desk', is_child: true},
-        { text: 'Dust my shelves', is_child: true},
-        { text: 'Clean out my closet', is_child: true}
-      ]
-    };
-  }
-
-  const startRecording = async() => {
-    try {
-      if (permissionResponse!.status !== 'granted') {
-        console.log('Requesting permission..');
-        await requestPermission();
-      }
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-        shouldDuckAndroid: true,
-        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
-        playThroughEarpieceAndroid: false,
-        staysActiveInBackground: true
-      });
-
-      console.log('Starting recording..');
-      const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-      setRecording(recording);
-      console.log('Recording started');
-      setErrorMsg(undefined);   // Clear error message if no error
-    } catch (err) {
-      if (retryCount < 99999999999) { // TODO: Resolve this hack to prevent the "recorder not prepared error"
-        startRecording();
-        retryCount += 1;
-      } else {
-        console.error('Failed to start recording', err);
-        setErrorMsg(err);
-      }
-    }
-  }
-
-  const stopRecording = async() : Promise<string> => {
-    console.log('Stopping recording..');
-    setRecording(undefined);
-    await recording.stopAndUnloadAsync();
-    await Audio.setAudioModeAsync(
-      {
-        allowsRecordingIOS: false,
-      }
-    );
-    const uri = recording.getURI();
-    console.log('Recording stopped and stored at', uri);
-    return uri;
-  }
-
-  const callBackendTranscribeService = async (fileUri: string) => {
-      return await transcribeAudioToTasks(fileUri, anonymousId);
-  }
-
-  const deleteFile = async (fileUri : string) => {
-    try {
-      // Check if the file exists
-      const fileExists = await RNFS.exists(fileUri);
-      
-      if (fileExists) {
-        // Delete the file
-        await RNFS.unlink(fileUri);
-        console.log('File deleted successfully');
-      } else {
-        console.log('File does not exist');
-      }
-    } catch (error) {
-      console.error('Error deleting file:', error);
-    }
-  };
-
-  const loadStubData = () => {
-    setLoading(true);
-    const response = generateStubData();
-    setLoading(false);
-    if (dootooItems && dootooItems.length > 0) {
-      setDootooItems(dootooItems.concat(response.tasks));
-    } else {
-      setDootooItems(response.tasks);
-    }
-  }
-
-  const processRecording = async () => {
-    setLoading(true);
-    const fileUri  = await stopRecording();
-    const response = await callBackendTranscribeService(fileUri); 
-    //const response =  generateStubData(); 
-    console.log(`Transcribed audio into ${response.length} items.`);
-    setLoading(false);
-    setItemIdxToEdit(-1);
-
-    if (dootooItems && response && response.length > 0) {
-      setLastRecordedCount(response.length);  // Set for future toast undo potential
-
-      var updatedItems = response.concat(dootooItems);
-      setDootooItems(updatedItems);
-    }
-    
-    console.log("Finished parsing file, deleting...");
-    deleteFile(fileUri);
-  }
-
-  const cancelRecording = async() => {
-    console.log("Cancelling recording...");
-    const fileUri  = await stopRecording();
-    console.log("Deleting file..");
-    deleteFile(fileUri);
-  }
-
   const loadItemsFromBackend = async(isNew : boolean) => {
     if (!isNew) {
       console.log("Loading items from backend for existing user...");
@@ -235,7 +96,6 @@ export default function Index() {
 
   useEffect(() => {
     setInitialLoad(false);
-    initializeMobileAds();
     initializeLocalUser((isNew : boolean) => {
       loadItemsFromBackend(isNew);
     });
@@ -277,15 +137,6 @@ export default function Index() {
       console.log("UseEffect called before initial load completed, skipping..");
     }
   }, [dootooItems]);
-
-  /********************** END Audio Recording CODE **** BEGIN View Code *****/
-
-  const handleToastHide = () => {
-    console.log("Inside toastHide")
-    const anyReturnVal = Toast.hide();
-    console.log("Any return val: " + anyReturnVal);
-    console.log("Exitting toastHide")
-  }
 
   const handleItemTextTap = (itemText : string, index : number) => {
     setItemIdxToEdit(index);
@@ -381,30 +232,6 @@ export default function Index() {
     setDootooItems(updatedTasks);
   }
 
-  const showClearListConfirmationPrompt = () => {
-    Alert.alert(
-      'Clear your list?', // Title of the alert
-      'This deletes all items in your list and can\'t be undone.', // Message of the alert
-      [
-        {
-          text: 'Cancel',
-          onPress: () => console.log('List Clear Pressed'),
-          style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
-        },
-        {
-          text: 'Yes',
-          onPress: () => {
-            console.log('List Clear OK Pressed');
-            setDootooItems([]);
-          },
-        },
-      ],
-      { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
-    );
-  };
-
-
-
   const styles = StyleSheet.create({
     container: {
       //padding: 10,
@@ -412,58 +239,6 @@ export default function Index() {
       justifyContent: "center",
       backgroundColor: "#DCC7AA"
       //alignItems: "center"
-    },
-    footerContainer: {
-      backgroundColor: '#FAF3E0',
-      alignItems: 'center',
-      height: 140
-    },
-    bannerAdContainer: {
-      position: 'absolute',
-      bottom: 40
-    },
-    footerButton: {
-      height: 100,
-      width: 100,
-      borderRadius: 50,
-      borderColor: '#3E2723',
-      borderWidth: 1,
-      position: 'absolute',
-      bottom: 120,
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center'
-    },
-    footerButtonImage_Record: {
-      height: 60,
-      width: 60
-    },
-    footerButtonImage_Restart: {
-      height: 49,
-      width: 49
-    },
-    footerButtonImage_Cancel: {
-      height: 49,
-      width: 49
-    },
-    footerButtonTitle: {
-      fontWeight: 'bold',
-      color: 'white',
-      fontSize: 20
-    },
-    cancelButton: {
-      backgroundColor: '#FAF3E0',
-      left: 34
-    },
-    recordButton: {
-      backgroundColor: '#556B2F'
-    },
-    stopRecordButton: {
-      backgroundColor: '#A23E48'
-    },
-    clearButton: {
-      backgroundColor: '#FAF3E0',
-      left: 269
     },
     link: {
       fontWeight: 'bold',
@@ -505,11 +280,6 @@ export default function Index() {
     taskTitle_isDone: {
       color: '#556B2F',
       textDecorationLine: 'line-through'
-    },
-    loadingAnim: {
-      margin: 10,
-      position: 'relative',
-      left: 1
     },
     itemContainer: {
       flexDirection: 'row', // Lays out children horizontally
@@ -651,20 +421,6 @@ export default function Index() {
     );
   };
 
-  const recordButton_handlePressIn = () => {
-    Animated.spring(recordButtonScaleAnim, {
-      toValue: 0.95,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const recordButton_handlePressOut = () => {
-    Animated.spring(recordButtonScaleAnim, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
-  };
-
   return (
     <TouchableWithoutFeedback onPress={() => {
         if (itemIdxToEdit != -1) {
@@ -672,18 +428,10 @@ export default function Index() {
             Keyboard.dismiss();
           }
           handleBlur(itemIdxToEdit); 
-          setItemIdxToEdit(-1); 
-          setRefreshKey((prevKey) => prevKey + 1)
+          setItemIdxToEdit(-1);
         }
       }} >
       <View style={styles.container}>
-        {/* <View>
-          <Text>initialLoad: {JSON.stringify(initialLoad)}</Text>
-          <Text>itemIdxToEdit: {JSON.stringify(itemIdxToEdit)}</Text>
-          <Text>inputFieldIndex.current: {JSON.stringify(inputFieldIndex.current)}</Text>
-          <Text>inputValueRef.current: {JSON.stringify(inputValueRef.current)}</Text>
-          <Text>refreshKey: {JSON.stringify(refreshKey)}</Text>
-        </View> */}
           { (initialLoad == false) ? 
             <View style={styles.initialLoadAnimContainer}>
               <ActivityIndicator size={"large"} color="black" /> 
@@ -793,36 +541,7 @@ export default function Index() {
             </View>}
           </View>  
           }
-          <View style={styles.footerContainer}>
-              {/* <Pressable 
-                  style={[styles.footerButton, styles.cancelButton]}
-                  onPress={() => Toast.hide()}>
-                  <Text>Hide Toast</Text>
-              </Pressable> */}
-            { recording ? 
-              <Pressable 
-                  style={[styles.footerButton, styles.cancelButton]}
-                  onPress={cancelRecording}>
-                  <Image style={styles.footerButtonImage_Cancel} source={require("../assets/images/cancel_icon_black.png")}/>
-              </Pressable>
-              : <></>  }
-            <Animated.View style={[{ transform: [{ scale: recordButtonScaleAnim }] }, styles.footerButton, ((recording || loading) ? styles.stopRecordButton : styles.recordButton)]}>
-              <Pressable
-                  onPress={recording ? processRecording : startRecording}
-                  onPressIn={recordButton_handlePressIn}
-                  onPressOut={recordButton_handlePressOut}>
-              { (loading) ? 
-                  <View style={styles.loadingAnim}>
-                    <ActivityIndicator size={"large"} color="white" /> 
-                  </View> : (recording) ? 
-                      <Text style={styles.footerButtonTitle}>Stop</Text> : 
-                      <Image style={styles.footerButtonImage_Record} source={require("../assets/images/microphone_white.png")}/> }
-              </Pressable>
-            </Animated.View>
-            <View style={styles.bannerAdContainer}>
-              <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
-            </View>
-          </View>
+          <DootooFooter />
       </View>
     </TouchableWithoutFeedback>
     
