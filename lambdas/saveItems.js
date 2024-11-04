@@ -48,9 +48,9 @@ const saveItems = async(anonymous_id, items_str) => {
                 console.log("Encrypted Item Text.");
 
                 const item = await prisma.item.upsert({
-                    where: { task_id: array_item.task_id},
+                    where: { uuid: array_item.uuid},
                     create: { 
-                        task_id: array_item.task_id,
+                        uuid: array_item.uuid,
                         user: {
                             connect: { id: user.id }
                         },
@@ -61,7 +61,7 @@ const saveItems = async(anonymous_id, items_str) => {
                         is_deleted: array_item.is_deleted 
                     },
                     update: { 
-                        task_id: array_item.task_id,
+                        uuid: array_item.uuid,
                         user: {
                             connect: { id: user.id }
                         },

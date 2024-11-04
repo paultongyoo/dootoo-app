@@ -57,7 +57,7 @@ export const handler = async (event) => {
     for (var i = 0; i < item_array.length; i++) {
       const item = item_array[i];
 
-      item.task_id = uuidv4();
+      item.uuid = uuidv4();
 
       // Obtain embedding for item text
       console.log(`Begin retrieval and storing of embedding for recorded item ...`);
