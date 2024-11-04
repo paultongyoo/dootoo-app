@@ -17,7 +17,7 @@ export const UserProvider = ({ children }) => {
       const userData = await initalizeUser();
       setUsername(userData.name);
       setAnonymousId(userData.anonymousId);
-      updateUserCountContext(userData);
+      updateUserCountContext();
 
       if (callback) {
         callback(userData.isNew);
