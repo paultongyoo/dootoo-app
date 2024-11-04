@@ -7,6 +7,7 @@ import { Drawer } from 'expo-router/drawer';
 import { UserProvider, UserContext } from '../components/UserContext';
 import Toast from 'react-native-toast-message';
 import toastConfig from '../components/ToastConfig';
+import { useSegments } from 'expo-router';
 
 const styles = StyleSheet.create({
   headerContainer: {
@@ -147,10 +148,23 @@ const styles = StyleSheet.create({
     fontWeight: 'normal',
     fontSize: 18,
     paddingTop: 5
+  },
+  backButtonContainer: {
+
+  },
+  backIcon_ios: {
+    height: 30,
+    width: 30
+  },
+  backIcon_android: {
+    height: 30,
+    width: 30
   }
 });
 
 export default function RootLayout() {
+  const segments = useSegments();
+
   return (
     <>
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -164,10 +178,17 @@ export default function RootLayout() {
               return (
                 <View style={styles.headerContainer}>
                   <View style={styles.headerLeftContainer}>
+                    { (segments.length == 0) ? 
                       <View style={styles.mainLogoContainer}>
-                      <Text style={styles.mainLogoPart}>doo</Text>
-                      <Text style={[styles.mainLogoPart, styles.secondLogoPart]}>too</Text>
-                    </View>
+                        <Text style={styles.mainLogoPart}>doo</Text>
+                        <Text style={[styles.mainLogoPart, styles.secondLogoPart]}>too</Text>
+                      </View>
+                    : <View style={styles.backButtonContainer}>
+                        <Pressable onPress={navigation.goBack}>
+                        {(Platform.OS == 'ios') ? <Image style={styles.backIcon_ios} source={require('../assets/images/back_arrow_556B2F_ios.png')} />
+                                                : <Image style={styles.backIcon_android} source={require('../assets/images/back_arrow_556B2F_android.png')} />}
+                        </Pressable>
+                      </View> }
                   </View>
                   <View style={styles.headerRightContainer}>
                     <Pressable style={styles.mainProfileIconContainer}

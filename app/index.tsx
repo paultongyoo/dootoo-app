@@ -1,6 +1,7 @@
 import { Platform, Image, Text, View, StyleSheet, Pressable, Animated, Alert,
          TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput } from "react-native";
 import { useState, useRef, useEffect, useContext } from "react";
+import { router } from 'expo-router';
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
 import { transcribeAudioToTasks } from '../components/BackendServices';
 import { saveItems, loadItems } from '../components/Storage';
@@ -753,7 +754,10 @@ export default function Index() {
                                 <Image style={styles.similarCountIcon} source={require("../assets/images/person_icon_556B2F.png")} />
                               </View> : <></>
                           : <Pressable style={styles.giveTipContainer}
-                                onPress={() => Alert.alert("Coming Soon!")}>
+                                onPress={() => { router.navigate({ 
+                                    pathname: '/item/tips/[item_id]',
+                                    params: { item_id: item.id }
+                                  })}}>
                                 <Image style={styles.giveTipIcon} source={require("../assets/images/give_icon_556B2F.png")} />
                             </Pressable>
                         }
