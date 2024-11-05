@@ -3,7 +3,7 @@ import {
   TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput
 } from "react-native";
 import { useState, useRef, useContext, useEffect } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, {
@@ -19,7 +19,7 @@ import { loadTips, saveTips } from '../../../components/Storage';
 
 export default function ItemTips() {
   const { item_idx } = useLocalSearchParams();
-  const { dootooItems, lastRecordedCount, setLastRecordedCount, updateUserCountContext } = useContext(AppContext);
+  const { dootooItems, setDootooItems, lastRecordedCount, setLastRecordedCount, updateUserCountContext } = useContext(AppContext);
   const selectedItem = dootooItems[item_idx];
   const [initialLoad, setInitialLoad] = useState(false);
   const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
@@ -146,12 +146,12 @@ export default function ItemTips() {
   }
 
   const handleDoneClick = () => {
-    Alert.alert("Coming soon!");
-    //setLastRecordedCount(0);
-    //console.log("Done clicked for item index: " + index);
-    //var updatedTasks = [...dootooItems];
-    //updatedTasks![index].is_done = !updatedTasks![index].is_done;
-    //setDootooItems(updatedTasks);
+    setLastRecordedCount(0);
+    console.log("Unfinishing item for item index: " + item_idx);
+    var updatedTasks = [...dootooItems];
+    updatedTasks![item_idx].is_done = false;
+    setDootooItems(updatedTasks);
+    router.back();
   }
 
   const renderRightActions = (progress: SharedValue<number>, dragX: SharedValue<number>, index: number) => {
