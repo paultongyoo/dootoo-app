@@ -122,8 +122,8 @@ export default function ItemTips() {
     console.log("Exiting handle delete item...");
   }
 
-  const handleDoneClick = (index : number) => {
-    Alert.prompt("Coming soon!");
+  const handleDoneClick = () => {
+    Alert.alert("Coming soon!");
     //setLastRecordedCount(0);
     //console.log("Done clicked for item index: " + index);
     //var updatedTasks = [...dootooItems];
@@ -186,7 +186,9 @@ export default function ItemTips() {
     },
     itemContainer: {
       flexDirection: 'row', // Lays out children horizontally
-      alignItems: 'center' // Aligns children vertically (centered in this case)
+      alignItems: 'center', // Aligns children vertically (centered in this case)
+      borderBottomWidth: 1,
+      borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
     },
     itemCircleOpen: {
       width: 26, 
@@ -201,11 +203,10 @@ export default function ItemTips() {
       backgroundColor: '#556B2F50'
     },
     itemNameContainer: {
+      marginTop: 4,
       marginLeft: 15,
       paddingBottom: 10,
       paddingTop: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
       flex: 1,
       flexDirection: 'row'
     },
@@ -292,7 +293,7 @@ export default function ItemTips() {
     <View style={styles.container}>
         <View  style={styles.taskContainer}>
           <View style={styles.itemContainer}>
-            <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(getIndex())}></Pressable>
+            <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick()}></Pressable>
             <View style={styles.itemNameContainer}>
                 <View style={styles.itemNamePressable}>
                   <Text style={[styles.taskTitle, selectedItem.is_done && styles.taskTitle_isDone]}>{selectedItem.text}</Text>
