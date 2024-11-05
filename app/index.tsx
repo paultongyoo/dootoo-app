@@ -331,6 +331,9 @@ export default function Index() {
     action_Delete: {
       backgroundColor: 'red'
     },
+    action_Give: {
+      backgroundColor: '#556B2F'
+    },
     itemLeftSwipeActions: {
       width: 50,
       backgroundColor: 'green',
@@ -387,6 +390,17 @@ export default function Index() {
   const renderRightActions = (progress : SharedValue<number>, dragX : SharedValue<number>, index : number) => {
     return (
       <>
+        { (dootooItems![index].is_done)  ?
+        <Reanimated.View style={[styles.itemSwipeAction, styles.action_Give]}>
+            <Pressable
+                onPress={() => { router.navigate({ 
+                    pathname: '/item/tips/[item_idx]',
+                    params: { item_idx: index }
+                  })}}>
+                <Image style={styles.giveTipIcon} source={require("../assets/images/give_icon_white.png")} />
+            </Pressable>
+        </Reanimated.View>
+        : <></>}
         <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
           <Pressable 
             onPress={() => handleItemDelete(index) }>
@@ -503,13 +517,7 @@ export default function Index() {
                                 <Text style={styles.similarCountText}>{item.similar_count}</Text>
                                 <Image style={styles.similarCountIcon} source={require("../assets/images/person_icon_556B2F.png")} />
                               </View> : <></>
-                          : <Pressable style={styles.giveTipContainer}
-                                onPress={() => { router.navigate({ 
-                                    pathname: '/item/tips/[item_idx]',
-                                    params: { item_idx: getIndex() }
-                                  })}}>
-                                <Image style={styles.giveTipIcon} source={require("../assets/images/give_icon_556B2F.png")} />
-                            </Pressable>
+                          : <></>
                         }
                       </View>
                     </View>
