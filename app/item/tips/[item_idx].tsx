@@ -104,9 +104,9 @@ export default function ItemTips() {
 
   const loadTipsFromBackend = async () => {
     console.log("Loading tips from backend for existing item...");
-    const {cta, savedTips} = await loadTips(selectedItem.uuid);
-    console.log(`Loaded ${(savedTips && savedTips.length > 0) ? savedTips.length : 'empty list'} tips from backend`);  
-    setTips(savedTips);
+    const {cta, loadedTips} = await loadTips(selectedItem.uuid);
+    console.log(`Loaded ${(loadedTips && loadedTips.length > 0) ? loadedTips.length : 'empty list'} tips from backend`);  
+    setTips(loadedTips);
     setInitialLoad(true);
 
     if (tips && tips.length == 0) {

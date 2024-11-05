@@ -151,7 +151,7 @@ export const loadTips = async (item_uuid) => {
     console.log(`Retrieved CTA from backend: ${tip_cta}`);
     console.log(`Retrieved ${tip_array.length} tips from backend.`);
     //console.log("Tip JSON: " + JSON.stringify(tip_array));
-    return response_obj;
+    return { cta: tip_cta, loadedTips : tip_array };
   } catch (error) {
     console.error('Error calling loadTips API:', error);
   }
