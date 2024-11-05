@@ -78,7 +78,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc }) =>
 
             var updatedItems = response.concat(listArray);
             listArraySetterFunc(updatedItems);
-            console.log("Setter function called with updated list: " + JSON.stringify(updatedItems));
+            console.log("Setter function called with updated list...");
         } else {
             console.log("Did not call setter with updated list");
         }

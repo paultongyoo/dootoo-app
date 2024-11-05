@@ -364,7 +364,7 @@ export default function ItemTips() {
                     setTips(data)
                   }}
                   keyExtractor={(item, index) => index.toString()}
-                  ListHeaderComponent={<View style={{ height: 4 }} />}
+                  ListHeaderComponent={<View style={{ height: 0 }} />}
                   ListFooterComponent={<View style={{ height: 200 }} />}
                   renderItem={({ item, getIndex, drag, isActive }) =>
                     <Swipeable
