@@ -253,6 +253,7 @@ export default function ItemTips() {
       marginTop: 4,
       paddingBottom: 10,
       paddingTop: 10,
+      paddingRight: 10,
       flex: 1,
       flexDirection: 'row'
     },
