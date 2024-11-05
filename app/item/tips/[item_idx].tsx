@@ -217,14 +217,17 @@ export default function ItemTips() {
     },
     tipsContainer: {
       flex: 1,
-      backgroundColor: '#FAF3E075'
+      backgroundColor: '#EBDDC5'
+    },
+    swipeableContainer: {
+      backgroundColor: '#EBDDC5'
     },
     tipContainer: {
       flexDirection: 'row', // Lays out children horizontally
       alignItems: 'center', // Aligns children vertically (centered in this case)
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
-      marginLeft: 20
+      marginLeft: 50
     },
     itemCircleOpen: {
       width: 26,
@@ -247,9 +250,17 @@ export default function ItemTips() {
       flexDirection: 'row'
     },
     tipNameContainer: {
-
+      marginTop: 4,
+      paddingBottom: 10,
+      paddingTop: 10,
+      flex: 1,
+      flexDirection: 'row'
     },
     itemNamePressable: {
+      flex: 1,
+      width: '100%'
+    },
+    tipNamePressable: {
       flex: 1,
       width: '100%'
     },
@@ -274,9 +285,6 @@ export default function ItemTips() {
       backgroundColor: 'green',
       justifyContent: 'center',
       alignItems: 'center'
-    },
-    swipeableContainer: {
-      backgroundColor: '#DCC7AA'
     },
     errorTextContainer: {
       padding: 20
@@ -386,7 +394,7 @@ export default function ItemTips() {
                               />
                               :
                               <Pressable
-                                style={styles.itemNamePressable}
+                                style={styles.tipNamePressable}
                                 onLongPress={drag}
                                 disabled={isActive}
                                 onPress={() => handleItemTextTap(item.text, getIndex())}>
