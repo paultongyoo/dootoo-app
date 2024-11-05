@@ -69,7 +69,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc }) =>
         const fileUri = await stopRecording();
         const response = await callBackendTranscribeService(fileUri);
         //const response =  generateStubData(); 
-        console.log(`Transcribed audio into ${response.length} items.`);
+        console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
         setLoading(false);
         setItemIdxToEdit(-1);
 
@@ -78,6 +78,9 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc }) =>
 
             var updatedItems = response.concat(listArray);
             listArraySetterFunc(updatedItems);
+            console.log("Setter function called with updated list: " + JSON.stringify(updatedItems));
+        } else {
+            console.log("Did not call setter with updated list");
         }
 
         console.log("Finished parsing file, deleting...");

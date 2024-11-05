@@ -55,6 +55,8 @@ export default function ItemTips() {
     if (!tips || tips.length == 0) {
       console.log("tips useEffect called with empty tips array, exitting...");
       return;
+    } else {
+      console.log("tips useEffect called tips array length " + tips.length);
     }
 
     if (initialLoad) {
@@ -410,7 +412,7 @@ export default function ItemTips() {
               </View>}
           </View>
         </View>
-        <DootooFooter transcribeFunction={transcribeAudioToTips} listArray={tips} listArraySetterFunc={setTips} />
+        <DootooFooter transcribeFunction={transcribeAudioToTips} listArray={tips || []} listArraySetterFunc={setTips} />
       </View>
     </TouchableWithoutFeedback>
   );
