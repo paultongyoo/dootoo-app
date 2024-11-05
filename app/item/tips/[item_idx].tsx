@@ -1,5 +1,7 @@
-import { Image, Text, View, StyleSheet, Pressable, Animated, Alert,
-  TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput } from "react-native";
+import {
+  Image, Text, View, StyleSheet, Pressable, Animated, Alert,
+  TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput
+} from "react-native";
 import { useState, useRef, useContext, useEffect } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
@@ -31,7 +33,7 @@ export default function ItemTips() {
     strict: false
   });
 
-  const handleSaveItems = async() => {
+  const handleSaveItems = async () => {
     console.log("handleSaveItems called with tips length: " + tips.length);
 
     if (tips && tips.length > 0) {
@@ -41,20 +43,21 @@ export default function ItemTips() {
     }
   };
 
-     // This is expected to be called on any item change, reorder, deletion, etc
-     useEffect(() => {
-      if (initialLoad) {
-        if (lastRecordedCount > 0) {
-          // If we're inside here, we were called after recording new items
-  
-          // Display Toast
-          Toast.show({
-            type: 'undoableToast',
-            text1: `Added ${lastRecordedCount} tip${(lastRecordedCount > 1) ? 's' : ''}.`,
-            position: 'bottom',
-            bottomOffset: 240,
-            props: { onUndoPress: () => {
-  
+  // This is expected to be called on any item change, reorder, deletion, etc
+  useEffect(() => {
+    if (initialLoad) {
+      if (lastRecordedCount > 0) {
+        // If we're inside here, we were called after recording new items
+
+        // Display Toast
+        Toast.show({
+          type: 'undoableToast',
+          text1: `Added ${lastRecordedCount} tip${(lastRecordedCount > 1) ? 's' : ''}.`,
+          position: 'bottom',
+          bottomOffset: 240,
+          props: {
+            onUndoPress: () => {
+
               // Remove the items just added to the list
               console.log(`Undoing recording op; removing first ${lastRecordedCount} tip(s).`);
               var updatedTips = [...tips];
@@ -62,21 +65,22 @@ export default function ItemTips() {
               updatedTips.splice(0, lastRecordedCount);
               console.log("List to update now has " + updatedTips.length + " in it.");
               setLastRecordedCount(0);
-              setTips(updatedTips);          
-            }}
-          }); 
-        } else {
-  
-          // This call has to be in this "main UI thread" in order to work
-          Toast.hide();
-        }
-  
-        handleSaveItems();
-  
+              setTips(updatedTips);
+            }
+          }
+        });
       } else {
-        console.log("UseEffect called before initial load completed, skipping..");
+
+        // This call has to be in this "main UI thread" in order to work
+        Toast.hide();
       }
-    }, [tips]);
+
+      handleSaveItems();
+
+    } else {
+      console.log("UseEffect called before initial load completed, skipping..");
+    }
+  }, [tips]);
 
   useEffect(() => {
     setInitialLoad(false);
@@ -84,7 +88,7 @@ export default function ItemTips() {
     loadTipsFromBackend();
   }, []);
 
-  const loadTipsFromBackend = async() => {
+  const loadTipsFromBackend = async () => {
     console.log("Loading tips from backend for existing item...");
     const savedTips = null // TODO: await loadTips();
     //console.log(`Loaded ${(savedTips && savedTips.length > 0) ? savedTips.length : 'empty list'} tips from backend`);  
@@ -92,11 +96,11 @@ export default function ItemTips() {
     setInitialLoad(true);
   };
 
-  const handleItemTextTap = (itemText : string, index : number) => {
+  const handleItemTextTap = (itemText: string, index: number) => {
     setItemIdxToEdit(index);
   }
 
-  const handleBlur = (index : number) => { 
+  const handleBlur = (index: number) => {
     console.log(`Inside handleBlur for index ${index}`);
     setItemIdxToEdit(-1);
 
@@ -112,7 +116,7 @@ export default function ItemTips() {
     }
   }
 
-  const handleItemDelete = (index : number) => {
+  const handleItemDelete = (index: number) => {
     console.log("Entering handle delete item...");
     setLastRecordedCount(0);
     var updatedTips = [...tips];
@@ -131,13 +135,13 @@ export default function ItemTips() {
     //setDootooItems(updatedTasks);
   }
 
-  const renderRightActions = (progress : SharedValue<number>, dragX : SharedValue<number>, index : number) => {
+  const renderRightActions = (progress: SharedValue<number>, dragX: SharedValue<number>, index: number) => {
     return (
       <>
         <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
-          <Pressable 
-            onPress={() => handleItemDelete(index) }>
-            <Image style={styles.swipeActionIcon_trash} source={require("../../../assets/images/trash_icon_white.png")}/>
+          <Pressable
+            onPress={() => handleItemDelete(index)}>
+            <Image style={styles.swipeActionIcon_trash} source={require("../../../assets/images/trash_icon_white.png")} />
           </Pressable>
         </Reanimated.View>
       </>
@@ -146,7 +150,7 @@ export default function ItemTips() {
 
   const styles = StyleSheet.create({
     container: {
-      flex:   1,
+      flex: 1,
       justifyContent: "center",
       backgroundColor: "#DCC7AA"
     },
@@ -170,7 +174,7 @@ export default function ItemTips() {
       height: 150,
       width: 50,
       opacity: 0.4,
-      transform: [{ rotate: '18deg'}]
+      transform: [{ rotate: '18deg' }]
     },
     taskContainer: {
       flex: 1
@@ -195,8 +199,8 @@ export default function ItemTips() {
       backgroundColor: '#FAF3E075'
     },
     itemCircleOpen: {
-      width: 26, 
-      height: 26, 
+      width: 26,
+      height: 26,
       borderRadius: 13, // Half of the width and height for a perfect circle
       borderColor: 'black',
       borderWidth: 2,
@@ -214,8 +218,8 @@ export default function ItemTips() {
       flex: 1,
       flexDirection: 'row'
     },
-    itemNamePressable: { 
-      flex: 1, 
+    itemNamePressable: {
+      flex: 1,
       width: '100%'
     },
     itemTextInput: {
@@ -242,7 +246,7 @@ export default function ItemTips() {
     },
     swipeableContainer: {
       backgroundColor: '#DCC7AA'
-    }, 
+    },
     errorTextContainer: {
       padding: 20
     },
@@ -270,7 +274,7 @@ export default function ItemTips() {
     },
     swipeActionIcon_ident: {
       height: 30,
-      width: 30 
+      width: 30
     },
     giveTipContainer: {
       justifyContent: 'center',
@@ -290,103 +294,103 @@ export default function ItemTips() {
         if (Keyboard.isVisible()) {
           Keyboard.dismiss();
         }
-        handleBlur(itemIdxToEdit); 
+        handleBlur(itemIdxToEdit);
         setItemIdxToEdit(-1);
       }
     }} >
-    <View style={styles.container}>
-        <View  style={styles.taskContainer}>
+      <View style={styles.container}>
+        <View style={styles.taskContainer}>
           <View style={styles.itemContainer}>
             <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick()}></Pressable>
             <View style={styles.itemNameContainer}>
-                <View style={styles.itemNamePressable}>
-                  <Text style={[styles.taskTitle, selectedItem.is_done && styles.taskTitle_isDone]}>{selectedItem.text}</Text>
-                </View>
-                <View style={styles.giveTipContainer}>
-                    <Image style={styles.giveTipIcon} source={require("../../../assets/images/give_icon_556B2F.png")} />
-                </View>
+              <View style={styles.itemNamePressable}>
+                <Text style={[styles.taskTitle, selectedItem.is_done && styles.taskTitle_isDone]}>{selectedItem.text}</Text>
+              </View>
+              <View style={styles.giveTipContainer}>
+                <Image style={styles.giveTipIcon} source={require("../../../assets/images/give_icon_556B2F.png")} />
+              </View>
             </View>
           </View>
           <View style={styles.tipContainer}>
-            { (initialLoad == false) ? 
-            <View style={styles.initialLoadAnimContainer}>
-              <ActivityIndicator size={"large"} color="black" /> 
-            </View>
-              : 
-            (tips && tips.filter(item => !item.is_deleted)!.length > 0) ? 
-              <DraggableFlatList
-                data={tips.filter(item => !item.is_deleted)}
-                onDragEnd={({ data }) => {
-                  setLastRecordedCount(0);
-                  setTips(data)
-                }}
-                keyExtractor={(item, index) => index.toString()}
-                ListHeaderComponent={<View style={{ height: 4 }} />}
-                ListFooterComponent={<View style={{ height: 200 }} />}
-                renderItem={({item, getIndex, drag, isActive}) => 
-                <Swipeable
-                    key={Math.random()}
-                    childrenContainerStyle={styles.swipeableContainer}
-                    overshootLeft={false}
-                    overshootRight={false}
-                    renderRightActions={(progress, dragX) =>
-                      renderRightActions(progress, dragX, getIndex())
-                    }
-                  >
-                  <ScaleDecorator>
-                    <View style={styles.itemContainer}>
-                      <View style={styles.itemNameContainer}>
-                        { (itemIdxToEdit == getIndex()) ?
-                            <TextInput
-                              multiline={false}
-                              style={styles.itemTextInput}
-                              defaultValue={item.text}
-                              autoFocus={true}
-                              onChangeText={(text) => { 
-                                setLastRecordedCount(0);
-                                inputFieldIndex.current = getIndex();
-                                inputValueRef.current = text;
-                              }}
-                              onBlur={() => handleBlur(getIndex())}
-                            />           
-                          :
-                          <Pressable 
-                            style={styles.itemNamePressable}
-                            onLongPress={drag}
-                            disabled={isActive}
-                            onPress={() => handleItemTextTap(item.text, getIndex()) }>
-                            <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
-                          </Pressable>
-                        }
-                        { 
-                          (item.upvote_count && item.upvote_count > 0) ?
-                          <View style={styles.similarCountContainer}>
-                            <Text style={styles.similarCountText}>{item.upvote_count}</Text>
-                            <Image style={styles.similarCountIcon} source={require("../../../assets/images/thumbs_up_556B2F.png")} />
-                          </View> : <></>
-                        }
-                      </View>
-                    </View>
-                  </ScaleDecorator>
-                </Swipeable>
-              }
-            /> : (initialLoad == true) ?
-              <Animated.View style={[styles.emptyListContainer, { opacity: fadeCTA }]}>
-                <Text style={styles.emptyListContainer_words}>Share your best tips with the community</Text>
-                <Image style={styles.emptyListContainer_arrow} source={require("../../../assets/images/sketch_arrow_556B2F.png")}/>
-              </Animated.View> : <></>
-              }
-                  { (errorMsg) ?
-            <View style={styles.errorTextContainer}>
-              <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
-            </View>
-          : <View style={styles.errorTextContainer}>
-              <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
-            </View>}
+            {(initialLoad == false) ?
+              <View style={styles.initialLoadAnimContainer}>
+                <ActivityIndicator size={"large"} color="black" />
+              </View>
+              :
+              (tips && tips.filter(item => !item.is_deleted)!.length > 0) ?
+                <DraggableFlatList
+                  data={tips.filter(item => !item.is_deleted)}
+                  onDragEnd={({ data }) => {
+                    setLastRecordedCount(0);
+                    setTips(data)
+                  }}
+                  keyExtractor={(item, index) => index.toString()}
+                  ListHeaderComponent={<View style={{ height: 4 }} />}
+                  ListFooterComponent={<View style={{ height: 200 }} />}
+                  renderItem={({ item, getIndex, drag, isActive }) =>
+                    <Swipeable
+                      key={Math.random()}
+                      childrenContainerStyle={styles.swipeableContainer}
+                      overshootLeft={false}
+                      overshootRight={false}
+                      renderRightActions={(progress, dragX) =>
+                        renderRightActions(progress, dragX, getIndex())
+                      }
+                    >
+                      <ScaleDecorator>
+                        <View style={styles.itemContainer}>
+                          <View style={styles.itemNameContainer}>
+                            {(itemIdxToEdit == getIndex()) ?
+                              <TextInput
+                                multiline={false}
+                                style={styles.itemTextInput}
+                                defaultValue={item.text}
+                                autoFocus={true}
+                                onChangeText={(text) => {
+                                  setLastRecordedCount(0);
+                                  inputFieldIndex.current = getIndex();
+                                  inputValueRef.current = text;
+                                }}
+                                onBlur={() => handleBlur(getIndex())}
+                              />
+                              :
+                              <Pressable
+                                style={styles.itemNamePressable}
+                                onLongPress={drag}
+                                disabled={isActive}
+                                onPress={() => handleItemTextTap(item.text, getIndex())}>
+                                <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
+                              </Pressable>
+                            }
+                            {
+                              (item.upvote_count && item.upvote_count > 0) ?
+                                <View style={styles.similarCountContainer}>
+                                  <Text style={styles.similarCountText}>{item.upvote_count}</Text>
+                                  <Image style={styles.similarCountIcon} source={require("../../../assets/images/thumbs_up_556B2F.png")} />
+                                </View> : <></>
+                            }
+                          </View>
+                        </View>
+                      </ScaleDecorator>
+                    </Swipeable>
+                  }
+                /> : (initialLoad == true) ?
+                  <Animated.View style={[styles.emptyListContainer, { opacity: fadeCTA }]}>
+                    <Text style={styles.emptyListContainer_words}>Share your best tips with the community</Text>
+                    <Image style={styles.emptyListContainer_arrow} source={require("../../../assets/images/sketch_arrow_556B2F.png")} />
+                  </Animated.View> : <></>
+            }
+            {(errorMsg) ?
+              <View style={styles.errorTextContainer}>
+                <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
+              </View>
+              : <View style={styles.errorTextContainer}>
+                <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
+              </View>}
           </View>
-        </View>  
-        <DootooFooter transcribeFunction={transcribeAudioToTips} listArray={tips} listArraySetterFunc={setTips}/>
-    </View>
-  </TouchableWithoutFeedback>
+        </View>
+        <DootooFooter transcribeFunction={transcribeAudioToTips} listArray={tips} listArraySetterFunc={setTips} />
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
