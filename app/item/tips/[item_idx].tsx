@@ -307,12 +307,6 @@ export default function ItemTips() {
                 </View>
             </View>
           </View>
-          { (initialLoad == false) ? 
-          <View style={styles.initialLoadAnimContainer}>
-            <ActivityIndicator size={"large"} color="black" /> 
-          </View>
-            : 
-           (tips && tips.filter(item => !item.is_deleted)!.length > 0) ? 
           <View style={styles.tipContainer}>
             { (initialLoad == false) ? 
             <View style={styles.initialLoadAnimContainer}>
