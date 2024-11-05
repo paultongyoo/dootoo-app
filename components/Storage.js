@@ -9,12 +9,15 @@ const TIP_COUNT_KEY = "user_tip_count";
 const USERNAME_KEY = "user_username";
 const ANON_ID_KEY = "user_anonymous_id";
 const ITEM_LIST_KEY = "item_list";
+const TIP_LIST_KEY_PREFIX = "tip_list_";    // Append item UUID to key
 
 const CREATEUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev';
 //const LOADUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadUser_Dev';
 const LOADITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItems_Dev';
 const SAVEITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev';
 const LOADTIPS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadTips_Dev';
+const SAVETIPS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveTips_Dev';
+
 
 
 export const saveItems = async (item_list_obj, callback) => {
@@ -29,6 +32,23 @@ export const saveItems = async (item_list_obj, callback) => {
   // Asyncronously save to backend to enable community features and refresh user counts.
   // Ensure all UI data uses only locally stored data and is not reliant on real-time backend state.
   saveItemsToBackend(item_list_obj, (updatedUser) => {
+    updateLocalUserCounts(updatedUser)
+    callback();
+  });
+}
+
+export const saveTips = async (item_obj, tip_list_obj, callback) => {
+  if (tip_list_obj === undefined) {
+    console.log("saveTips called with undefined parameter, exiting...");
+    return;
+  }
+
+  // Local data is the source of truth for the app (most reliable and lowest latency)
+  await saveTipsLocally(item_obj, tip_list_obj);
+
+  // Asyncronously save to backend to enable community features and refresh user counts.
+  // Ensure all UI data uses only locally stored data and is not reliant on real-time backend state.
+  saveTipsToBackend(item_obj, tip_list_obj, (updatedUser) => {
     updateLocalUserCounts(updatedUser)
     callback();
   });
@@ -131,7 +151,7 @@ export const loadTips = async (item_uuid) => {
     console.log(`Retrieved CTA from backend: ${tip_cta}`);
     console.log(`Retrieved ${tip_array.length} tips from backend.`);
     //console.log("Tip JSON: " + JSON.stringify(tip_array));
-    return response_obj;
+    return { cta: tip_cta, loadedTips : tip_array };
   } catch (error) {
     console.error('Error calling loadTips API:', error);
   }
@@ -230,12 +250,53 @@ const saveItemsToBackend = async(item_list_obj, callback) => {
   }
 }
 
+const saveTipsToBackend = async(item_obj, tip_list_obj, callback) => {
+  if (!tip_list_obj || tip_list_obj.length == 0) {
+    console.log("saveTipsToBackend called with empty list, aborting backend call!");
+    return null;
+  }
+
+  try {
+
+    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
+    console.log("Saving to backend for anon Id: " + localAnonId);
+    const response = await axios.post(SAVETIPS_URL,
+      {
+        anonymous_id: localAnonId,
+        item_uuid: item_obj.uuid,
+        tips_str: JSON.stringify(tip_list_obj)
+      }
+    );
+    const updatedUser = JSON.parse(response.data.body);
+    console.log(`Saved tip list to backend storage with ${tip_list_obj.length} tips.`);
+    console.log(`User returned with save operation: ${JSON.stringify(updatedUser)}`);
+    
+    if (callback) {
+      callback(updatedUser);
+    }
+
+  } catch (e) {
+    console.log("Error saving tip list to backend", e);
+  }
+}
+
 const saveItemsLocally = async(item_list_obj) => {
   try {
     console.log("Saving to local storage...");
     const item_list_str = JSON.stringify(item_list_obj);
     await AsyncStorage.setItem(ITEM_LIST_KEY, item_list_str);
     console.log(`Saved list to local storage with ${item_list_obj.length} items.`)
+  } catch (e) {
+    console.log("Error saving list to local storage.", e);
+  }
+}
+
+const saveTipsLocally = async(item_obj, tip_list_obj) => {
+  try {
+    console.log("Saving to local storage...");
+    const tip_list_str = JSON.stringify(tip_list_obj);
+    await AsyncStorage.setItem(`${TIP_LIST_KEY_PREFIX}_${item_obj.uuid}`, tip_list_str);
+    console.log(`Saved tip list to local storage with ${tip_list_obj.length} tips.`)
   } catch (e) {
     console.log("Error saving list to local storage.", e);
   }

@@ -15,7 +15,7 @@ import { AppContext } from '../../../components/AppContext';
 import DootooFooter from '../../../components/DootooFooter';
 import Toast from 'react-native-toast-message';
 import { transcribeAudioToTips } from '../../../components/BackendServices';
-import { loadTips } from '../../../components/Storage';
+import { loadTips, saveTips } from '../../../components/Storage';
 
 export default function ItemTips() {
   const { item_idx } = useLocalSearchParams();
@@ -42,11 +42,9 @@ export default function ItemTips() {
 
   const handleSaveItems = async () => {
     if (tips && tips.length > 0) {
-      console.log("handleSaveItems called with tips length: " + tips.length);
-
       console.log(`Passing ${tips.length} to saveItems method...`);
-      //await saveTips(tips, () => updateUserCountContext());
-      console.log("Save successful.");
+      await saveTips(selectedItem, tips, () => updateUserCountContext());
+      console.log("Tip save successful.");
     }
   };
 
@@ -106,9 +104,9 @@ export default function ItemTips() {
 
   const loadTipsFromBackend = async () => {
     console.log("Loading tips from backend for existing item...");
-    const {cta, savedTips} = await loadTips(selectedItem.uuid);
-    console.log(`Loaded ${(savedTips && savedTips.length > 0) ? savedTips.length : 'empty list'} tips from backend`);  
-    setTips(savedTips);
+    const {cta, loadedTips} = await loadTips(selectedItem.uuid);
+    console.log(`Loaded ${(loadedTips && loadedTips.length > 0) ? loadedTips.length : 'empty list'} tips from backend`);  
+    setTips(loadedTips);
     setInitialLoad(true);
 
     if (tips && tips.length == 0) {
@@ -217,9 +215,19 @@ export default function ItemTips() {
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
     },
-    tipContainer: {
+    tipsContainer: {
       flex: 1,
-      backgroundColor: '#FAF3E075'
+      backgroundColor: '#EBDDC5'
+    },
+    swipeableContainer: {
+      backgroundColor: '#EBDDC5'
+    },
+    tipContainer: {
+      flexDirection: 'row', // Lays out children horizontally
+      alignItems: 'center', // Aligns children vertically (centered in this case)
+      borderBottomWidth: 1,
+      borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
+      marginLeft: 50
     },
     itemCircleOpen: {
       width: 26,
@@ -241,7 +249,18 @@ export default function ItemTips() {
       flex: 1,
       flexDirection: 'row'
     },
+    tipNameContainer: {
+      marginTop: 4,
+      paddingBottom: 10,
+      paddingTop: 10,
+      flex: 1,
+      flexDirection: 'row'
+    },
     itemNamePressable: {
+      flex: 1,
+      width: '100%'
+    },
+    tipNamePressable: {
       flex: 1,
       width: '100%'
     },
@@ -266,9 +285,6 @@ export default function ItemTips() {
       backgroundColor: 'green',
       justifyContent: 'center',
       alignItems: 'center'
-    },
-    swipeableContainer: {
-      backgroundColor: '#DCC7AA'
     },
     errorTextContainer: {
       padding: 20
@@ -334,7 +350,7 @@ export default function ItemTips() {
               </View>
             </View>
           </View>
-          <View style={styles.tipContainer}>
+          <View style={styles.tipsContainer}>
             {(initialLoad == false) ?
               <View style={styles.initialLoadAnimContainer}>
                 <ActivityIndicator size={"large"} color="black" />
@@ -361,8 +377,8 @@ export default function ItemTips() {
                       }
                     >
                       <ScaleDecorator>
-                        <View style={styles.itemContainer}>
-                          <View style={styles.itemNameContainer}>
+                        <View style={styles.tipContainer}>
+                          <View style={styles.tipNameContainer}>
                             {(itemIdxToEdit == getIndex()) ?
                               <TextInput
                                 multiline={false}
@@ -378,11 +394,11 @@ export default function ItemTips() {
                               />
                               :
                               <Pressable
-                                style={styles.itemNamePressable}
+                                style={styles.tipNamePressable}
                                 onLongPress={drag}
                                 disabled={isActive}
                                 onPress={() => handleItemTextTap(item.text, getIndex())}>
-                                <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
+                                <Text style={[styles.taskTitle]}>{item.text}</Text>
                               </Pressable>
                             }
                             {

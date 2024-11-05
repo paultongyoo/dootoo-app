@@ -27,7 +27,7 @@ export const AppProvider = ({ children }) => {
     const updateUserCountContext = async() => {
       const localUser = await loadLocalUser();
       setDoneCount(localUser.doneCountStr);
-      setTipCount(localUser.taskCountStr);
+      setTipCount(localUser.tipCountStr);
     }
 
     const resetUserContext = async () => {
