@@ -15,7 +15,7 @@ import { AppContext } from '../../../components/AppContext';
 import DootooFooter from '../../../components/DootooFooter';
 import Toast from 'react-native-toast-message';
 import { transcribeAudioToTips } from '../../../components/BackendServices';
-import { loadTips } from '../../../components/Storage';
+import { loadTips, saveTips } from '../../../components/Storage';
 
 export default function ItemTips() {
   const { item_idx } = useLocalSearchParams();
@@ -42,11 +42,9 @@ export default function ItemTips() {
 
   const handleSaveItems = async () => {
     if (tips && tips.length > 0) {
-      console.log("handleSaveItems called with tips length: " + tips.length);
-
       console.log(`Passing ${tips.length} to saveItems method...`);
-      //await saveTips(tips, () => updateUserCountContext());
-      console.log("Save successful.");
+      await saveTips(selectedItem, tips, () => updateUserCountContext());
+      console.log("Tip save successful.");
     }
   };
 
@@ -217,9 +215,16 @@ export default function ItemTips() {
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
     },
-    tipContainer: {
+    tipsContainer: {
       flex: 1,
       backgroundColor: '#FAF3E075'
+    },
+    tipContainer: {
+      flexDirection: 'row', // Lays out children horizontally
+      alignItems: 'center', // Aligns children vertically (centered in this case)
+      borderBottomWidth: 1,
+      borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
+      marginLeft: 20
     },
     itemCircleOpen: {
       width: 26,
@@ -240,6 +245,9 @@ export default function ItemTips() {
       paddingTop: 10,
       flex: 1,
       flexDirection: 'row'
+    },
+    tipNameContainer: {
+
     },
     itemNamePressable: {
       flex: 1,
@@ -334,7 +342,7 @@ export default function ItemTips() {
               </View>
             </View>
           </View>
-          <View style={styles.tipContainer}>
+          <View style={styles.tipsContainer}>
             {(initialLoad == false) ?
               <View style={styles.initialLoadAnimContainer}>
                 <ActivityIndicator size={"large"} color="black" />
@@ -361,8 +369,8 @@ export default function ItemTips() {
                       }
                     >
                       <ScaleDecorator>
-                        <View style={styles.itemContainer}>
-                          <View style={styles.itemNameContainer}>
+                        <View style={styles.tipContainer}>
+                          <View style={styles.tipNameContainer}>
                             {(itemIdxToEdit == getIndex()) ?
                               <TextInput
                                 multiline={false}
@@ -382,7 +390,7 @@ export default function ItemTips() {
                                 onLongPress={drag}
                                 disabled={isActive}
                                 onPress={() => handleItemTextTap(item.text, getIndex())}>
-                                <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
+                                <Text style={[styles.taskTitle]}>{item.text}</Text>
                               </Pressable>
                             }
                             {
