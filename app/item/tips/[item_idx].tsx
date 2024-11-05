@@ -14,7 +14,8 @@ import Reanimated, {
 import { AppContext } from '../../../components/AppContext';
 import DootooFooter from '../../../components/DootooFooter';
 import Toast from 'react-native-toast-message';
-import { transcribeAudioToTips } from './../../../components/BackendServices';
+import { transcribeAudioToTips } from '../../../components/BackendServices';
+import { loadTips } from '../../../components/Storage';
 
 export default function ItemTips() {
   const { item_idx } = useLocalSearchParams();
@@ -27,6 +28,11 @@ export default function ItemTips() {
   const inputValueRef = useRef('');
   const [errorMsg, setErrorMsg] = useState();
   const fadeCTA = useRef(new Animated.Value(0)).current;
+  const ctaAnimation = Animated.timing(fadeCTA, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true
+    });
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
@@ -83,6 +89,7 @@ export default function ItemTips() {
   }, [tips]);
 
   useEffect(() => {
+    setLastRecordedCount(0);
     setInitialLoad(false);
     console.log("Selected item: " + JSON.stringify(selectedItem));
     loadTipsFromBackend();
@@ -90,10 +97,14 @@ export default function ItemTips() {
 
   const loadTipsFromBackend = async () => {
     console.log("Loading tips from backend for existing item...");
-    const savedTips = null // TODO: await loadTips();
-    //console.log(`Loaded ${(savedTips && savedTips.length > 0) ? savedTips.length : 'empty list'} tips from backend`);  
-    //setTips(savedTips);
+    const savedTips = await loadTips(selectedItem.uuid);
+    console.log(`Loaded ${(savedTips && savedTips.length > 0) ? savedTips.length : 'empty list'} tips from backend`);  
+    setTips(savedTips);
     setInitialLoad(true);
+
+    if (tips && tips.length == 0) {
+      ctaAnimation.start();
+    }
   };
 
   const handleItemTextTap = (itemText: string, index: number) => {
@@ -162,17 +173,19 @@ export default function ItemTips() {
     emptyListContainer: {
       flex: 1,
       justifyContent: 'center',
-      paddingLeft: 20
+      paddingLeft: 30,
+      paddingRight: 60
     },
     emptyListContainer_words: {
-      fontSize: 50
+      fontSize: 40,
+      lineHeight: 48
     },
     emptyListContainer_arrow: {
       position: 'absolute',
-      bottom: -9,
-      right: 100,
-      height: 150,
-      width: 50,
+      bottom: 0,
+      right: 80,
+      height: 220,
+      width: 100,
       opacity: 0.4,
       transform: [{ rotate: '18deg' }]
     },

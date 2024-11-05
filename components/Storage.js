@@ -11,9 +11,11 @@ const ANON_ID_KEY = "user_anonymous_id";
 const ITEM_LIST_KEY = "item_list";
 
 const CREATEUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev';
-const LOADUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadUser_Dev';
+//const LOADUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadUser_Dev';
 const LOADITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItems_Dev';
 const SAVEITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev';
+const LOADTIPS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadTips_Dev';
+
 
 export const saveItems = async (item_list_obj, callback) => {
   if (item_list_obj === undefined) {
@@ -106,6 +108,29 @@ export const loadItems = async () => {
     return item_array;
   } catch (error) {
     console.error('Error calling loadItems API:', error);
+  }
+};
+
+export const loadTips = async (item_uuid) => {
+  try {
+
+    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
+    if (!localAnonId) {
+      console.log("Received null local anon Id, aborting loadItems!");
+      return [];
+    }
+    const response = await axios.post(LOADTIPS_URL,
+      {
+        anonymous_id : localAnonId,
+        item_uuid: item_uuid
+      }
+    );
+    const tip_array = JSON.parse(response.data.body);
+    console.log(`Retrieved ${tip_array.length} tips from backend.`);
+    //console.log("Tip JSON: " + JSON.stringify(tip_array));
+    return tip_array;
+  } catch (error) {
+    console.error('Error calling loadTips API:', error);
   }
 };
 
