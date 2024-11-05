@@ -503,8 +503,8 @@ export default function Index() {
                               </View> : <></>
                           : <Pressable style={styles.giveTipContainer}
                                 onPress={() => { router.navigate({ 
-                                    pathname: '/item/tips/[item_id]',
-                                    params: { item_id: item.id }
+                                    pathname: '/item/tips/[item_idx]',
+                                    params: { item_idx: getIndex() }
                                   })}}>
                                 <Image style={styles.giveTipIcon} source={require("../assets/images/give_icon_556B2F.png")} />
                             </Pressable>
