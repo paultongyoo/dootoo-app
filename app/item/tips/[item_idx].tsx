@@ -213,7 +213,7 @@ export default function ItemTips() {
       flexDirection: 'row', // Lays out children horizontally
       alignItems: 'center', // Aligns children vertically (centered in this case)
       borderBottomWidth: 1,
-      borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
+      borderBottomColor: '#3E272333' //#322723 with approx 20% alpha
     },
     tipsContainer: {
       flex: 1,
@@ -242,7 +242,6 @@ export default function ItemTips() {
       backgroundColor: '#556B2F50'
     },
     itemNameContainer: {
-      marginTop: 4,
       marginLeft: 15,
       paddingBottom: 10,
       paddingTop: 10,
