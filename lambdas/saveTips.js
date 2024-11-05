@@ -93,7 +93,8 @@ const refreshUpdatedCounts = async(loadedUser) => {
         where: {
             user: {
                 id: loadedUser.id
-            }
+            },
+            is_deleted: false
         }
     });
     console.log("User Task Tip Count: " + loadedUser.tipCount);

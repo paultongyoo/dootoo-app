@@ -116,7 +116,16 @@ const refreshUpdatedCounts = async(loadedUser) => {
     });
     console.log("User Task Done Count: " + loadedUser.doneCount);
 
-    // TODO: Count user's tips
+    // Count user's tips
+    loadedUser.tipCount = await prisma.tip.count({
+        where: {
+            user: {
+                id: loadedUser.id
+            },
+            is_deleted: false
+        }
+    });
+    console.log("User Tip Count: " + loadedUser.tipCount);
     
     return loadedUser;
 }
