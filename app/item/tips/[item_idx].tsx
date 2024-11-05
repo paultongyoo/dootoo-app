@@ -324,6 +324,10 @@ export default function ItemTips() {
     giveTipIcon: {
       height: 30,
       width: 50
+    },
+    giveTipText: {
+      fontSize: 15,
+      paddingRight: 10
     }
   });
 
@@ -346,6 +350,7 @@ export default function ItemTips() {
                 <Text style={[styles.taskTitle, selectedItem.is_done && styles.taskTitle_isDone]}>{selectedItem.text}</Text>
               </View>
               <View style={styles.giveTipContainer}>
+                <Text style={styles.giveTipText}>{(tips) ? tips.length : '0'}</Text>
                 <Image style={styles.giveTipIcon} source={require("../../../assets/images/give_icon_556B2F.png")} />
               </View>
             </View>
