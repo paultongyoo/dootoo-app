@@ -190,6 +190,10 @@ export default function ItemTips() {
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
     },
+    tipContainer: {
+      flex: 1,
+      backgroundColor: '#FAF3E075'
+    },
     itemCircleOpen: {
       width: 26, 
       height: 26, 
@@ -309,75 +313,83 @@ export default function ItemTips() {
           </View>
             : 
            (tips && tips.filter(item => !item.is_deleted)!.length > 0) ? 
-            <DraggableFlatList
-              data={tips.filter(item => !item.is_deleted)}
-              onDragEnd={({ data }) => {
-                setLastRecordedCount(0);
-                setTips(data)
-              }}
-              keyExtractor={(item, index) => index.toString()}
-              ListHeaderComponent={<View style={{ height: 4 }} />}
-              ListFooterComponent={<View style={{ height: 200 }} />}
-              renderItem={({item, getIndex, drag, isActive}) => 
-              <Swipeable
-                  key={Math.random()}
-                  childrenContainerStyle={styles.swipeableContainer}
-                  overshootLeft={false}
-                  overshootRight={false}
-                  renderRightActions={(progress, dragX) =>
-                    renderRightActions(progress, dragX, getIndex())
-                  }
-                >
-                <ScaleDecorator>
-                  <View style={styles.itemContainer}>
-                    <View style={styles.itemNameContainer}>
-                      { (itemIdxToEdit == getIndex()) ?
-                          <TextInput
-                            multiline={false}
-                            style={styles.itemTextInput}
-                            defaultValue={item.text}
-                            autoFocus={true}
-                            onChangeText={(text) => { 
-                              setLastRecordedCount(0);
-                              inputFieldIndex.current = getIndex();
-                              inputValueRef.current = text;
-                            }}
-                            onBlur={() => handleBlur(getIndex())}
-                          />           
-                        :
-                        <Pressable 
-                          style={styles.itemNamePressable}
-                          onLongPress={drag}
-                          disabled={isActive}
-                          onPress={() => handleItemTextTap(item.text, getIndex()) }>
-                          <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
-                        </Pressable>
-                      }
-                      { 
-                        (item.upvote_count && item.upvote_count > 0) ?
-                        <View style={styles.similarCountContainer}>
-                          <Text style={styles.similarCountText}>{item.upvote_count}</Text>
-                          <Image style={styles.similarCountIcon} source={require("../../../assets/images/thumbs_up_556B2F.png")} />
-                        </View> : <></>
-                      }
+          <View style={styles.tipContainer}>
+            { (initialLoad == false) ? 
+            <View style={styles.initialLoadAnimContainer}>
+              <ActivityIndicator size={"large"} color="black" /> 
+            </View>
+              : 
+            (tips && tips.filter(item => !item.is_deleted)!.length > 0) ? 
+              <DraggableFlatList
+                data={tips.filter(item => !item.is_deleted)}
+                onDragEnd={({ data }) => {
+                  setLastRecordedCount(0);
+                  setTips(data)
+                }}
+                keyExtractor={(item, index) => index.toString()}
+                ListHeaderComponent={<View style={{ height: 4 }} />}
+                ListFooterComponent={<View style={{ height: 200 }} />}
+                renderItem={({item, getIndex, drag, isActive}) => 
+                <Swipeable
+                    key={Math.random()}
+                    childrenContainerStyle={styles.swipeableContainer}
+                    overshootLeft={false}
+                    overshootRight={false}
+                    renderRightActions={(progress, dragX) =>
+                      renderRightActions(progress, dragX, getIndex())
+                    }
+                  >
+                  <ScaleDecorator>
+                    <View style={styles.itemContainer}>
+                      <View style={styles.itemNameContainer}>
+                        { (itemIdxToEdit == getIndex()) ?
+                            <TextInput
+                              multiline={false}
+                              style={styles.itemTextInput}
+                              defaultValue={item.text}
+                              autoFocus={true}
+                              onChangeText={(text) => { 
+                                setLastRecordedCount(0);
+                                inputFieldIndex.current = getIndex();
+                                inputValueRef.current = text;
+                              }}
+                              onBlur={() => handleBlur(getIndex())}
+                            />           
+                          :
+                          <Pressable 
+                            style={styles.itemNamePressable}
+                            onLongPress={drag}
+                            disabled={isActive}
+                            onPress={() => handleItemTextTap(item.text, getIndex()) }>
+                            <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
+                          </Pressable>
+                        }
+                        { 
+                          (item.upvote_count && item.upvote_count > 0) ?
+                          <View style={styles.similarCountContainer}>
+                            <Text style={styles.similarCountText}>{item.upvote_count}</Text>
+                            <Image style={styles.similarCountIcon} source={require("../../../assets/images/thumbs_up_556B2F.png")} />
+                          </View> : <></>
+                        }
+                      </View>
                     </View>
-                  </View>
-                </ScaleDecorator>
-              </Swipeable>
-            }
-          /> : (initialLoad == true) ?
-            <Animated.View style={[styles.emptyListContainer, { opacity: fadeCTA }]}>
-              <Text style={styles.emptyListContainer_words}>Share your best tips with the community</Text>
-              <Image style={styles.emptyListContainer_arrow} source={require("../../../assets/images/sketch_arrow_556B2F.png")}/>
-            </Animated.View> : <></>
-            }
-                { (errorMsg) ?
-          <View style={styles.errorTextContainer}>
-            <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
+                  </ScaleDecorator>
+                </Swipeable>
+              }
+            /> : (initialLoad == true) ?
+              <Animated.View style={[styles.emptyListContainer, { opacity: fadeCTA }]}>
+                <Text style={styles.emptyListContainer_words}>Share your best tips with the community</Text>
+                <Image style={styles.emptyListContainer_arrow} source={require("../../../assets/images/sketch_arrow_556B2F.png")}/>
+              </Animated.View> : <></>
+              }
+                  { (errorMsg) ?
+            <View style={styles.errorTextContainer}>
+              <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
+            </View>
+          : <View style={styles.errorTextContainer}>
+              <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
+            </View>}
           </View>
-        : <View style={styles.errorTextContainer}>
-            <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
-          </View>}
         </View>  
         <DootooFooter transcribeFunction={transcribeAudioToTips} listArray={tips} listArraySetterFunc={setTips}/>
     </View>
