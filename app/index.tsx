@@ -511,13 +511,12 @@ export default function Index() {
                             <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
                           </Pressable>
                         }
-                        { (!item.is_done) ? 
-                              (item.similar_count && item.similar_count > 0) ?
-                              <View style={styles.similarCountContainer}>
-                                <Text style={styles.similarCountText}>{item.similar_count}</Text>
-                                <Image style={styles.similarCountIcon} source={require("../assets/images/person_icon_556B2F.png")} />
-                              </View> : <></>
-                          : <></>
+                        { 
+                          (item.similar_count && item.similar_count > 0) ?
+                          <View style={styles.similarCountContainer}>
+                            <Text style={styles.similarCountText}>{item.similar_count}</Text>
+                            <Image style={styles.similarCountIcon} source={require("../assets/images/person_icon_556B2F.png")} />
+                          </View> : <></>
                         }
                       </View>
                     </View>
