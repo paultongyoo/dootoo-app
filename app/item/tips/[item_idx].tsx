@@ -12,11 +12,11 @@ import Reanimated, {
 import { AppContext } from '../../../components/AppContext';
 import DootooFooter from '../../../components/DootooFooter';
 import Toast from 'react-native-toast-message';
-
+import { transcribeAudioToTips } from './../../../components/BackendServices';
 
 export default function ItemTips() {
   const { item_idx } = useLocalSearchParams();
-  const { dootooItems, setLastRecordedCount } = useContext(AppContext);
+  const { dootooItems, lastRecordedCount, setLastRecordedCount, updateUserCountContext } = useContext(AppContext);
   const selectedItem = dootooItems[item_idx];
   const [initialLoad, setInitialLoad] = useState(false);
   const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
@@ -31,26 +31,64 @@ export default function ItemTips() {
     strict: false
   });
 
+  const handleSaveItems = async() => {
+    console.log("handleSaveItems called with tips length: " + tips.length);
+
+    if (tips && tips.length > 0) {
+      console.log(`Passing ${tips.length} to saveItems method...`);
+      //await saveTips(tips, () => updateUserCountContext());
+      console.log("Save successful.");
+    }
+  };
+
+     // This is expected to be called on any item change, reorder, deletion, etc
+     useEffect(() => {
+      if (initialLoad) {
+        if (lastRecordedCount > 0) {
+          // If we're inside here, we were called after recording new items
+  
+          // Display Toast
+          Toast.show({
+            type: 'undoableToast',
+            text1: `Added ${lastRecordedCount} tip${(lastRecordedCount > 1) ? 's' : ''}.`,
+            position: 'bottom',
+            bottomOffset: 240,
+            props: { onUndoPress: () => {
+  
+              // Remove the items just added to the list
+              console.log(`Undoing recording op; removing first ${lastRecordedCount} tip(s).`);
+              var updatedTips = [...tips];
+              console.log("dootooItems length: " + dootooItems.length);
+              updatedTips.splice(0, lastRecordedCount);
+              console.log("List to update now has " + updatedTips.length + " in it.");
+              setLastRecordedCount(0);
+              setTips(updatedTips);          
+            }}
+          }); 
+        } else {
+  
+          // This call has to be in this "main UI thread" in order to work
+          Toast.hide();
+        }
+  
+        handleSaveItems();
+  
+      } else {
+        console.log("UseEffect called before initial load completed, skipping..");
+      }
+    }, [tips]);
+
   useEffect(() => {
     setInitialLoad(false);
     console.log("Selected item: " + JSON.stringify(selectedItem));
-
-    /* TODO Replace initialzeLocaluser with retreiving item for given index 
-    initializeLocalUser((isNew : boolean) => {
-      loadTipsFromBackend(isNew);
-    });
-    */
+    loadTipsFromBackend();
   }, []);
 
-  const loadTipsFromBackend = async(isNew : boolean) => {
-    if (!isNew) {
-      console.log("Loading tips from backend for existing item...");
-      const savedTips = null // TODO: await loadTips();
-      console.log(`Loaded ${(savedTips && savedTips.length > 0) ? savedTips.length : 'empty list'} tips from backend`);  
-      setTips(savedTips);
-    } else {
-      console.log("Skipping backend tip load as item is new.");
-    }
+  const loadTipsFromBackend = async() => {
+    console.log("Loading tips from backend for existing item...");
+    const savedTips = null // TODO: await loadTips();
+    //console.log(`Loaded ${(savedTips && savedTips.length > 0) ? savedTips.length : 'empty list'} tips from backend`);  
+    //setTips(savedTips);
     setInitialLoad(true);
   };
 
@@ -82,6 +120,15 @@ export default function ItemTips() {
     setTips(updatedTips);
     setItemIdxToEdit(-1);
     console.log("Exiting handle delete item...");
+  }
+
+  const handleDoneClick = (index : number) => {
+    Alert.prompt("Coming soon!");
+    //setLastRecordedCount(0);
+    //console.log("Done clicked for item index: " + index);
+    //var updatedTasks = [...dootooItems];
+    //updatedTasks![index].is_done = !updatedTasks![index].is_done;
+    //setDootooItems(updatedTasks);
   }
 
   const renderRightActions = (progress : SharedValue<number>, dragX : SharedValue<number>, index : number) => {
@@ -140,6 +187,18 @@ export default function ItemTips() {
     itemContainer: {
       flexDirection: 'row', // Lays out children horizontally
       alignItems: 'center' // Aligns children vertically (centered in this case)
+    },
+    itemCircleOpen: {
+      width: 26, 
+      height: 26, 
+      borderRadius: 13, // Half of the width and height for a perfect circle
+      borderColor: 'black',
+      borderWidth: 2,
+      backgroundColor: 'white',
+      marginLeft: 15
+    },
+    itemCircleOpen_isDone: {
+      backgroundColor: '#556B2F50'
     },
     itemNameContainer: {
       marginLeft: 15,
@@ -207,6 +266,16 @@ export default function ItemTips() {
     swipeActionIcon_ident: {
       height: 30,
       width: 30 
+    },
+    giveTipContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingRight: 15,
+      flexDirection: 'row'
+    },
+    giveTipIcon: {
+      height: 28,
+      width: 50
     }
   });
 
@@ -221,13 +290,24 @@ export default function ItemTips() {
       }
     }} >
     <View style={styles.container}>
-        { (initialLoad == false) ? 
+        <View  style={styles.taskContainer}>
+          <View style={styles.itemContainer}>
+            <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(getIndex())}></Pressable>
+            <View style={styles.itemNameContainer}>
+                <View style={styles.itemNamePressable}>
+                  <Text style={[styles.taskTitle, selectedItem.is_done && styles.taskTitle_isDone]}>{selectedItem.text}</Text>
+                </View>
+                <View style={styles.giveTipContainer}>
+                    <Image style={styles.giveTipIcon} source={require("../../../assets/images/give_icon_556B2F.png")} />
+                </View>
+            </View>
+          </View>
+          { (initialLoad == false) ? 
           <View style={styles.initialLoadAnimContainer}>
             <ActivityIndicator size={"large"} color="black" /> 
           </View>
             : 
-        <View  style={styles.taskContainer}>
-          { tips && tips.filter(item => !item.is_deleted)!.length > 0 ? 
+           (tips && tips.filter(item => !item.is_deleted)!.length > 0) ? 
             <DraggableFlatList
               data={tips.filter(item => !item.is_deleted)}
               onDragEnd={({ data }) => {
@@ -298,8 +378,7 @@ export default function ItemTips() {
             <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
           </View>}
         </View>  
-        }
-        <DootooFooter />
+        <DootooFooter transcribeFunction={transcribeAudioToTips} listArray={tips} listArraySetterFunc={setTips}/>
     </View>
   </TouchableWithoutFeedback>
   );

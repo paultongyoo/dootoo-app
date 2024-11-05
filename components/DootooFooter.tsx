@@ -1,13 +1,12 @@
 import { Platform, Image, Text, View, StyleSheet, Pressable, Animated, ActivityIndicator } from "react-native";
-import { transcribeAudioToTasks } from './BackendServices';
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
 import RNFS from 'react-native-fs';
 import { AppContext } from './AppContext.js';
 import { useState, useContext, useRef, useEffect } from "react";
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
 
-const DootooFooter = () => {
-    const { dootooItems, setDootooItems, anonymousId,
+const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc }) => {
+    const { anonymousId,
         setLastRecordedCount } = useContext(AppContext);
     const [loading, setLoading] = useState(false);
     const [recording, setRecording] = useState();
@@ -74,11 +73,11 @@ const DootooFooter = () => {
         setLoading(false);
         setItemIdxToEdit(-1);
 
-        if (dootooItems && response && response.length > 0) {
+        if (listArray && response && response.length > 0) {
             setLastRecordedCount(response.length);  // Set for future toast undo potential
 
-            var updatedItems = response.concat(dootooItems);
-            setDootooItems(updatedItems);
+            var updatedItems = response.concat(listArray);
+            listArraySetterFunc(updatedItems);
         }
 
         console.log("Finished parsing file, deleting...");
@@ -100,7 +99,7 @@ const DootooFooter = () => {
       }
     
       const callBackendTranscribeService = async (fileUri: string) => {
-          return await transcribeAudioToTasks(fileUri, anonymousId);
+          return await transcribeFunction(fileUri, anonymousId);
       }
 
     const cancelRecording = async () => {

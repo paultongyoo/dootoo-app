@@ -13,6 +13,8 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import DootooFooter from '../components/DootooFooter';
 import Toast from 'react-native-toast-message';
+import { transcribeAudioToTasks } from './../components/BackendServices';
+
 
 export default function Index() {
   const { dootooItems, setDootooItems,
@@ -541,7 +543,7 @@ export default function Index() {
             </View>}
           </View>  
           }
-          <DootooFooter />
+          <DootooFooter transcribeFunction={transcribeAudioToTasks} listArray={dootooItems} listArraySetterFunc={setDootooItems} />
       </View>
     </TouchableWithoutFeedback>
     
