@@ -154,7 +154,8 @@ const styles = StyleSheet.create({
   },
   backIcon_ios: {
     height: 30,
-    width: 30
+    width: 15,
+    marginLeft: 5
   },
   backIcon_android: {
     height: 30,

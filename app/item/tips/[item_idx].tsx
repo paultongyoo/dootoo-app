@@ -306,7 +306,7 @@ export default function ItemTips() {
       flexDirection: 'row'
     },
     giveTipIcon: {
-      height: 28,
+      height: 30,
       width: 50
     }
   });
