@@ -24,6 +24,7 @@ export default function ItemTips() {
   const [initialLoad, setInitialLoad] = useState(false);
   const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
   const [tips, setTips] = useState([]);
+  const [emptyTipsCTA, setEmptyTipsCTA] = useState('');
   const inputFieldIndex = useRef(-1);
   const inputValueRef = useRef('');
   const [errorMsg, setErrorMsg] = useState();
@@ -40,9 +41,9 @@ export default function ItemTips() {
   });
 
   const handleSaveItems = async () => {
-    console.log("handleSaveItems called with tips length: " + tips.length);
-
     if (tips && tips.length > 0) {
+      console.log("handleSaveItems called with tips length: " + tips.length);
+
       console.log(`Passing ${tips.length} to saveItems method...`);
       //await saveTips(tips, () => updateUserCountContext());
       console.log("Save successful.");
@@ -51,6 +52,11 @@ export default function ItemTips() {
 
   // This is expected to be called on any item change, reorder, deletion, etc
   useEffect(() => {
+    if (!tips || tips.length == 0) {
+      console.log("tips useEffect called with empty tips array, exitting...");
+      return;
+    }
+
     if (initialLoad) {
       if (lastRecordedCount > 0) {
         // If we're inside here, we were called after recording new items
@@ -90,6 +96,7 @@ export default function ItemTips() {
 
   useEffect(() => {
     setLastRecordedCount(0);
+    ctaAnimation.reset();
     setInitialLoad(false);
     console.log("Selected item: " + JSON.stringify(selectedItem));
     loadTipsFromBackend();
@@ -97,12 +104,13 @@ export default function ItemTips() {
 
   const loadTipsFromBackend = async () => {
     console.log("Loading tips from backend for existing item...");
-    const savedTips = await loadTips(selectedItem.uuid);
+    const {cta, savedTips} = await loadTips(selectedItem.uuid);
     console.log(`Loaded ${(savedTips && savedTips.length > 0) ? savedTips.length : 'empty list'} tips from backend`);  
     setTips(savedTips);
     setInitialLoad(true);
 
     if (tips && tips.length == 0) {
+      setEmptyTipsCTA(cta);
       ctaAnimation.start();
     }
   };
@@ -184,8 +192,8 @@ export default function ItemTips() {
       position: 'absolute',
       bottom: 0,
       right: 80,
-      height: 220,
-      width: 100,
+      height: 150,
+      width: 50,
       opacity: 0.4,
       transform: [{ rotate: '18deg' }]
     },
@@ -389,7 +397,7 @@ export default function ItemTips() {
                   }
                 /> : (initialLoad == true) ?
                   <Animated.View style={[styles.emptyListContainer, { opacity: fadeCTA }]}>
-                    <Text style={styles.emptyListContainer_words}>Share your best tips with the community</Text>
+                    <Text style={styles.emptyListContainer_words}>{emptyTipsCTA}</Text>
                     <Image style={styles.emptyListContainer_arrow} source={require("../../../assets/images/sketch_arrow_556B2F.png")} />
                   </Animated.View> : <></>
             }

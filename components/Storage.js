@@ -125,10 +125,13 @@ export const loadTips = async (item_uuid) => {
         item_uuid: item_uuid
       }
     );
-    const tip_array = JSON.parse(response.data.body);
+    const response_obj = JSON.parse(response.data.body);
+    const tip_cta = response_obj.cta;
+    const tip_array = response_obj.tips;
+    console.log(`Retrieved CTA from backend: ${tip_cta}`);
     console.log(`Retrieved ${tip_array.length} tips from backend.`);
     //console.log("Tip JSON: " + JSON.stringify(tip_array));
-    return tip_array;
+    return response_obj;
   } catch (error) {
     console.error('Error calling loadTips API:', error);
   }
