@@ -40,8 +40,9 @@ export const handler = async (event) => {
             model: "gpt-4o",
             messages: [
             {"role": "system", 
-                "content": "Create a short casually-worded call to action for a mobile app user to share their best tips with the community for the provided user task.  " +
-                        "Use the following format: 'Share your best tips with the community to help them <do the user task>."},
+                "content": "Create a short casually-worded call to action for a mobile app user to share tips " +
+                "for completing tasks similar to the provided user task, generalizing all references the user may make to specific names. " +
+                        "Use the following format: 'Share your best tips with the community to help them <do the user task generalizing references to specific names>."},
             {"role": "user", "content": decryptedString }
             ]
         });
