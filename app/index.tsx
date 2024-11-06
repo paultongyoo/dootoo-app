@@ -233,7 +233,7 @@ export default function Index() {
   const handleDoneClick = (index: number) => {
     try {
       setLastRecordedCount(0);
-      console.log("Done clicked for item index: " + index);
+      //console.log("Done clicked for item index: " + index);
       var updatedTasks = [...dootooItems];
 
       // Before making changes, remember index of first done item in the list, if any
@@ -250,8 +250,7 @@ export default function Index() {
       updatedTasks![index].is_done = !updatedTasks![index].is_done;
       if (updatedTasks![index].is_done == true) {
 
-        // Backup previous location of item in current session in case user un-done's item
-        console.log("Backing index of item: " + index);
+        console.log(`Backing index of item ${updatedTasks![index].text}: ${index}`);
         updatedTasks![index].index_backup = index;
 
         // Move item to the bottom of the list
@@ -262,7 +261,8 @@ export default function Index() {
         const backupVal = updatedTasks![index].index_backup;
         const [item] = updatedTasks.splice(index, 1);   // remove the item
         const modifyIdxIfNecessary = (index == updatedTasks.length) ? index - 1 : index;
-        if (updatedTasks![modifyIdxIfNecessary].index_backup &&
+        console.log("updatedTasks![modifyIdxIfNecessary].index_backup value: " + updatedTasks![modifyIdxIfNecessary].index_backup);
+        if (updatedTasks![modifyIdxIfNecessary].index_backup != null &&
           (updatedTasks![modifyIdxIfNecessary].index_backup <= firstDoneItemIdx)) {
 
           console.log("Placing item at firstDoneItemIdx: " + firstDoneItemIdx);
