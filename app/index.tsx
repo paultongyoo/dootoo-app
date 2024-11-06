@@ -231,31 +231,23 @@ export default function Index() {
     console.log("Done clicked for item index: " + index);
     var updatedTasks = [...dootooItems];
     updatedTasks![index].is_done = !updatedTasks![index].is_done;
-    if (updatedTasks![index].is_done ) {
+    // if (updatedTasks![index].is_done == true ) {
 
-      // Backup previous location of item in current session in case user un-done's item
-      updatedTasks![index].index_backup = index;
+    //   // Backup previous location of item in current session in case user un-done's item
+    //   updatedTasks![index].index_backup = index;
 
-      // Move item to above the first is_done item in the list
-      var firstUnDoneItemIdxFromBottom = -1;
-      for (var i = updatedTasks.length - 1; i >= 0; i--) {
-        var currItem = updatedTasks[i];
-        if (!currItem.is_done) {
-          firstUnDoneItemIdxFromBottom = i;
-          break;
-        }
-      }
-      
-      const [item] = updatedTasks.splice(index, 1);   // remove the item
-      updatedTasks.splice(firstUnDoneItemIdxFromBottom, 0, item)  // insert it in new location
-    } else {
+    //   // Move item to the bottom of the list
+    //   const [item] = updatedTasks.splice(index, 1);   // remove the item
+    //   updatedTasks = updatedTasks.concat(item);
 
-      // If item was undone, move item to its previous location if it was saved
-      if (updatedTasks![index].index_backup) {
-        const [item] = updatedTasks.splice(index, 1);   // remove the item
-        updatedTasks.splice(updatedTasks![index].index_backup, 0, item)  // insert it in new location
-      }
-    }
+    // } else {
+
+    //   // If item was undone, move item to its previous location if it was saved
+    //   if (updatedTasks![index].index_backup) {
+    //     const [item] = updatedTasks.splice(index, 1);   // remove the item
+    //     updatedTasks.splice(updatedTasks![index].index_backup, 0, item)  // insert it in new location
+    //   }
+    // }
 
     setDootooItems(updatedTasks);
   }
@@ -406,7 +398,8 @@ export default function Index() {
       width: 16, 
       height: 16, 
       borderRadius: 8, // Half of the width and height for a perfect circle
-      backgroundColor: '#DCC7AA'
+      backgroundColor: '#556B2F50',
+      marginLeft: 10
     },
     swipeActionIcon_trash: {
       height: 30,
