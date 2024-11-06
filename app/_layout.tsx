@@ -150,7 +150,8 @@ const styles = StyleSheet.create({
     paddingTop: 5
   },
   backButtonContainer: {
-
+    width: 40,
+    paddingTop: 20
   },
   backIcon_ios: {
     height: 30,
