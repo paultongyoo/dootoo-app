@@ -71,9 +71,9 @@ export default function Index() {
 
   const loadItemsFromBackend = async (isNew: boolean) => {
     if (!isNew) {
-      console.log("Loading items from backend for existing user...");
+      //console.log("Loading items from backend for existing user...");
       const savedItems = await loadItems();
-      console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} items from backend`);
+      //console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} items from backend`);
       setDootooItems(savedItems);
     } else {
       console.log("Skipping backend item load as user is new.");
@@ -83,13 +83,13 @@ export default function Index() {
   };
 
   const handleSaveItems = async () => {
-    console.log("handleSaveItems called with dootooitems length: " + dootooItems.length);
+    //console.log("handleSaveItems called with dootooitems length: " + dootooItems.length);
     ctaAnimation.reset();
 
     if (dootooItems && dootooItems.length > 0) {
-      console.log(`Passing ${dootooItems.length} to saveItems method...`);
+      //console.log(`Passing ${dootooItems.length} to saveItems method...`);
       await saveItems(dootooItems, () => updateUserCountContext());
-      console.log("Save successful.");
+      //console.log("Save successful.");
     }
 
     var nonDeletedItems = dootooItems.filter(item => !item.is_deleted);
@@ -140,7 +140,7 @@ export default function Index() {
       handleSaveItems();
 
     } else {
-      console.log("UseEffect called before initial load completed, skipping..");
+      //console.log("UseEffect called before initial load completed, skipping..");
     }
   }, [dootooItems]);
 
@@ -235,10 +235,23 @@ export default function Index() {
       setLastRecordedCount(0);
       console.log("Done clicked for item index: " + index);
       var updatedTasks = [...dootooItems];
+
+      // Before making changes, remember index of first done item in the list, if any
+      var firstDoneItemIdx = -1;
+      for (var i = 0; i < updatedTasks.length; i++) {
+        var currItem = updatedTasks[i];
+        if (currItem.is_done) {
+          firstDoneItemIdx = i;
+          break;
+        }
+      }
+      console.log("firstDoneItemIdx before changing list: " + firstDoneItemIdx);
+
       updatedTasks![index].is_done = !updatedTasks![index].is_done;
       if (updatedTasks![index].is_done == true) {
 
         // Backup previous location of item in current session in case user un-done's item
+        console.log("Backing index of item: " + index);
         updatedTasks![index].index_backup = index;
 
         // Move item to the bottom of the list
@@ -246,27 +259,19 @@ export default function Index() {
         updatedTasks = updatedTasks.concat(item);
 
       } else {
-
-        var firstDoneItemIdx = -1;
-        for (var i = 0; i < updatedTasks.length; i++) {
-          var currItem = updatedTasks[i];
-          if (currItem.is_done) {
-            firstDoneItemIdx = i;
-            break;
-          }
-        }
         const backupVal = updatedTasks![index].index_backup;
         const [item] = updatedTasks.splice(index, 1);   // remove the item
         const modifyIdxIfNecessary = (index == updatedTasks.length) ? index - 1 : index;
         if (updatedTasks![modifyIdxIfNecessary].index_backup &&
           (updatedTasks![modifyIdxIfNecessary].index_backup <= firstDoneItemIdx)) {
+
+          console.log("Placing item at firstDoneItemIdx: " + firstDoneItemIdx);
           updatedTasks.splice(firstDoneItemIdx, 0, item)  // insert it in new location
         } else {
-          console.log("Entering backupVal code");
+          console.log("Placing item at backup index: " + backupVal);
           updatedTasks.splice(backupVal, 0, item)  // insert it in new location
         }
       }
-      console.log("Updating updatedtasks order");
       setDootooItems(updatedTasks);
     } catch(error) {
       console.log("Error occurred during done logic!", error);
