@@ -424,7 +424,7 @@ export default function Index() {
       width: 16,
       height: 16,
       borderRadius: 8, // Half of the width and height for a perfect circle
-      borderWidth: 1,
+      //borderWidth: 1,
       borderColor: '#3E2723',
       backgroundColor: '#556B2F60',
       marginLeft: 10
