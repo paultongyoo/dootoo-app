@@ -256,7 +256,7 @@ export default function Index() {
         updatedTasks.splice(updatedTasks![index].index_backup, 0, item)  // insert it in new location
       }
     }
-    
+
     setDootooItems(updatedTasks);
   }
 
@@ -392,6 +392,21 @@ export default function Index() {
       width: 28,
       height: 28,
       opacity: 0.6
+    },
+    tipCountContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingRight: 15,
+      flexDirection: 'row'
+    },
+    tipCountText: {
+      fontSize: 15
+    },
+    tipCountIcon: {
+      width: 16, 
+      height: 16, 
+      borderRadius: 8, // Half of the width and height for a perfect circle
+      backgroundColor: '#DCC7AA'
     },
     swipeActionIcon_trash: {
       height: 30,
@@ -536,6 +551,13 @@ export default function Index() {
                             onPress={() => handleItemTextTap(item.text, getIndex()) }>
                             <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
                           </Pressable>
+                        }
+                        { 
+                          (item.tip_count && item.tip_count > 0) ?
+                          <View style={styles.tipCountContainer}>
+                            <Text style={styles.tipCountText}>{item.tip_count}</Text>
+                            <View style={styles.tipCountIcon}></View>
+                          </View> : <></>
                         }
                         { 
                           (item.similar_count && item.similar_count > 0) ?

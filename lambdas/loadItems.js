@@ -51,6 +51,17 @@ export const handler = async (event) => {
         console.log("num close embeddings return: " + num_close_embeddings[0].count);
         // append count to item object
         retrievedItems[i].similar_count = Number(num_close_embeddings[0].count + ''); // Hack workaround to convert BigInt 
+
+        // Execute query to count how many tips from similar items
+        const num_tips_of_close_embeddings = await prisma.$queryRawUnsafe(
+          `SELECT COUNT(DISTINCT "Tip".id) FROM "Tip" LEFT JOIN "Item" on "Tip".item_id = "Item".id ` +
+          `WHERE "Tip".user_id <> ` + user.id + ` AND 0.4 > embedding <-> '[` + 
+          embeddingArray  + `]'::vector;`);
+
+        console.log("num tips of close embeddings return: " + num_tips_of_close_embeddings[0].count);
+        // append count to item object
+        retrievedItems[i].tip_count = Number(num_tips_of_close_embeddings[0].count + ''); // Hack workaround to convert BigInt 
+
         console.log("Updated Item: " + retrievedItems[i]);
 
       } catch (error) {
