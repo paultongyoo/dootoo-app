@@ -464,6 +464,12 @@ export default function Index() {
     giveTipIcon: {
       height: 30,
       width: 50
+    },
+    simliarTipsIcon: {
+      height: 16,
+      width: 16,
+      borderRadius: 8,
+      backgroundColor: 'white'
     }
   });
 
@@ -480,7 +486,18 @@ export default function Index() {
               <Image style={styles.giveTipIcon} source={require("../assets/images/give_icon_white.png")} />
             </Pressable>
           </Reanimated.View>
-          : <></>}
+          : (dootooItems![index].tip_count && dootooItems![index].tip_count > 0) ?
+            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Give]}>
+              <Pressable
+                onPress={() => {
+                  setSelectedItem(dootooItems![index]);
+                  router.navigate('/tips');
+                }}>
+                <View style={styles.simliarTipsIcon}></View>
+              </Pressable>
+            </Reanimated.View>
+          : <></>       
+          }
         <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
           <Pressable
             onPress={() => handleItemDelete(index)}>
@@ -543,7 +560,7 @@ export default function Index() {
                   setDootooItems(data)
                 }}
                 keyExtractor={(item, index) => index.toString()}
-                ListHeaderComponent={<View style={{ height: 4 }} />}
+                ListHeaderComponent={<View style={{ height: 0 }} />}
                 ListFooterComponent={<View style={{ height: 200 }} />}
                 refreshing={refreshing}
                 onRefresh={() => {

@@ -9,7 +9,7 @@ const kms = new AWS.KMS();
 export const handler = async (event) => {
     var cta = '';
     const user = await prisma.user.findUnique({
-        where: { anonymous_id: event.anonymous_id}
+        where: { anonymous_id: event.anonymous_id }
     });
     console.log(user);
     const selectedItem = await prisma.item.findUnique({
@@ -17,33 +17,45 @@ export const handler = async (event) => {
     });
     console.log(selectedItem);
 
-    const retrievedTips = await prisma.tip.findMany({
-        where: { 
-            item: { id: selectedItem.id },
-            is_deleted: false
-        },
-        orderBy: {
-          rank_idx: 'asc'
-        }
-    });
-    console.log("Returning " + retrievedTips.length + " tips...");
+    // If the specified item is done, return the 
+    // user's tips for the item (if any).
+    //
+    // ELSE return the tips of items similar to the specified item.
+
+    var retrievedTips = []
+
+    if (selectedItem.is_done) {
+        console.log("Specified item is done, returning its tips (if any)...");
+        retrievedTips = await prisma.tip.findMany({
+            where: {
+                item: { id: selectedItem.id },
+                is_deleted: false
+            },
+            orderBy: {
+                rank_idx: 'asc'
+            }
+        });
+        console.log("Query returned " + retrievedTips.length + " tip(s).");
+    } else {
+        console.log("Specified item is NOT done, returning tips of similar items (if any)...");
+        retrievedTips = await prisma.$queryRawUnsafe(
+            `SELECT "Tip".* FROM "Tip" LEFT JOIN "Item" on "Tip".item_id = "Item".id ` +
+            `WHERE "Tip".user_id <> ` + user.id + ` AND 0.4 > embedding <-> (select embedding from "Item" where uuid = '` + selectedItem.uuid + `')`);
+        console.log("Query returned " + retrievedTips.length + " tip(s).");
+    }
 
     if (retrievedTips.length == 0) {
-        // Decrypt item text
-        const decryptParams = {
-            CiphertextBlob: Buffer.from(selectedItem.text, 'base64')
-        };
-        const decryptedData = await kms.decrypt(decryptParams).promise();
-        const decryptedString = decryptedData.Plaintext.toString('utf-8');
-
+        const decryptedString = await decryptItemText(selectedItem);
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [
-            {"role": "system", 
-                "content": "Create a short casually-worded call to action for a mobile app user to share tips " +
-                "for completing tasks similar to the provided user task, generalizing all references the user may make to specific names. " +
-                        "Use the following format: 'Share your best tips with the community to help them <do the user task generalizing references to specific names>."},
-            {"role": "user", "content": decryptedString }
+                {
+                    "role": "system",
+                    "content": "Create a short casually-worded call to action for a mobile app user to share tips " +
+                        "for completing tasks similar to the provided user task, generalizing all references the user may make to specific names. " +
+                        "Use the following format: 'Share your best tips with the community to help them <do the user task generalizing references to specific names>."
+                },
+                { "role": "user", "content": decryptedString }
             ]
         });
         cta = completion.choices[0].message.content;
@@ -53,9 +65,17 @@ export const handler = async (event) => {
     }
 
     const response = {
-      statusCode: 200,
-      body: JSON.stringify({ cta: cta, tips: retrievedTips })
+        statusCode: 200,
+        body: JSON.stringify({ cta: cta, tips: retrievedTips })
     };
     await prisma.$disconnect();
     return response;
 };
+
+const decryptItemText = async (item) => {
+    const decryptParams = {
+        CiphertextBlob: Buffer.from(item.text, 'base64')
+    };
+    const decryptedData = await kms.decrypt(decryptParams).promise();
+    return decryptedData.Plaintext.toString('utf-8');
+}
