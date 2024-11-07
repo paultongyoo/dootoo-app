@@ -99,7 +99,7 @@ import {
             setLastRecordedCount(0);
             ctaAnimation.reset();
             console.log("Selected item: " + JSON.stringify(selectedItem));
-
+            loadTipsFromBackend();
             return () => {
                 console.log('User has navigated away from this tips route');
                 setInitialLoad(false);
@@ -109,13 +109,13 @@ import {
         }, [])
     );
 
-    useEffect(() => {
-        // setInitialLoad(false);
-        // setLastRecordedCount(0);
-        // ctaAnimation.reset();
-        console.log("Selected item: " + JSON.stringify(selectedItem));
-        loadTipsFromBackend();
-      }, [selectedItem]);
+    // useEffect(() => {
+    //     // setInitialLoad(false);
+    //     // setLastRecordedCount(0);
+    //     // ctaAnimation.reset();
+    //     console.log("Selected item: " + JSON.stringify(selectedItem));
+        
+    //   }, [selectedItem]);
   
     const loadTipsFromBackend = async () => {
       console.log("Loading tips from backend for existing item...");
