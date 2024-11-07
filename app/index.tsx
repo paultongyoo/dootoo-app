@@ -26,6 +26,7 @@ export default function Index() {
   const itemFlatList = useRef(null);
   const swipeableRef = useRef(null);
   const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
+  const [refreshing, setRefreshing] = useState(false);
   const [errorMsg, setErrorMsg] = useState();
   const [listDeletesRefreshed, setListDeletesRefreshed] = useState(true);
   const inputFieldIndex = useRef(-1);
@@ -80,6 +81,7 @@ export default function Index() {
       console.log("Skipping backend item load as user is new.");
     }
     setInitialLoad(true);
+    setRefreshing(false);
     ctaAnimation.start();
   };
 
@@ -543,6 +545,12 @@ export default function Index() {
                 keyExtractor={(item, index) => index.toString()}
                 ListHeaderComponent={<View style={{ height: 4 }} />}
                 ListFooterComponent={<View style={{ height: 200 }} />}
+                refreshing={refreshing}
+                onRefresh={() => {
+                  console.log("onRefresh called");
+                  setRefreshing(true);
+                  loadItemsFromBackend(false);
+                }}
                 renderItem={({ item, getIndex, drag, isActive }) =>
                   <Swipeable
                     key={Math.random()}
