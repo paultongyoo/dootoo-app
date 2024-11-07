@@ -27,13 +27,17 @@ export const saveItems = async (item_list_obj, callback) => {
   }
 
   // Local data is the source of truth for the app (most reliable and lowest latency)
-  await saveItemsLocally(item_list_obj);
+  // STRATEGY UPDATED 11.7.24: We no longer save items locally because we want to requery latest
+  // data on every save in case items text and therefore tips, similar items, etc counts should be updated.
+  // We actually never loaded the UI from local data anyway.
+  //
+  //await saveItemsLocally(item_list_obj);
 
   // Asyncronously save to backend to enable community features and refresh user counts.
   // Ensure all UI data uses only locally stored data and is not reliant on real-time backend state.
-  saveItemsToBackend(item_list_obj, (updatedUser) => {
+  saveItemsToBackend(item_list_obj, (updatedUser, updatedItems) => {
     updateLocalUserCounts(updatedUser)
-    callback();
+    callback(updatedItems);
   });
 }
 
@@ -102,7 +106,7 @@ export const loadLocalUser = async() => {
       doneCountStr: await AsyncStorage.getItem(DONE_COUNT_KEY),
       tipCountStr: await AsyncStorage.getItem(TIP_COUNT_KEY)
     }
-    console.log("Retrieved user from local storage: " + JSON.stringify(loadedUser));
+    //console.log("Retrieved user from local storage: " + JSON.stringify(loadedUser));
     return loadedUser;
   } catch (error) {
     console.error('Error loading user from local storage:', error);
@@ -123,7 +127,7 @@ export const loadItems = async () => {
       }
     );
     const item_array = JSON.parse(response.data.body);
-    console.log(`Retrieved ${item_array.length} items from backend.`);
+    //console.log(`Retrieved ${item_array.length} items from backend.`);
     //console.log("Item JSON: " + JSON.stringify(item_array));
     return item_array;
   } catch (error) {
@@ -148,8 +152,8 @@ export const loadTips = async (item_uuid) => {
     const response_obj = JSON.parse(response.data.body);
     const tip_cta = response_obj.cta;
     const tip_array = response_obj.tips;
-    console.log(`Retrieved CTA from backend: ${tip_cta}`);
-    console.log(`Retrieved ${tip_array.length} tips from backend.`);
+    //console.log(`Retrieved CTA from backend: ${tip_cta}`);
+    //console.log(`Retrieved ${tip_array.length} tips from backend.`);
     //console.log("Tip JSON: " + JSON.stringify(tip_array));
     return { cta: tip_cta, loadedTips : tip_array };
   } catch (error) {
@@ -174,7 +178,7 @@ const updateLocalUserCounts = async(updatedUser) => {
     var doneCount = -1;
     var tipCount = -1;
     if (updatedUser) {
-      console.log("Inside updateLocalUserCounts: " + JSON.stringify(updatedUser));
+      //console.log("Inside updateLocalUserCounts: " + JSON.stringify(updatedUser));
       doneCount = updatedUser.doneCount;
       tipCount = updatedUser.tipCount;
     } else {
@@ -184,7 +188,7 @@ const updateLocalUserCounts = async(updatedUser) => {
     }
     await AsyncStorage.setItem(DONE_COUNT_KEY, `${doneCount}`);
     await AsyncStorage.setItem(TIP_COUNT_KEY, `${tipCount}`);
-    console.log(`Updated local counts: Done Count (${doneCount}) Tip Count (${tipCount})`);
+    //console.log(`Updated local counts: Done Count (${doneCount}) Tip Count (${tipCount})`);
   } catch (e) {
     console.log("Error updated user counts in local storage.", e);
   }
@@ -202,7 +206,7 @@ const createUser = async () => {
     const newAnonymousId = uuid.v4();
     const doneCountStr = '0';
     const tipCountStr = '0';
-    console.log(`Username created ${newUsername} with Anon ID ${newAnonymousId}`);
+    //console.log(`Username created ${newUsername} with Anon ID ${newAnonymousId}`);
 
     // Store user data locally
     await saveUserLocally(newUsername, newAnonymousId, doneCountStr, tipCountStr);
@@ -230,19 +234,21 @@ const saveItemsToBackend = async(item_list_obj, callback) => {
   try {
 
     const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
-    console.log("Saving to backend for anon Id: " + localAnonId);
+    //console.log("Saving to backend for anon Id: " + localAnonId);
     const response = await axios.post(SAVEITEMS_URL,
       {
         anonymous_id: localAnonId,
         items_str: JSON.stringify(item_list_obj)
       }
     );
-    const updatedUser = JSON.parse(response.data.body);
-    console.log(`Saved list to backend storage with ${item_list_obj.length} items.`);
-    console.log(`User returned with save operation: ${JSON.stringify(updatedUser)}`);
+    const response_obj = JSON.parse(response.data.body);
+    const updatedUser = response_obj.user;
+    const updatedItems = response_obj.items;
+    //console.log("Updated User: " + JSON.stringify(updatedUser));
+    //console.log("Updated items: " + JSON.stringify(updatedItems));
     
     if (callback) {
-      callback(updatedUser);
+      callback(updatedUser, updatedItems);
     }
 
   } catch (e) {
@@ -259,7 +265,7 @@ const saveTipsToBackend = async(item_obj, tip_list_obj, callback) => {
   try {
 
     const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
-    console.log("Saving to backend for anon Id: " + localAnonId);
+    //console.log("Saving to backend for anon Id: " + localAnonId);
     const response = await axios.post(SAVETIPS_URL,
       {
         anonymous_id: localAnonId,
@@ -268,8 +274,8 @@ const saveTipsToBackend = async(item_obj, tip_list_obj, callback) => {
       }
     );
     const updatedUser = JSON.parse(response.data.body);
-    console.log(`Saved tip list to backend storage with ${tip_list_obj.length} tips.`);
-    console.log(`User returned with save operation: ${JSON.stringify(updatedUser)}`);
+    //console.log(`Saved tip list to backend storage with ${tip_list_obj.length} tips.`);
+    //console.log(`User returned with save operation: ${JSON.stringify(updatedUser)}`);
     
     if (callback) {
       callback(updatedUser);
@@ -282,10 +288,10 @@ const saveTipsToBackend = async(item_obj, tip_list_obj, callback) => {
 
 const saveItemsLocally = async(item_list_obj) => {
   try {
-    console.log("Saving to local storage...");
+    //console.log("Saving to local storage...");
     const item_list_str = JSON.stringify(item_list_obj);
     await AsyncStorage.setItem(ITEM_LIST_KEY, item_list_str);
-    console.log(`Saved list to local storage with ${item_list_obj.length} items.`)
+    //console.log(`Saved list to local storage with ${item_list_obj.length} items.`)
   } catch (e) {
     console.log("Error saving list to local storage.", e);
   }
@@ -293,10 +299,10 @@ const saveItemsLocally = async(item_list_obj) => {
 
 const saveTipsLocally = async(item_obj, tip_list_obj) => {
   try {
-    console.log("Saving to local storage...");
+    //console.log("Saving to local storage...");
     const tip_list_str = JSON.stringify(tip_list_obj);
     await AsyncStorage.setItem(`${TIP_LIST_KEY_PREFIX}_${item_obj.uuid}`, tip_list_str);
-    console.log(`Saved tip list to local storage with ${tip_list_obj.length} tips.`)
+    //console.log(`Saved tip list to local storage with ${tip_list_obj.length} tips.`)
   } catch (e) {
     console.log("Error saving list to local storage.", e);
   }
@@ -319,7 +325,7 @@ const saveUserLocally = async(newUsername, newAnonymousId, doneCount, tipCount) 
   await AsyncStorage.setItem(ANON_ID_KEY, newAnonymousId);
   await AsyncStorage.setItem(DONE_COUNT_KEY, doneCount);
   await AsyncStorage.setItem(TIP_COUNT_KEY, tipCount);
-  console.log("Saved user data to local storage successfully.");
+  //console.log("Saved user data to local storage successfully.");
 }
 
 // Pass generated user name and anonymous ID to backend to store on server
@@ -328,6 +334,6 @@ const saveUserToBackend = async(newUsername, newAnonymousId) => {
     username: newUsername,
     anonymous_id: newAnonymousId
   });
-  console.log('User saved to backend storage');
+  //console.log('User saved to backend storage');
 }
 

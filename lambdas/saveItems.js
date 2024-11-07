@@ -7,13 +7,15 @@ import AWS from 'aws-sdk';
 const kms = new AWS.KMS();
 const ITEMS_KEY_ID = process.env.ITEMS_KEY_ID;
 
+const lambda = new AWS.Lambda();
+
 export const handler = async (event) => {
   const user = await saveItems(event.anonymous_id, event.items_str);
   const updatedUser = await refreshUpdatedCounts(user);
-  console.log("Returning updatedUser: " + JSON.stringify(updatedUser));
+  const updatedItems = await loadItems(event.anonymous_id);
   const response = {
     statusCode: 200,
-    body: JSON.stringify(updatedUser)
+    body: JSON.stringify({ user: updatedUser, items: updatedItems})
   };
   await prisma.$disconnect()
   return response;
@@ -128,4 +130,22 @@ const refreshUpdatedCounts = async(loadedUser) => {
     console.log("User Tip Count: " + loadedUser.tipCount);
     
     return loadedUser;
+}
+
+const loadItems = async (anonymous_id) => {
+    const lambdaParams = {
+        FunctionName: "loadItems_Dev", // Replace with the name of the other Lambda
+        InvocationType: "RequestResponse", // Use "Event" for asynchronous invocation
+        Payload: JSON.stringify({ anonymous_id: anonymous_id })
+    };
+
+    try {
+        const response = await lambda.invoke(lambdaParams).promise();
+        const updatedItems = JSON.parse(JSON.parse(response.Payload).body);
+        console.log("Number of updated items: " + updatedItems.length);
+        return updatedItems;
+    } catch (error) {
+        console.error("Error invoking Lambda function:", error);
+        throw error;
+    }
 }

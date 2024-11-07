@@ -28,7 +28,7 @@ export default function Index() {
   const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMsg, setErrorMsg] = useState();
-  const [listDeletesRefreshed, setListDeletesRefreshed] = useState(true);
+  const [itemListRefreshed, setItemListRefreshed] = useState(true);
   const inputFieldIndex = useRef(-1);
   const inputValueRef = useRef('');
   const fadeCTA = useRef(new Animated.Value(0)).current;
@@ -89,7 +89,15 @@ export default function Index() {
     console.log("handleSaveItems called with dootooitems length: " + dootooItems.length);
     if (dootooItems && dootooItems.length > 0) {
       //console.log(`Passing ${dootooItems.length} to saveItems method...`);
-      await saveItems(dootooItems, () => updateUserCountContext());
+      await saveItems(dootooItems, (updatedItems) => {  
+        updateUserCountContext();    
+        setItemListRefreshed(false);
+        setDootooItems(updatedItems);
+        if (updatedItems && updatedItems.length == 0) {
+          ctaAnimation.start();
+        }
+      
+      });
       //console.log("Save successful.");
     }
   };
@@ -103,9 +111,9 @@ export default function Index() {
 
   // This is expected to be called on any item change, reorder, deletion, etc
   useEffect(() => {
-    if (!listDeletesRefreshed) {
-      console.log("dootooItems useEffect called on list delete trim; exitting early");
-      setListDeletesRefreshed(true);
+    if (!itemListRefreshed) {
+      console.log("dootooItems useEffect[dootooItems] called on list refresh; exitting early");
+      setItemListRefreshed(true);
       return;
     }
 
@@ -141,18 +149,8 @@ export default function Index() {
         Toast.hide();
       }
 
-      handleSaveItems();
-
-      var nonDeletedItems = dootooItems.filter(item => !item.is_deleted);
-
-      if (nonDeletedItems && nonDeletedItems.length == 0) {
-        ctaAnimation.start();
-      }
-
-      if (nonDeletedItems.length < dootooItems.length) {
-        setListDeletesRefreshed(false);
-        setDootooItems(nonDeletedItems);
-      }
+      // Asyncronous
+      handleSaveItems();  // TODO:  Have save items return full list to populate with new counts
 
     } else {
       //console.log("UseEffect called before initial load completed, skipping..");
@@ -263,12 +261,12 @@ export default function Index() {
           break;
         }
       }
-      console.log("firstDoneItemIdx before changing list: " + firstDoneItemIdx);
+      //console.log("firstDoneItemIdx before changing list: " + firstDoneItemIdx);
 
       updatedTasks![index].is_done = !updatedTasks![index].is_done;
       if (updatedTasks![index].is_done == true) {
 
-        console.log(`Backing index of item ${updatedTasks![index].text}: ${index}`);
+        //console.log(`Backing index of item ${updatedTasks![index].text}: ${index}`);
         updatedTasks![index].index_backup = index;
 
         // Move item to the bottom of the list
@@ -279,10 +277,10 @@ export default function Index() {
         const backupVal = updatedTasks![index].index_backup;
         const [item] = updatedTasks.splice(index, 1);   // remove the item
         if (backupVal != null && (backupVal > firstDoneItemIdx)) {
-          console.log("Placing item at firstDoneItemIdx: " + firstDoneItemIdx);
+          //console.log("Placing item at firstDoneItemIdx: " + firstDoneItemIdx);
           updatedTasks.splice(firstDoneItemIdx, 0, item)  // insert it in new location
         } else {
-          console.log("Placing item at backup index: " + backupVal);
+          //console.log("Placing item at backup index: " + backupVal);
           updatedTasks.splice(backupVal, 0, item)  // insert it in new location
         }
       }
