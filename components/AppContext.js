@@ -12,6 +12,7 @@ export const AppProvider = ({ children }) => {
     const [tipCount, setTipCount] = useState(0);
     const [dootooItems, setDootooItems] = useState([]);
     const [lastRecordedCount, setLastRecordedCount] = useState(0);
+    const [selectedItem, setSelectedItem] = useState(null);
 
     const initializeLocalUser = async(callback) => {
       const userData = await initalizeUser();
@@ -47,7 +48,8 @@ export const AppProvider = ({ children }) => {
             tipCount, setTipCount,
             resetUserContext,
             initializeLocalUser,
-            updateUserCountContext
+            updateUserCountContext,
+            selectedItem, setSelectedItem
              }}>
           {children}
         </AppContext.Provider>

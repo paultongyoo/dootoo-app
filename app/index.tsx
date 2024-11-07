@@ -20,13 +20,14 @@ import { transcribeAudioToTasks } from './../components/BackendServices';
 
 export default function Index() {
   const { dootooItems, setDootooItems,
-    lastRecordedCount, setLastRecordedCount,
+    lastRecordedCount, setLastRecordedCount, setSelectedItem,
     initializeLocalUser, updateUserCountContext } = useContext(AppContext);
   const [initialLoad, setInitialLoad] = useState(false);
   const itemFlatList = useRef(null);
   const swipeableRef = useRef(null);
   const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
   const [errorMsg, setErrorMsg] = useState();
+  const [listDeletesRefreshed, setListDeletesRefreshed] = useState(true);
   const inputFieldIndex = useRef(-1);
   const inputValueRef = useRef('');
   const fadeCTA = useRef(new Animated.Value(0)).current;
@@ -83,18 +84,11 @@ export default function Index() {
   };
 
   const handleSaveItems = async () => {
-    //console.log("handleSaveItems called with dootooitems length: " + dootooItems.length);
-    ctaAnimation.reset();
-
+    console.log("handleSaveItems called with dootooitems length: " + dootooItems.length);
     if (dootooItems && dootooItems.length > 0) {
       //console.log(`Passing ${dootooItems.length} to saveItems method...`);
       await saveItems(dootooItems, () => updateUserCountContext());
       //console.log("Save successful.");
-    }
-
-    var nonDeletedItems = dootooItems.filter(item => !item.is_deleted);
-    if (nonDeletedItems && nonDeletedItems.length == 0) {
-      ctaAnimation.start();
     }
   };
 
@@ -107,6 +101,14 @@ export default function Index() {
 
   // This is expected to be called on any item change, reorder, deletion, etc
   useEffect(() => {
+    if (!listDeletesRefreshed) {
+      console.log("dootooItems useEffect called on list delete trim; exitting early");
+      setListDeletesRefreshed(true);
+      return;
+    }
+
+    ctaAnimation.reset();
+
     if (initialLoad) {
       if (lastRecordedCount > 0) {
         // If we're inside here, we were called after recording new items
@@ -138,6 +140,17 @@ export default function Index() {
       }
 
       handleSaveItems();
+
+      var nonDeletedItems = dootooItems.filter(item => !item.is_deleted);
+
+      if (nonDeletedItems && nonDeletedItems.length == 0) {
+        ctaAnimation.start();
+      }
+
+      if (nonDeletedItems.length < dootooItems.length) {
+        setListDeletesRefreshed(false);
+        setDootooItems(nonDeletedItems);
+      }
 
     } else {
       //console.log("UseEffect called before initial load completed, skipping..");
@@ -193,8 +206,8 @@ export default function Index() {
               for (var i = index; i <= index + numSubtasks; i++) {
                 updatedTasks[i].is_deleted = true;
               }
-              setDootooItems(updatedTasks);
               setItemIdxToEdit(-1);
+              setDootooItems(updatedTasks);
             }
           },
           {
@@ -206,14 +219,17 @@ export default function Index() {
       );
     } else {
 
-      console.log("Deleting sole item...");
-
+      console.log(`Deleting sole item at index ${index}...`);
+      console.log("Items before delete: " + JSON.stringify(updatedTasks));
       // Just mark the item as deleted
       updatedTasks[index].is_deleted = true;
-      setDootooItems(updatedTasks);
       setItemIdxToEdit(-1);
+      setDootooItems(updatedTasks);
+
+      console.log("Items after delete: " + JSON.stringify(updatedTasks));
+
     }
-    console.log("Exiting handle delete item...");
+    console.log(`Exiting handle delete item at index ${index}...`);
   }
 
   const handleMakeParent = (index: number) => {
@@ -456,10 +472,8 @@ export default function Index() {
           <Reanimated.View style={[styles.itemSwipeAction, styles.action_Give]}>
             <Pressable
               onPress={() => {
-                router.navigate({
-                  pathname: '/item/tips/[item_idx]',
-                  params: { item_idx: index }
-                })
+                setSelectedItem(dootooItems![index]);
+                router.navigate('/tips');
               }}>
               <Image style={styles.giveTipIcon} source={require("../assets/images/give_icon_white.png")} />
             </Pressable>
