@@ -52,15 +52,29 @@ export const handler = async (event) => {
         // append count to item object
         retrievedItems[i].similar_count = Number(num_close_embeddings[0].count + ''); // Hack workaround to convert BigInt 
 
-        // Execute query to count how many tips from similar items
-        const num_tips_of_close_embeddings = await prisma.$queryRawUnsafe(
-          `SELECT COUNT(DISTINCT "Tip".id) FROM "Tip" LEFT JOIN "Item" on "Tip".item_id = "Item".id ` +
-          `WHERE "Tip".user_id <> ` + user.id + ` AND 0.4 > embedding <-> '[` + 
-          embeddingArray  + `]'::vector;`);
+        // If item is done, return count of your tips for item
+        // If item is not done, return count of tips on similar items
+        if (item.is_done) {
+          const tipCount = await prisma.tip.count({
+              where: { 
+                  item: {
+                      id: item.id
+                  }
+              }
+          })
+          console.log("Setting tip count of item: " + tipCount);
+          retrievedItems[i].tip_count = tipCount;
+        } else {
 
-        console.log("num tips of close embeddings return: " + num_tips_of_close_embeddings[0].count);
-        // append count to item object
-        retrievedItems[i].tip_count = Number(num_tips_of_close_embeddings[0].count + ''); // Hack workaround to convert BigInt 
+          // Execute query to count how many tips from similar items
+          const num_tips_of_close_embeddings = await prisma.$queryRawUnsafe(
+            `SELECT COUNT(DISTINCT "Tip".id) FROM "Tip" LEFT JOIN "Item" on "Tip".item_id = "Item".id ` +
+            `WHERE "Tip".user_id <> ` + user.id + ` AND 0.4 > embedding <-> '[` + 
+            embeddingArray  + `]'::vector;`);
+
+          console.log("Setting tip count of similar items: " + num_tips_of_close_embeddings[0].count);
+          retrievedItems[i].tip_count = Number(num_tips_of_close_embeddings[0].count + ''); // Hack workaround to convert BigInt 
+        }
 
         console.log("Updated Item: " + retrievedItems[i]);
 
