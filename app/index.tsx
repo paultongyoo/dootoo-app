@@ -480,6 +480,7 @@ export default function Index() {
           <Reanimated.View style={[styles.itemSwipeAction, styles.action_Give]}>
             <Pressable
               onPress={() => {
+                console.log("Give Tips button tapped on item: " + dootooItems![index].text);
                 setSelectedItem(dootooItems![index]);
                 router.navigate('/tips');
               }}>
@@ -490,6 +491,7 @@ export default function Index() {
             <Reanimated.View style={[styles.itemSwipeAction, styles.action_Give]}>
               <Pressable
                 onPress={() => {
+                  console.log("Similar Tips button tapped on item: " + dootooItems![index].text);
                   setSelectedItem(dootooItems![index]);
                   router.navigate('/tips');
                 }}>

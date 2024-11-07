@@ -98,8 +98,8 @@ import {
             setInitialLoad(false);
             setLastRecordedCount(0);
             ctaAnimation.reset();
-            console.log("Selected item: " + JSON.stringify(selectedItem));
-            loadTipsFromBackend();
+            console.log("Selected item: " + selectedItem.text);
+
             return () => {
                 console.log('User has navigated away from this tips route');
                 setInitialLoad(false);
@@ -109,16 +109,12 @@ import {
         }, [])
     );
 
-    // useEffect(() => {
-    //     // setInitialLoad(false);
-    //     // setLastRecordedCount(0);
-    //     // ctaAnimation.reset();
-    //     console.log("Selected item: " + JSON.stringify(selectedItem));
-        
-    //   }, [selectedItem]);
+    useEffect(() => {
+        console.log("Calling loadTipsFromBackend for item: " + selectedItem.text);
+        loadTipsFromBackend();
+      }, [selectedItem]);
   
     const loadTipsFromBackend = async () => {
-      console.log("Loading tips from backend for existing item...");
       const {cta, loadedTips} = await loadTips(selectedItem.uuid);
       console.log(`Loaded ${(loadedTips && loadedTips.length > 0) ? loadedTips.length : 'empty list'} tips from backend`);  
       setTips(loadedTips);
