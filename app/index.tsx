@@ -278,11 +278,7 @@ export default function Index() {
       } else {
         const backupVal = updatedTasks![index].index_backup;
         const [item] = updatedTasks.splice(index, 1);   // remove the item
-        const modifyIdxIfNecessary = (index == updatedTasks.length) ? index - 1 : index;
-        console.log("updatedTasks![modifyIdxIfNecessary].index_backup value: " + updatedTasks![modifyIdxIfNecessary].index_backup);
-        if (updatedTasks![modifyIdxIfNecessary].index_backup != null &&
-          (updatedTasks![modifyIdxIfNecessary].index_backup <= firstDoneItemIdx)) {
-
+        if (backupVal != null && (backupVal > firstDoneItemIdx)) {
           console.log("Placing item at firstDoneItemIdx: " + firstDoneItemIdx);
           updatedTasks.splice(firstDoneItemIdx, 0, item)  // insert it in new location
         } else {
