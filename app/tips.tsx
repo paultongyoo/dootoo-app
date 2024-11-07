@@ -110,6 +110,7 @@ export default function ItemTips() {
 
       setInitialLoad(false);
       setLastRecordedCount(0);
+      setItemIdxToEdit(-1);
       ctaAnimation.reset();
       console.log("Selected item: " + selectedItem.text);
 
@@ -117,6 +118,7 @@ export default function ItemTips() {
         console.log('User has navigated away from this tips route');
         setInitialLoad(false);
         setLastRecordedCount(0);
+        setItemIdxToEdit(-1);
         setSelectedItem(null);
         ctaAnimation.reset();
       }
@@ -186,13 +188,15 @@ export default function ItemTips() {
 
   const renderRightActions = (progress: SharedValue<number>, dragX: SharedValue<number>, index: number) => {
     return (
-      <>
+      <> 
+        { (tips[index].user_id == selectedItem.user_id) ?
         <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
           <Pressable
             onPress={() => handleItemDelete(index)}>
             <Image style={styles.swipeActionIcon_trash} source={require("../assets/images/trash_icon_white.png")} />
           </Pressable>
         </Reanimated.View>
+        : <Text></Text> }
       </>
     );
   };
@@ -432,8 +436,14 @@ export default function ItemTips() {
                   <DraggableFlatList
                     data={tips.filter(item => !item.is_deleted)}
                     onDragEnd={({ data }) => {
-                      setLastRecordedCount(0);
-                      setTips(data)
+
+                      // Only support dragging items if user owns the tips
+                      if (tips[0].user_id == selectedItem.user_id) {
+                        setLastRecordedCount(0);
+                        setTips(data)
+                      } else {
+                        console.log("Ignoring drag operation as user doesn't own the first tip.");
+                      }
                     }}
                     keyExtractor={(item, index) => index.toString()}
                     ListHeaderComponent={<View style={{ height: 0 }} />}
@@ -451,7 +461,7 @@ export default function ItemTips() {
                         <ScaleDecorator>
                           <View style={styles.tipContainer}>
                             <View style={styles.tipNameContainer}>
-                              {(itemIdxToEdit == getIndex()) ?
+                              {(item.user_id == selectedItem.user_id) && (itemIdxToEdit == getIndex()) ?
                                 <TextInput
                                   multiline={false}
                                   style={styles.itemTextInput}
