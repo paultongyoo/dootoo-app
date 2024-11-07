@@ -63,10 +63,6 @@ const saveItems = async(anonymous_id, items_str) => {
                         is_deleted: array_item.is_deleted 
                     },
                     update: { 
-                        uuid: array_item.uuid,
-                        user: {
-                            connect: { id: user.id }
-                        },
                         text: encryptedString,
                         is_child: array_item.is_child,
                         rank_idx: i,

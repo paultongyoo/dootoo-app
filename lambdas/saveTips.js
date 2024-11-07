@@ -52,13 +52,6 @@ const saveTips = async(anonymous_id, item_uuid, tips_str) => {
                     is_deleted: array_tip.is_deleted 
                 },
                 update: { 
-                    uuid: array_tip.uuid,
-                    item: {
-                        connect: { id: item_obj.id }
-                    },
-                    user: {
-                        connect: { id: user.id }
-                    },
                     text: array_tip.text,
                     rank_idx: i,
                     is_deleted: array_tip.is_deleted
