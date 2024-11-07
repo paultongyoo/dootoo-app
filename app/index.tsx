@@ -470,6 +470,10 @@ export default function Index() {
       width: 16,
       borderRadius: 8,
       backgroundColor: 'white'
+    },
+    receiveTipIcon: {
+      height: 40,
+      width: 45
     }
   });
 
@@ -495,7 +499,8 @@ export default function Index() {
                   setSelectedItem(dootooItems![index]);
                   router.navigate('/tips');
                 }}>
-                <View style={styles.simliarTipsIcon}></View>
+                {/* <View style={styles.simliarTipsIcon}></View> */}
+                <Image style={styles.receiveTipIcon} source={require("../assets/images/receive_tip_white.png")} />
               </Pressable>
             </Reanimated.View>
           : <></>       
