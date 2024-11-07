@@ -424,7 +424,7 @@ export default function ItemTips() {
             <View style={styles.tipsContainer}>
               {(initialLoad == false) ?
                 <View style={styles.initialLoadAnimContainer}>
-                  <Text style={styles.initialLoadMsg}>{(selectedItem.is_done) ? 'Loading your tips' : 'Loading tips of similar items'}</Text>
+                  <Text style={styles.initialLoadMsg}>{(selectedItem.is_done) ? 'Loading your tips' : 'Loading tips from the community'}</Text>
                   <ActivityIndicator size={"large"} color="black" />
                 </View>
                 :
