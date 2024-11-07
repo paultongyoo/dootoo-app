@@ -375,6 +375,10 @@ export default function ItemTips() {
       borderColor: '#3E2723',
       backgroundColor: '#556B2F60',
       marginLeft: 10
+    }, 
+    initialLoadMsg: {
+      fontSize: 20,
+      paddingBottom: 15
     }
   });
 
@@ -420,6 +424,7 @@ export default function ItemTips() {
             <View style={styles.tipsContainer}>
               {(initialLoad == false) ?
                 <View style={styles.initialLoadAnimContainer}>
+                  <Text style={styles.initialLoadMsg}>{(selectedItem.is_done) ? 'Loading your tips' : 'Loading tips of similar items'}</Text>
                   <ActivityIndicator size={"large"} color="black" />
                 </View>
                 :
