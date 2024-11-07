@@ -257,7 +257,7 @@ export default function ItemTips() {
       alignItems: 'center', // Aligns children vertically (centered in this case)
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
-      marginLeft: 50
+      marginLeft: 20
     },
     itemCircleOpen: {
       width: 26,
