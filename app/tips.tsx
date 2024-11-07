@@ -343,6 +343,23 @@ import {
       giveTipText: {
         fontSize: 15,
         paddingRight: 10
+      },
+      tipCountContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingRight: 15,
+        flexDirection: 'row'
+      },
+      tipCountText: {
+        fontSize: 15
+      },
+      tipCountIcon: {
+        width: 16,
+        height: 16,
+        borderRadius: 8, // Half of the width and height for a perfect circle
+        borderColor: '#3E2723',
+        backgroundColor: '#556B2F60',
+        marginLeft: 10
       }
     });
   
@@ -366,10 +383,20 @@ import {
                 <View style={styles.itemNamePressable}>
                   <Text style={[styles.taskTitle, selectedItem.is_done && styles.taskTitle_isDone]}>{selectedItem.text}</Text>
                 </View>
-                {/* <View style={styles.giveTipContainer}>
-                  <Text style={styles.giveTipText}>{(tips) ? tips.length : ''}</Text>
-                  <Image style={styles.giveTipIcon} source={require("../assets/images/give_icon_556B2F.png")} />
-                </View> */}
+                {
+                  (selectedItem.tip_count && selectedItem.tip_count > 0) ?
+                    <View style={styles.tipCountContainer}>
+                      <Text style={styles.tipCountText}>{selectedItem.tip_count}</Text>
+                      <View style={styles.tipCountIcon}></View>
+                    </View> : <></>
+                }
+                {
+                  (selectedItem.similar_count && selectedItem.similar_count > 0) ?
+                    <View style={styles.similarCountContainer}>
+                      <Text style={styles.similarCountText}>{selectedItem.similar_count}</Text>
+                      <Image style={styles.similarCountIcon} source={require("../assets/images/person_icon_556B2F.png")} />
+                    </View> : <></>
+                }
               </View>
             </View>
             <View style={styles.tipsContainer}>
