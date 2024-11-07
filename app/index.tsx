@@ -617,7 +617,7 @@ export default function Index() {
                             </Pressable>
                           }
                           {
-                            (item.tip_count && item.tip_count > 0) ?
+                            (item.tip_count || item.is_done) ?
                               <View style={styles.tipCountContainer}>
                                 <Text style={styles.tipCountText}>{item.tip_count}</Text>
                                 <View style={styles.tipCountIcon}></View>
