@@ -186,6 +186,33 @@ export default function ItemTips() {
     router.back();
   }
 
+  const handleTipVote = (index, voteValue) => {
+
+  }
+
+  const handleTipFlag = (index) => {
+    Alert.alert(
+      'Report Abuse', // Title of the alert
+      'Are you sure you want to report this tip as abusive? Reporting helps us keep our community safe. Your report will remain anonymous.', // Message of the alert
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Tip Flag Cancel Pressed'),
+          style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
+        },
+        {
+          text: 'Yes',
+          onPress: () => {
+            console.log('Tip Flag OK Pressed');
+            // TODO: Save flag to backend
+            // TODO: Remove tip from user lifetime view
+          },
+        },
+      ],
+      { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+    );
+  }
+
   const renderRightActions = (progress: SharedValue<number>, dragX: SharedValue<number>, index: number) => {
     return (
       <> 
@@ -200,20 +227,20 @@ export default function ItemTips() {
         <>
           <Reanimated.View style={styles.voteContainer}>
             <Pressable style={styles.voteIconContainer}
-                onPress={() => {}/* handleTipVote(index, 1) */}>
+                onPress={() => handleTipVote(index, 1)}>
               <Image style={styles.similarCountIcon} source={require("../assets/images/thumbs_up_556B2F.png")} />
             </Pressable>
             <View style={styles.voteCountContainer}>
               <Text style={styles.voteCountText}>{tips[index].upvote_count || 'vote'}</Text>                        
             </View> 
             <Pressable style={styles.voteIconContainer}
-                onPress={() => {}/* handleTipVote(index, -1) */}>
+                onPress={() => handleTipVote(index, -1)}>
               <Image style={styles.similarCountIcon} source={require("../assets/images/thumbs_down_556B2F.png")} />
             </Pressable>
           </Reanimated.View>
           <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
             <Pressable
-              onPress={() => {} /* handleTipFlag(index) */}>
+              onPress={() => handleTipFlag(index)}>
               <Image style={styles.swipeActionIcon_trash} source={require("../assets/images/flag_white.png")} />
             </Pressable>
           </Reanimated.View>
