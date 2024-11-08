@@ -26,15 +26,18 @@ export const handler = async (event) => {
 
     if (selectedItem.is_done) {
         console.log("Specified item is done, returning its tips (if any)...");
-        retrievedTips = await prisma.tip.findMany({
-            where: {
-                item: { id: selectedItem.id },
-                is_deleted: false
-            },
-            orderBy: {
-                rank_idx: 'asc'
-            }
-        });
+        retrievedTips = await prisma.$queryRawUnsafe(
+            `SELECT COALESCE(tip_net_vote::integer, 0) as upvote_count, "Tip".* 
+            FROM "Tip" 
+            LEFT JOIN (
+                SELECT "TipVote".tip_id, SUM(value) as tip_net_vote
+                FROM "TipVote" 
+                LEFT JOIN "Tip" on "TipVote".id = "Tip".id
+                LEFT JOIN "Item" on "Item".id = "Tip".item_id
+                WHERE "Tip".is_deleted IS false AND "Tip".item_id = ${selectedItem.id}
+                GROUP BY 1) tip_votes on "Tip".id = tip_votes.tip_id
+            WHERE "Tip".is_deleted IS false AND "Tip".item_id = ${selectedItem.id}
+            ORDER BY rank_idx ASC;`);
         console.log("Query returned " + retrievedTips.length + " tip(s).");
     } else {
         console.log("Specified item is NOT done, returning tips of similar items (if any)...");
@@ -51,9 +54,9 @@ export const handler = async (event) => {
                 FROM "TipVote" 
                 LEFT JOIN "Tip" on "TipVote".id = "Tip".id
                 LEFT JOIN "Item" on "Item".id = "Tip".item_id
-                WHERE "Tip".user_id <> ${user.id} AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}')
+                WHERE "Tip".is_deleted IS false AND "Tip".user_id <> ${user.id} AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}')
                 GROUP BY 1) tip_votes on "Tip".id = tip_votes.tip_id
-            WHERE "Tip".user_id <> ${user.id} AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}')
+            WHERE "Tip".is_deleted IS false AND "Tip".user_id <> ${user.id} AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}')
             ORDER BY upvote_count DESC;`);
         console.log("Query returned " + retrievedTips.length + " tip(s).");
     }
