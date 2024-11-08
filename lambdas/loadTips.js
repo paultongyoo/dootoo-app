@@ -32,7 +32,7 @@ export const handler = async (event) => {
             LEFT JOIN (
                 SELECT "TipVote".tip_id, SUM(value) as tip_net_vote
                 FROM "TipVote" 
-                LEFT JOIN "Tip" on "TipVote".id = "Tip".id
+                LEFT JOIN "Tip" on "TipVote".tip_id = "Tip".id
                 LEFT JOIN "Item" on "Item".id = "Tip".item_id
                 WHERE "Tip".is_deleted IS false AND "Tip".item_id = ${selectedItem.id}
                 GROUP BY 1) tip_votes on "Tip".id = tip_votes.tip_id
@@ -52,7 +52,7 @@ export const handler = async (event) => {
             LEFT JOIN (
                 SELECT "TipVote".tip_id, SUM(value) as tip_net_vote
                 FROM "TipVote" 
-                LEFT JOIN "Tip" on "TipVote".id = "Tip".id
+                LEFT JOIN "Tip" on "TipVote".tip_id = "Tip".id
                 LEFT JOIN "Item" on "Item".id = "Tip".item_id
                 WHERE "Tip".is_deleted IS false AND "Tip".user_id <> ${user.id} AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}')
                 GROUP BY 1) tip_votes on "Tip".id = tip_votes.tip_id
