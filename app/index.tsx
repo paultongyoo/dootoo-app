@@ -385,10 +385,14 @@ export default function Index() {
       backgroundColor: '#FAF3E0'
     },
     action_Delete: {
-      backgroundColor: 'red'
+      backgroundColor: 'red',
+      borderBottomWidth: 1,
+      borderBottomColor: '#3E272333' //#322723 with approx 20% alpha
     },
     action_Give: {
-      backgroundColor: '#556B2F'
+      backgroundColor: '#556B2F',
+      borderBottomWidth: 1,
+      borderBottomColor: '#3E272333' //#322723 with approx 20% alpha
     },
     itemLeftSwipeActions: {
       width: 50,
