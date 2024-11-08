@@ -9,6 +9,12 @@ export const handler = async (event) => {
     const user = await prisma.user.findUnique({
         where: { anonymous_id: event.anonymous_id}
     });
+    if (user == null) {
+      return {
+          statusCode: 403,
+          body: JSON.stringify({ error: 'Can\'t find user!' })
+        };
+    }
     console.log(user);
     const retrievedItems = await prisma.item.findMany({
         where: { 
