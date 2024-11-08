@@ -1,6 +1,6 @@
 import {
   Image, Text, View, StyleSheet, Pressable, Animated, Alert,
-  TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput
+  TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput, Linking
 } from "react-native";
 import { useState, useRef, useContext, useEffect, useCallback } from 'react';
 import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
@@ -20,7 +20,7 @@ import { loadTips, saveTips, tipVote, flagTip } from '../components/Storage';
 export default function ItemTips() {
   const { item_idx } = useLocalSearchParams();
   const { dootooItems, setDootooItems, lastRecordedCount,
-    setLastRecordedCount, updateUserCountContext,
+    setLastRecordedCount, updateUserCountContext, anonymousId,
     selectedItem, setSelectedItem } = useContext(AppContext);
   const [initialLoad, setInitialLoad] = useState(false);
   const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
@@ -222,6 +222,40 @@ export default function ItemTips() {
       ],
       { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
     );
+  }
+
+  const handleTipFlagContest = async (index : number) => {
+    Alert.alert(
+      'Tip Flagged', // Title of the alert
+      'This tip was flagged as abusive and was removed from the community\'s view.  Repeated offenses will result in your account being deleted.  If you want to contest the flag, you can email your reasoning to the administrators.', // Message of the alert
+      [
+        {
+          text: 'Email Admins',
+          onPress: () => {
+            console.log('Tip Flag Contest Email Pressed')
+            sendFlagContextEmail(index);
+          }
+        },
+        {
+          text: 'I Understand',
+          onPress: () => {
+            console.log('Tip Flag Contest Understood Pressed');
+          },
+        },
+      ]    
+    );
+  }
+
+  const sendFlagContextEmail = (index) => {
+    const email = 'contact@thoughtswork.co'; // Replace with the desired email address
+    const subject = `User ${anonymousId} Tip Flag Objection`; // Optional: add a subject
+    const body = `Tip text: ${tips[index].text} - Reason I'm contesting flagging this: `;
+    
+    // Construct the mailto URL
+    const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  
+    // Use Linking API to open email client
+    Linking.openURL(url).catch(err => console.error('Error opening email client:', err));
   }
 
   const handleFlagTip = async (index) => {
@@ -662,10 +696,11 @@ export default function ItemTips() {
                                       : <Image style={styles.scoreIcon} source={require("../assets/images/thumbs_down_A23E48.png")} />
                                     }
                                   </View> : (item.is_flagged) ?
-                                          <View style={styles.flaggedContainer}>
+                                          <Pressable style={styles.flaggedContainer}
+                                                     onPress={() => handleTipFlagContest(getIndex())}>
                                             <Text style={styles.flaggedText}>Flagged</Text>
                                             <Image style={styles.flaggedIcon} source={require("../assets/images/flag_A23E48.png")} />
-                                          </View>
+                                          </Pressable>
                                           : <View style={styles.scoreContainer}></View>
                               }
                             </View>
