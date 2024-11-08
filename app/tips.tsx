@@ -15,7 +15,7 @@ import { AppContext } from '../components/AppContext';
 import DootooFooter from '../components/DootooFooter';
 import Toast from 'react-native-toast-message';
 import { transcribeAudioToTips } from '../components/BackendServices';
-import { loadTips, saveTips } from '../components/Storage';
+import { loadTips, saveTips, tipVote } from '../components/Storage';
 
 export default function ItemTips() {
   const { item_idx } = useLocalSearchParams();
@@ -186,8 +186,11 @@ export default function ItemTips() {
     router.back();
   }
 
-  const handleTipVote = (index, voteValue) => {
-
+  const handleTipVote = async (index, voteValue : number) => {
+    await tipVote(tips[index].uuid, voteValue);
+    const updatedTips = [...tips];
+    updatedTips[index].upvote_count += voteValue;
+    setTips(updatedTips);
   }
 
   const handleTipFlag = (index) => {
@@ -227,20 +230,20 @@ export default function ItemTips() {
         <>
           <Reanimated.View style={styles.voteContainer}>
             <Pressable style={styles.voteIconContainer}
-                onPress={() => handleTipVote(index, 1)}>
+                onPress={() => { handleTipVote(index, 1) }}>
               <Image style={styles.similarCountIcon} source={require("../assets/images/thumbs_up_556B2F.png")} />
             </Pressable>
             <View style={styles.voteCountContainer}>
               <Text style={styles.voteCountText}>{tips[index].upvote_count || 'vote'}</Text>                        
             </View> 
             <Pressable style={styles.voteIconContainer}
-                onPress={() => handleTipVote(index, -1)}>
+                onPress={() => { handleTipVote(index, -1) }}>
               <Image style={styles.similarCountIcon} source={require("../assets/images/thumbs_down_556B2F.png")} />
             </Pressable>
           </Reanimated.View>
           <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
             <Pressable
-              onPress={() => handleTipFlag(index)}>
+              onPress={() => { handleTipFlag(index) }}>
               <Image style={styles.swipeActionIcon_trash} source={require("../assets/images/flag_white.png")} />
             </Pressable>
           </Reanimated.View>

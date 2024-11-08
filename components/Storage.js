@@ -12,13 +12,11 @@ const ITEM_LIST_KEY = "item_list";
 const TIP_LIST_KEY_PREFIX = "tip_list_";    // Append item UUID to key
 
 const CREATEUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev';
-//const LOADUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadUser_Dev';
 const LOADITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItems_Dev';
 const SAVEITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev';
 const LOADTIPS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadTips_Dev';
 const SAVETIPS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveTips_Dev';
-
-
+const TIPVOTE_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/tipVote_Dev';
 
 export const saveItems = async (item_list_obj, callback) => {
   if (item_list_obj === undefined) {
@@ -160,6 +158,27 @@ export const loadTips = async (item_uuid) => {
     console.error('Error calling loadTips API:', error);
   }
 };
+
+export const tipVote = async(tip_uuid, voteValue) => {
+  try {
+    console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
+    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
+    if (!localAnonId) {
+      console.log("Received null local anon Id, aborting tipVote!");
+      return [];
+    }
+    const response = await axios.post(TIPVOTE_URL,
+      {
+        anonymous_id : localAnonId,
+        tip_uuid: tip_uuid,
+        vote_value: voteValue
+      }
+    );
+    console.log("Tip Vote Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling tipVote API:', error);
+  }
+}
 
 export const resetAllData = async () => {
   try {
