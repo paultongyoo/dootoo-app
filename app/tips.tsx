@@ -202,7 +202,7 @@ export default function ItemTips() {
     setTips(updatedTips); 
   }
 
-  const handleTipFlag = (index) => {
+  const handleTipFlag = (index : number) => {
     Alert.alert(
       'Report Abuse', // Title of the alert
       'Are you sure you want to report this tip as abusive? Reporting helps us keep our community safe. Your report will remain anonymous.', // Message of the alert
@@ -216,8 +216,21 @@ export default function ItemTips() {
           text: 'Yes',
           onPress: () => {
             console.log('Tip Flag OK Pressed');
-            // TODO: Save flag to backend
-            // TODO: Remove tip from user lifetime view
+            const updatedTips = [...tips];    
+            updatedTips[index].is_flagged = true;
+            setTips(updatedTips); 
+            Alert.alert(
+              'Abuse Reported', // Title of the alert
+              'Thank you for helping to keep the community safe!', // Message of the alert
+              [
+                {
+                  text: 'OK',
+                  onPress: () => console.log('Tip Flag Cancel Pressed'),
+                  style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
+                }
+              ],
+              { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+            );
           },
         },
       ],
@@ -510,6 +523,24 @@ export default function ItemTips() {
       borderRightColor: '#3E272333',
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333'
+    },
+    flaggedContainer: {
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      flexDirection: 'row',
+      width: 80,
+      paddingRight: 10
+    },
+    flaggedText: {
+      fontSize: 16,
+      color: '#A23E48',
+      fontWeight: 'bold',
+      paddingRight: 10
+    },
+    flaggedIcon: {
+      height: 20,
+      width: 20,
+      opacity: 0.8
     }
   });
 
@@ -618,14 +649,19 @@ export default function ItemTips() {
                                   </View>
                               }
                               {
-                                (item.upvote_count && item.upvote_count != 0) ?
+                                (!item.is_flagged && item.upvote_count && item.upvote_count != 0) ?
                                   <View style={styles.scoreContainer}>
                                     <Text style={styles.scoreText}>{item.upvote_count}</Text>
                                     { (item.upvote_count > 0) ?
                                         <Image style={styles.scoreIcon} source={require("../assets/images/thumbs_up_556B2F.png")} />
                                       : <Image style={styles.scoreIcon} source={require("../assets/images/thumbs_down_A23E48.png")} />
                                     }
-                                  </View> : <View style={styles.scoreContainer}></View>
+                                  </View> : (item.is_flagged) ?
+                                          <View style={styles.flaggedContainer}>
+                                            <Text style={styles.flaggedText}>Flagged</Text>
+                                            <Image style={styles.flaggedIcon} source={require("../assets/images/flag_A23E48.png")} />
+                                          </View>
+                                          : <View style={styles.scoreContainer}></View>
                               }
                             </View>
                           </View>
