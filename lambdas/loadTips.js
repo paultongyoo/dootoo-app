@@ -53,7 +53,8 @@ export const handler = async (event) => {
                 LEFT JOIN "Item" on "Item".id = "Tip".item_id
                 WHERE "Tip".user_id <> ${user.id} AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}')
                 GROUP BY 1) tip_votes on "Tip".id = tip_votes.tip_id
-            WHERE "Tip".user_id <> ${user.id} AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}');`);
+            WHERE "Tip".user_id <> ${user.id} AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}')
+            ORDER BY upvote_count DESC;`);
         console.log("Query returned " + retrievedTips.length + " tip(s).");
     }
 
