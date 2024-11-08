@@ -42,10 +42,18 @@ export default function ItemTips() {
     strict: false
   });
 
-  const handleSaveItems = async () => {
+  const handleSaveTips = async () => {
     if (tips && tips.length > 0) {
-      console.log(`Passing ${tips.length} to saveItems method...`);
-      await saveTips(selectedItem, tips, () => updateUserCountContext());
+      console.log(`Passing ${tips.length} tips to saveTips method...`);
+      await saveTips(selectedItem, tips, () => {
+        updateUserCountContext()
+
+        // Update tip count of selectedItem
+        const updatedSelectedItem = selectedItem;
+        updatedSelectedItem.tip_count = tips.length;
+        setSelectedItem(updatedSelectedItem);
+        //console.log("Updated selected Item with new tip count: " +  updatedSelectedItem.tip_count);
+      });
       console.log("Tip save successful.");
     }
   };
@@ -94,7 +102,7 @@ export default function ItemTips() {
         Toast.hide();
       }
 
-      handleSaveItems();
+      handleSaveTips();
 
     } else {
       console.log("UseEffect called before initial load completed, skipping..");
@@ -639,7 +647,7 @@ export default function ItemTips() {
                 </View>}
             </View>
           </View>
-          <DootooFooter transcribeFunction={transcribeAudioToTips} listArray={tips || []} listArraySetterFunc={setTips} />
+          <DootooFooter transcribeFunction={transcribeAudioToTips} listArray={tips || []} listArraySetterFunc={setTips} hideRecordButton={!selectedItem.is_done} />
         </View>
       </TouchableWithoutFeedback>
     );

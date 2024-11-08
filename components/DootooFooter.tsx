@@ -5,7 +5,7 @@ import { AppContext } from './AppContext.js';
 import { useState, useContext, useRef, useEffect } from "react";
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
 
-const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc }) => {
+const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hideRecordButton = false }) => {
     const { anonymousId,
         setLastRecordedCount } = useContext(AppContext);
     const [loading, setLoading] = useState(false);
@@ -203,33 +203,43 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc }) =>
         }
     });
 
-    return (
-        <View style={styles.footerContainer}>
-            {recording ?
-                <Pressable
-                    style={[styles.footerButton, styles.cancelButton]}
-                    onPress={cancelRecording}>
-                    <Image style={styles.footerButtonImage_Cancel} source={require("../assets/images/cancel_icon_black.png")} />
-                </Pressable>
-                : <></>}
-            <Animated.View style={[{ transform: [{ scale: recordButtonScaleAnim }] }, styles.footerButton, ((recording || loading) ? styles.stopRecordButton : styles.recordButton)]}>
-                <Pressable
-                    onPress={recording ? processRecording : startRecording}
-                    onPressIn={recordButton_handlePressIn}
-                    onPressOut={recordButton_handlePressOut}>
-                    {(loading) ?
-                        <View style={styles.loadingAnim}>
-                            <ActivityIndicator size={"large"} color="white" />
-                        </View> : (recording) ?
-                            <Text style={styles.footerButtonTitle}>Stop</Text> :
-                            <Image style={styles.footerButtonImage_Record} source={require("../assets/images/microphone_white.png")} />}
-                </Pressable>
-            </Animated.View>
-            <View style={styles.bannerAdContainer}>
-                <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
+    if (!hideRecordButton) {
+        return (
+            <View style={styles.footerContainer}>
+                {recording ?
+                    <Pressable
+                        style={[styles.footerButton, styles.cancelButton]}
+                        onPress={cancelRecording}>
+                        <Image style={styles.footerButtonImage_Cancel} source={require("../assets/images/cancel_icon_black.png")} />
+                    </Pressable>
+                    : <></>}
+                <Animated.View style={[{ transform: [{ scale: recordButtonScaleAnim }] }, styles.footerButton, ((recording || loading) ? styles.stopRecordButton : styles.recordButton)]}>
+                    <Pressable
+                        onPress={recording ? processRecording : startRecording}
+                        onPressIn={recordButton_handlePressIn}
+                        onPressOut={recordButton_handlePressOut}>
+                        {(loading) ?
+                            <View style={styles.loadingAnim}>
+                                <ActivityIndicator size={"large"} color="white" />
+                            </View> : (recording) ?
+                                <Text style={styles.footerButtonTitle}>Stop</Text> :
+                                <Image style={styles.footerButtonImage_Record} source={require("../assets/images/microphone_white.png")} />}
+                    </Pressable>
+                </Animated.View>
+                <View style={styles.bannerAdContainer}>
+                    <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
+                </View>
             </View>
-        </View>
-    );
+        );
+    } else {
+        return (
+            <View style={styles.footerContainer}>
+                <View style={styles.bannerAdContainer}>
+                    <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
+                </View>
+            </View>
+        );
+    }
 };
 
 export default DootooFooter;
