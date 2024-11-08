@@ -241,10 +241,10 @@ export default function ItemTips() {
               <Image style={styles.similarCountIcon} source={require("../assets/images/thumbs_down_556B2F.png")} />
             </Pressable>
           </Reanimated.View>
-          <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
+          <Reanimated.View style={[styles.itemSwipeAction, styles.action_Flag]}>
             <Pressable
               onPress={() => { handleTipFlag(index) }}>
-              <Image style={styles.swipeActionIcon_trash} source={require("../assets/images/flag_white.png")} />
+              <Image style={styles.swipeActionIcon_flag} source={require("../assets/images/flag_A23E48.png")} />
             </Pressable>
           </Reanimated.View>
         </>
@@ -399,6 +399,11 @@ export default function ItemTips() {
       height: 30,
       width: 30
     },
+    swipeActionIcon_flag: {
+      height: 20,
+      width: 20,
+      opacity: 0.6
+    },
     swipeActionIcon_ident: {
       height: 30,
       width: 30
@@ -458,6 +463,13 @@ export default function ItemTips() {
       paddingLeft: 10,
       paddingRight: 10,
       fontSize: 15
+    },
+    action_Flag: {
+      backgroundColor: '#FAF3E090',
+      borderRightWidth: 1,
+      borderRightColor: '#3E272333',
+      borderBottomWidth: 1,
+      borderBottomColor: '#3E272333'
     }
   });
 
@@ -529,6 +541,7 @@ export default function ItemTips() {
                         childrenContainerStyle={styles.swipeableContainer}
                         overshootLeft={false}
                         overshootRight={false}
+                        leftThreshold={300}
                         renderRightActions={(progress, dragX) =>
                           renderRightActions(progress, dragX, getIndex())
                         }
