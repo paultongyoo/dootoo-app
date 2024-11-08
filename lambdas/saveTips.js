@@ -49,14 +49,12 @@ const saveTips = async(anonymous_id, item_uuid, tips_str) => {
                     },
                     text: array_tip.text,
                     rank_idx: i,
-                    is_deleted: array_tip.is_deleted,
-                    is_flagged: false 
+                    is_deleted: array_tip.is_deleted
                 },
                 update: { 
                     text: array_tip.text,
                     rank_idx: i,
-                    is_deleted: array_tip.is_deleted,
-                    is_flagged: array_tip.is_flagged
+                    is_deleted: array_tip.is_deleted
                 }
             });
             console.log(tip); 

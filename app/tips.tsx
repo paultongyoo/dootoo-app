@@ -15,7 +15,7 @@ import { AppContext } from '../components/AppContext';
 import DootooFooter from '../components/DootooFooter';
 import Toast from 'react-native-toast-message';
 import { transcribeAudioToTips } from '../components/BackendServices';
-import { loadTips, saveTips, tipVote } from '../components/Storage';
+import { loadTips, saveTips, tipVote, flagTip } from '../components/Storage';
 
 export default function ItemTips() {
   const { item_idx } = useLocalSearchParams();
@@ -202,7 +202,7 @@ export default function ItemTips() {
     setTips(updatedTips); 
   }
 
-  const handleTipFlag = (index : number) => {
+  const handleTipFlag = async (index : number) => {
     Alert.alert(
       'Report Abuse', // Title of the alert
       'Are you sure you want to report this tip as abusive? Reporting helps us keep our community safe. Your report will remain anonymous.', // Message of the alert
@@ -216,21 +216,7 @@ export default function ItemTips() {
           text: 'Yes',
           onPress: () => {
             console.log('Tip Flag OK Pressed');
-            const updatedTips = [...tips];    
-            updatedTips[index].is_flagged = true;
-            setTips(updatedTips); 
-            Alert.alert(
-              'Abuse Reported', // Title of the alert
-              'Thank you for helping to keep the community safe!', // Message of the alert
-              [
-                {
-                  text: 'OK',
-                  onPress: () => console.log('Tip Flag Cancel Pressed'),
-                  style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
-                }
-              ],
-              { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
-            );
+            handleFlagTip(index);
           },
         },
       ],
@@ -238,14 +224,33 @@ export default function ItemTips() {
     );
   }
 
-    // Function to close all Swipeables except the one being opened
-    const closeOtherSwipeables = (index) => {
-      swipeableRefs.current.forEach((ref, i) => {
-        if (ref && i !== index) {
-          ref.close();
+  const handleFlagTip = async (index) => {
+    await flagTip(tips[index].uuid);
+    const updatedTips = [...tips];    
+    updatedTips[index].is_flagged = true;
+    setTips(updatedTips); 
+    Alert.alert(
+      'Abuse Reported', // Title of the alert
+      'Thank you for helping to keep the community safe!', // Message of the alert
+      [
+        {
+          text: 'OK',
+          onPress: () => console.log('Tip Flag Cancel Pressed'),
+          style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
         }
-      });
-    };
+      ],
+      { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+    );
+  }
+
+  // Function to close all Swipeables except the one being opened
+  const closeOtherSwipeables = (index) => {
+    swipeableRefs.current.forEach((ref, i) => {
+      if (ref && i !== index) {
+        ref.close();
+      }
+    });
+  };
 
   const renderRightActions = (progress: SharedValue<number>, dragX: SharedValue<number>, index: number) => {
     return (
@@ -532,7 +537,7 @@ export default function ItemTips() {
       paddingRight: 10
     },
     flaggedText: {
-      fontSize: 16,
+      fontSize: 12,
       color: '#A23E48',
       fontWeight: 'bold',
       paddingRight: 10

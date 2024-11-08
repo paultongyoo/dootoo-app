@@ -17,6 +17,8 @@ const SAVEITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/de
 const LOADTIPS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadTips_Dev';
 const SAVETIPS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveTips_Dev';
 const TIPVOTE_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/tipVote_Dev';
+const FLAGTIP_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/flagTip_Dev';
+
 
 export const saveItems = async (item_list_obj, callback) => {
   if (item_list_obj === undefined) {
@@ -161,7 +163,7 @@ export const loadTips = async (item_uuid) => {
 
 export const tipVote = async(tip_uuid, voteValue) => {
   try {
-    console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
+    //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
     const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
     if (!localAnonId) {
       console.log("Received null local anon Id, aborting tipVote!");
@@ -174,9 +176,29 @@ export const tipVote = async(tip_uuid, voteValue) => {
         vote_value: voteValue
       }
     );
-    console.log("Tip Vote Response Obj: " + JSON.stringify(response.data.body));
+    //console.log("Tip Vote Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling tipVote API:', error);
+  }
+}
+
+export const flagTip = async(tip_uuid) => {
+  try {
+    console.log("Entering flag tip, uuid: " + tip_uuid);
+    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
+    if (!localAnonId) {
+      console.log("Received null local anon Id, aborting tipVote!");
+      return [];
+    }
+    const response = await axios.post(FLAGTIP_URL,
+      {
+        anonymous_id : localAnonId,
+        tip_uuid: tip_uuid
+      }
+    );
+    console.log("Flag Tip Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling flagTip API:', error);
   }
 }
 

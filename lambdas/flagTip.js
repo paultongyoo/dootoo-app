@@ -28,36 +28,27 @@ export const handler = async (event) => {
   }
 
   if (tip.user_id == user.id) {
-    console.log("User owns specified tip, aborting save!  Can't vote on tips you own!");
+    console.log("User owns specified tip, aborting save!  Can't flag tips you own!");
     return {
       statusCode: 403,
-      body: "User owns tip!  Can't vote on tips you own!"
+      body: "User owns tip!  Can't flag tips you own!"
     };
   }
 
-  const upsertedTip = await prisma.tipVote.upsert({
+  const updatedTip = await prisma.tip.update({
     where: {
-      tip_id_user_id: { tip_id: tip.id, user_id: user.id }
+      id: tip.id
     },
-    create: {
-      user: {
-        connect: { id: user.id }
-      },
-      tip: {
-        connect: { id: tip.id }
-      },
-      value: event.vote_value
-    },
-    update: {
-      value: event.vote_value
+    data: {
+      is_flagged: true
     }
   });
-  console.log("TipVote upsert response: " + upsertedTip);
+  console.log("FlagTip response: " + updatedTip);
 
   await prisma.$disconnect();
   const response = {
     statusCode: 200,
-    body: JSON.stringify(upsertedTip)
+    body: JSON.stringify(updatedTip)
   };
   return response;
 };
