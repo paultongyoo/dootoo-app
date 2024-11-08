@@ -39,18 +39,22 @@ export const handler = async (event) => {
     } else {
         console.log("Specified item is NOT done, returning tips of similar items (if any)...");
         retrievedTips = await prisma.$queryRawUnsafe(
-            `SELECT COALESCE(upvote_count::integer, 0) as upvote_count, "Tip".*
+            `SELECT COALESCE(tip_net_vote::integer, 0) as upvote_count, COALESCE(tip_user_vote, 0) as user_vote_value, "Tip".* 
             FROM "Tip" 
             LEFT JOIN "Item" on "Tip".item_id = "Item".id
             LEFT JOIN (
-                SELECT "TipVote".id as "tip_id", SUM(value) as upvote_count
+                SELECT tip_id, value as tip_user_vote 
+                FROM "TipVote"
+                WHERE user_id = ${user.id}) tip_user_vote on tip_user_vote.tip_id = "Tip".id
+            LEFT JOIN (
+                SELECT "TipVote".tip_id, SUM(value) as tip_net_vote
                 FROM "TipVote" 
-                LEFT JOIN "Tip" on "TipVote".tip_id = "Tip".id
+                LEFT JOIN "Tip" on "TipVote".id = "Tip".id
                 LEFT JOIN "Item" on "Item".id = "Tip".item_id
                 WHERE "Tip".user_id <> ${user.id} AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}')
                 GROUP BY 1) tip_votes on "Tip".id = tip_votes.tip_id
-            WHERE "Tip".user_id <> ${user.id} AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}') ORDER BY 1 DESC`);
-            console.log("Query returned " + retrievedTips.length + " tip(s).");
+            WHERE "Tip".user_id <> ${user.id} AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}');`);
+        console.log("Query returned " + retrievedTips.length + " tip(s).");
     }
 
     if (retrievedTips.length == 0) {

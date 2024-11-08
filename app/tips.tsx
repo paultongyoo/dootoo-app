@@ -28,6 +28,7 @@ export default function ItemTips() {
   const [emptyTipsCTA, setEmptyTipsCTA] = useState('');
   const inputFieldIndex = useRef(-1);
   const inputValueRef = useRef('');
+  const swipeableRefs = useRef([]);
   const [errorMsg, setErrorMsg] = useState();
   const fadeCTA = useRef(new Animated.Value(0)).current;
   const ctaAnimation = Animated.timing(fadeCTA, {
@@ -216,6 +217,15 @@ export default function ItemTips() {
     );
   }
 
+    // Function to close all Swipeables except the one being opened
+    const closeOtherSwipeables = (index) => {
+      swipeableRefs.current.forEach((ref, i) => {
+        if (ref && i !== index) {
+          ref.close();
+        }
+      });
+    };
+
   const renderRightActions = (progress: SharedValue<number>, dragX: SharedValue<number>, index: number) => {
     return (
       <> 
@@ -231,14 +241,14 @@ export default function ItemTips() {
           <Reanimated.View style={styles.voteContainer}>
             <Pressable style={styles.voteIconContainer}
                 onPress={() => { handleTipVote(index, 1) }}>
-              <Image style={styles.similarCountIcon} source={require("../assets/images/thumbs_up_556B2F.png")} />
+              <Image style={[styles.voteThumbIcon, (tips[index].user_vote_value == 1) && {opacity: 1.0}]} source={require("../assets/images/thumbs_up_556B2F.png")} />
             </Pressable>
             <View style={styles.voteCountContainer}>
               <Text style={styles.voteCountText}>{tips[index].upvote_count || 'vote'}</Text>                        
             </View> 
             <Pressable style={styles.voteIconContainer}
                 onPress={() => { handleTipVote(index, -1) }}>
-              <Image style={styles.similarCountIcon} source={require("../assets/images/thumbs_down_556B2F.png")} />
+              <Image style={[styles.voteThumbIcon, (tips[index].user_vote_value == -1) && {opacity: 1.0}]} source={require("../assets/images/thumbs_down_556B2F.png")} />
             </Pressable>
           </Reanimated.View>
           <Reanimated.View style={[styles.itemSwipeAction, styles.action_Flag]}>
@@ -395,6 +405,11 @@ export default function ItemTips() {
       height: 28,
       opacity: 0.6
     },
+    voteThumbIcon: {
+      width: 28,
+      height: 28,
+      opacity: 0.6
+    },
     swipeActionIcon_trash: {
       height: 30,
       width: 30
@@ -462,7 +477,8 @@ export default function ItemTips() {
     voteCountText: {
       paddingLeft: 10,
       paddingRight: 10,
-      fontSize: 15
+      fontSize: 15,
+      textAlign: 'center'
     },
     action_Flag: {
       backgroundColor: '#FAF3E090',
@@ -538,10 +554,13 @@ export default function ItemTips() {
                     renderItem={({ item, getIndex, drag, isActive }) =>
                       <Swipeable
                         key={Math.random()}
+                        ref={(ref) =>{
+                          swipeableRefs.current[getIndex()] = ref;
+                        }}
+                        onSwipeableOpen={() => closeOtherSwipeables(getIndex())}
                         childrenContainerStyle={styles.swipeableContainer}
                         overshootLeft={false}
                         overshootRight={false}
-                        leftThreshold={300}
                         renderRightActions={(progress, dragX) =>
                           renderRightActions(progress, dragX, getIndex())
                         }
