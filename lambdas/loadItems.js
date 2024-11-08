@@ -45,7 +45,7 @@ export const handler = async (event) => {
 
         // Execute query to count how many similar items
         const num_close_embeddings = await prisma.$queryRawUnsafe(
-          `SELECT COUNT(DISTINCT user_id) FROM "Item" WHERE id <> ` + item.id + ` AND 0.4 > embedding <-> '[` + 
+          `SELECT COUNT(DISTINCT user_id) FROM "Item" WHERE id <> ` + item.id + ` AND 0.7 >= embedding <-> '[` + 
         embeddingArray + `]'::vector AND user_id <> ` + user.id + `;`);
 
         console.log("num close embeddings return: " + num_close_embeddings[0].count);
@@ -69,7 +69,7 @@ export const handler = async (event) => {
           // Execute query to count how many tips from similar items
           const num_tips_of_close_embeddings = await prisma.$queryRawUnsafe(
             `SELECT COUNT(DISTINCT "Tip".id) FROM "Tip" LEFT JOIN "Item" on "Tip".item_id = "Item".id ` +
-            `WHERE "Tip".user_id <> ` + user.id + ` AND 0.4 > embedding <-> '[` + 
+            `WHERE "Tip".user_id <> ` + user.id + ` AND 0.7 >= embedding <-> '[` + 
             embeddingArray  + `]'::vector;`);
 
           console.log("Setting tip count of similar items: " + num_tips_of_close_embeddings[0].count);

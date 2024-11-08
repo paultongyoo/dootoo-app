@@ -40,7 +40,7 @@ export const handler = async (event) => {
         console.log("Specified item is NOT done, returning tips of similar items (if any)...");
         retrievedTips = await prisma.$queryRawUnsafe(
             `SELECT "Tip".* FROM "Tip" LEFT JOIN "Item" on "Tip".item_id = "Item".id ` +
-            `WHERE "Tip".user_id <> ` + user.id + ` AND 0.4 > embedding <-> (select embedding from "Item" where uuid = '` + selectedItem.uuid + `')`);
+            `WHERE "Tip".user_id <> ` + user.id + ` AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '` + selectedItem.uuid + `')`);
         console.log("Query returned " + retrievedTips.length + " tip(s).");
     }
 
