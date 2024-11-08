@@ -189,9 +189,9 @@ export default function ItemTips() {
 
   const handleTipVote = async (index, voteValue : number) => {
     await tipVote(tips[index].uuid, voteValue);
-    const updatedTips = [...tips];
-    updatedTips[index].upvote_count += voteValue;
-    setTips(updatedTips);
+    const updatedTips = [...tips];    
+    updatedTips[index].upvote_count += voteValue  // This value will be overwritten by DB load Just force a reload to reorder list as needed
+    setTips(updatedTips); 
   }
 
   const handleTipFlag = (index) => {
@@ -244,11 +244,11 @@ export default function ItemTips() {
               <Image style={[styles.voteThumbIcon, (tips[index].user_vote_value == 1) && {opacity: 1.0}]} source={require("../assets/images/thumbs_up_556B2F.png")} />
             </Pressable>
             <View style={styles.voteCountContainer}>
-              <Text style={styles.voteCountText}>{tips[index].upvote_count || 'vote'}</Text>                        
+              <Text style={styles.voteCountText}>{tips[index].upvote_count}</Text>                        
             </View> 
             <Pressable style={styles.voteIconContainer}
                 onPress={() => { handleTipVote(index, -1) }}>
-              <Image style={[styles.voteThumbIcon, (tips[index].user_vote_value == -1) && {opacity: 1.0}]} source={require("../assets/images/thumbs_down_556B2F.png")} />
+              <Image style={[styles.voteThumbIcon, (tips[index].user_vote_value == -1) && {opacity: 1.0}]} source={require("../assets/images/thumbs_down_A23E48.png")} />
             </Pressable>
           </Reanimated.View>
           <Reanimated.View style={[styles.itemSwipeAction, styles.action_Flag]}>
@@ -405,10 +405,26 @@ export default function ItemTips() {
       height: 28,
       opacity: 0.6
     },
+    scoreContainer: {
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      flexDirection: 'row',
+      width: 80,
+      paddingRight: 10
+    },
+    scoreText: {
+      fontSize: 16,
+      paddingRight: 10
+    },
+    scoreIcon: {
+      width: 28,
+      height: 28,
+      opacity: 0.5
+    },
     voteThumbIcon: {
       width: 28,
       height: 28,
-      opacity: 0.6
+      opacity: 0.2
     },
     swipeActionIcon_trash: {
       height: 30,
@@ -469,7 +485,7 @@ export default function ItemTips() {
       borderBottomColor: '#3E272333'
     },
     voteIconContainer: {
-      opacity: 0.6
+      //opacity: 0.6
     },
     voteCountContainer: {
 
@@ -592,6 +608,16 @@ export default function ItemTips() {
                                 : <View style={styles.tipNamePressable}>
                                     <Text style={[styles.taskTitle]}>{item.text}</Text>
                                   </View>
+                              }
+                              {
+                                (item.upvote_count && item.upvote_count != 0) ?
+                                  <View style={styles.scoreContainer}>
+                                    <Text style={styles.scoreText}>{item.upvote_count}</Text>
+                                    { (item.upvote_count > 0) ?
+                                        <Image style={styles.scoreIcon} source={require("../assets/images/thumbs_up_556B2F.png")} />
+                                      : <Image style={styles.scoreIcon} source={require("../assets/images/thumbs_down_A23E48.png")} />
+                                    }
+                                  </View> : <View style={styles.scoreContainer}></View>
                               }
                             </View>
                           </View>
