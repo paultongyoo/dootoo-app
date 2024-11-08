@@ -196,7 +196,19 @@ export default function ItemTips() {
             <Image style={styles.swipeActionIcon_trash} source={require("../assets/images/trash_icon_white.png")} />
           </Pressable>
         </Reanimated.View>
-        : <Text></Text> }
+        :
+        <Reanimated.View style={styles.voteContainer}>
+          <View style={styles.voteIconContainer}>
+            <Image style={styles.similarCountIcon} source={require("../assets/images/thumbs_up_556B2F.png")} />
+          </View>
+          <View style={styles.voteCountContainer}>
+            <Text style={styles.voteCountText}>{tips[index].upvote_count || 'vote'}</Text>                        
+          </View> 
+          <View style={styles.voteIconContainer}>
+            <Image style={styles.similarCountIcon} source={require("../assets/images/thumbs_down_556B2F.png")} />
+          </View>
+        </Reanimated.View>
+        }
       </>
     );
   };
@@ -383,6 +395,27 @@ export default function ItemTips() {
     initialLoadMsg: {
       fontSize: 20,
       paddingBottom: 15
+    },
+    voteContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingRight: 20,
+      paddingLeft: 20,
+      backgroundColor: '#FAF3E090',
+      borderBottomWidth: 1,
+      borderBottomColor: '#3E272333'
+    },
+    voteIconContainer: {
+      opacity: 0.5
+    },
+    voteCountContainer: {
+
+    },
+    voteCountText: {
+      paddingLeft: 10,
+      paddingRight: 10,
+      fontSize: 15
     }
   });
 
@@ -461,7 +494,7 @@ export default function ItemTips() {
                         <ScaleDecorator>
                           <View style={styles.tipContainer}>
                             <View style={styles.tipNameContainer}>
-                              {(item.user_id == selectedItem.user_id) && (itemIdxToEdit == getIndex()) ?
+                              {(itemIdxToEdit == getIndex()) ?
                                 <TextInput
                                   multiline={false}
                                   style={styles.itemTextInput}
@@ -474,21 +507,17 @@ export default function ItemTips() {
                                   }}
                                   onBlur={() => handleBlur(getIndex())}
                                 />
-                                :
+                                : (item.user_id == selectedItem.user_id) ?
                                 <Pressable
                                   style={styles.tipNamePressable}
                                   onLongPress={drag}
                                   disabled={isActive}
                                   onPress={() => handleItemTextTap(item.text, getIndex())}>
                                   <Text style={[styles.taskTitle]}>{item.text}</Text>
-                                </Pressable>
-                              }
-                              {
-                                (item.upvote_count && item.upvote_count > 0) ?
-                                  <View style={styles.similarCountContainer}>
-                                    <Text style={styles.similarCountText}>{item.upvote_count}</Text>
-                                    <Image style={styles.similarCountIcon} source={require("../assets/images/thumbs_up_556B2F.png")} />
-                                  </View> : <></>
+                                </Pressable> 
+                                : <View style={styles.tipNamePressable}>
+                                    <Text style={[styles.taskTitle]}>{item.text}</Text>
+                                  </View>
                               }
                             </View>
                           </View>
