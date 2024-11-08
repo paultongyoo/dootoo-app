@@ -159,8 +159,10 @@ const styles = StyleSheet.create({
     marginLeft: 5
   },
   backIcon_android: {
-    height: 30,
-    width: 30
+    height: 25,
+    width: 25,
+    marginBottom: 3,
+    marginLeft: 2
   }
 });
 
