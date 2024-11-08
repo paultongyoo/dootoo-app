@@ -65,7 +65,8 @@ export const handler = async (event) => {
               where: { 
                   item: {
                       id: item.id
-                  }
+                  },
+                  is_deleted: false
               }
           })
           console.log("Setting tip count of item: " + tipCount);
@@ -75,7 +76,7 @@ export const handler = async (event) => {
           // Execute query to count how many tips from similar items
           const num_tips_of_close_embeddings = await prisma.$queryRawUnsafe(
             `SELECT COUNT(DISTINCT "Tip".id) FROM "Tip" LEFT JOIN "Item" on "Tip".item_id = "Item".id ` +
-            `WHERE "Tip".user_id <> ` + user.id + ` AND 0.7 >= embedding <-> '[` + 
+            `WHERE "Tip".is_deleted IS FALSE AND "Tip".user_id <> ` + user.id + ` AND 0.7 >= embedding <-> '[` + 
             embeddingArray  + `]'::vector;`);
 
           console.log("Setting tip count of similar items: " + num_tips_of_close_embeddings[0].count);
