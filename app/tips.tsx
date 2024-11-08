@@ -197,17 +197,27 @@ export default function ItemTips() {
           </Pressable>
         </Reanimated.View>
         :
-        <Reanimated.View style={styles.voteContainer}>
-          <View style={styles.voteIconContainer}>
-            <Image style={styles.similarCountIcon} source={require("../assets/images/thumbs_up_556B2F.png")} />
-          </View>
-          <View style={styles.voteCountContainer}>
-            <Text style={styles.voteCountText}>{tips[index].upvote_count || 'vote'}</Text>                        
-          </View> 
-          <View style={styles.voteIconContainer}>
-            <Image style={styles.similarCountIcon} source={require("../assets/images/thumbs_down_556B2F.png")} />
-          </View>
-        </Reanimated.View>
+        <>
+          <Reanimated.View style={styles.voteContainer}>
+            <Pressable style={styles.voteIconContainer}
+                onPress={() => {}/* handleTipVote(index, 1) */}>
+              <Image style={styles.similarCountIcon} source={require("../assets/images/thumbs_up_556B2F.png")} />
+            </Pressable>
+            <View style={styles.voteCountContainer}>
+              <Text style={styles.voteCountText}>{tips[index].upvote_count || 'vote'}</Text>                        
+            </View> 
+            <Pressable style={styles.voteIconContainer}
+                onPress={() => {}/* handleTipVote(index, -1) */}>
+              <Image style={styles.similarCountIcon} source={require("../assets/images/thumbs_down_556B2F.png")} />
+            </Pressable>
+          </Reanimated.View>
+          <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
+            <Pressable
+              onPress={() => {} /* handleTipFlag(index) */}>
+              <Image style={styles.swipeActionIcon_trash} source={require("../assets/images/flag_white.png")} />
+            </Pressable>
+          </Reanimated.View>
+        </>
         }
       </>
     );
@@ -324,7 +334,9 @@ export default function ItemTips() {
       backgroundColor: '#FAF3E0'
     },
     action_Delete: {
-      backgroundColor: 'red'
+      backgroundColor: 'red',
+      borderBottomWidth: 1,
+      borderBottomColor: '#3E272333'
     },
     itemLeftSwipeActions: {
       width: 50,
@@ -407,7 +419,7 @@ export default function ItemTips() {
       borderBottomColor: '#3E272333'
     },
     voteIconContainer: {
-      opacity: 0.5
+      opacity: 0.6
     },
     voteCountContainer: {
 
