@@ -1,9 +1,10 @@
-import { Platform, Image, Text, View, StyleSheet, Pressable, Animated, ActivityIndicator } from "react-native";
-import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';  
+import { Platform, Image, Text, View, StyleSheet, Pressable, ActivityIndicator, Animated } from "react-native";
+import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import RNFS from 'react-native-fs';
 import { AppContext } from './AppContext.js';
 import { useState, useContext, useRef, useEffect } from "react";
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
+import Reanimated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hideRecordButton = false }) => {
     const { anonymousId,
@@ -12,57 +13,64 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
     const [recording, setRecording] = useState();
     const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
     const [permissionResponse, requestPermission] = Audio.usePermissions();
-    const bannerAdId = __DEV__ ? 
-    TestIds.ADAPTIVE_BANNER : 
-      (Platform.OS === 'ios' ? "ca-app-pub-6723010005352574/5609444195" : 
-                               "ca-app-pub-6723010005352574/8538859865");
+    const meteringLevel = useSharedValue(1); // shared value for animated scale
+
+    const bannerAdId = __DEV__ ?
+        TestIds.ADAPTIVE_BANNER :
+        (Platform.OS === 'ios' ? "ca-app-pub-6723010005352574/5609444195" :
+            "ca-app-pub-6723010005352574/8538859865");
     const bannerRef = useRef<BannerAd>(null);
     const recordButtonScaleAnim = useRef(new Animated.Value(1)).current;
     var retryCount = 0;
 
     useEffect(() => {
         initializeMobileAds();
-      }, []);
+    }, []);
 
     useForeground(() => {
         Platform.OS === 'ios' && bannerRef.current?.load();
-      })
-    
+    })
+
     const initializeMobileAds = async () => {
-    const adapterStatuses = await mobileAds().initialize();
+        const adapterStatuses = await mobileAds().initialize();
     }
 
-    const startRecording = async() => {
+    const startRecording = async () => {
         try {
-          if (permissionResponse!.status !== 'granted') {
-            console.log('Requesting permission..');
-            await requestPermission();
-          }
-          await Audio.setAudioModeAsync({
-            allowsRecordingIOS: true,
-            playsInSilentModeIOS: true,
-            interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-            shouldDuckAndroid: true,
-            interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
-            playThroughEarpieceAndroid: false,
-            staysActiveInBackground: true
-          });
-    
-          console.log('Starting recording..');
-          const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-          setRecording(recording);
-          console.log('Recording started');
-          //setErrorMsg(undefined);   // Clear error message if no error
+            if (permissionResponse!.status !== 'granted') {
+                console.log('Requesting permission..');
+                await requestPermission();
+            }
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: true,
+                playsInSilentModeIOS: true,
+                interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+                shouldDuckAndroid: true,
+                interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+                playThroughEarpieceAndroid: false,
+                staysActiveInBackground: true
+            });
+
+            console.log('Starting recording..');
+            const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
+            setRecording(recording);
+
+            recording.setOnRecordingStatusUpdate((status: Audio.RecordingStatus) => {
+                meteringLevel.value = withTiming(1 + Math.max(0, (1 - (status.metering * -1) / 100)), { duration: 100 });
+                console.log(`status.metering: ${status.metering} - Metering Level: ${meteringLevel.value}`);
+            });
+            console.log('Recording started');
+            //setErrorMsg(undefined);   // Clear error message if no error
         } catch (err) {
-          if (retryCount < 99999999999) { // TODO: Resolve this hack to prevent the "recorder not prepared error"
-            startRecording();
-            retryCount += 1;
-          } else {
-            console.error('Failed to start recording', err);
-            //setErrorMsg(err);
-          }
+            if (retryCount < 99999999999) { // TODO: Resolve this hack to prevent the "recorder not prepared error"
+                startRecording();
+                retryCount += 1;
+            } else {
+                console.error('Failed to start recording', err);
+                //setErrorMsg(err);
+            }
         }
-      }
+    }
 
     const processRecording = async () => {
         setLoading(true);
@@ -87,23 +95,24 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
         deleteFile(fileUri);
     }
 
-    const stopRecording = async() : Promise<string> => {
+    const stopRecording = async (): Promise<string> => {
         console.log('Stopping recording..');
         setRecording(undefined);
         await recording.stopAndUnloadAsync();
         await Audio.setAudioModeAsync(
-          {
-            allowsRecordingIOS: false,
-          }
+            {
+                allowsRecordingIOS: false,
+            }
         );
+        meteringLevel.value = withTiming(1); // reset scale when stopped
         const uri = recording.getURI();
         console.log('Recording stopped and stored at', uri);
         return uri;
-      }
-    
-      const callBackendTranscribeService = async (fileUri: string) => {
-          return await transcribeFunction(fileUri, anonymousId);
-      }
+    }
+
+    const callBackendTranscribeService = async (fileUri: string) => {
+        return await transcribeFunction(fileUri, anonymousId);
+    }
 
     const cancelRecording = async () => {
         console.log("Cancelling recording...");
@@ -131,16 +140,16 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
 
     const recordButton_handlePressIn = () => {
         Animated.spring(recordButtonScaleAnim, {
-          toValue: 0.95,
-          useNativeDriver: true,
+            toValue: 0.95,
+            useNativeDriver: true,
         }).start();
-      };
-    
+    };
+
     const recordButton_handlePressOut = () => {
-    Animated.spring(recordButtonScaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-    }).start();
+        Animated.spring(recordButtonScaleAnim, {
+            toValue: 1,
+            useNativeDriver: true,
+        }).start();
     };
 
     const styles = StyleSheet.create({
@@ -203,6 +212,11 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
         }
     });
 
+    // Animated style for scaling the button
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: meteringLevel.value }],
+    }));
+
     if (!hideRecordButton) {
         return (
             <View style={styles.footerContainer}>
@@ -213,7 +227,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
                         <Image style={styles.footerButtonImage_Cancel} source={require("../assets/images/cancel_icon_black.png")} />
                     </Pressable>
                     : <></>}
-                <Animated.View style={[{ transform: [{ scale: recordButtonScaleAnim }] }, styles.footerButton, ((recording || loading) ? styles.stopRecordButton : styles.recordButton)]}>
+                <Reanimated.View style={[{ transform: [{ scale: recordButtonScaleAnim }] }, animatedStyle, styles.footerButton, ((recording || loading) ? styles.stopRecordButton : styles.recordButton)]}>
                     <Pressable
                         onPress={recording ? processRecording : startRecording}
                         onPressIn={recordButton_handlePressIn}
@@ -225,7 +239,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
                                 <Text style={styles.footerButtonTitle}>Stop</Text> :
                                 <Image style={styles.footerButtonImage_Record} source={require("../assets/images/microphone_white.png")} />}
                     </Pressable>
-                </Animated.View>
+                </Reanimated.View>
                 <View style={styles.bannerAdContainer}>
                     <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
                 </View>
