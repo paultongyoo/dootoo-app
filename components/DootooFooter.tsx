@@ -209,6 +209,11 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
             margin: 10,
             position: 'relative',
             left: 1
+        },
+        footerButtonIcon_Stop: {
+            width: 30,
+            height: 30,
+            backgroundColor: 'white'
         }
     });
 
@@ -236,7 +241,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
                             <View style={styles.loadingAnim}>
                                 <ActivityIndicator size={"large"} color="white" />
                             </View> : (recording) ?
-                                <Text style={styles.footerButtonTitle}>Stop</Text> :
+                                <View style={styles.footerButtonIcon_Stop}></View> :
                                 <Image style={styles.footerButtonImage_Record} source={require("../assets/images/microphone_white.png")} />}
                     </Pressable>
                 </Reanimated.View>
