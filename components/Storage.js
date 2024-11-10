@@ -19,6 +19,8 @@ const SAVETIPS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev
 const TIPVOTE_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/tipVote_Dev';
 const FLAGTIP_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/flagTip_Dev';
 const DELETEITEM_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/deleteItem_Dev';
+const UPDATEITEMTEXT_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemText_Dev';
+const UPDATEITEMHIERARCHY_DEV = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemHierarchy_Dev';
 
 
 export const saveItems = async (item_list_obj, callback) => {
@@ -217,9 +219,51 @@ export const deleteItem = async(item_uuid) => {
         item_uuid: item_uuid
       }
     );
-    console.log("Delete Item Response Obj: " + JSON.stringify(response.data.body));
+    //console.log("Delete Item Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling Delete Item API:', error);
+  }
+}
+
+export const updateItemText = async(item_uuid, text) => {
+  try {
+    console.log("Entering updateItemText, uuid: " + item_uuid + " text: " + text);
+    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
+    if (!localAnonId) {
+      console.log("Received null local anon Id, aborting tipVote!");
+      return [];
+    }
+    const response = await axios.post(UPDATEITEMTEXT_URL,
+      {
+        anonymous_id : localAnonId,
+        item_uuid: item_uuid,
+        text: text
+      }
+    );
+    //console.log("updateItemText Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling updateItemText API:', error);
+  }
+}
+
+export const updateItemHierarchy = async(item_uuid, is_child) => {
+  try {
+    console.log("Entering updateItemHierarchy, uuid: " + item_uuid + " is_child: " + is_child);
+    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
+    if (!localAnonId) {
+      console.log("Received null local anon Id, aborting tipVote!");
+      return [];
+    }
+    const response = await axios.post(UPDATEITEMHIERARCHY_DEV,
+      {
+        anonymous_id : localAnonId,
+        item_uuid: item_uuid,
+        is_child: is_child
+      }
+    );
+    //console.log("updateItemHierarchy Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling updateItemHierarchy API:', error);
   }
 }
 

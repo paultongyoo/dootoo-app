@@ -4,7 +4,7 @@ import {
 } from "react-native";
 import { useState, useRef, useEffect, useContext } from "react";
 import { router } from 'expo-router';
-import { saveItems, loadItems, deleteItem } from '../components/Storage';
+import { saveItems, loadItems, deleteItem, updateItemText, updateItemHierarchy } from '../components/Storage';
 import { AppContext } from '../components/AppContext';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -85,11 +85,13 @@ export default function Index() {
     ctaAnimation.start();
   };
 
-  const handleSaveItems = async () => {
-    console.log("handleSaveItems called with dootooitems length: " + dootooItems.length);
+  const saveAllItems = async () => {
+    console.log("saveAllItems called with dootooitems length: " + dootooItems.length);
     if (dootooItems && dootooItems.length > 0) {
       console.log(`Passing ${dootooItems.length} to saveItems method...`);
       await saveItems(dootooItems, (updatedItems) => {  
+
+        console.log("Updating user counts asyncronously after saving all items")
         updateUserCountContext();  
         
         // 11.10.24  Updated saveItems lambda to always return empty items for now
@@ -97,7 +99,7 @@ export default function Index() {
         //setItemListRefreshed(false);
         //setDootooItems(updatedItems);
       });
-      console.log("Save successful.");
+      console.log("saveAllItems successful.");
     }
   };
 
@@ -138,7 +140,7 @@ export default function Index() {
               updatedItems.splice(0, lastRecordedCount);
               console.log("List to update now has " + updatedItems.length + " in it.");
               setLastRecordedCount(0);
-              setDootooItems(updatedItems);
+              setDootooItems(updatedItems); // This should update UI only and not invoke any syncronous backend operations
             }
           }
         });
@@ -153,8 +155,9 @@ export default function Index() {
         ctaAnimation.start();
       }      
 
-      // Asyncronous
-      handleSaveItems();  // TODO:  Have save items return full list to populate with new counts
+      // Commented out backend call from useEffect after moving all sync operations to their respective actions
+      // Leaving line here to remove after enough time user tests verify things still work
+      //saveAllItems();  // TODO:  Have save items return full list to populate with new counts
 
     } else {
       //console.log("UseEffect called before initial load completed, skipping..");
@@ -179,9 +182,10 @@ export default function Index() {
 
         var updatedTasks = [...dootooItems];
         updatedTasks![index].text = currentValue;
-        setDootooItems(updatedTasks);
+        setDootooItems(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
 
-        // TODO: Asynchronously sync new item text to DB
+        // Asynchronously sync new item text to DB
+        updateItemText(updatedTasks![index].uuid, updatedTasks![index].text);
       } else {
         console.log(`${currentValue} not changed on blur, ignoring..`);
       }
@@ -215,12 +219,17 @@ export default function Index() {
             text: 'Yes',
             onPress: () => {
 
-              // Mark the item and its subtasks as is_deleted: true
+              // Two step process:
+              // 1) Delete each item from backend
+              // 2) Remove each item from UI array
               for (var i = index; i <= index + numSubtasks; i++) {
-                updatedTasks[i].is_deleted = true;
+
+                // Call asyncronous delete to mark item as deleted in backend to sync database
+                deleteItem(updatedTasks[i].uuid);
               }
+              updatedTasks.splice(index, 1 + numSubtasks);  // Remove item and its subtasks from array
               setItemIdxToEdit(-1);
-              setDootooItems(updatedTasks);
+              setDootooItems(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
             }
           },
           {
@@ -249,14 +258,22 @@ export default function Index() {
     setLastRecordedCount(0);
     var updatedTasks = [...dootooItems];
     updatedTasks![index].is_child = false;
-    setDootooItems(updatedTasks);
+
+    // Asyncronously update item hierarhcy in DB
+    updateItemHierarchy(updatedTasks![index].uuid, updatedTasks![index].is_child);
+
+    setDootooItems(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
   }
 
   const handleMakeChild = (index: number) => {
     setLastRecordedCount(0);
     var updatedTasks = [...dootooItems];
     updatedTasks![index].is_child = true;
-    setDootooItems(updatedTasks);
+
+    // Asyncronously update item hierarhcy in DB
+    updateItemHierarchy(updatedTasks![index].uuid, updatedTasks![index].is_child);
+
+    setDootooItems(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
   }
 
   const handleDoneClick = (index: number) => {
@@ -297,10 +314,22 @@ export default function Index() {
           updatedTasks.splice(backupVal, 0, item)  // insert it in new location
         }
       }
-      setDootooItems(updatedTasks);
+
+      // Asyncronously save all items to DB as rank_idxes will have changed
+      saveAllItems();
+
+      setDootooItems(updatedTasks);  // This should update UI only and not invoke any syncronous backend operations
     } catch(error) {
       console.log("Error occurred during done logic!", error);
     }
+  }
+
+  function handleItemDrag(data: unknown[]) {
+    setLastRecordedCount(0);
+    setDootooItems(data);  // This should update UI only and not invoke any syncronous backend operations
+
+    // Asyncronously save all items to DB as rank_idxes will have changed
+    saveAllItems();
   }
 
   const styles = StyleSheet.create({
@@ -577,8 +606,7 @@ export default function Index() {
                 ref={itemFlatList}
                 data={dootooItems.filter(item => !item.is_deleted)}
                 onDragEnd={({ data }) => {
-                  setLastRecordedCount(0);
-                  setDootooItems(data)
+                  handleItemDrag(data);
                 }}
                 keyExtractor={(item, index) => index.toString()}
                 ListHeaderComponent={<View style={{ height: 0 }} />}
