@@ -25,11 +25,11 @@ export default function Index() {
   const [initialLoad, setInitialLoad] = useState(false);
   const itemFlatList = useRef(null);
   const swipeableRef = useRef(null);
+  const [itemTextOnTap, setItemTextOnTap] = useState('');
   const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMsg, setErrorMsg] = useState();
   const [itemListRefreshed, setItemListRefreshed] = useState(true);
-  const inputFieldIndex = useRef(-1);
   const inputValueRef = useRef('');
   const fadeCTA = useRef(new Animated.Value(0)).current;
   const fadeAnimGoals = useRef(new Animated.Value(0.1)).current;
@@ -162,22 +162,31 @@ export default function Index() {
   }, [dootooItems]);
 
   const handleItemTextTap = (itemText: string, index: number) => {
+    //console.log(`handleItemTextTap called with text (${itemText}) and index (${index})`);
+    inputValueRef.current = itemText;
+    setItemTextOnTap(itemText);
     setItemIdxToEdit(index);
   }
 
   const handleBlur = (index: number) => {
-    console.log(`Inside handleBlur for index ${index}`);
+    //console.log(`Inside handleBlur for index ${index}`);
     setItemIdxToEdit(-1);
 
-    if (index != -1 && (inputFieldIndex.current == index)) {
+    if (index != -1 && (itemIdxToEdit == index)) {
       const currentValue = inputValueRef.current;
-      console.log("Text changed to: " + currentValue);
+      if (currentValue != itemTextOnTap) {
+        //console.log("Text changed to: " + currentValue);
 
-      var updatedTasks = [...dootooItems];
-      updatedTasks![index].text = currentValue;
-      setDootooItems(updatedTasks);
+        var updatedTasks = [...dootooItems];
+        updatedTasks![index].text = currentValue;
+        setDootooItems(updatedTasks);
+
+        // TODO: Asynchronously sync new item text to DB
+      } else {
+        console.log(`${currentValue} not changed on blur, ignoring..`);
+      }
     } else {
-      console.log(`Previous field ${inputFieldIndex.current} exited with no change, ignoring blur`);
+      console.log(`Previous field ${itemIdxToEdit} exited with no change, ignoring blur`);
     }
   }
 
@@ -612,7 +621,6 @@ export default function Index() {
                               autoFocus={true}
                               onChangeText={(text) => {
                                 setLastRecordedCount(0);
-                                inputFieldIndex.current = getIndex();
                                 inputValueRef.current = text;
                               }}
                               onBlur={() => handleBlur(getIndex())}
