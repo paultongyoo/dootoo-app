@@ -55,9 +55,17 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
             const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
             setRecording(recording);
 
+            // Poll metering level and update the animated scale
+            const interval = setInterval(async () => {
+                const status = await recording.getStatusAsync();
+                if (status.isRecording) {
+                    meteringLevel.value = withTiming(1 + Math.max(0, 1 + (status.metering / 30)), { duration: 100 });
+                    console.log(`status.metering: ${status.metering} - Metering Level: ${meteringLevel.value}`);
+                }
+            }, 100);
+
             recording.setOnRecordingStatusUpdate((status: Audio.RecordingStatus) => {
-                meteringLevel.value = withTiming(1 + Math.max(0, (1 - (status.metering * -1) / 100)), { duration: 100 });
-                console.log(`status.metering: ${status.metering} - Metering Level: ${meteringLevel.value}`);
+                if (!status.isRecording) clearInterval(interval);
             });
             console.log('Recording started');
             //setErrorMsg(undefined);   // Clear error message if no error
