@@ -18,6 +18,7 @@ const LOADTIPS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev
 const SAVETIPS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveTips_Dev';
 const TIPVOTE_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/tipVote_Dev';
 const FLAGTIP_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/flagTip_Dev';
+const DELETEITEM_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/deleteItem_Dev';
 
 
 export const saveItems = async (item_list_obj, callback) => {
@@ -202,6 +203,26 @@ export const flagTip = async(tip_uuid) => {
   }
 }
 
+export const deleteItem = async(item_uuid) => {
+  try {
+    console.log("Entering delete item, uuid: " + item_uuid);
+    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
+    if (!localAnonId) {
+      console.log("Received null local anon Id, aborting tipVote!");
+      return [];
+    }
+    const response = await axios.post(DELETEITEM_URL,
+      {
+        anonymous_id : localAnonId,
+        item_uuid: item_uuid
+      }
+    );
+    console.log("Delete Item Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling Delete Item API:', error);
+  }
+}
+
 export const resetAllData = async () => {
   try {
     await AsyncStorage.clear();
@@ -284,7 +305,7 @@ const saveItemsToBackend = async(item_list_obj, callback) => {
     );
     const response_obj = JSON.parse(response.data.body);
     const updatedUser = response_obj.user;
-    const updatedItems = response_obj.items;
+    const updatedItems = response_obj.items;  // 11.10.24:  Updated Lambda to always return empty lsit for now
     //console.log("Updated User: " + JSON.stringify(updatedUser));
     //console.log("Updated items: " + JSON.stringify(updatedItems));
     

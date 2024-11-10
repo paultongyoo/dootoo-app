@@ -4,7 +4,7 @@ import {
 } from "react-native";
 import { useState, useRef, useEffect, useContext } from "react";
 import { router } from 'expo-router';
-import { saveItems, loadItems } from '../components/Storage';
+import { saveItems, loadItems, deleteItem } from '../components/Storage';
 import { AppContext } from '../components/AppContext';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -88,17 +88,16 @@ export default function Index() {
   const handleSaveItems = async () => {
     console.log("handleSaveItems called with dootooitems length: " + dootooItems.length);
     if (dootooItems && dootooItems.length > 0) {
-      //console.log(`Passing ${dootooItems.length} to saveItems method...`);
+      console.log(`Passing ${dootooItems.length} to saveItems method...`);
       await saveItems(dootooItems, (updatedItems) => {  
-        updateUserCountContext();    
-        setItemListRefreshed(false);
-        setDootooItems(updatedItems);
-        if (updatedItems && updatedItems.length == 0) {
-          ctaAnimation.start();
-        }
-      
+        updateUserCountContext();  
+        
+        // 11.10.24  Updated saveItems lambda to always return empty items for now
+        //           exploring replacing loadItems call with individual item loads
+        //setItemListRefreshed(false);
+        //setDootooItems(updatedItems);
       });
-      //console.log("Save successful.");
+      console.log("Save successful.");
     }
   };
 
@@ -111,13 +110,13 @@ export default function Index() {
 
   // This is expected to be called on any item change, reorder, deletion, etc
   useEffect(() => {
+    console.log("useEffect[dootooItems] called");
+
     if (!itemListRefreshed) {
       console.log("dootooItems useEffect[dootooItems] called on list refresh; exitting early");
       setItemListRefreshed(true);
       return;
     }
-
-    ctaAnimation.reset();
 
     if (initialLoad) {
       if (lastRecordedCount > 0) {
@@ -148,6 +147,11 @@ export default function Index() {
         // This call has to be in this "main UI thread" in order to work
         Toast.hide();
       }
+
+      if (dootooItems && dootooItems.length == 0) {
+        ctaAnimation.reset();
+        ctaAnimation.start();
+      }      
 
       // Asyncronous
       handleSaveItems();  // TODO:  Have save items return full list to populate with new counts
@@ -219,15 +223,15 @@ export default function Index() {
       );
     } else {
 
-      console.log(`Deleting sole item at index ${index}...`);
-      console.log("Items before delete: " + JSON.stringify(updatedTasks));
-      // Just mark the item as deleted
-      updatedTasks[index].is_deleted = true;
+      console.log(`Deleting sole item at index ${index}: ${updatedTasks[index].text}`);
+
+      // Call asyncronous delete to mark item as deleted in backend to sync database
+      deleteItem(updatedTasks[index].uuid);
+
+      // Remove item from displayed list
+      updatedTasks.splice(index, 1);
       setItemIdxToEdit(-1);
-      setDootooItems(updatedTasks);
-
-      console.log("Items after delete: " + JSON.stringify(updatedTasks));
-
+      setDootooItems(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
     }
     console.log(`Exiting handle delete item at index ${index}...`);
   }
