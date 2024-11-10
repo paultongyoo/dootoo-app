@@ -1,27 +1,27 @@
-import {
-  Image, StyleSheet, Pressable, Alert
-} from "react-native";
 import { useContext } from "react";
 import { router } from 'expo-router';
 import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText } from '../components/Storage';
+import { transcribeAudioToTasks } from './../components/BackendServices';
+import DootooItemEmptyUX from "../components/DootooItemEmptyUX";
+import DootooList from "../components/DootooList";
+import DootooItemSidebar from "../components/DootooItemSidebar";
+import DootooSwipeAction_Delete from "../components/DootooSwipeAction_Delete";
+
+import {
+  Image, StyleSheet, Pressable
+} from "react-native";
 import { AppContext } from '../components/AppContext';
 import Reanimated, {
   SharedValue,
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
-import DootooItemEmptyUX from "../components/DootooItemEmptyUX";
-import DootooList from "../components/DootooList";
-import { transcribeAudioToTasks } from './../components/BackendServices';
-import DootooItemSidebar from "../components/DootooItemSidebar";
-
 
 export default function Index() {
   const { dootooItems, setDootooItems,
     setLastRecordedCount, setSelectedItem,
     updateUserCountContext } = useContext(AppContext);
 
-  
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
     strict: false
@@ -31,11 +31,11 @@ export default function Index() {
     console.log("saveAllItems called with dootooitems length: " + dootooItems.length);
     if (dootooItems && dootooItems.length > 0) {
       console.log(`Passing ${dootooItems.length} to saveItems method...`);
-      await saveItems(dootooItems, (updatedItems) => {  
+      await saveItems(dootooItems, (updatedItems) => {
 
         console.log("Updating user counts asyncronously after saving all items")
-        updateUserCountContext();  
-        
+        updateUserCountContext();
+
         // 11.10.24  Updated saveItems lambda to always return empty items for now
         //           exploring replacing loadItems call with individual item loads
         //setItemListRefreshed(false);
@@ -44,66 +44,6 @@ export default function Index() {
       console.log("saveAllItems successful.");
     }
   };
-
-  const handleItemDelete = (index: number) => {
-    console.log("Entering handle delete item...");
-    setLastRecordedCount(0);
-    var updatedTasks = [...dootooItems];
-
-    // If the item is a parent and has one or more children, ask user if they want to remove all children too
-    if (!dootooItems[index].is_child && ((index + 1) <= (dootooItems.length - 1)) && dootooItems[index + 1].is_child) {
-
-      // Count how many subtasks this item has
-      var numSubtasks = 0;
-      for (var idx = index + 1; idx < dootooItems.length; idx++) {
-        if (dootooItems[idx].is_child == true) {
-          numSubtasks += 1;
-        } else {
-          break;
-        }
-      }
-      Alert.alert(
-        `Item Has ${numSubtasks} Subtask${numSubtasks > 1 ? 's' : ''}`,
-        `Deleting this item will delete its subtask${numSubtasks > 1 ? 's' : ''} too.  Continue?`,
-        [
-          {
-            text: 'Yes',
-            onPress: () => {
-
-              // Two step process:
-              // 1) Delete each item from backend
-              // 2) Remove each item from UI array
-              for (var i = index; i <= index + numSubtasks; i++) {
-
-                // Call asyncronous delete to mark item as deleted in backend to sync database
-                deleteItem(updatedTasks[i].uuid);
-              }
-              updatedTasks.splice(index, 1 + numSubtasks);  // Remove item and its subtasks from array
-              //setItemIdxToEdit(-1);  //TODO: Move Delete into List component
-              setDootooItems(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
-            }
-          },
-          {
-            text: 'Cancel',
-            style: 'cancel'
-          }
-        ],
-        { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
-      );
-    } else {
-
-      console.log(`Deleting sole item at index ${index}: ${updatedTasks[index].text}`);
-
-      // Call asyncronous delete to mark item as deleted in backend to sync database
-      deleteItem(updatedTasks[index].uuid);
-
-      // Remove item from displayed list
-      updatedTasks.splice(index, 1);
-      //TODO: Move Delete into List component
-      setDootooItems(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
-    }
-    console.log(`Exiting handle delete item at index ${index}...`);
-  }
 
   const handleMakeParent = (index: number) => {
     setLastRecordedCount(0);
@@ -170,7 +110,7 @@ export default function Index() {
       saveAllItems();
 
       setDootooItems(updatedTasks);  // This should update UI only and not invoke any syncronous backend operations
-    } catch(error) {
+    } catch (error) {
       console.log("Error occurred during done logic!", error);
     }
   }
@@ -389,14 +329,13 @@ export default function Index() {
                 <Image style={styles.receiveTipIcon} source={require("../assets/images/receive_tip_white.png")} />
               </Pressable>
             </Reanimated.View>
-          : <></>       
-          }
-        <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
-          <Pressable
-            onPress={() => handleItemDelete(index)}>
-            <Image style={styles.swipeActionIcon_trash} source={require("../assets/images/trash_icon_white.png")} />
-          </Pressable>
-        </Reanimated.View>
+            : <></>
+        }
+        <DootooSwipeAction_Delete
+          styles={styles}
+          listArray={dootooItems} listArraySetter={setDootooItems}
+          listThingIndex={index}
+          deleteThing={deleteItem} />
         {(dootooItems![index].is_child) ?
           <Reanimated.View style={[styles.itemSwipeAction]}>
             <Pressable
@@ -437,7 +376,7 @@ export default function Index() {
       saveAllThings={saveAllItems}
       loadAllThings={loadItems}
       updateThingText={updateItemText}
-      transcribeAudioToThings={transcribeAudioToTasks} 
+      transcribeAudioToThings={transcribeAudioToTasks}
       ListThingSidebar={DootooItemSidebar}
       EmptyThingUX={DootooItemEmptyUX} />
   );

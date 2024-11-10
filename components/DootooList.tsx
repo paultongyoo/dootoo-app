@@ -223,7 +223,3 @@ const DootooList = ({ listArray, listArraySetter, ListThingSidebar, EmptyThingUX
 };
 
 export default DootooList;
-
-function initializeLocalUser(arg0: (isNew: boolean) => void) {
-    throw new Error('Function not implemented.');
-}
