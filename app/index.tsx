@@ -343,6 +343,9 @@ export default function Index() {
       flexDirection: 'row', // Lays out children horizontally
       alignItems: 'center' // Aligns children vertically (centered in this case)
     },
+    itemContainer_firstItem: {
+      paddingTop: 4
+    },
     itemCircleOpen: {
       width: 26,
       height: 26,
@@ -566,7 +569,7 @@ export default function Index() {
                 }}
                 keyExtractor={(item, index) => index.toString()}
                 ListHeaderComponent={<View style={{ height: 0 }} />}
-                ListFooterComponent={<View style={{ height: 75 }} />}
+                ListFooterComponent={<View style={{ height: 60 }} />}
                 refreshing={refreshing}
                 onRefresh={() => {
                   console.log("onRefresh called");
@@ -590,7 +593,7 @@ export default function Index() {
                   //onSwipeableOpen={(direction) => onSwipedOpen(direction, getIndex(), this)}
                   >
                     <ScaleDecorator>
-                      <View style={styles.itemContainer}>
+                      <View style={[styles.itemContainer, (getIndex() == 0) && styles.itemContainer_firstItem]}>
                         {(item.is_child) ?
                           <View style={styles.childItemSpacer}></View>
                           : <></>
