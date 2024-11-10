@@ -156,16 +156,16 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
         footerContainer: {
             backgroundColor: '#FAF3E0',
             alignItems: 'center',
-            height: 140
+            height: 155
         },
         bannerAdContainer: {
             position: 'absolute',
             bottom: 40
         },
         footerButton: {
-            height: 100,
-            width: 100,
-            borderRadius: 50,
+            height: 76,
+            width: 76,
+            borderRadius: 38,
             borderColor: '#3E2723',
             borderWidth: 1,
             position: 'absolute',
@@ -175,16 +175,16 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
             justifyContent: 'center'
         },
         footerButtonImage_Record: {
-            height: 60,
-            width: 60
+            height: 43,
+            width: 43
         },
         footerButtonImage_Restart: {
-            height: 49,
-            width: 49
+            height: 43,
+            width: 43
         },
         footerButtonImage_Cancel: {
-            height: 49,
-            width: 49
+            height: 43,
+            width: 43
         },
         footerButtonTitle: {
             fontWeight: 'bold',
@@ -211,8 +211,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
             left: 1
         },
         footerButtonIcon_Stop: {
-            width: 30,
-            height: 30,
+            width: 25,
+            height: 25,
             backgroundColor: 'white'
         }
     });
@@ -225,13 +225,13 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
     if (!hideRecordButton) {
         return (
             <View style={styles.footerContainer}>
-                {recording ?
+                {/* {recording ?
                     <Pressable
                         style={[styles.footerButton, styles.cancelButton]}
                         onPress={cancelRecording}>
                         <Image style={styles.footerButtonImage_Cancel} source={require("../assets/images/cancel_icon_black.png")} />
                     </Pressable>
-                    : <></>}
+                    : <></>} */}
                 <Reanimated.View style={[{ transform: [{ scale: recordButtonScaleAnim }] }, animatedStyle, styles.footerButton, ((recording || loading) ? styles.stopRecordButton : styles.recordButton)]}>
                     <Pressable
                         onPress={recording ? processRecording : startRecording}

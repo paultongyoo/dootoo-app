@@ -81,7 +81,7 @@ export default function ItemTips() {
           type: 'undoableToast',
           text1: `Added ${lastRecordedCount} tip${(lastRecordedCount > 1) ? 's' : ''}.`,
           position: 'bottom',
-          bottomOffset: 240,
+          bottomOffset: 220,
           props: {
             onUndoPress: () => {
 
@@ -644,7 +644,7 @@ export default function ItemTips() {
                     }}
                     keyExtractor={(item, index) => index.toString()}
                     ListHeaderComponent={<View style={{ height: 0 }} />}
-                    ListFooterComponent={<View style={{ height: 200 }} />}
+                    ListFooterComponent={<View style={{ height: 75 }} />}
                     renderItem={({ item, getIndex, drag, isActive }) =>
                       <Swipeable
                         key={Math.random()}

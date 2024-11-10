@@ -128,7 +128,7 @@ export default function Index() {
           type: 'undoableToast',
           text1: `Added ${lastRecordedCount} item${(lastRecordedCount > 1) ? 's' : ''}.`,
           position: 'bottom',
-          bottomOffset: 240,
+          bottomOffset: 220,
           props: {
             onUndoPress: () => {
 
@@ -566,7 +566,7 @@ export default function Index() {
                 }}
                 keyExtractor={(item, index) => index.toString()}
                 ListHeaderComponent={<View style={{ height: 0 }} />}
-                ListFooterComponent={<View style={{ height: 200 }} />}
+                ListFooterComponent={<View style={{ height: 75 }} />}
                 refreshing={refreshing}
                 onRefresh={() => {
                   console.log("onRefresh called");
