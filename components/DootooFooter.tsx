@@ -156,7 +156,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
         footerContainer: {
             backgroundColor: '#FAF3E0',
             alignItems: 'center',
-            height: 155
+            height: 158
         },
         bannerAdContainer: {
             position: 'absolute',
