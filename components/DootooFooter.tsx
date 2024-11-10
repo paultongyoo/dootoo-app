@@ -14,13 +14,13 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
     const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
     const [permissionResponse, requestPermission] = Audio.usePermissions();
     const meteringLevel = useSharedValue(1); // shared value for animated scale
+    const recordButtonOpacity = useSharedValue(1);
 
     const bannerAdId = __DEV__ ?
         TestIds.ADAPTIVE_BANNER :
         (Platform.OS === 'ios' ? "ca-app-pub-6723010005352574/5609444195" :
             "ca-app-pub-6723010005352574/8538859865");
     const bannerRef = useRef<BannerAd>(null);
-    const recordButtonScaleAnim = useRef(new Animated.Value(1)).current;
     var retryCount = 0;
 
     useEffect(() => {
@@ -138,18 +138,18 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
         }
     };
 
+    const recordButtonOpacityAnimatedStyle = useAnimatedStyle(() => {
+        return {
+          opacity: recordButtonOpacity.value,
+        };
+      });
+
     const recordButton_handlePressIn = () => {
-        Animated.spring(recordButtonScaleAnim, {
-            toValue: 0.95,
-            useNativeDriver: true,
-        }).start();
+        recordButtonOpacity.value = withTiming(0.7, { duration: 150 }); // Dim button on press
     };
 
     const recordButton_handlePressOut = () => {
-        Animated.spring(recordButtonScaleAnim, {
-            toValue: 1,
-            useNativeDriver: true,
-        }).start();
+        recordButtonOpacity.value = withTiming(1, { duration: 150 }); // Return to full opacity
     };
 
     const styles = StyleSheet.create({
@@ -173,6 +173,14 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
             flex: 1,
             alignItems: 'center',
             justifyContent: 'center'
+        },
+        footerButton_Underlay: {
+            height: 76,
+            width: 76,
+            borderRadius: 38,
+            position: 'absolute',
+            bottom: 120,
+            backgroundColor: 'black'
         },
         footerButtonImage_Record: {
             height: 43,
@@ -232,7 +240,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
                         <Image style={styles.footerButtonImage_Cancel} source={require("../assets/images/cancel_icon_black.png")} />
                     </Pressable>
                     : <></>} */}
-                <Reanimated.View style={[{ transform: [{ scale: recordButtonScaleAnim }] }, animatedStyle, styles.footerButton, ((recording || loading) ? styles.stopRecordButton : styles.recordButton)]}>
+                <View style={styles.footerButton_Underlay}></View>
+                <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || loading) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
                     <Pressable
                         onPress={recording ? processRecording : startRecording}
                         onPressIn={recordButton_handlePressIn}
