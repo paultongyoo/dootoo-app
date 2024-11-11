@@ -226,9 +226,9 @@ export const deleteItem = async(item_uuid) => {
   }
 }
 
-export const updateItemText = async(item_uuid, text) => {
+export const updateItemText = async(item_uuid, text, callback) => {
   try {
-    console.log("Entering updateItemText, uuid: " + item_uuid + " text: " + text);
+    //console.log("Entering updateItemText, uuid: " + item_uuid + " text: " + text);
     const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
     if (!localAnonId) {
       console.log("Received null local anon Id, aborting updateItemText!");
@@ -242,6 +242,10 @@ export const updateItemText = async(item_uuid, text) => {
       }
     );
     //console.log("updateItemText Response Obj: " + JSON.stringify(response.data.body));
+    const updatedItem = JSON.parse(response.data.body);
+    if (callback) {
+      callback(updatedItem);
+    }
   } catch (error) {
     console.error('Error calling updateItemText API:', error);
   }
@@ -268,7 +272,7 @@ export const updateItemHierarchy = async(item_uuid, is_child) => {
   }
 }
 
-export const updateTipText = async(tip_uuid, text) => {
+export const updateTipText = async(tip_uuid, text, callback) => {
   try {
     console.log("Entering updateTipText, uuid: " + tip_uuid + " text: " + text);
     const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);

@@ -88,6 +88,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
 
                 var updatedTasks = [...listArray];
                 updatedTasks![index].text = currentValue;
+                updatedTasks![index].counts_updating = true;    // Set this in case new text results in new counts
                 listArraySetter(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
 
                 // Asynchronously sync new item text to DB

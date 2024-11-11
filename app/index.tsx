@@ -30,36 +30,38 @@ export default function Index() {
   const saveAllItems = async (latestItems) => {
    // console.log("saveAllItems called with latestItems length: " + dootooItems.length);
     if (latestItems && latestItems.length > 0) {
-      console.log(`Passing ${latestItems.length} to saveItems method...`);
+      //console.log(`Passing ${latestItems.length} to saveItems method...`);
 
-      console.log("saveAllItems started...");
+      //console.log("saveAllItems started...");
       // Asynchronously sync DB with latest items
       saveItems(latestItems, (updatedItems) => {
 
-          console.log("Updating user counts asyncronously after saving all items")
+          //console.log("Updating user counts asyncronously after saving all items")
           updateUserCountContext();
 
           // Apply latest counts to displayed list without affecting list order
           // This is hack workaround to avoid jolting behavior if/when
           // item order changes
-          var displayedListToUpdate = [...latestItems];
-          for (var i = 0; i < updatedItems.length; i++) {
-            const currUpdatedItem = updatedItems[i];
-            for (var j = 0; j < displayedListToUpdate.length; j++) {
-              if (displayedListToUpdate[j].uuid == currUpdatedItem.uuid) {
-                displayedListToUpdate[j].tip_count = currUpdatedItem.tip_count;
-                displayedListToUpdate[j].similar_count = currUpdatedItem.similar_count;
-                displayedListToUpdate[j].counts_updating = false;
-                break;
-              }
-            }
-          }
+          var displayedListToUpdate = refreshItemCounts(latestItems, updatedItems);
           setDootooItems(displayedListToUpdate);
-          console.log("saveAllItems finished...");
+          //console.log("saveAllItems finished...");
         });
       //console.log("saveAllItems successful.");
     }
   };
+
+  const updateSingleItem = async (item_uuid, new_text) => {
+    // The DootooList component will have set the "counts_updating" flag 
+    // prior to calling back end to update this item so that we can
+    // reset the flag after retrieving the latest tip/similar counts for the item
+    // based on the updated text
+    //console.log("updateSingleItem started.");
+    updateItemText(item_uuid, new_text, (updatedItem) => {
+      var displayedListToUpdate = refreshItemCounts(dootooItems, [updatedItem]);
+      setDootooItems(displayedListToUpdate);
+      //console.log("updateSingleItem finished.");
+    });
+  }
 
   const handleMakeParent = (index: number) => {
     setLastRecordedCount(0);
@@ -401,12 +403,28 @@ export default function Index() {
                 handleDoneClick={handleDoneClick}
                 saveAllThings={saveAllItems}
                 loadAllThings={loadItems}
-                updateThingText={updateItemText}
+                updateThingText={updateSingleItem}
                 transcribeAudioToThings={transcribeAudioToTasks}
                 ListThingSidebar={DootooItemSidebar}
                 EmptyThingUX={DootooItemEmptyUX} 
                 isThingPressable={() => { return true}} 
                 isThingDraggable={() => { return true}} />
   );
+
+  function refreshItemCounts(latestItems: any, updatedItems: any) {
+    var displayedListToUpdate = [...latestItems];
+    for (var i = 0; i < updatedItems.length; i++) {
+      const currUpdatedItem = updatedItems[i];
+      for (var j = 0; j < displayedListToUpdate.length; j++) {
+        if (displayedListToUpdate[j].uuid == currUpdatedItem.uuid) {
+          displayedListToUpdate[j].tip_count = currUpdatedItem.tip_count;
+          displayedListToUpdate[j].similar_count = currUpdatedItem.similar_count;
+          displayedListToUpdate[j].counts_updating = false;
+          break;
+        }
+      }
+    }
+    return displayedListToUpdate;
+  }
 }
 

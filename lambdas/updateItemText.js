@@ -4,6 +4,7 @@ const prisma = new PrismaClient();
 import AWS from 'aws-sdk';
 const kms = new AWS.KMS();
 const ITEMS_KEY_ID = process.env.ITEMS_KEY_ID;
+const lambda = new AWS.Lambda();
 
 export const handler = async (event) => {
     try {
@@ -38,11 +39,12 @@ export const handler = async (event) => {
         const encryptedData = await kms.encrypt(encryptParams).promise();
         const encryptedText = encryptedData.CiphertextBlob.toString('base64');
 
-        const updatedItem = await prisma.item.update({
+        var updatedItem = await prisma.item.update({
             where: { id: item.id },
             data: { text: encryptedText }
         });
 
+        updatedItem = await loadItem(user.anonymous_id, item.uuid);
         const response = {
             statusCode: 200,
             body: JSON.stringify(updatedItem)
@@ -55,5 +57,28 @@ export const handler = async (event) => {
             statusCode: 500,
             body: `Error occurred: ${error}`
         }
+    }
+}
+
+const loadItem = async (anonymous_id, item_uuid) => {
+    const lambdaParams = {
+        FunctionName: "loadItems_Dev", // Replace with the name of the other Lambda
+        InvocationType: "RequestResponse", // Use "Event" for asynchronous invocation
+        Payload: JSON.stringify({ anonymous_id: anonymous_id, item_uuid: item_uuid })
+    };
+
+    try {
+        const response = await lambda.invoke(lambdaParams).promise();
+        const arrayOfOne = JSON.parse(JSON.parse(response.Payload).body);
+        console.log("Number of updated items: " + arrayOfOne.length);
+        if (arrayOfOne.length == 1) {
+            return arrayOfOne[0];
+        } else {
+            console.log("Unexpected response from loadItems: " + JSON.stringify(arrayOfOne));
+            return arrayOfOne;
+        }
+    } catch (error) {
+        console.error("Error invoking Lambda function:", error);
+        throw error;
     }
 }
