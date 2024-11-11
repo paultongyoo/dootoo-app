@@ -122,7 +122,7 @@ const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingS
         if (!isNew) {
             //console.log("Loading items from backend for existing user...");
             const savedItems = await loadAllThings();
-            console.log("Loaded things: " + JSON.stringify(savedItems));
+            //console.log("Loaded things: " + JSON.stringify(savedItems));
             console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} things from backend`);
             listArraySetter(savedItems);
         } else {

@@ -6,11 +6,6 @@ import { AppContext } from './AppContext';
 const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
     const { anonymousId } = useContext(AppContext);
 
-    // useEffect(() => {
-    //     console.log("Inside Sidebar useEffect - thing contents: " + JSON.stringify(thing));
-    //     console.log("thing up_vote check: " + JSON.stringify(thing.upvote_count));
-    // });
-
     const handleTipFlagContest = async (index: number) => {
         Alert.alert(
             'Tip Flagged', // Title of the alert
