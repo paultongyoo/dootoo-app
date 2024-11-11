@@ -391,7 +391,7 @@ const saveItemsToBackend = async(item_list_obj, callback) => {
     );
     const response_obj = JSON.parse(response.data.body);
     const updatedUser = response_obj.user;
-    const updatedItems = response_obj.items;  // 11.10.24:  Updated Lambda to always return empty lsit for now
+    const updatedItems = response_obj.items;
     //console.log("Updated User: " + JSON.stringify(updatedUser));
     //console.log("Updated items: " + JSON.stringify(updatedItems));
     

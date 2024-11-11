@@ -28,20 +28,21 @@ export default function Index() {
   });
 
   const saveAllItems = async (latestItems) => {
-    console.log("saveAllItems called with latestItems length: " + dootooItems.length);
+   // console.log("saveAllItems called with latestItems length: " + dootooItems.length);
     if (latestItems && latestItems.length > 0) {
       console.log(`Passing ${latestItems.length} to saveItems method...`);
+
+      console.log("saveAllItems started...");
+      // Asynchronously sync DB with latest items
       saveItems(latestItems, (updatedItems) => {
 
           console.log("Updating user counts asyncronously after saving all items")
           updateUserCountContext();
 
-          // 11.10.24  Updated saveItems lambda to always return empty items for now
-          //           exploring replacing loadItems call with individual item loads
-          //setItemListRefreshed(false);
-          //setDootooItems(updatedItems);
+          setDootooItems(updatedItems);
+          console.log("saveAllItems finished...");
         });
-      console.log("saveAllItems successful.");
+      //console.log("saveAllItems successful.");
     }
   };
 
@@ -85,6 +86,10 @@ export default function Index() {
       //console.log("firstDoneItemIdx before changing list: " + firstDoneItemIdx);
 
       updatedTasks![index].is_done = !updatedTasks![index].is_done;
+
+      // Set this to instruct UI to hide item counts until async save op returns and removes the value
+      updatedTasks![index].counts_updating = true;  
+
       if (updatedTasks![index].is_done == true) {
 
         //console.log(`Backing index of item ${updatedTasks![index].text}: ${index}`);
@@ -109,7 +114,7 @@ export default function Index() {
       // Asyncronously save all items to DB as rank_idxes will have changed
       saveAllItems(updatedTasks);
 
-      setDootooItems(updatedTasks);  // This should update UI only and not invoke any syncronous backend operations
+      setDootooItems(updatedTasks);  // This should update UI only and not invoke any synchronous backend operations
     } catch (error) {
       console.log("Error occurred during done logic!", error);
     }
@@ -190,6 +195,7 @@ export default function Index() {
       marginLeft: 15,
       paddingBottom: 10,
       paddingTop: 10,
+      paddingRight: 15,
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
       flex: 1,
@@ -244,7 +250,6 @@ export default function Index() {
     similarCountContainer: {
       justifyContent: 'center',
       alignItems: 'center',
-      paddingRight: 15,
       flexDirection: 'row'
     },
     similarCountText: {
@@ -300,6 +305,9 @@ export default function Index() {
     receiveTipIcon: {
       height: 40,
       width: 45
+    },
+    itemCountsRefreshingAnimContainer: {
+      justifyContent: 'center'
     }
   });
 

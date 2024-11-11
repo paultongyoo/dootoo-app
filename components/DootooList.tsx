@@ -35,7 +35,7 @@ const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingS
     }, []);
 
     useEffect(() => {
-        console.log(`useEffect[listArray] called`);
+        //console.log(`useEffect[listArray] called`);
         //console.log(`useEffect[listArray] called: listArray parse: ${JSON.stringify(listArray)}`);
 
         if (initialLoad) {
@@ -112,7 +112,7 @@ const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingS
             setLastRecordedCount(0);
             listArraySetter(data);  // This should update UI only and not invoke any syncronous backend operations
 
-            // Asyncronously save all items to DB as rank_idxes will have changed
+            // Asynchronously save all items to DB as rank_idxes will have changed
             saveAllThings(data);
         } else {
             console.log("Ignoring drag operation given isThingDraggable(data) == false");
