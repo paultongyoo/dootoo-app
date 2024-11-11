@@ -15,6 +15,7 @@ import DootooTipSidebar from "../components/DootooTipSidebar";
 import DootooTipEmptyUX from "../components/DootooTipEmptyUX";
 import DootooList from "@/components/DootooList";
 import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
+import DootooItemSidebar from "@/components/DootooItemSidebar";
 
 export default function ItemTips() {
   const { setLastRecordedCount, updateUserCountContext, 
@@ -434,20 +435,7 @@ export default function ItemTips() {
               <View style={styles.itemNamePressable}>
                 <Text style={[styles.taskTitle, selectedItem.is_done && styles.taskTitle_isDone]}>{selectedItem.text}</Text>
               </View>
-              {
-                (selectedItem.tip_count && selectedItem.tip_count > 0) ?
-                  <View style={styles.tipCountContainer}>
-                    <Text style={styles.tipCountText}>{selectedItem.tip_count}</Text>
-                    <View style={styles.tipCountIcon}></View>
-                  </View> : <></>
-              }
-              {
-                (selectedItem.similar_count && selectedItem.similar_count > 0) ?
-                  <View style={styles.similarCountContainer}>
-                    <Text style={styles.similarCountText}>{selectedItem.similar_count}</Text>
-                    <Image style={styles.similarCountIcon} source={require("../assets/images/person_icon_556B2F.png")} />
-                  </View> : <></>
-              }
+              <DootooItemSidebar thing={selectedItem} styles={styles} />
             </View>
           </View>
           <DootooList thingName="tip" listArray={tips}
