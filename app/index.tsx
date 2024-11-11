@@ -1,99 +1,41 @@
-import {
-  Image, Text, View, StyleSheet, Pressable, Animated, Alert,
-  TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput
-} from "react-native";
-import { useState, useRef, useEffect, useContext } from "react";
+import { useContext } from "react";
 import { router } from 'expo-router';
-import { saveItems, loadItems, deleteItem, updateItemText, updateItemHierarchy } from '../components/Storage';
+import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText } from '../components/Storage';
+import { transcribeAudioToTasks } from './../components/BackendServices';
+import DootooItemEmptyUX from "../components/DootooItemEmptyUX";
+import DootooList from "../components/DootooList";
+import DootooItemSidebar from "../components/DootooItemSidebar";
+import DootooSwipeAction_Delete from "../components/DootooSwipeAction_Delete";
+
+import {
+  Image, StyleSheet, Pressable
+} from "react-native";
 import { AppContext } from '../components/AppContext';
-import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
-import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, {
   SharedValue,
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
-import DootooFooter from '../components/DootooFooter';
-import Toast from 'react-native-toast-message';
-import { transcribeAudioToTasks } from './../components/BackendServices';
-
 
 export default function Index() {
   const { dootooItems, setDootooItems,
-    lastRecordedCount, setLastRecordedCount, setSelectedItem,
-    initializeLocalUser, updateUserCountContext } = useContext(AppContext);
-  const [initialLoad, setInitialLoad] = useState(false);
-  const itemFlatList = useRef(null);
-  const swipeableRef = useRef(null);
-  const [itemTextOnTap, setItemTextOnTap] = useState('');
-  const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
-  const [refreshing, setRefreshing] = useState(false);
-  const [errorMsg, setErrorMsg] = useState();
-  const [itemListRefreshed, setItemListRefreshed] = useState(true);
-  const inputValueRef = useRef('');
-  const fadeCTA = useRef(new Animated.Value(0)).current;
-  const fadeAnimGoals = useRef(new Animated.Value(0.1)).current;
-  const fadeAnimDreams = useRef(new Animated.Value(0.1)).current;
-  const fadeAnimChallenges = useRef(new Animated.Value(0.1)).current;
-
-  const ctaAnimation = Animated.sequence([
-    Animated.timing(fadeCTA, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true
-    }),
-    Animated.delay(1000),
-    Animated.timing(fadeAnimGoals, {
-      toValue: 1,
-      duration: 1500,
-      useNativeDriver: true
-    }),
-    Animated.timing(fadeAnimDreams, {
-      toValue: 1,
-      duration: 1500,
-      useNativeDriver: true
-    }),
-    Animated.timing(fadeAnimChallenges, {
-      toValue: 1,
-      duration: 1500,
-      useNativeDriver: true
-    }),
-    Animated.timing(fadeAnimChallenges, {
-      toValue: 1,
-      duration: 3000,
-      useNativeDriver: true
-    })
-  ]);
-
+    setLastRecordedCount, setSelectedItem,
+    updateUserCountContext } = useContext(AppContext);
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
     strict: false
   });
 
-  const loadItemsFromBackend = async (isNew: boolean) => {
-    if (!isNew) {
-      //console.log("Loading items from backend for existing user...");
-      const savedItems = await loadItems();
-      //console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} items from backend`);
-      setDootooItems(savedItems);
-    } else {
-      console.log("Skipping backend item load as user is new.");
-    }
-    setInitialLoad(true);
-    setRefreshing(false);
-    ctaAnimation.start();
-  };
-
   const saveAllItems = async () => {
     console.log("saveAllItems called with dootooitems length: " + dootooItems.length);
     if (dootooItems && dootooItems.length > 0) {
       console.log(`Passing ${dootooItems.length} to saveItems method...`);
-      await saveItems(dootooItems, (updatedItems) => {  
+      await saveItems(dootooItems, (updatedItems) => {
 
         console.log("Updating user counts asyncronously after saving all items")
-        updateUserCountContext();  
-        
+        updateUserCountContext();
+
         // 11.10.24  Updated saveItems lambda to always return empty items for now
         //           exploring replacing loadItems call with individual item loads
         //setItemListRefreshed(false);
@@ -102,157 +44,6 @@ export default function Index() {
       console.log("saveAllItems successful.");
     }
   };
-
-  useEffect(() => {
-    setInitialLoad(false);
-    initializeLocalUser((isNew: boolean) => {
-      loadItemsFromBackend(isNew);
-    });
-  }, []);
-
-  // This is expected to be called on any item change, reorder, deletion, etc
-  useEffect(() => {
-    console.log("useEffect[dootooItems] called");
-
-    if (!itemListRefreshed) {
-      console.log("dootooItems useEffect[dootooItems] called on list refresh; exitting early");
-      setItemListRefreshed(true);
-      return;
-    }
-
-    if (initialLoad) {
-      if (lastRecordedCount > 0) {
-        // If we're inside here, we were called after recording new items
-
-        // Display Toast
-        Toast.show({
-          type: 'undoableToast',
-          text1: `Added ${lastRecordedCount} item${(lastRecordedCount > 1) ? 's' : ''}.`,
-          position: 'bottom',
-          bottomOffset: 220,
-          props: {
-            onUndoPress: () => {
-
-              // Remove the items just added to the list
-              console.log(`Undoing recording op; removing first ${lastRecordedCount} item(s).`);
-              var updatedItems = [...dootooItems];
-              console.log("dootooItems length: " + dootooItems.length);
-              updatedItems.splice(0, lastRecordedCount);
-              console.log("List to update now has " + updatedItems.length + " in it.");
-              setLastRecordedCount(0);
-              setDootooItems(updatedItems); // This should update UI only and not invoke any syncronous backend operations
-            }
-          }
-        });
-      } else {
-
-        // This call has to be in this "main UI thread" in order to work
-        Toast.hide();
-      }
-
-      if (dootooItems && dootooItems.length == 0) {
-        ctaAnimation.reset();
-        ctaAnimation.start();
-      }      
-
-      // Commented out backend call from useEffect after moving all sync operations to their respective actions
-      // Leaving line here to remove after enough time user tests verify things still work
-      //saveAllItems();  // TODO:  Have save items return full list to populate with new counts
-
-    } else {
-      //console.log("UseEffect called before initial load completed, skipping..");
-    }
-  }, [dootooItems]);
-
-  const handleItemTextTap = (itemText: string, index: number) => {
-    //console.log(`handleItemTextTap called with text (${itemText}) and index (${index})`);
-    inputValueRef.current = itemText;
-    setItemTextOnTap(itemText);
-    setItemIdxToEdit(index);
-  }
-
-  const handleBlur = (index: number) => {
-    //console.log(`Inside handleBlur for index ${index}`);
-    setItemIdxToEdit(-1);
-
-    if (index != -1 && (itemIdxToEdit == index)) {
-      const currentValue = inputValueRef.current;
-      if (currentValue != itemTextOnTap) {
-        //console.log("Text changed to: " + currentValue);
-
-        var updatedTasks = [...dootooItems];
-        updatedTasks![index].text = currentValue;
-        setDootooItems(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
-
-        // Asynchronously sync new item text to DB
-        updateItemText(updatedTasks![index].uuid, updatedTasks![index].text);
-      } else {
-        console.log(`${currentValue} not changed on blur, ignoring..`);
-      }
-    } else {
-      console.log(`Previous field ${itemIdxToEdit} exited with no change, ignoring blur`);
-    }
-  }
-
-  const handleItemDelete = (index: number) => {
-    console.log("Entering handle delete item...");
-    setLastRecordedCount(0);
-    var updatedTasks = [...dootooItems];
-
-    // If the item is a parent and has one or more children, ask user if they want to remove all children too
-    if (!dootooItems[index].is_child && ((index + 1) <= (dootooItems.length - 1)) && dootooItems[index + 1].is_child) {
-
-      // Count how many subtasks this item has
-      var numSubtasks = 0;
-      for (var idx = index + 1; idx < dootooItems.length; idx++) {
-        if (dootooItems[idx].is_child == true) {
-          numSubtasks += 1;
-        } else {
-          break;
-        }
-      }
-      Alert.alert(
-        `Item Has ${numSubtasks} Subtask${numSubtasks > 1 ? 's' : ''}`,
-        `Deleting this item will delete its subtask${numSubtasks > 1 ? 's' : ''} too.  Continue?`,
-        [
-          {
-            text: 'Yes',
-            onPress: () => {
-
-              // Two step process:
-              // 1) Delete each item from backend
-              // 2) Remove each item from UI array
-              for (var i = index; i <= index + numSubtasks; i++) {
-
-                // Call asyncronous delete to mark item as deleted in backend to sync database
-                deleteItem(updatedTasks[i].uuid);
-              }
-              updatedTasks.splice(index, 1 + numSubtasks);  // Remove item and its subtasks from array
-              setItemIdxToEdit(-1);
-              setDootooItems(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
-            }
-          },
-          {
-            text: 'Cancel',
-            style: 'cancel'
-          }
-        ],
-        { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
-      );
-    } else {
-
-      console.log(`Deleting sole item at index ${index}: ${updatedTasks[index].text}`);
-
-      // Call asyncronous delete to mark item as deleted in backend to sync database
-      deleteItem(updatedTasks[index].uuid);
-
-      // Remove item from displayed list
-      updatedTasks.splice(index, 1);
-      setItemIdxToEdit(-1);
-      setDootooItems(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
-    }
-    console.log(`Exiting handle delete item at index ${index}...`);
-  }
 
   const handleMakeParent = (index: number) => {
     setLastRecordedCount(0);
@@ -319,21 +110,13 @@ export default function Index() {
       saveAllItems();
 
       setDootooItems(updatedTasks);  // This should update UI only and not invoke any syncronous backend operations
-    } catch(error) {
+    } catch (error) {
       console.log("Error occurred during done logic!", error);
     }
   }
 
-  function handleItemDrag(data: unknown[]) {
-    setLastRecordedCount(0);
-    setDootooItems(data);  // This should update UI only and not invoke any syncronous backend operations
-
-    // Asyncronously save all items to DB as rank_idxes will have changed
-    saveAllItems();
-  }
-
   const styles = StyleSheet.create({
-    container: {
+    listContainer: {
       //padding: 10,
       flex: 1,
       justifyContent: "center",
@@ -546,14 +329,13 @@ export default function Index() {
                 <Image style={styles.receiveTipIcon} source={require("../assets/images/receive_tip_white.png")} />
               </Pressable>
             </Reanimated.View>
-          : <></>       
-          }
-        <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
-          <Pressable
-            onPress={() => handleItemDelete(index)}>
-            <Image style={styles.swipeActionIcon_trash} source={require("../assets/images/trash_icon_white.png")} />
-          </Pressable>
-        </Reanimated.View>
+            : <></>
+        }
+        <DootooSwipeAction_Delete
+          styles={styles}
+          listArray={dootooItems} listArraySetter={setDootooItems}
+          listThingIndex={index}
+          deleteThing={deleteItem} />
         {(dootooItems![index].is_child) ?
           <Reanimated.View style={[styles.itemSwipeAction]}>
             <Pressable
@@ -585,132 +367,20 @@ export default function Index() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={() => {
-      if (itemIdxToEdit != -1) {
-        if (Keyboard.isVisible()) {
-          Keyboard.dismiss();
-        }
-        handleBlur(itemIdxToEdit);
-        setItemIdxToEdit(-1);
-      }
-    }} >
-      <View style={styles.container}>
-        {(initialLoad == false) ?
-          <View style={styles.initialLoadAnimContainer}>
-            <ActivityIndicator size={"large"} color="black" />
-          </View>
-          :
-          <View style={styles.taskContainer}>
-            {dootooItems && dootooItems.filter(item => !item.is_deleted)!.length > 0 ?
-              <DraggableFlatList
-                ref={itemFlatList}
-                data={dootooItems.filter(item => !item.is_deleted)}
-                onDragEnd={({ data }) => {
-                  handleItemDrag(data);
-                }}
-                keyExtractor={(item, index) => index.toString()}
-                ListHeaderComponent={<View style={{ height: 0 }} />}
-                ListFooterComponent={<View style={{ height: 60 }} />}
-                refreshing={refreshing}
-                onRefresh={() => {
-                  console.log("onRefresh called");
-                  setRefreshing(true);
-                  loadItemsFromBackend(false);
-                }}
-                renderItem={({ item, getIndex, drag, isActive }) =>
-                  <Swipeable
-                    key={Math.random()}
-                    ref={swipeableRef}
-                    childrenContainerStyle={styles.swipeableContainer}
-                    overshootLeft={false}
-                    overshootRight={false}
-                    renderLeftActions={(progress, dragX) =>
-                      renderLeftActions(progress, dragX, getIndex())
-                    }
-                    renderRightActions={(progress, dragX) =>
-                      renderRightActions(progress, dragX, getIndex())
-                    }
-
-                  //onSwipeableOpen={(direction) => onSwipedOpen(direction, getIndex(), this)}
-                  >
-                    <ScaleDecorator>
-                      <View style={[styles.itemContainer, (getIndex() == 0) && styles.itemContainer_firstItem]}>
-                        {(item.is_child) ?
-                          <View style={styles.childItemSpacer}></View>
-                          : <></>
-                        }
-                        <Pressable style={[styles.itemCircleOpen, item.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(getIndex())}></Pressable>
-                        <View style={styles.itemNameContainer}>
-                          {(itemIdxToEdit == getIndex()) ?
-                            <TextInput
-                              multiline={false}
-                              style={styles.itemTextInput}
-                              defaultValue={item.text}
-                              autoFocus={true}
-                              onChangeText={(text) => {
-                                setLastRecordedCount(0);
-                                inputValueRef.current = text;
-                              }}
-                              onBlur={() => handleBlur(getIndex())}
-                            />
-                            :
-                            <Pressable
-                              style={styles.itemNamePressable}
-                              onLongPress={drag}
-                              disabled={isActive}
-                              onPress={() => handleItemTextTap(item.text, getIndex())}>
-                              <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
-                            </Pressable>
-                          }
-                          {
-                            (item.tip_count || item.is_done) ?
-                              <View style={styles.tipCountContainer}>
-                                <Text style={styles.tipCountText}>{item.tip_count}</Text>
-                                <View style={styles.tipCountIcon}></View>
-                              </View> : <></>
-                          }
-                          {
-                            (item.similar_count && item.similar_count > 0) ?
-                              <View style={styles.similarCountContainer}>
-                                <Text style={styles.similarCountText}>{item.similar_count}</Text>
-                                <Image style={styles.similarCountIcon} source={require("../assets/images/person_icon_556B2F.png")} />
-                              </View> : <></>
-                          }
-                        </View>
-                      </View>
-                    </ScaleDecorator>
-                  </Swipeable>
-                }
-              /> : (initialLoad == true) ?
-                <Animated.View style={[styles.emptyListContainer, { opacity: fadeCTA }]}>
-                  <Text style={styles.emptyListContainer_words}>what are your</Text>
-                  <Animated.View>
-                    <Text style={[styles.emptyListContainer_words, { color: '#556B2F' }]}>tasks?</Text>
-                  </Animated.View>
-                  <Animated.View style={[{ opacity: fadeAnimGoals }]}>
-                    <Text style={[styles.emptyListContainer_words, { color: '#556B2F' }]}>goals?</Text>
-                  </Animated.View>
-                  <Animated.View style={[{ opacity: fadeAnimDreams }]}>
-                    <Text style={[styles.emptyListContainer_words, { color: '#556B2F' }]}>dreams?</Text>
-                  </Animated.View>
-                  <Animated.View style={[{ opacity: fadeAnimChallenges }]}>
-                    <Text style={[styles.emptyListContainer_words, { color: '#556B2F' }]}>challenges?</Text>
-                  </Animated.View>
-                  <Image style={styles.emptyListContainer_arrow} source={require("../assets/images/sketch_arrow_556B2F.png")} />
-                </Animated.View> : <></>
-            }
-            {(errorMsg) ?
-              <View style={styles.errorTextContainer}>
-                <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
-              </View>
-              : <View style={styles.errorTextContainer}>
-                <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
-              </View>}
-          </View>
-        }
-        <DootooFooter transcribeFunction={transcribeAudioToTasks} listArray={dootooItems} listArraySetterFunc={setDootooItems} />
-      </View>
-    </TouchableWithoutFeedback>
-
+    <DootooList listArray={dootooItems}
+                listArraySetter={setDootooItems}
+                styles={styles}
+                renderLeftActions={renderLeftActions}
+                renderRightActions={renderRightActions}
+                handleDoneClick={handleDoneClick}
+                saveAllThings={saveAllItems}
+                loadAllThings={loadItems}
+                updateThingText={updateItemText}
+                transcribeAudioToThings={transcribeAudioToTasks}
+                ListThingSidebar={DootooItemSidebar}
+                EmptyThingUX={DootooItemEmptyUX} 
+                isThingPressable={() => { return true}} 
+                isThingDraggable={() => { return true}} />
   );
 }
+

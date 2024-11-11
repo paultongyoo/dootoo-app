@@ -4,6 +4,7 @@ import { Buffer } from 'buffer';
 
 const BACKEND_TRANSCRIPTION_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/transcribeAudioToTasks_Dev';
 const BACKEND_TRANSCRIPTION_TIPS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/transcribeAudioToTips_Dev';
+const BACKEND_GENERATETIPCTA_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/generateTipCTA_Dev';
 
 export const transcribeAudioToTasks = async (fileUri, anonymous_id) => {
   console.log("Entering transcribeAudiToTasks with anonymous Id: " + anonymous_id);
@@ -70,4 +71,19 @@ export const transcribeAudioToTips = async (fileUri, anonymous_id) => {
     return `Modified file URI: ${fileUri} | File length: ${fileData.length} | Binary Data Length: ${binaryData.length} | ${error.message} | ${JSON.stringify(error)}`;
   }
 };
+
+export const generateTipCTA = async(anonymous_id, item_uuid) => {
+  try {
+    const response = await axios.post(BACKEND_GENERATETIPCTA_URL,
+      {
+        anonymous_id : anonymous_id,
+        item_uuid: item_uuid
+      }
+    );
+    //console.log("generateTipCTA Response Obj: " + JSON.stringify(response.data.body));
+    return response.data.body;
+  } catch (error) {
+    console.error('Error calling generateTipCTA API:', error);
+  }
+}
 

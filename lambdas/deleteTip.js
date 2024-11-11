@@ -12,27 +12,27 @@ export const handler = async (event) => {
         };
     }
     console.log(user);
-    const item = await prisma.item.findUnique({
+    const tip = await prisma.tip.findUnique({
         where: {
             user: { id: user.id },
-            uuid: event.item_uuid
+            uuid: event.tip_uuid
         }
     });
-    if (item == null) {
+    if (tip == null) {
         return {
             statusCode: 403,
-            body: JSON.stringify({ error: 'Can\'t find item owned by user!' })
+            body: JSON.stringify({ error: 'Can\'t find tip owned by user!' })
         };
     }
 
-    const updatedItem = await prisma.item.update({
-        where: { id: item.id },
+    const updatedTip = await prisma.tip.update({
+        where: { id: tip.id },
         data: { is_deleted: true}
     });
 
     const response = {
         statusCode: 200,
-        body: JSON.stringify(updatedItem)
+        body: JSON.stringify(updatedTip)
     };
     await prisma.$disconnect();
     return response;

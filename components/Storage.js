@@ -20,7 +20,9 @@ const TIPVOTE_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/
 const FLAGTIP_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/flagTip_Dev';
 const DELETEITEM_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/deleteItem_Dev';
 const UPDATEITEMTEXT_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemText_Dev';
-const UPDATEITEMHIERARCHY_DEV = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemHierarchy_Dev';
+const UPDATEITEMHIERARCHY_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemHierarchy_Dev';
+const UPDATETIPTEXT_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateTipText_Dev';
+const DELETETIP_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/deleteTip_Dev';
 
 
 export const saveItems = async (item_list_obj, callback) => {
@@ -139,6 +141,7 @@ export const loadItems = async () => {
 };
 
 export const loadTips = async (item_uuid) => {
+  //console.log("loadTips called with item_uuid: " + item_uuid);
   try {
 
     const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
@@ -152,13 +155,11 @@ export const loadTips = async (item_uuid) => {
         item_uuid: item_uuid
       }
     );
-    const response_obj = JSON.parse(response.data.body);
-    const tip_cta = response_obj.cta;
-    const tip_array = response_obj.tips;
+    const tip_array = JSON.parse(response.data.body);
     //console.log(`Retrieved CTA from backend: ${tip_cta}`);
     //console.log(`Retrieved ${tip_array.length} tips from backend.`);
     //console.log("Tip JSON: " + JSON.stringify(tip_array));
-    return { cta: tip_cta, loadedTips : tip_array };
+    return tip_array;
   } catch (error) {
     console.error('Error calling loadTips API:', error);
   }
@@ -230,7 +231,7 @@ export const updateItemText = async(item_uuid, text) => {
     console.log("Entering updateItemText, uuid: " + item_uuid + " text: " + text);
     const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
     if (!localAnonId) {
-      console.log("Received null local anon Id, aborting tipVote!");
+      console.log("Received null local anon Id, aborting updateItemText!");
       return [];
     }
     const response = await axios.post(UPDATEITEMTEXT_URL,
@@ -251,10 +252,10 @@ export const updateItemHierarchy = async(item_uuid, is_child) => {
     console.log("Entering updateItemHierarchy, uuid: " + item_uuid + " is_child: " + is_child);
     const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
     if (!localAnonId) {
-      console.log("Received null local anon Id, aborting tipVote!");
+      console.log("Received null local anon Id, aborting updateItemHierarchy!");
       return [];
     }
-    const response = await axios.post(UPDATEITEMHIERARCHY_DEV,
+    const response = await axios.post(UPDATEITEMHIERARCHY_URL,
       {
         anonymous_id : localAnonId,
         item_uuid: item_uuid,
@@ -264,6 +265,47 @@ export const updateItemHierarchy = async(item_uuid, is_child) => {
     //console.log("updateItemHierarchy Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateItemHierarchy API:', error);
+  }
+}
+
+export const updateTipText = async(tip_uuid, text) => {
+  try {
+    console.log("Entering updateTipText, uuid: " + tip_uuid + " text: " + text);
+    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
+    if (!localAnonId) {
+      console.log("Received null local anon Id, aborting updateTipText!");
+      return [];
+    }
+    const response = await axios.post(UPDATETIPTEXT_URL,
+      {
+        anonymous_id : localAnonId,
+        tip_uuid: item_uuid,
+        text: text
+      }
+    );
+    //console.log("updateTipText Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling updateTipText API:', error);
+  }
+}
+
+export const deleteTip = async(tip_uuid) => {
+  try {
+    console.log("Entering deleteTip, uuid: " + tip_uuid);
+    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
+    if (!localAnonId) {
+      console.log("Received null local anon Id, aborting tipVote!");
+      return [];
+    }
+    const response = await axios.post(DELETETIP_URL,
+      {
+        anonymous_id : localAnonId,
+        tip_uuid: tip_uuid
+      }
+    );
+    //console.log("deleteTip Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling deleteTip API:', error);
   }
 }
 
