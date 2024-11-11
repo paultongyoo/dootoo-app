@@ -1,13 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
-import OpenAI from "openai";
-const openai = new OpenAI();
-
-import AWS from 'aws-sdk';
-const kms = new AWS.KMS();
 
 export const handler = async (event) => {
-    var cta = '';
     const user = await prisma.user.findUnique({
         where: { anonymous_id: event.anonymous_id }
     });
@@ -61,38 +55,10 @@ export const handler = async (event) => {
         console.log("Query returned " + retrievedTips.length + " tip(s).");
     }
 
-    if (retrievedTips.length == 0) {
-        const decryptedString = await decryptItemText(selectedItem);
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-                {
-                    "role": "system",
-                    "content": "Create a short casually-worded call to action for a mobile app user to share tips " +
-                        "for completing tasks similar to the provided user task, generalizing all references the user may make to specific names. " +
-                        "Use the following format: 'Share your best tips with the community to help them <do the user task generalizing references to specific names>."
-                },
-                { "role": "user", "content": decryptedString }
-            ]
-        });
-        cta = completion.choices[0].message.content;
-        console.log("Generated CTA: " + cta);
-    } else {
-        console.log("Skipping generating CTA since we have tips for this item.")
-    }
-
     const response = {
         statusCode: 200,
-        body: JSON.stringify({ cta: cta, tips: retrievedTips })
+        body: JSON.stringify(retrievedTips)
     };
     await prisma.$disconnect();
     return response;
 };
-
-const decryptItemText = async (item) => {
-    const decryptParams = {
-        CiphertextBlob: Buffer.from(item.text, 'base64')
-    };
-    const decryptedData = await kms.decrypt(decryptParams).promise();
-    return decryptedData.Plaintext.toString('utf-8');
-}

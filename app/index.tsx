@@ -116,7 +116,7 @@ export default function Index() {
   }
 
   const styles = StyleSheet.create({
-    container: {
+    listContainer: {
       //padding: 10,
       flex: 1,
       justifyContent: "center",
@@ -368,17 +368,19 @@ export default function Index() {
 
   return (
     <DootooList listArray={dootooItems}
-      listArraySetter={setDootooItems}
-      styles={styles}
-      renderLeftActions={renderLeftActions}
-      renderRightActions={renderRightActions}
-      handleDoneClick={handleDoneClick}
-      saveAllThings={saveAllItems}
-      loadAllThings={loadItems}
-      updateThingText={updateItemText}
-      transcribeAudioToThings={transcribeAudioToTasks}
-      ListThingSidebar={DootooItemSidebar}
-      EmptyThingUX={DootooItemEmptyUX} />
+                listArraySetter={setDootooItems}
+                styles={styles}
+                renderLeftActions={renderLeftActions}
+                renderRightActions={renderRightActions}
+                handleDoneClick={handleDoneClick}
+                saveAllThings={saveAllItems}
+                loadAllThings={loadItems}
+                updateThingText={updateItemText}
+                transcribeAudioToThings={transcribeAudioToTasks}
+                ListThingSidebar={DootooItemSidebar}
+                EmptyThingUX={DootooItemEmptyUX} 
+                isThingPressable={() => { return true}} 
+                isThingDraggable={() => { return true}} />
   );
 }
 

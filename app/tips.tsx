@@ -1,48 +1,33 @@
 import {
-  Image, Text, View, StyleSheet, Pressable, Animated, Alert,
-  TouchableWithoutFeedback, Keyboard, ActivityIndicator, TextInput, Linking
+  Image, Text, View, StyleSheet, Pressable, Alert
 } from "react-native";
-import { useState, useRef, useContext, useEffect, useCallback } from 'react';
-import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
-import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
-import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import { useState, useContext, useCallback } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import Reanimated, {
   SharedValue,
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
 import { AppContext } from '../components/AppContext';
-import DootooFooter from '../components/DootooFooter';
-import Toast from 'react-native-toast-message';
 import { transcribeAudioToTips } from '../components/BackendServices';
-import { loadTips, saveTips, tipVote, flagTip } from '../components/Storage';
+import { loadTips, saveTips, tipVote, flagTip, updateTipText, deleteTip, saveItems } from '../components/Storage';
+import DootooTipSidebar from "../components/DootooTipSidebar";
+import DootooTipEmptyUX from "../components/DootooTipEmptyUX";
+import DootooList from "@/components/DootooList";
+import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
 
 export default function ItemTips() {
-  const { item_idx } = useLocalSearchParams();
-  const { dootooItems, setDootooItems, lastRecordedCount,
-    setLastRecordedCount, updateUserCountContext, anonymousId,
+  const { setLastRecordedCount, updateUserCountContext, 
     selectedItem, setSelectedItem } = useContext(AppContext);
-  const [initialLoad, setInitialLoad] = useState(false);
-  const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
   const [tips, setTips] = useState([]);
-  const [emptyTipsCTA, setEmptyTipsCTA] = useState('');
-  const inputFieldIndex = useRef(-1);
-  const inputValueRef = useRef('');
-  const swipeableRefs = useRef([]);
-  const [errorMsg, setErrorMsg] = useState();
-  const fadeCTA = useRef(new Animated.Value(0)).current;
-  const ctaAnimation = Animated.timing(fadeCTA, {
-    toValue: 1,
-    duration: 500,
-    useNativeDriver: true
-  });
+
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
     strict: false
   });
 
-  const handleSaveTips = async () => {
+  const saveAllTips = async () => {
     if (tips && tips.length > 0) {
       console.log(`Passing ${tips.length} tips to saveTips method...`);
       await saveTips(selectedItem, tips, () => {
@@ -52,157 +37,50 @@ export default function ItemTips() {
         const updatedSelectedItem = selectedItem;
         updatedSelectedItem.tip_count = tips.length;
         setSelectedItem(updatedSelectedItem);
-        //console.log("Updated selected Item with new tip count: " +  updatedSelectedItem.tip_count);
+        console.log("Updated selected Item with new tip count: " +  updatedSelectedItem.tip_count);
       });
       console.log("Tip save successful.");
     }
   };
 
-  // This is expected to be called on any item change, reorder, deletion, etc
-  useEffect(() => {
-    if (selectedItem == null) {
-      console.log("Aborting useEffect([]) call on null selected item");
-      return;
-    }
-
-    if (!tips || tips.length == 0) {
-      console.log("tips useEffect called with empty tips array, exitting...");
-      return;
-    } else {
-      console.log("tips useEffect called tips array length " + tips.length);
-    }
-
-    if (initialLoad) {
-      if (lastRecordedCount > 0) {
-        // If we're inside here, we were called after recording new items
-
-        // Display Toast
-        Toast.show({
-          type: 'undoableToast',
-          text1: `Added ${lastRecordedCount} tip${(lastRecordedCount > 1) ? 's' : ''}.`,
-          position: 'bottom',
-          bottomOffset: 220,
-          props: {
-            onUndoPress: () => {
-
-              // Remove the items just added to the list
-              console.log(`Undoing recording op; removing first ${lastRecordedCount} tip(s).`);
-              var updatedTips = [...tips];
-              console.log("dootooItems length: " + dootooItems.length);
-              updatedTips.splice(0, lastRecordedCount);
-              console.log("List to update now has " + updatedTips.length + " in it.");
-              setLastRecordedCount(0);
-              setTips(updatedTips);
-            }
-          }
-        });
-      } else {
-
-        // This call has to be in this "main UI thread" in order to work
-        Toast.hide();
-      }
-
-      handleSaveTips();
-
-    } else {
-      console.log("UseEffect called before initial load completed, skipping..");
-    }
-  }, [tips]);
-
   useFocusEffect(
     useCallback(() => {
-
       if (selectedItem == null) {
-        console.log("Aborting useFocusEffect call on null selected item");
+        //console.log("Aborting useFocusEffect call on null selected item");
         return;
       }
-
-      setInitialLoad(false);
-      setLastRecordedCount(0);
-      setItemIdxToEdit(-1);
-      ctaAnimation.reset();
-      console.log("Selected item: " + selectedItem.text);
+      //console.log("Selected item: " + JSON.stringify(selectedItem));
 
       return () => {
-        console.log('User has navigated away from this tips route');
-        setInitialLoad(false);
-        setLastRecordedCount(0);
-        setItemIdxToEdit(-1);
+        //console.log('User has navigated away from this tips route - Nulling out selectedItem context.');
         setSelectedItem(null);
-        ctaAnimation.reset();
       }
     }, [])
   );
 
-  useEffect(() => {
-    if (selectedItem == null) {
-      console.log("Aborting useEffect[selectedItem] call on null selected item");
-      return;
-    }
-
-    console.log("Calling loadTipsFromBackend for item: " + selectedItem.text);
-    loadTipsFromBackend();
-  }, [selectedItem]);
-
-  const loadTipsFromBackend = async () => {
-    const { cta, loadedTips } = await loadTips(selectedItem.uuid);
-    console.log(`Loaded ${(loadedTips && loadedTips.length > 0) ? loadedTips.length : 'empty list'} tips from backend`);
-    setTips(loadedTips);
-    setInitialLoad(true);
-
-    if (loadedTips && loadedTips.length == 0) {
-      setEmptyTipsCTA(cta);
-      ctaAnimation.start();
-    }
-  };
-
-  const handleItemTextTap = (itemText: string, index: number) => {
-    setItemIdxToEdit(index);
-  }
-
-  const handleBlur = (index: number) => {
-    console.log(`Inside handleBlur for index ${index}`);
-    setItemIdxToEdit(-1);
-
-    if (index != -1 && (inputFieldIndex.current == index)) {
-      const currentValue = inputValueRef.current;
-      console.log("Text changed to: " + currentValue);
-
-      var updatedTips = [...tips];
-      updatedTips![index].text = currentValue;
-      setTips(updatedTips);
-    } else {
-      console.log(`Previous field ${inputFieldIndex.current} exited with no change, ignoring blur`);
-    }
-  }
-
-  const handleItemDelete = (index: number) => {
-    console.log("Entering handle delete item...");
+  const handleDoneClick = async () => {
     setLastRecordedCount(0);
-    var updatedTips = [...tips];
-    updatedTips[index].is_deleted = true;
-    setTips(updatedTips);
-    setItemIdxToEdit(-1);
-    console.log("Exiting handle delete item...");
-  }
-
-  const handleDoneClick = () => {
-    setLastRecordedCount(0);
-    console.log("Unfinishing item for item index: " + item_idx);
-    var updatedTasks = [...dootooItems];
-    updatedTasks![item_idx].is_done = false;
-    setDootooItems(updatedTasks);
+    console.log("Calling saveItems for selectedItem to undone it...");
+    const updatedSelectedItem = selectedItem;
+    updatedSelectedItem.is_done = false;
+    const oneItemList = [updatedSelectedItem]
+    await saveItems(oneItemList, (updatedItems) => {
+      console.log("Updating user counts asyncronously after saving undone selected item")
+      updateUserCountContext();
+    });
+    console.log("saveItems call for undone item successful.");
+    console.log("Attempting to navigate back to main index list.");
     router.back();
   }
 
-  const handleTipVote = async (index, voteValue : number) => {
+  const handleTipVote = async (index, voteValue: number) => {
     await tipVote(tips[index].uuid, voteValue);
-    const updatedTips = [...tips];    
+    const updatedTips = [...tips];
     updatedTips[index].upvote_count += voteValue  // This value will be overwritten by DB load Just force a reload to reorder list as needed
-    setTips(updatedTips); 
+    setTips(updatedTips);
   }
 
-  const handleTipFlag = async (index : number) => {
+  const handleTipFlag = async (index: number) => {
     Alert.alert(
       'Report Abuse', // Title of the alert
       'Are you sure you want to report this tip as abusive? Reporting helps us keep our community safe. Your report will remain anonymous.', // Message of the alert
@@ -224,45 +102,11 @@ export default function ItemTips() {
     );
   }
 
-  const handleTipFlagContest = async (index : number) => {
-    Alert.alert(
-      'Tip Flagged', // Title of the alert
-      'This tip was flagged as abusive and was removed from the community\'s view.  Repeated offenses will result in your account being deleted.  If you want to contest the flag, you can email your reasoning to the administrators.', // Message of the alert
-      [
-        {
-          text: 'Email Admins',
-          onPress: () => {
-            console.log('Tip Flag Contest Email Pressed')
-            sendFlagContextEmail(index);
-          }
-        },
-        {
-          text: 'I Understand',
-          onPress: () => {
-            console.log('Tip Flag Contest Understood Pressed');
-          },
-        },
-      ]    
-    );
-  }
-
-  const sendFlagContextEmail = (index) => {
-    const email = 'contact@thoughtswork.co'; // Replace with the desired email address
-    const subject = `User ${anonymousId} Tip Flag Objection`; // Optional: add a subject
-    const body = `Tip text: ${tips[index].text} - Reason I'm contesting flagging this: `;
-    
-    // Construct the mailto URL
-    const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  
-    // Use Linking API to open email client
-    Linking.openURL(url).catch(err => console.error('Error opening email client:', err));
-  }
-
   const handleFlagTip = async (index) => {
     await flagTip(tips[index].uuid);
-    const updatedTips = [...tips];    
+    const updatedTips = [...tips];
     updatedTips[index].is_flagged = true;
-    setTips(updatedTips); 
+    setTips(updatedTips);
     Alert.alert(
       'Abuse Reported', // Title of the alert
       'Thank you for helping to keep the community safe!', // Message of the alert
@@ -277,47 +121,37 @@ export default function ItemTips() {
     );
   }
 
-  // Function to close all Swipeables except the one being opened
-  const closeOtherSwipeables = (index) => {
-    swipeableRefs.current.forEach((ref, i) => {
-      if (ref && i !== index) {
-        ref.close();
-      }
-    });
-  };
-
   const renderRightActions = (progress: SharedValue<number>, dragX: SharedValue<number>, index: number) => {
     return (
-      <> 
-        { (tips[index].user_id == selectedItem.user_id) ?
-        <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
-          <Pressable
-            onPress={() => handleItemDelete(index)}>
-            <Image style={styles.swipeActionIcon_trash} source={require("../assets/images/trash_icon_white.png")} />
-          </Pressable>
-        </Reanimated.View>
-        :
-        <>
-          <Reanimated.View style={styles.voteContainer}>
-            <Pressable style={styles.voteIconContainer}
+      <>
+        {(tips[index].user_id == selectedItem.user_id) ?
+          <DootooSwipeAction_Delete
+            styles={styles}
+            listArray={tips} listArraySetter={setTips}
+            listThingIndex={index}
+            deleteThing={deleteTip} />
+          :
+          <>
+            <Reanimated.View style={styles.voteContainer}>
+              <Pressable style={styles.voteIconContainer}
                 onPress={() => { handleTipVote(index, 1) }}>
-              <Image style={[styles.voteThumbIcon, (tips[index].user_vote_value == 1) && {opacity: 1.0}]} source={require("../assets/images/thumbs_up_556B2F.png")} />
-            </Pressable>
-            <View style={styles.voteCountContainer}>
-              <Text style={styles.voteCountText}>{tips[index].upvote_count}</Text>                        
-            </View> 
-            <Pressable style={styles.voteIconContainer}
+                <Image style={[styles.voteThumbIcon, (tips[index].user_vote_value == 1) && { opacity: 1.0 }]} source={require("../assets/images/thumbs_up_556B2F.png")} />
+              </Pressable>
+              <View style={styles.voteCountContainer}>
+                <Text style={styles.voteCountText}>{tips[index].upvote_count}</Text>
+              </View>
+              <Pressable style={styles.voteIconContainer}
                 onPress={() => { handleTipVote(index, -1) }}>
-              <Image style={[styles.voteThumbIcon, (tips[index].user_vote_value == -1) && {opacity: 1.0}]} source={require("../assets/images/thumbs_down_A23E48.png")} />
-            </Pressable>
-          </Reanimated.View>
-          <Reanimated.View style={[styles.itemSwipeAction, styles.action_Flag]}>
-            <Pressable
-              onPress={() => { handleTipFlag(index) }}>
-              <Image style={styles.swipeActionIcon_flag} source={require("../assets/images/flag_A23E48.png")} />
-            </Pressable>
-          </Reanimated.View>
-        </>
+                <Image style={[styles.voteThumbIcon, (tips[index].user_vote_value == -1) && { opacity: 1.0 }]} source={require("../assets/images/thumbs_down_A23E48.png")} />
+              </Pressable>
+            </Reanimated.View>
+            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Flag]}>
+              <Pressable
+                onPress={() => { handleTipFlag(index) }}>
+                <Image style={styles.swipeActionIcon_flag} source={require("../assets/images/flag_A23E48.png")} />
+              </Pressable>
+            </Reanimated.View>
+          </>
         }
       </>
     );
@@ -371,7 +205,7 @@ export default function ItemTips() {
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333' //#322723 with approx 20% alpha
     },
-    tipsContainer: {
+    listContainer: {
       flex: 1,
       backgroundColor: '#EBDDC5'
     },
@@ -529,7 +363,7 @@ export default function ItemTips() {
       borderColor: '#3E2723',
       backgroundColor: '#556B2F60',
       marginLeft: 10
-    }, 
+    },
     initialLoadMsg: {
       fontSize: 20,
       paddingBottom: 15
@@ -584,148 +418,50 @@ export default function ItemTips() {
   });
 
   if (selectedItem == null) {
-    console.log("Selected Item is null, aborting render of tips page");
+    //console.log("Selected Item is null, aborting render of tips page");
     return;
   } else {
 
     return (
-      <TouchableWithoutFeedback onPress={() => {
-        if (itemIdxToEdit != -1) {
-          if (Keyboard.isVisible()) {
-            Keyboard.dismiss();
-          }
-          handleBlur(itemIdxToEdit);
-          setItemIdxToEdit(-1);
-        }
-      }} >
-        <View style={styles.container}>
-          <View style={styles.taskContainer}>
-            <View style={styles.itemContainer}>
-              <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick()}></Pressable>
-              <View style={styles.itemNameContainer}>
-                <View style={styles.itemNamePressable}>
-                  <Text style={[styles.taskTitle, selectedItem.is_done && styles.taskTitle_isDone]}>{selectedItem.text}</Text>
-                </View>
-                {
-                  (selectedItem.tip_count && selectedItem.tip_count > 0) ?
-                    <View style={styles.tipCountContainer}>
-                      <Text style={styles.tipCountText}>{selectedItem.tip_count}</Text>
-                      <View style={styles.tipCountIcon}></View>
-                    </View> : <></>
-                }
-                {
-                  (selectedItem.similar_count && selectedItem.similar_count > 0) ?
-                    <View style={styles.similarCountContainer}>
-                      <Text style={styles.similarCountText}>{selectedItem.similar_count}</Text>
-                      <Image style={styles.similarCountIcon} source={require("../assets/images/person_icon_556B2F.png")} />
-                    </View> : <></>
-                }
+      <View style={styles.container}>
+        <View style={styles.taskContainer}>
+          <View style={styles.itemContainer}>
+            <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick()}></Pressable>
+            <View style={styles.itemNameContainer}>
+              <View style={styles.itemNamePressable}>
+                <Text style={[styles.taskTitle, selectedItem.is_done && styles.taskTitle_isDone]}>{selectedItem.text}</Text>
               </View>
-            </View>
-            <View style={styles.tipsContainer}>
-              {(initialLoad == false) ?
-                <View style={styles.initialLoadAnimContainer}>
-                  <Text style={styles.initialLoadMsg}>{(selectedItem.is_done) ? 'Loading your tips' : 'Loading tips from the community'}</Text>
-                  <ActivityIndicator size={"large"} color="black" />
-                </View>
-                :
-                (tips && tips.filter(item => !item.is_deleted)!.length > 0) ?
-                  <DraggableFlatList
-                    data={tips.filter(item => !item.is_deleted)}
-                    onDragEnd={({ data }) => {
-
-                      // Only support dragging items if user owns the tips
-                      if (tips[0].user_id == selectedItem.user_id) {
-                        setLastRecordedCount(0);
-                        setTips(data)
-                      } else {
-                        console.log("Ignoring drag operation as user doesn't own the first tip.");
-                      }
-                    }}
-                    keyExtractor={(item, index) => index.toString()}
-                    ListHeaderComponent={<View style={{ height: 0 }} />}
-                    ListFooterComponent={<View style={{ height: 75 }} />}
-                    renderItem={({ item, getIndex, drag, isActive }) =>
-                      <Swipeable
-                        key={Math.random()}
-                        ref={(ref) =>{
-                          swipeableRefs.current[getIndex()] = ref;
-                        }}
-                        onSwipeableOpen={() => closeOtherSwipeables(getIndex())}
-                        childrenContainerStyle={styles.swipeableContainer}
-                        overshootLeft={false}
-                        overshootRight={false}
-                        renderRightActions={(progress, dragX) =>
-                          renderRightActions(progress, dragX, getIndex())
-                        }
-                      >
-                        <ScaleDecorator>
-                          <View style={styles.tipContainer}>
-                            <View style={styles.tipNameContainer}>
-                              {(itemIdxToEdit == getIndex()) ?
-                                <TextInput
-                                  multiline={false}
-                                  style={styles.itemTextInput}
-                                  defaultValue={item.text}
-                                  autoFocus={true}
-                                  onChangeText={(text) => {
-                                    setLastRecordedCount(0);
-                                    inputFieldIndex.current = getIndex();
-                                    inputValueRef.current = text;
-                                  }}
-                                  onBlur={() => handleBlur(getIndex())}
-                                />
-                                : (item.user_id == selectedItem.user_id) ?
-                                <Pressable
-                                  style={styles.tipNamePressable}
-                                  onLongPress={drag}
-                                  disabled={isActive}
-                                  onPress={() => handleItemTextTap(item.text, getIndex())}>
-                                  <Text style={[styles.taskTitle]}>{item.text}</Text>
-                                </Pressable> 
-                                : <View style={styles.tipNamePressable}>
-                                    <Text style={[styles.taskTitle]}>{item.text}</Text>
-                                  </View>
-                              }
-                              {
-                                (!item.is_flagged && item.upvote_count && item.upvote_count != 0) ?
-                                  <View style={styles.scoreContainer}>
-                                    <Text style={styles.scoreText}>{item.upvote_count}</Text>
-                                    { (item.upvote_count > 0) ?
-                                        <Image style={styles.scoreIcon} source={require("../assets/images/thumbs_up_556B2F.png")} />
-                                      : <Image style={styles.scoreIcon} source={require("../assets/images/thumbs_down_A23E48.png")} />
-                                    }
-                                  </View> : (item.is_flagged) ?
-                                          <Pressable style={styles.flaggedContainer}
-                                                     onPress={() => handleTipFlagContest(getIndex())}>
-                                            <Text style={styles.flaggedText}>Flagged</Text>
-                                            <Image style={styles.flaggedIcon} source={require("../assets/images/flag_A23E48.png")} />
-                                          </Pressable>
-                                          : <View style={styles.scoreContainer}></View>
-                              }
-                            </View>
-                          </View>
-                        </ScaleDecorator>
-                      </Swipeable>
-                    }
-                  /> : (initialLoad == true) ?
-                    <Animated.View style={[styles.emptyListContainer, { opacity: fadeCTA }]}>
-                      <Text style={styles.emptyListContainer_words}>{emptyTipsCTA}</Text>
-                      <Image style={styles.emptyListContainer_arrow} source={require("../assets/images/sketch_arrow_556B2F.png")} />
-                    </Animated.View> : <></>
+              {
+                (selectedItem.tip_count && selectedItem.tip_count > 0) ?
+                  <View style={styles.tipCountContainer}>
+                    <Text style={styles.tipCountText}>{selectedItem.tip_count}</Text>
+                    <View style={styles.tipCountIcon}></View>
+                  </View> : <></>
               }
-              {(errorMsg) ?
-                <View style={styles.errorTextContainer}>
-                  <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
-                </View>
-                : <View style={styles.errorTextContainer}>
-                  <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
-                </View>}
+              {
+                (selectedItem.similar_count && selectedItem.similar_count > 0) ?
+                  <View style={styles.similarCountContainer}>
+                    <Text style={styles.similarCountText}>{selectedItem.similar_count}</Text>
+                    <Image style={styles.similarCountIcon} source={require("../assets/images/person_icon_556B2F.png")} />
+                  </View> : <></>
+              }
             </View>
           </View>
-          <DootooFooter transcribeFunction={transcribeAudioToTips} listArray={tips || []} listArraySetterFunc={setTips} hideRecordButton={!selectedItem.is_done} />
+          <DootooList thingName="tip" listArray={tips}
+            listArraySetter={setTips}
+            styles={styles}
+            isDoneable={false}
+            renderRightActions={renderRightActions}
+            saveAllThings={saveAllTips}
+            loadAllThings={() => loadTips(selectedItem.uuid)}
+            updateThingText={updateTipText}
+            transcribeAudioToThings={transcribeAudioToTips}
+            ListThingSidebar={(thing, styles, index) => <DootooTipSidebar styles={styles} listArray={tips} thing={thing} listThingIndex={index} />}
+            EmptyThingUX={() => <DootooTipEmptyUX styles={styles} ThingToDriveEmptyListCTA={selectedItem} />}
+            isThingPressable={(item) => { return (item.user_id == selectedItem.user_id); }}
+            isThingDraggable={(data) => { return data[0].user_id == selectedItem.user_id; }} />
         </View>
-      </TouchableWithoutFeedback>
+      </View>
     );
   }
 }

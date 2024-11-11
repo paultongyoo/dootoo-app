@@ -7,7 +7,7 @@ const DootooSwipeAction_Delete = ({
     styles, listArray, listArraySetter, listThingIndex, 
     deleteThing, thingNameStr = "Item" }) => {
     const { setLastRecordedCount } = useContext(AppContext);
-
+ 
     const handleThingDelete = (index: number) => {
         console.log("Entering handle delete item...");
         setLastRecordedCount(0);
@@ -26,8 +26,8 @@ const DootooSwipeAction_Delete = ({
                 }
             }
             Alert.alert(
-                `${thingNameStr.toUpperCase} Has ${numSubtasks} Sub${thingNameStr.toLowerCase}${numSubtasks > 1 ? 's' : ''}`,
-                `Deleting this ${thingNameStr.toLowerCase} will delete its sub${thingNameStr.toLowerCase}${numSubtasks > 1 ? 's' : ''} too.  Continue?`,
+                `${thingNameStr.toUpperCase()} Has ${numSubtasks} Sub${thingNameStr.toLowerCase()}${numSubtasks > 1 ? 's' : ''}`,
+                `Deleting this ${thingNameStr.toLowerCase()} will delete its sub${thingNameStr.toLowerCase()}${numSubtasks > 1 ? 's' : ''} too.  Continue?`,
                 [
                     {
                         text: 'Yes',
@@ -65,7 +65,7 @@ const DootooSwipeAction_Delete = ({
             //setItemIdxToEdit(-1) TODO: Deprecate if nolonger need!
             listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
         }
-        console.log(`Exiting handle delete ${thingNameStr.toLowerCase} at index ${index}...`);
+        console.log(`Exiting handle delete ${thingNameStr.toLowerCase()} at index ${index}...`);
     }
 
     return (

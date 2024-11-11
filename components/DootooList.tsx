@@ -6,18 +6,21 @@ import { AppContext } from './AppContext';
 import DootooFooter from './DootooFooter';
 import Toast from 'react-native-toast-message';
 
-const DootooList = ({ listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
-    renderLeftActions, renderRightActions,
-    isDoneable = true, handleDoneClick,
+const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingSidebar, EmptyThingUX, ThingToDriveEmptyListCTA = null, styles,
+    renderLeftActions = (progress, dragX, index) => { return <></>}, 
+    renderRightActions = (progress, dragX, index) => { return <></>},
+    isDoneable = true, handleDoneClick = (index) => { return; },
     saveAllThings, loadAllThings, updateThingText,
-    transcribeAudioToThings, }) => {
+    transcribeAudioToThings,
+    isThingPressable,
+    isThingDraggable}) => {
 
     const { lastRecordedCount, setLastRecordedCount, initializeLocalUser } = useContext(AppContext);
     const [initialLoad, setInitialLoad] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [errorMsg, setErrorMsg] = useState();
     const itemFlatList = useRef(null);              // TODO: Consider deprecate
-    const swipeableRef = useRef(null);              // TODO: Consider deprecate
+    const swipeableRefs = useRef([]);
     const [thingIdxToEdit, setThingIdxToEdit] = useState(-1);
     const [thingTextOnTap, setThingTextOnTap] = useState('');
     const inputValueRef = useRef('');
@@ -30,46 +33,47 @@ const DootooList = ({ listArray, listArraySetter, ListThingSidebar, EmptyThingUX
     }, []);
 
     useEffect(() => {
-        console.log("useEffect[listArray] called");
-    
+        console.log(`useEffect[listArray] called`);
+        //console.log(`useEffect[listArray] called: listArray parse: ${JSON.stringify(listArray)}`);
+
         if (initialLoad) {
-          if (lastRecordedCount > 0) {
-            // If we're inside here, we were called after recording new things
-    
-            // Display Toast
-            Toast.show({
-              type: 'undoableToast',
-              text1: `Added ${lastRecordedCount} thing${(lastRecordedCount > 1) ? 's' : ''}.`,
-              position: 'bottom',
-              bottomOffset: 220,
-              props: {
-                onUndoPress: () => {
-    
-                  // Remove the things just added to the list
-                  console.log(`Undoing recording op; removing first ${lastRecordedCount} things(s).`);
-                  var updatedItems = [...listArray];
-                  console.log("listArray length: " + listArray.length);
-                  updatedItems.splice(0, lastRecordedCount);
-                  console.log("List to update now has " + updatedItems.length + " in it.");
-                  setLastRecordedCount(0);
-                  listArraySetter(updatedItems); // This should update UI only and not invoke any syncronous backend operations
-                }
-              }
-            });
-          } else {
-    
-            // This call has to be in this "main UI thread" in order to work
-            Toast.hide();
-          } 
-    
-          // Commented out backend call from useEffect after moving all sync operations to their respective actions
-          // Leaving line here to remove after enough time user tests verify things still work
-          //saveAllItems();  // TODO:  Have save items return full list to populate with new counts
-    
+            if (lastRecordedCount > 0) {
+                // If we're inside here, we were called after recording new things
+
+                // Display Toast
+                Toast.show({
+                    type: 'undoableToast',
+                    text1: `Added ${lastRecordedCount} ${thingName}${(lastRecordedCount > 1) ? 's' : ''}.`,
+                    position: 'bottom',
+                    bottomOffset: 220,
+                    props: {
+                        onUndoPress: () => {
+
+                            // Remove the things just added to the list
+                            console.log(`Undoing recording op; removing first ${lastRecordedCount} things(s).`);
+                            var updatedItems = [...listArray];
+                            console.log("listArray length: " + listArray.length);
+                            updatedItems.splice(0, lastRecordedCount);
+                            console.log("List to update now has " + updatedItems.length + " in it.");
+                            setLastRecordedCount(0);
+                            listArraySetter(updatedItems); // This should update UI only and not invoke any syncronous backend operations
+                        }
+                    }
+                });
+            } else {
+
+                // This call has to be in this "main UI thread" in order to work
+                Toast.hide();
+            }
+
+            // Commented out backend call from useEffect after moving all sync operations to their respective actions
+            // Leaving line here to remove after enough time user tests verify things still work
+            //saveAllItems();  // TODO:  Have save items return full list to populate with new counts
+
         } else {
-          //console.log("UseEffect called before initial load completed, skipping..");
+            //console.log("UseEffect called before initial load completed, skipping..");
         }
-      }, [listArray]);
+    }, [listArray]);
 
     const handleBlur = (index: number) => {
         //console.log(`Inside handleBlur for index ${index}`);
@@ -102,18 +106,23 @@ const DootooList = ({ listArray, listArraySetter, ListThingSidebar, EmptyThingUX
     }
 
     function handleThingDrag(data: unknown[]) {
-        setLastRecordedCount(0);
-        listArraySetter(data);  // This should update UI only and not invoke any syncronous backend operations
+        if (isThingDraggable(data)) {
+            setLastRecordedCount(0);
+            listArraySetter(data);  // This should update UI only and not invoke any syncronous backend operations
 
-        // Asyncronously save all items to DB as rank_idxes will have changed
-        saveAllThings();
+            // Asyncronously save all items to DB as rank_idxes will have changed
+            saveAllThings();
+        } else {
+            console.log("Ignoring drag operation given isThingDraggable(data) == false");
+        }
     }
 
     const loadThingsFromBackend = async (isNew: boolean) => {
         if (!isNew) {
             //console.log("Loading items from backend for existing user...");
             const savedItems = await loadAllThings();
-            //console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} items from backend`);
+            console.log("Stringified saveItems: " + JSON.stringify(savedItems));
+            console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} things from backend`);
             listArraySetter(savedItems);
         } else {
             console.log("Skipping backend thing load as user is new.");
@@ -122,15 +131,27 @@ const DootooList = ({ listArray, listArraySetter, ListThingSidebar, EmptyThingUX
         setRefreshing(false);
     };
 
+    // Function to close all Swipeables except the one being opened
+    const closeOtherSwipeables = (index) => {
+        swipeableRefs.current.forEach((ref, i) => {
+            if (ref && i !== index) {
+                ref.close();
+            }
+        });
+    };
+
     const renderThing = ({ item, getIndex, drag, isActive }) => {
         return (<Swipeable
             key={Math.random()}
-            ref={swipeableRef}
+            ref={(ref) => {
+                swipeableRefs.current[getIndex()] = ref;
+            }}
+            onSwipeableOpen={() => closeOtherSwipeables(getIndex())}
             childrenContainerStyle={styles.swipeableContainer}
             overshootLeft={false}
             overshootRight={false}
-            renderLeftActions={(progress, dragX) => renderLeftActions(progress, dragX, getIndex())}
-            renderRightActions={(progress, dragX) => renderRightActions(progress, dragX, getIndex())}>
+            renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(progress, dragX, getIndex())} else { return <></>}}}
+            renderRightActions={(progress, dragX) => { if (renderRightActions) { return renderRightActions(progress, dragX, getIndex())} else { return <></>}}}>
             <ScaleDecorator>
                 <View style={[styles.itemContainer, (getIndex() == 0) && styles.itemContainer_firstItem]}>
                     {(item.is_child) ?
@@ -154,14 +175,19 @@ const DootooList = ({ listArray, listArraySetter, ListThingSidebar, EmptyThingUX
                                 }}
                                 onBlur={() => handleBlur(getIndex())} />
                             :
-                            <Pressable
-                                style={styles.itemNamePressable}
-                                onLongPress={drag}
-                                disabled={isActive}
-                                onPress={() => handleThingTextTap(item.text, getIndex())}>
-                                <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
-                            </Pressable>}
-                        <ListThingSidebar thing={item} styles={styles} />
+                            (isThingPressable(item)) ?
+                                <Pressable
+                                    style={styles.itemNamePressable}
+                                    onLongPress={drag}
+                                    disabled={isActive}
+                                    onPress={() => handleThingTextTap(item.text, getIndex())}>
+                                    <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
+                                </Pressable>
+                                : <View style={styles.tipNamePressable}>
+                                    <Text style={[styles.taskTitle]}>{item.text}</Text>
+                                </View>
+                        }
+                        <ListThingSidebar thing={item} styles={styles} index={getIndex()} />
                     </View>
                 </View>
             </ScaleDecorator>
@@ -179,14 +205,14 @@ const DootooList = ({ listArray, listArraySetter, ListThingSidebar, EmptyThingUX
                 setThingIdxToEdit(-1);
             }
         }} >
-            <View style={styles.container}>
+            <View style={styles.listContainer}>
                 {(initialLoad == false) ?
                     <View style={styles.initialLoadAnimContainer}>
                         <ActivityIndicator size={"large"} color="black" />
                     </View>
                     :
                     <View style={styles.taskContainer}>
-                        {listArray && listArray.filter(item => !item.is_deleted)!.length > 0 ?
+                        {listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0 ?
                             <DraggableFlatList
                                 ref={itemFlatList}
                                 data={listArray.filter(item => !item.is_deleted)}
@@ -204,7 +230,7 @@ const DootooList = ({ listArray, listArraySetter, ListThingSidebar, EmptyThingUX
                                     loadThingsFromBackend(false);
                                 }}
                                 renderItem={renderThing}
-                            /> : (initialLoad == true) ? <EmptyThingUX styles={styles} /> : <></>
+                            /> : (initialLoad == true) ? <EmptyThingUX styles={styles} ThingToDriveEmptyListCTA={ThingToDriveEmptyListCTA} /> : <></>
                         }
                         {(errorMsg) ?
                             <View style={styles.errorTextContainer}>
