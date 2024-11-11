@@ -27,15 +27,15 @@ export default function ItemTips() {
     strict: false
   });
 
-  const saveAllTips = async () => {
-    if (tips && tips.length > 0) {
+  const saveAllTips = async (latestTips) => {
+    if (latestTips && latestTips.length > 0) {
       console.log(`Passing ${tips.length} tips to saveTips method...`);
-      await saveTips(selectedItem, tips, () => {
+      await saveTips(selectedItem, latestTips, () => {
         updateUserCountContext()
 
         // Update tip count of selectedItem
         const updatedSelectedItem = selectedItem;
-        updatedSelectedItem.tip_count = tips.length;
+        updatedSelectedItem.tip_count = latestTips.length;
         setSelectedItem(updatedSelectedItem);
         console.log("Updated selected Item with new tip count: " +  updatedSelectedItem.tip_count);
       });

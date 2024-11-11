@@ -111,7 +111,7 @@ const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingS
             listArraySetter(data);  // This should update UI only and not invoke any syncronous backend operations
 
             // Asyncronously save all items to DB as rank_idxes will have changed
-            saveAllThings();
+            saveAllThings(data);
         } else {
             console.log("Ignoring drag operation given isThingDraggable(data) == false");
         }
@@ -241,7 +241,7 @@ const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingS
                             </View>}
                     </View>
                 }
-                <DootooFooter transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} />
+                <DootooFooter transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveAllThingsFunc={saveAllThings} />
             </View>
         </TouchableWithoutFeedback>
     );

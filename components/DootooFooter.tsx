@@ -6,12 +6,11 @@ import { useState, useContext, useRef, useEffect } from "react";
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
 import Reanimated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
-const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hideRecordButton = false }) => {
+const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const { anonymousId,
         setLastRecordedCount } = useContext(AppContext);
     const [loading, setLoading] = useState(false);
     const [recording, setRecording] = useState();
-    const [itemIdxToEdit, setItemIdxToEdit] = useState(-1);
     const [permissionResponse, requestPermission] = Audio.usePermissions();
     const meteringLevel = useSharedValue(1); // shared value for animated scale
     const recordButtonOpacity = useSharedValue(1);
@@ -87,14 +86,15 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
         //const response =  generateStubData(); 
         console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
         setLoading(false);
-        setItemIdxToEdit(-1);
 
         if (listArray && response && response.length > 0) {
             setLastRecordedCount(response.length);  // Set for future toast undo potential
 
             var updatedItems = response.concat(listArray);
             listArraySetterFunc(updatedItems);
-            console.log("Setter function called with updated list...");
+
+            // Make sure this function is asynchronous!!!
+            saveAllThingsFunc(updatedItems);
         } else {
             console.log("Did not call setter with updated list");
         }
@@ -224,7 +224,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
         loadingAnim: {
             margin: 10,
             position: 'relative',
-            left: 1
+            left: 1,
+            top: 1
         },
         footerButtonIcon_Stop: {
             width: 25,
@@ -251,7 +252,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, hide
                 <View style={styles.footerButton_Underlay}></View>
                 <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || loading) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
                     <Pressable
-                        onPress={recording ? processRecording : startRecording}
+                        onPress={(recording) ? processRecording : startRecording }
                         onPressIn={recordButton_handlePressIn}
                         onPressOut={recordButton_handlePressOut}>
                         {(loading) ?

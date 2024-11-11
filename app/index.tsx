@@ -20,27 +20,27 @@ import Reanimated, {
 export default function Index() {
   const { dootooItems, setDootooItems,
     setLastRecordedCount, setSelectedItem,
-    updateUserCountContext } = useContext(AppContext);
+    updateUserCountContext, queue } = useContext(AppContext);
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
     strict: false
   });
 
-  const saveAllItems = async () => {
-    console.log("saveAllItems called with dootooitems length: " + dootooItems.length);
-    if (dootooItems && dootooItems.length > 0) {
-      console.log(`Passing ${dootooItems.length} to saveItems method...`);
-      await saveItems(dootooItems, (updatedItems) => {
+  const saveAllItems = async (latestItems) => {
+    console.log("saveAllItems called with latestItems length: " + dootooItems.length);
+    if (latestItems && latestItems.length > 0) {
+      console.log(`Passing ${latestItems.length} to saveItems method...`);
+      saveItems(latestItems, (updatedItems) => {
 
-        console.log("Updating user counts asyncronously after saving all items")
-        updateUserCountContext();
+          console.log("Updating user counts asyncronously after saving all items")
+          updateUserCountContext();
 
-        // 11.10.24  Updated saveItems lambda to always return empty items for now
-        //           exploring replacing loadItems call with individual item loads
-        //setItemListRefreshed(false);
-        //setDootooItems(updatedItems);
-      });
+          // 11.10.24  Updated saveItems lambda to always return empty items for now
+          //           exploring replacing loadItems call with individual item loads
+          //setItemListRefreshed(false);
+          //setDootooItems(updatedItems);
+        });
       console.log("saveAllItems successful.");
     }
   };
@@ -107,7 +107,7 @@ export default function Index() {
       }
 
       // Asyncronously save all items to DB as rank_idxes will have changed
-      saveAllItems();
+      saveAllItems(updatedTasks);
 
       setDootooItems(updatedTasks);  // This should update UI only and not invoke any syncronous backend operations
     } catch (error) {
@@ -357,7 +357,6 @@ export default function Index() {
             <Pressable
               onPress={() => handleMakeChild(index)}>
               <Image style={styles.swipeActionIcon_ident} source={require("../assets/images/left_indent_3E2723.png")} />
-
             </Pressable>
           </Reanimated.View>
           : <></>
