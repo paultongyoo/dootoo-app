@@ -7,7 +7,7 @@ import DootooFooter from './DootooFooter';
 import Toast from 'react-native-toast-message';
 import { RefreshControl } from 'react-native-gesture-handler';
 
-const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingSidebar, EmptyThingUX, ThingToDriveEmptyListCTA = null, styles,
+const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items", listArray, listArraySetter, ListThingSidebar, EmptyThingUX, ThingToDriveEmptyListCTA = null, styles,
     renderLeftActions = (progress, dragX, index) => { return <></> },
     renderRightActions = (progress, dragX, index) => { return <></> },
     isDoneable = true, handleDoneClick = (index) => { return; },
@@ -210,6 +210,7 @@ const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingS
             <View style={styles.listContainer}>
                 {(initialLoad == false) ?
                     <View style={styles.initialLoadAnimContainer}>
+                        <Text style={styles.initialLoadMsg}>{loadingAnimMsg}</Text>
                         <ActivityIndicator size={"large"} color="black" />
                     </View>
                     :

@@ -64,16 +64,7 @@ export default function ItemTips() {
 
   const handleDoneClick = async () => {
     setLastRecordedCount(0);
-    console.log("Calling saveItems for selectedItem to undone it...");
-    const updatedSelectedItem = selectedItem;
-    updatedSelectedItem.is_done = false;
-    const oneItemList = [updatedSelectedItem]
-    await saveItems(oneItemList, (updatedItems) => {
-      console.log("Updating user counts asyncronously after saving undone selected item")
-      updateUserCountContext();
-    });
-    console.log("saveItems call for undone item successful.");
-    console.log("Attempting to navigate back to main index list.");
+    // For now just navigate user back to full list if they press this
     router.back();
   }
 
@@ -439,7 +430,7 @@ export default function ItemTips() {
               <DootooItemSidebar thing={selectedItem} styles={styles} />
             </View>
           </View>
-          <DootooList thingName="tip" listArray={tips}
+          <DootooList thingName="tip" loadingAnimMsg="Loading tips" listArray={tips}
             listArraySetter={setTips}
             styles={styles}
             isDoneable={false}
