@@ -13,7 +13,8 @@ const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingS
     saveAllThings, loadAllThings, updateThingText,
     transcribeAudioToThings,
     isThingPressable,
-    isThingDraggable}) => {
+    isThingDraggable,
+    hideRecordButton = false}) => {
 
     const { lastRecordedCount, setLastRecordedCount, initializeLocalUser } = useContext(AppContext);
     const [initialLoad, setInitialLoad] = useState(false);
@@ -121,7 +122,7 @@ const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingS
         if (!isNew) {
             //console.log("Loading items from backend for existing user...");
             const savedItems = await loadAllThings();
-            //console.log("Stringified saveItems: " + JSON.stringify(savedItems));
+            console.log("Loaded things: " + JSON.stringify(savedItems));
             console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} things from backend`);
             listArraySetter(savedItems);
         } else {
@@ -187,7 +188,7 @@ const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingS
                                     <Text style={[styles.taskTitle]}>{item.text}</Text>
                                 </View>
                         }
-                        <ListThingSidebar thing={item} styles={styles} index={getIndex()} />
+                        <ListThingSidebar thing={item} styles={styles} listArray={listArray} listThingIndex={getIndex()} />
                     </View>
                 </View>
             </ScaleDecorator>
@@ -241,7 +242,7 @@ const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingS
                             </View>}
                     </View>
                 }
-                <DootooFooter transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveAllThingsFunc={saveAllThings} />
+                <DootooFooter hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveAllThingsFunc={saveAllThings} />
             </View>
         </TouchableWithoutFeedback>
     );

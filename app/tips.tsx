@@ -199,11 +199,18 @@ export default function ItemTips() {
       color: '#556B2F',
       textDecorationLine: 'line-through'
     },
-    itemContainer: {
-      flexDirection: 'row', // Lays out children horizontally
-      alignItems: 'center', // Aligns children vertically (centered in this case)
+    headerItemContainer: {
+      flexDirection: 'row', 
+      alignItems: 'center', 
       borderBottomWidth: 1,
-      borderBottomColor: '#3E272333' //#322723 with approx 20% alpha
+      borderBottomColor: '#3E272333'
+    },
+    itemContainer: {
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      borderBottomWidth: 1,
+      borderBottomColor: '#3E272333',
+      marginLeft: 20
     },
     listContainer: {
       flex: 1,
@@ -211,13 +218,6 @@ export default function ItemTips() {
     },
     swipeableContainer: {
       backgroundColor: '#EBDDC5'
-    },
-    tipContainer: {
-      flexDirection: 'row', // Lays out children horizontally
-      alignItems: 'center', // Aligns children vertically (centered in this case)
-      borderBottomWidth: 1,
-      borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
-      marginLeft: 20
     },
     itemCircleOpen: {
       width: 26,
@@ -304,7 +304,7 @@ export default function ItemTips() {
       alignItems: 'center',
       flexDirection: 'row',
       width: 80,
-      paddingRight: 10
+      paddingRight: 20
     },
     scoreText: {
       fontSize: 16,
@@ -425,7 +425,7 @@ export default function ItemTips() {
     return (
       <View style={styles.container}>
         <View style={styles.taskContainer}>
-          <View style={styles.itemContainer}>
+          <View style={styles.headerItemContainer}>
             <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick()}></Pressable>
             <View style={styles.itemNameContainer}>
               <View style={styles.itemNamePressable}>
@@ -456,10 +456,11 @@ export default function ItemTips() {
             loadAllThings={() => loadTips(selectedItem.uuid)}
             updateThingText={updateTipText}
             transcribeAudioToThings={transcribeAudioToTips}
-            ListThingSidebar={(thing, styles, index) => <DootooTipSidebar styles={styles} listArray={tips} thing={thing} listThingIndex={index} />}
+            ListThingSidebar={DootooTipSidebar}
             EmptyThingUX={() => <DootooTipEmptyUX styles={styles} ThingToDriveEmptyListCTA={selectedItem} />}
             isThingPressable={(item) => { return (item.user_id == selectedItem.user_id); }}
-            isThingDraggable={(data) => { return data[0].user_id == selectedItem.user_id; }} />
+            isThingDraggable={(data) => { return data[0].user_id == selectedItem.user_id; }}
+            hideRecordButton={!selectedItem.is_done} />
         </View>
       </View>
     );

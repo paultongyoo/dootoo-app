@@ -1,6 +1,12 @@
 import { View, Text, Image } from 'react-native';
+import { useEffect } from 'react';
 
 const DootooItemSidebar = ({ thing, styles }) => {
+
+    useEffect(() => {
+        console.log("Inside Sidebar useEffect - thing contents: " + JSON.stringify(thing));
+        console.log("thing up_vote check: " + JSON.stringify(thing.upvote_count));
+    });
 
     return (
         <>
