@@ -57,9 +57,10 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             // Poll metering level and update the animated scale
             const interval = setInterval(async () => {
                 const status = await recording.getStatusAsync();
+                const metering_divisor = (Platform.OS == 'ios') ? 30 : 100;
                 if (status.isRecording) {
-                    meteringLevel.value = withTiming(1 + Math.max(0, 1 + (status.metering / 30)), { duration: 100 });
-                    console.log(`status.metering: ${status.metering} - Metering Level: ${meteringLevel.value}`);
+                    meteringLevel.value = withTiming(1 + Math.max(0, 1 + (status.metering / metering_divisor)), { duration: 100 });
+                    console.log(`Platform: ${Platform.OS} - status.metering: ${status.metering} - Metering Level: ${meteringLevel.value} - Metering modifier: ${1 + (status.metering / metering_divisor)}`);
                 }
             }, 100);
 
@@ -224,13 +225,14 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         loadingAnim: {
             margin: 10,
             position: 'relative',
-            left: 1,
-            top: 1
+            left: 1
         },
         footerButtonIcon_Stop: {
             width: 25,
             height: 25,
-            backgroundColor: 'white'
+            backgroundColor: 'white',
+            position: 'relative',
+            left: 1
         }
     });
 
