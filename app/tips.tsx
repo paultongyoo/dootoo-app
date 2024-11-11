@@ -184,12 +184,12 @@ export default function ItemTips() {
     },
     emptyListContainer_arrow: {
       position: 'absolute',
-      bottom: 0,
-      right: 80,
-      height: 150,
+      bottom: -50,
+      right: 90,
+      height: 175,
       width: 50,
       opacity: 0.4,
-      transform: [{ rotate: '18deg' }]
+      transform: [{ rotate: '20deg' }]
     },
     taskContainer: {
       flex: 1

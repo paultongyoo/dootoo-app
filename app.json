@@ -15,8 +15,11 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.thoughtswork.dootoo",
+      "buildNumber": "59",
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
@@ -107,6 +110,11 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "793f59aa-e203-4f84-9786-66253edd7c9f"
+      }
     }
   }
 }
