@@ -7,7 +7,7 @@ const DootooItemSidebar = ({ thing, styles }) => {
         <>
             {(thing.tip_count || thing.is_done) ?
                 <View style={styles.tipCountContainer}>
-                    <Text style={styles.tipCountText}>{thing.tip_count}</Text>
+                    <Text style={styles.tipCountText}>{thing.tip_count || '0'}</Text>
                     <View style={styles.tipCountIcon}></View>
                 </View> : <></>}
             {(thing.similar_count && thing.similar_count > 0) ?
