@@ -39,7 +39,22 @@ export default function Index() {
           console.log("Updating user counts asyncronously after saving all items")
           updateUserCountContext();
 
-          setDootooItems(updatedItems);
+          // Apply latest counts to displayed list without affecting list order
+          // This is hack workaround to avoid jolting behavior if/when
+          // item order changes
+          var displayedListToUpdate = [...latestItems];
+          for (var i = 0; i < updatedItems.length; i++) {
+            const currUpdatedItem = updatedItems[i];
+            for (var j = 0; j < displayedListToUpdate.length; j++) {
+              if (displayedListToUpdate[j].uuid == currUpdatedItem.uuid) {
+                displayedListToUpdate[j].tip_count = currUpdatedItem.tip_count;
+                displayedListToUpdate[j].similar_count = currUpdatedItem.similar_count;
+                displayedListToUpdate[j].counts_updating = false;
+                break;
+              }
+            }
+          }
+          setDootooItems(displayedListToUpdate);
           console.log("saveAllItems finished...");
         });
       //console.log("saveAllItems successful.");
@@ -137,6 +152,10 @@ export default function Index() {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center'
+    },
+    initialLoadMsg: {
+      paddingBottom: 10,
+      fontSize: 16
     },
     emptyListContainer: {
       flex: 1,
