@@ -218,6 +218,7 @@ export default function ItemTips() {
     },
     listContainer: {
       flex: 1,
+      justifyContent: "center",
       backgroundColor: '#EBDDC5'
     },
     swipeableContainer: {

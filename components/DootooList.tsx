@@ -1,20 +1,21 @@
 import { View, Text, ActivityIndicator, Pressable, TextInput, Image, TouchableWithoutFeedback, Keyboard } from 'react-native';
-import { useState, useRef, useContext, useEffect } from 'react';
+import { useState, useRef, useContext, useEffect, useCallback } from 'react';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { AppContext } from './AppContext';
 import DootooFooter from './DootooFooter';
 import Toast from 'react-native-toast-message';
+import { RefreshControl } from 'react-native-gesture-handler';
 
 const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingSidebar, EmptyThingUX, ThingToDriveEmptyListCTA = null, styles,
-    renderLeftActions = (progress, dragX, index) => { return <></>}, 
-    renderRightActions = (progress, dragX, index) => { return <></>},
+    renderLeftActions = (progress, dragX, index) => { return <></> },
+    renderRightActions = (progress, dragX, index) => { return <></> },
     isDoneable = true, handleDoneClick = (index) => { return; },
     saveAllThings, loadAllThings, updateThingText,
     transcribeAudioToThings,
     isThingPressable,
     isThingDraggable,
-    hideRecordButton = false}) => {
+    hideRecordButton = false }) => {
 
     const { lastRecordedCount, setLastRecordedCount, initializeLocalUser } = useContext(AppContext);
     const [initialLoad, setInitialLoad] = useState(false);
@@ -123,7 +124,7 @@ const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingS
             //console.log("Loading items from backend for existing user...");
             const savedItems = await loadAllThings();
             //console.log("Loaded things: " + JSON.stringify(savedItems));
-            console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} things from backend`);
+            console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} ${thingName}(s) from backend`);
             listArraySetter(savedItems);
         } else {
             console.log("Skipping backend thing load as user is new.");
@@ -151,8 +152,8 @@ const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingS
             childrenContainerStyle={styles.swipeableContainer}
             overshootLeft={false}
             overshootRight={false}
-            renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(progress, dragX, getIndex())} else { return <></>}}}
-            renderRightActions={(progress, dragX) => { if (renderRightActions) { return renderRightActions(progress, dragX, getIndex())} else { return <></>}}}>
+            renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(progress, dragX, getIndex()) } else { return <></> } }}
+            renderRightActions={(progress, dragX) => { if (renderRightActions) { return renderRightActions(progress, dragX, getIndex()) } else { return <></> } }}>
             <ScaleDecorator>
                 <View style={[styles.itemContainer, (getIndex() == 0) && styles.itemContainer_firstItem]}>
                     {(item.is_child) ?
@@ -223,13 +224,15 @@ const DootooList = ({ thingName = 'item', listArray, listArraySetter, ListThingS
                                 keyExtractor={(item, index) => index.toString()}
                                 ListHeaderComponent={<View style={{ height: 0 }} />}
                                 ListFooterComponent={<View style={{ height: 60 }} />}
-                                refreshing={refreshing}
-                                onRefresh={() => {
-                                    // TODO: Fix me (this doesn't get called on the pull down)
-                                    console.log("onRefresh called");
-                                    setRefreshing(true);
-                                    loadThingsFromBackend(false);
-                                }}
+                                refreshControl={
+                                    <RefreshControl
+                                        onRefresh={() => {
+                                            setLastRecordedCount(0);
+                                            setRefreshing(true);
+                                            loadThingsFromBackend(false);
+                                        }}
+                                        refreshing={refreshing} />
+                                }
                                 renderItem={renderThing}
                             /> : (initialLoad == true) ? <EmptyThingUX styles={styles} ThingToDriveEmptyListCTA={ThingToDriveEmptyListCTA} /> : <></>
                         }

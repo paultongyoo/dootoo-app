@@ -230,9 +230,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         footerButtonIcon_Stop: {
             width: 25,
             height: 25,
-            backgroundColor: 'white',
-            position: 'relative',
-            left: 1
+            backgroundColor: 'white'
         }
     });
 
