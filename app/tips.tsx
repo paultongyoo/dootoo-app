@@ -144,23 +144,22 @@ export default function ItemTips() {
             deleteThing={deleteTip} />
           :
           <>
-            <Reanimated.View style={styles.voteContainer}>
-              <Pressable style={styles.voteIconContainer}
+            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Upvote]}>
+              <Pressable
                 onPress={() => { handleTipVote(index, 1) }}>
-                <Image style={[styles.voteThumbIcon, (tips[index].user_vote_value == 1) && { opacity: 1.0 }]} source={require("../assets/images/thumbs_up_556B2F.png")} />
+                <Image style={[styles.voteThumbIcon, (tips[index].user_vote_value == 1) && { opacity: 1.0 }]} source={require("../assets/images/thumbs_up_white.png")} />
               </Pressable>
-              <View style={styles.voteCountContainer}>
-                <Text style={styles.voteCountText}>{tips[index].upvote_count}</Text>
-              </View>
-              <Pressable style={styles.voteIconContainer}
+            </Reanimated.View>
+            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Downvote]}>
+              <Pressable
                 onPress={() => { handleTipVote(index, -1) }}>
-                <Image style={[styles.voteThumbIcon, (tips[index].user_vote_value == -1) && { opacity: 1.0 }]} source={require("../assets/images/thumbs_down_A23E48.png")} />
+                <Image style={[styles.voteThumbIcon, (tips[index].user_vote_value == -1) && { opacity: 1.0 }]} source={require("../assets/images/thumbs_down_white.png")} />
               </Pressable>
             </Reanimated.View>
             <Reanimated.View style={[styles.itemSwipeAction, styles.action_Flag]}>
               <Pressable
                 onPress={() => { handleTipFlag(index) }}>
-                <Image style={styles.swipeActionIcon_flag} source={require("../assets/images/flag_A23E48.png")} />
+                <Image style={styles.swipeActionIcon_flag} source={require("../assets/images/flag_white.png")} />
               </Pressable>
             </Reanimated.View>
           </>
@@ -282,10 +281,11 @@ export default function ItemTips() {
       flexDirection: 'row',
       backgroundColor: '#FAF3E0'
     },
-    action_Delete: {
-      backgroundColor: 'red',
-      borderBottomWidth: 1,
-      borderBottomColor: '#3E272333'
+    action_Upvote: {
+      backgroundColor: '#556B2F'
+    },
+    action_Downvote: {
+      backgroundColor: '#A23E48'
     },
     itemLeftSwipeActions: {
       width: 50,
@@ -331,18 +331,16 @@ export default function ItemTips() {
       opacity: 0.5
     },
     voteThumbIcon: {
-      width: 28,
-      height: 28,
-      opacity: 0.2
+      width: 30,
+      height: 30
     },
     swipeActionIcon_trash: {
       height: 30,
       width: 30
     },
     swipeActionIcon_flag: {
-      height: 20,
-      width: 20,
-      opacity: 0.6
+      height: 30,
+      width: 30
     },
     swipeActionIcon_ident: {
       height: 30,
@@ -382,16 +380,6 @@ export default function ItemTips() {
       fontSize: 20,
       paddingBottom: 15
     },
-    voteContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingRight: 20,
-      paddingLeft: 20,
-      backgroundColor: '#FAF3E090',
-      borderBottomWidth: 1,
-      borderBottomColor: '#3E272333'
-    },
     voteIconContainer: {
       //opacity: 0.6
     },
@@ -405,7 +393,7 @@ export default function ItemTips() {
       textAlign: 'center'
     },
     action_Flag: {
-      backgroundColor: '#FAF3E090',
+      backgroundColor: 'red',
       borderRightWidth: 1,
       borderRightColor: '#3E272333',
       borderBottomWidth: 1,
