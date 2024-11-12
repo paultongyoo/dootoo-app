@@ -214,7 +214,8 @@ export default function ItemTips() {
       flexDirection: 'row', 
       alignItems: 'center', 
       borderBottomWidth: 1,
-      borderBottomColor: '#3E272333'
+      borderBottomColor: '#3E272333',
+      paddingTop: 4
     },
     itemContainer: {
       flexDirection: 'row', 
