@@ -156,8 +156,8 @@ export default function Index() {
       alignItems: 'center'
     },
     initialLoadMsg: {
-      paddingBottom: 10,
-      fontSize: 16
+      paddingBottom: 15,
+      fontSize: 20
     },
     emptyListContainer: {
       flex: 1,
