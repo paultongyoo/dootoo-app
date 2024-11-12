@@ -1,6 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
+import OpenAI from "openai";
+const openai = new OpenAI();
+
 export const handler = async (event) => {
   const user = await saveTips(event.anonymous_id, event.item_uuid, event.tips_str);
   const updatedUser = await refreshUpdatedCounts(user);
@@ -36,6 +39,16 @@ const saveTips = async(anonymous_id, item_uuid, tips_str) => {
         var tips_arr = JSON.parse(tips_str);
         for (var i = 0; i < tips_arr.length; i++) {
             var array_tip = tips_arr[i];
+
+            // TODO:  Improve this moderation UX in future
+            const moderation = await openai.moderations.create({
+                model: "omni-moderation-latest",
+                input: array_tip.text
+              });       
+            const flagged = moderation.results[0].flagged;
+            if (flagged) {
+                array_tip.text = '(flagged)';
+            }
 
             const tip = await prisma.tip.upsert({
                 where: { uuid: array_tip.uuid},

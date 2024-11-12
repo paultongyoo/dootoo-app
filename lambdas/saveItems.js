@@ -1,5 +1,8 @@
 import axios from 'axios';
 
+import OpenAI from "openai";
+const openai = new OpenAI();
+
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
@@ -37,6 +40,16 @@ const saveItems = async(anonymous_id, items_str) => {
         var items_arr = JSON.parse(items_str);
         for (var i = 0; i < items_arr.length; i++) {
             var array_item = items_arr[i];
+
+            // TODO:  Improve this moderation UX in future
+            const moderation = await openai.moderations.create({
+                model: "omni-moderation-latest",
+                input: array_item.text
+              });       
+            const flagged = moderation.results[0].flagged;
+            if (flagged) {
+                array_item.text = '(flagged)';
+            }
 
             // Encrypt item text before saving
             try {
