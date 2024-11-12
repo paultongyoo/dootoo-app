@@ -68,6 +68,7 @@ export default function ItemTips() {
         //console.log('User has navigated away from this tips route - Nulling out selectedItem and tips contexts.');
         setSelectedItem(null);
         setTips([]);
+        setLastRecordedCount(0);
       }
     }, [])
   );
@@ -302,7 +303,8 @@ export default function ItemTips() {
     similarCountContainer: {
       justifyContent: 'center',
       alignItems: 'center',
-      flexDirection: 'row'
+      flexDirection: 'row',
+      paddingLeft: 15
     },
     similarCountText: {
       fontSize: 15
@@ -363,7 +365,6 @@ export default function ItemTips() {
     tipCountContainer: {
       justifyContent: 'center',
       alignItems: 'center',
-      paddingRight: 15,
       flexDirection: 'row'
     },
     tipCountText: {
