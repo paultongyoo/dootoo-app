@@ -19,9 +19,7 @@ const SAVETIPS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev
 const TIPVOTE_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/tipVote_Dev';
 const FLAGTIP_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/flagTip_Dev';
 const DELETEITEM_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/deleteItem_Dev';
-const UPDATEITEMTEXT_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemText_Dev';
 const UPDATEITEMHIERARCHY_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemHierarchy_Dev';
-const UPDATETIPTEXT_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateTipText_Dev';
 const DELETETIP_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/deleteTip_Dev';
 
 
