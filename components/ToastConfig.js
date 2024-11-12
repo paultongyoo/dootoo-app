@@ -28,7 +28,7 @@ const toastConfig = {
   msgOnlyToast: ({ text1 = '', props }) => (
     <View style={{ 
         height: 50,
-        width: 230,
+        width: 190,
         padding: 15,
         justifyContent: 'center',
         alignItems: 'center',
