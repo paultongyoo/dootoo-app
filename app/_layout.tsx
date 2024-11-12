@@ -243,7 +243,7 @@ function ProfileDrawer({ navigation }) {
 
   const sendEmail = () => {
     const email = 'contact@thoughtswork.co'; // Replace with the desired email address
-    const subject = `Feedback from User ${anonymousId}`; // Optional: add a subject
+    const subject = `Feedback from User ${username}`; // Optional: add a subject
     const body = '';
     
     // Construct the mailto URL

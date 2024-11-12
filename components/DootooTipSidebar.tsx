@@ -4,7 +4,7 @@ import { AppContext } from './AppContext';
 
 
 const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
-    const { anonymousId } = useContext(AppContext);
+    const { username } = useContext(AppContext);
 
     const handleTipFlagContest = async (index: number) => {
         Alert.alert(
@@ -30,7 +30,7 @@ const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
 
     const sendFlagContextEmail = (index) => {
         const email = 'contact@thoughtswork.co'; // Replace with the desired email address
-        const subject = `User ${anonymousId} Tip Flag Objection`; // Optional: add a subject
+        const subject = `Tip Flag Objection from User ${username}`; // Optional: add a subject
         const body = `Tip text: ${listArray[listThingIndex].text} - Reason I'm contesting flagging this: `;
 
         // Construct the mailto URL
