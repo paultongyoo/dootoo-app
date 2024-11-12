@@ -85,8 +85,6 @@ export const initalizeUser = async() => {
 
       // Syncronously retrieve existing user's done and tip counts from backend
       // because they can count historical items not currently listed in local storage
-
-
       doneCountStr = await AsyncStorage.getItem(DONE_COUNT_KEY);
       tipCountStr = await AsyncStorage.getItem(TIP_COUNT_KEY);
       isNewUser = false;

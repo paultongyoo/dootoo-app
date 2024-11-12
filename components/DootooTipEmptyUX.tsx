@@ -6,7 +6,7 @@ import { AppContext } from './AppContext';
 
 const DootooTipEmptyUX = ({ styles, ThingToDriveEmptyListCTA }) => {
     const { anonymousId } = useContext(AppContext);
-    const [ctaLoading, setCTALoading] = useState(true);
+    const [ctaLoading, setCTALoading] = useState(false);
     const [emptyListCTA, setEmptyListCTA] = useState('');
     const fadeCTA = useRef(new Animated.Value(0)).current;
     const ctaAnimation = Animated.timing(fadeCTA, {
@@ -17,20 +17,20 @@ const DootooTipEmptyUX = ({ styles, ThingToDriveEmptyListCTA }) => {
 
     const generateEmptyListCTA = async (thing) => {
         ctaAnimation.reset();
-        if (thing) {
-            const emptyListCTA = await generateTipCTA(anonymousId, thing.uuid)
-            //console.log("Setting emptyListCTA to: " + JSON.stringify(emptyListCTA));
-            setEmptyListCTA(emptyListCTA);
-        } else {
-            setEmptyListCTA("Specify 'setEmptyListCTA' prop to use!'");
-        }
+        //console.log("Calling generateTipCTA for thing: " + JSON.stringify(thing));
+        setCTALoading(true);
+        const emptyListCTA = await generateTipCTA(anonymousId, thing.uuid)
+        //console.log("Setting emptyListCTA to: " + JSON.stringify(emptyListCTA));
+        setEmptyListCTA(emptyListCTA);
         setCTALoading(false);
         ctaAnimation.start();
     }
 
     useFocusEffect(
         useCallback(() => {
-            generateEmptyListCTA(ThingToDriveEmptyListCTA);
+            if (!ThingToDriveEmptyListCTA.tip_count || ThingToDriveEmptyListCTA == 0) {
+                generateEmptyListCTA(ThingToDriveEmptyListCTA);
+            }
             return () => {
                 ctaAnimation.reset();
             }

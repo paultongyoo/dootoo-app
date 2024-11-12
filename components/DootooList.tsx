@@ -15,10 +15,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     transcribeAudioToThings,
     isThingPressable,
     isThingDraggable,
-    hideRecordButton = false }) => {
+    hideRecordButton = false,
+    shouldInitialLoad = true }) => {
 
     const { lastRecordedCount, setLastRecordedCount, initializeLocalUser } = useContext(AppContext);
-    const [initialLoad, setInitialLoad] = useState(false);
+    const [initialLoad, setInitialLoad] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [errorMsg, setErrorMsg] = useState();
     const itemFlatList = useRef(null);              // TODO: Consider deprecate
@@ -28,9 +29,19 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     const inputValueRef = useRef('');
 
     useEffect(() => {
-        setInitialLoad(false);
+        //console.log(`useEffect([]) - shouldInitialLoad ${shouldInitialLoad}`);
         initializeLocalUser((isNew: boolean) => {
-            loadThingsFromBackend(isNew);
+            //console.log("initializeLocalUser callback method started...");
+            if (shouldInitialLoad) {
+                if (!isNew) {
+                    setInitialLoad(false);
+                    loadThingsFromBackend();
+                } else {
+                    //console.log("Skipping loading things for user as they are brand new.");
+                }
+            } else {
+                //console.log("Skipping initial load for user per shouldInitialLoad == false.");
+            }
         });
     }, []);
 
@@ -121,16 +132,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
         }
     }
 
-    const loadThingsFromBackend = async (isNew: boolean) => {
-        if (!isNew) {
-            //console.log("Loading items from backend for existing user...");
-            const savedItems = await loadAllThings();
-            //console.log("Loaded things: " + JSON.stringify(savedItems));
-            console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} ${thingName}(s) from backend`);
-            listArraySetter(savedItems);
-        } else {
-            console.log("Skipping backend thing load as user is new.");
-        }
+    const loadThingsFromBackend = async () => {
+        const savedItems = await loadAllThings();
+        //console.log("Loaded things: " + JSON.stringify(savedItems));
+        //console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} ${thingName}(s) from backend`);
+        listArraySetter(savedItems);
         setInitialLoad(true);
         setRefreshing(false);
     };

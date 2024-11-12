@@ -65,8 +65,9 @@ export default function ItemTips() {
       //console.log("Selected item: " + JSON.stringify(selectedItem));
 
       return () => {
-        //console.log('User has navigated away from this tips route - Nulling out selectedItem context.');
+        //console.log('User has navigated away from this tips route - Nulling out selectedItem and tips contexts.');
         setSelectedItem(null);
+        setTips([]);
       }
     }, [])
   );
@@ -453,7 +454,8 @@ export default function ItemTips() {
                 EmptyThingUX={() => <DootooTipEmptyUX styles={styles} ThingToDriveEmptyListCTA={selectedItem} />}
                 isThingPressable={(item) => { return (item.user_id == selectedItem.user_id); }}
                 isThingDraggable={(data) => { return data[0].user_id == selectedItem.user_id; }}
-                hideRecordButton={!selectedItem.is_done} />
+                hideRecordButton={!selectedItem.is_done} 
+                shouldInitialLoad={selectedItem.tip_count && (Number(selectedItem.tip_count) > 0)} />
         </View>
       </View>
     );
