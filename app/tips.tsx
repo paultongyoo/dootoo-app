@@ -248,6 +248,7 @@ export default function ItemTips() {
       marginLeft: 15,
       paddingBottom: 10,
       paddingTop: 10,
+      paddingRight: 20,
       flex: 1,
       flexDirection: 'row'
     },
@@ -301,31 +302,30 @@ export default function ItemTips() {
     similarCountContainer: {
       justifyContent: 'center',
       alignItems: 'center',
-      paddingRight: 15,
       flexDirection: 'row'
     },
     similarCountText: {
       fontSize: 15
     },
     similarCountIcon: {
-      width: 28,
-      height: 28,
-      opacity: 0.6
+      width: 16,
+      height: 16,
+      opacity: 0.45,
+      marginLeft: 10
     },
     scoreContainer: {
       justifyContent: 'flex-end',
       alignItems: 'center',
       flexDirection: 'row',
-      width: 80,
-      paddingRight: 20
+      width: 80
     },
     scoreText: {
       fontSize: 16,
       paddingRight: 10
     },
     scoreIcon: {
-      width: 28,
-      height: 28,
+      width: 16,
+      height: 16,
       opacity: 0.5
     },
     voteThumbIcon: {
