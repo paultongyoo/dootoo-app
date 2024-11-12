@@ -1,10 +1,11 @@
-import { Platform, Image, Text, View, StyleSheet, Pressable, ActivityIndicator, Animated } from "react-native";
+import { Platform, Image, Text, View, StyleSheet, Pressable, ActivityIndicator, Animated, Alert } from "react-native";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import RNFS from 'react-native-fs';
 import { AppContext } from './AppContext.js';
 import { useState, useContext, useRef, useEffect } from "react";
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
 import Reanimated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Toast from "react-native-toast-message";
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const { anonymousId,
@@ -84,22 +85,44 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         setLoading(true);
         const fileUri = await stopRecording();
         const response = await callBackendTranscribeService(fileUri);
-        //const response =  generateStubData(); 
-        console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
-        setLoading(false);
 
-        if (listArray && response && response.length > 0) {
-            setLastRecordedCount(response.length);  // Set for future toast undo potential
-
-            var updatedItems = response.concat(listArray);
-            listArraySetterFunc(updatedItems);
-
-            // Make sure this function is asynchronous!!!
-            saveAllThingsFunc(updatedItems);
+        if (response == "flagged") {
+            console.log(`Audio flagged, displaying alert prompt`);
+            Alert.alert(
+                'Content Advisory', // Title of the alert
+                'Our app detected language that may not align with our guidelines for a safe and supportive experience. Please consider using positive, constructive expressions.', // Message of the alert
+                [
+                    {
+                        text: 'I Understand',
+                        onPress: () => {
+                            console.log('Audio Content Advisory Acknowledgement button Pressed');
+                        },
+                    },
+                ]
+            );
         } else {
-            console.log("Did not call setter with updated list");
-        }
+            //const response =  generateStubData(); 
+            console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
+            
+            if (listArray && response && response.length > 0) {
+                setLastRecordedCount(response.length);  // Set for future toast undo potential
 
+                var updatedItems = response.concat(listArray);
+                listArraySetterFunc(updatedItems);
+
+                // Make sure this function is asynchronous!!!
+                saveAllThingsFunc(updatedItems);
+            } else {
+                console.log("Did not call setter with updated list, attempting to show toast.");
+                Toast.show({
+                    type: 'msgOnlyToast',
+                    text1: `Please try again.`,
+                    position: 'bottom',
+                    bottomOffset: 220
+                });
+            }
+        }
+        setLoading(false);
         console.log("Finished parsing file, deleting...");
         deleteFile(fileUri);
     }

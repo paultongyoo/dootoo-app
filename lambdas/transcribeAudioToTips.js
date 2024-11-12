@@ -30,6 +30,21 @@ export const handler = async (event) => {
     var transcribedText = transcription.text;
     console.log("Transcribed Text: " + transcribedText);
 
+    // Run transcribed text through moderation API -- if flagged, do not split into tasks and instead report back to user
+    const moderation = await openai.moderations.create({
+      mdeol: "omni-moderation-latest",
+      input: transcribedText
+    });
+
+    var flagged = moderation.results[0].flagged;
+    console.log("Text Input Flagged by Moderation API? ", moderation.results[0].flagged);
+    if (flagged) {
+      return {
+        statusCode: 200,
+        body: "flagged"
+      };
+    }
+
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
