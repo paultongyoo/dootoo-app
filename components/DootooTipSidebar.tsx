@@ -4,7 +4,7 @@ import { AppContext } from './AppContext';
 
 
 const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
-    const { username } = useContext(AppContext);
+    const { username, selectedItem } = useContext(AppContext);
 
     const formatNumber = (num) => {
         if (num < 1000) return num.toString();
@@ -59,7 +59,9 @@ const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
                             : <Image style={styles.scoreIcon} source={require("../assets/images/thumbs_down_A23E48.png")} />
                         }
                     </View> : (thing.is_flagged) ?
-                        <Pressable style={styles.flaggedContainer}
+                        <Pressable 
+                            disabled={selectedItem.user_id != thing.user_id}
+                            style={styles.flaggedContainer}
                             onPress={() => handleTipFlagContest(listThingIndex)}>
                             <Text style={styles.flaggedText}>Flagged</Text>
                             <Image style={styles.flaggedIcon} source={require("../assets/images/flag_A23E48.png")} />
