@@ -11,7 +11,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     renderLeftActions = (progress, dragX, index) => { return <></> },
     renderRightActions = (progress, dragX, index) => { return <></> },
     isDoneable = true, handleDoneClick = (index) => { return; },
-    saveAllThings, loadAllThings, updateThingText,
+    saveAllThings, saveSingleThing, loadAllThings,
     transcribeAudioToThings,
     isThingPressable,
     isThingDraggable,
@@ -88,11 +88,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
 
                 var updatedTasks = [...listArray];
                 updatedTasks![index].text = currentValue;
-                updatedTasks![index].counts_updating = true;    // Set this in case new text results in new counts
-                listArraySetter(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
 
                 // Asynchronously sync new item text to DB
-                updateThingText(updatedTasks![index].uuid, updatedTasks![index].text);
+                saveSingleThing(updatedTasks![index]);
+
+                updatedTasks![index].counts_updating = true;    // Set this in case new text results in new counts
+                listArraySetter(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
             } else {
                 console.log(`${currentValue} not changed on blur, ignoring..`);
             }

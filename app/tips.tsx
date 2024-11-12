@@ -10,7 +10,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { AppContext } from '../components/AppContext';
 import { transcribeAudioToTips } from '../components/BackendServices';
-import { loadTips, saveTips, tipVote, flagTip, updateTipText, deleteTip, saveItems } from '../components/Storage';
+import { loadTips, saveTips, tipVote, flagTip, deleteTip } from '../components/Storage';
 import DootooTipSidebar from "../components/DootooTipSidebar";
 import DootooTipEmptyUX from "../components/DootooTipEmptyUX";
 import DootooList from "@/components/DootooList";
@@ -29,6 +29,7 @@ export default function ItemTips() {
   });
 
   const saveAllTips = async (latestTips) => {
+    console.log("saveAllTips started...");
     if (latestTips && latestTips.length > 0) {
 
       // Immediately update displayed tip count within selected item header
@@ -41,11 +42,19 @@ export default function ItemTips() {
       // Asynchronously sync DB with latest tips
       saveTips(selectedItem, latestTips, () => {
         updateUserCountContext();
-        console.log("Updated selected Item with new tip count: " +  updatedSelectedItem.tip_count);
+        console.log("saveAllTips successful.");
       });
-      console.log("Tip save successful.");
     }
   };
+
+  const saveSingleTip = async (tip) => {
+    console.log("saveSingleTip started...");
+    // Asynchronously sync DB with latest tips
+    saveTips(selectedItem, [tip], () => {
+      updateUserCountContext();
+      console.log("saveSingleTip successful.");
+    });
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -430,20 +439,21 @@ export default function ItemTips() {
               <DootooItemSidebar thing={selectedItem} styles={styles} />
             </View>
           </View>
-          <DootooList thingName="tip" loadingAnimMsg="Loading tips" listArray={tips}
-            listArraySetter={setTips}
-            styles={styles}
-            isDoneable={false}
-            renderRightActions={renderRightActions}
-            saveAllThings={saveAllTips}
-            loadAllThings={() => loadTips(selectedItem.uuid)}
-            updateThingText={updateTipText}
-            transcribeAudioToThings={transcribeAudioToTips}
-            ListThingSidebar={DootooTipSidebar}
-            EmptyThingUX={() => <DootooTipEmptyUX styles={styles} ThingToDriveEmptyListCTA={selectedItem} />}
-            isThingPressable={(item) => { return (item.user_id == selectedItem.user_id); }}
-            isThingDraggable={(data) => { return data[0].user_id == selectedItem.user_id; }}
-            hideRecordButton={!selectedItem.is_done} />
+          <DootooList 
+                thingName="tip" loadingAnimMsg="Loading tips" listArray={tips}
+                listArraySetter={setTips}
+                styles={styles}
+                isDoneable={false}
+                renderRightActions={renderRightActions}
+                saveAllThings={saveAllTips}
+                saveSingleThing={saveSingleTip}
+                loadAllThings={() => loadTips(selectedItem.uuid)}
+                transcribeAudioToThings={transcribeAudioToTips}
+                ListThingSidebar={DootooTipSidebar}
+                EmptyThingUX={() => <DootooTipEmptyUX styles={styles} ThingToDriveEmptyListCTA={selectedItem} />}
+                isThingPressable={(item) => { return (item.user_id == selectedItem.user_id); }}
+                isThingDraggable={(data) => { return data[0].user_id == selectedItem.user_id; }}
+                hideRecordButton={!selectedItem.is_done} />
         </View>
       </View>
     );

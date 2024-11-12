@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { router } from 'expo-router';
-import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText } from '../components/Storage';
+import { saveItems, loadItems, deleteItem, updateItemHierarchy } from '../components/Storage';
 import { transcribeAudioToTasks } from './../components/BackendServices';
 import DootooItemEmptyUX from "../components/DootooItemEmptyUX";
 import DootooList from "../components/DootooList";
@@ -50,16 +50,16 @@ export default function Index() {
     }
   };
 
-  const updateSingleItem = async (item_uuid, new_text) => {
+  const saveSingleItem = async (item) => {
+    console.log("saveSingleItem started...");
     // The DootooList component will have set the "counts_updating" flag 
     // prior to calling back end to update this item so that we can
     // reset the flag after retrieving the latest tip/similar counts for the item
     // based on the updated text
-    //console.log("updateSingleItem started.");
-    updateItemText(item_uuid, new_text, (updatedItem) => {
-      var displayedListToUpdate = refreshItemCounts(dootooItems, [updatedItem]);
+    saveItems([item], (updatedItems) => {
+      var displayedListToUpdate = refreshItemCounts(dootooItems, updatedItems);
       setDootooItems(displayedListToUpdate);
-      //console.log("updateSingleItem finished.");
+      console.log("saveSingleItem finished.");
     });
   }
 
@@ -402,8 +402,8 @@ export default function Index() {
                 renderRightActions={renderRightActions}
                 handleDoneClick={handleDoneClick}
                 saveAllThings={saveAllItems}
+                saveSingleThing={saveSingleItem}
                 loadAllThings={loadItems}
-                updateThingText={updateSingleItem}
                 transcribeAudioToThings={transcribeAudioToTasks}
                 ListThingSidebar={DootooItemSidebar}
                 EmptyThingUX={DootooItemEmptyUX} 

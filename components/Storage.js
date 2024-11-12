@@ -226,31 +226,6 @@ export const deleteItem = async(item_uuid) => {
   }
 }
 
-export const updateItemText = async(item_uuid, text, callback) => {
-  try {
-    //console.log("Entering updateItemText, uuid: " + item_uuid + " text: " + text);
-    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
-    if (!localAnonId) {
-      console.log("Received null local anon Id, aborting updateItemText!");
-      return [];
-    }
-    const response = await axios.post(UPDATEITEMTEXT_URL,
-      {
-        anonymous_id : localAnonId,
-        item_uuid: item_uuid,
-        text: text
-      }
-    );
-    //console.log("updateItemText Response Obj: " + JSON.stringify(response.data.body));
-    const updatedItem = JSON.parse(response.data.body);
-    if (callback) {
-      callback(updatedItem);
-    }
-  } catch (error) {
-    console.error('Error calling updateItemText API:', error);
-  }
-}
-
 export const updateItemHierarchy = async(item_uuid, is_child) => {
   try {
     console.log("Entering updateItemHierarchy, uuid: " + item_uuid + " is_child: " + is_child);
@@ -269,27 +244,6 @@ export const updateItemHierarchy = async(item_uuid, is_child) => {
     //console.log("updateItemHierarchy Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateItemHierarchy API:', error);
-  }
-}
-
-export const updateTipText = async(tip_uuid, text, callback) => {
-  try {
-    console.log("Entering updateTipText, uuid: " + tip_uuid + " text: " + text);
-    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
-    if (!localAnonId) {
-      console.log("Received null local anon Id, aborting updateTipText!");
-      return [];
-    }
-    const response = await axios.post(UPDATETIPTEXT_URL,
-      {
-        anonymous_id : localAnonId,
-        tip_uuid: item_uuid,
-        text: text
-      }
-    );
-    //console.log("updateTipText Response Obj: " + JSON.stringify(response.data.body));
-  } catch (error) {
-    console.error('Error calling updateTipText API:', error);
   }
 }
 
