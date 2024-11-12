@@ -145,13 +145,13 @@ export default function ItemTips() {
             deleteThing={deleteTip} />
           :
           <>
-            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Upvote]}>
+            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Upvote, (tips[index].user_vote_value == 1) && styles.action_vote_selected]}>
               <Pressable disabled={(tips[index].user_vote_value == 1)}
                 onPress={() => { handleTipVote(index, 1) }}>
                 <Image style={styles.voteThumbIcon} source={require("../assets/images/thumbs_up_white.png")} />
               </Pressable>
             </Reanimated.View>
-            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Downvote]}>
+            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Downvote, (tips[index].user_vote_value == -1) && styles.action_vote_selected]}>
               <Pressable disabled={(tips[index].user_vote_value == -1)}
                 onPress={() => { handleTipVote(index, -1) }}>
                 <Image style={styles.voteThumbIcon} source={require("../assets/images/thumbs_down_white.png")} />
@@ -287,6 +287,10 @@ export default function ItemTips() {
     },
     action_Downvote: {
       backgroundColor: '#A23E48'
+    },
+    action_vote_selected: {
+      borderWidth: 2,
+      borderColor: 'white'
     },
     itemLeftSwipeActions: {
       width: 50,
