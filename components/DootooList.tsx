@@ -73,6 +73,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
                         }
                     }
                 });
+                setLastRecordedCount(0);
             } else {
 
                 // This call has to be in this "main UI thread" in order to work
