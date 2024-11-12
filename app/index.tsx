@@ -216,7 +216,7 @@ export default function Index() {
       marginLeft: 15,
       paddingBottom: 10,
       paddingTop: 10,
-      paddingRight: 15,
+      paddingRight: 20,
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
       flex: 1,
@@ -271,20 +271,21 @@ export default function Index() {
     similarCountContainer: {
       justifyContent: 'center',
       alignItems: 'center',
-      flexDirection: 'row'
+      flexDirection: 'row',
+      paddingLeft: 15
     },
     similarCountText: {
       fontSize: 15
     },
     similarCountIcon: {
-      width: 28,
-      height: 28,
-      opacity: 0.6
+      width: 16,
+      height: 16,
+      opacity: 0.45,
+      marginLeft: 10
     },
     tipCountContainer: {
       justifyContent: 'center',
       alignItems: 'center',
-      paddingRight: 15,
       flexDirection: 'row'
     },
     tipCountText: {
