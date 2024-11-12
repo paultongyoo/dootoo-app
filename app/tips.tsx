@@ -79,10 +79,12 @@ export default function ItemTips() {
   }
 
   const handleTipVote = async (index, voteValue: number) => {
-    await tipVote(tips[index].uuid, voteValue);
     const updatedTips = [...tips];
     updatedTips[index].upvote_count += voteValue  // This value will be overwritten by DB load Just force a reload to reorder list as needed
     setTips(updatedTips);
+
+    // Asynchronously send tip vote to backend 
+    tipVote(tips[index].uuid, voteValue);
   }
 
   const handleTipFlag = async (index: number) => {
@@ -108,10 +110,14 @@ export default function ItemTips() {
   }
 
   const handleFlagTip = async (index) => {
-    await flagTip(tips[index].uuid);
+
+    // Asynchronously send tip flag to backend
+    flagTip(tips[index].uuid);
+
     const updatedTips = [...tips];
     updatedTips[index].is_flagged = true;
     setTips(updatedTips);
+    
     Alert.alert(
       'Abuse Reported', // Title of the alert
       'Thank you for helping to keep the community safe!', // Message of the alert
