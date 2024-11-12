@@ -223,7 +223,7 @@ export default function ItemTips() {
       alignItems: 'center', 
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333',
-      marginLeft: 20
+      marginLeft: 10
     },
     listContainer: {
       flex: 1,
