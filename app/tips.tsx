@@ -81,7 +81,8 @@ export default function ItemTips() {
 
   const handleTipVote = async (index, voteValue: number) => {
     const updatedTips = [...tips];
-    updatedTips[index].upvote_count += voteValue  // This value will be overwritten by DB load Just force a reload to reorder list as needed
+    updatedTips[index].upvote_count += voteValue;   // This value will be overwritten by DB load Just force a reload to reorder list as needed
+    updatedTips[index].user_vote_value = voteValue; // Drives UI logic preventing votability of same vote value
     setTips(updatedTips);
 
     // Asynchronously send tip vote to backend 
@@ -145,15 +146,15 @@ export default function ItemTips() {
           :
           <>
             <Reanimated.View style={[styles.itemSwipeAction, styles.action_Upvote]}>
-              <Pressable
+              <Pressable disabled={(tips[index].user_vote_value == 1)}
                 onPress={() => { handleTipVote(index, 1) }}>
-                <Image style={[styles.voteThumbIcon, (tips[index].user_vote_value == 1) && { opacity: 1.0 }]} source={require("../assets/images/thumbs_up_white.png")} />
+                <Image style={styles.voteThumbIcon} source={require("../assets/images/thumbs_up_white.png")} />
               </Pressable>
             </Reanimated.View>
             <Reanimated.View style={[styles.itemSwipeAction, styles.action_Downvote]}>
-              <Pressable
+              <Pressable disabled={(tips[index].user_vote_value == -1)}
                 onPress={() => { handleTipVote(index, -1) }}>
-                <Image style={[styles.voteThumbIcon, (tips[index].user_vote_value == -1) && { opacity: 1.0 }]} source={require("../assets/images/thumbs_down_white.png")} />
+                <Image style={styles.voteThumbIcon} source={require("../assets/images/thumbs_down_white.png")} />
               </Pressable>
             </Reanimated.View>
             <Reanimated.View style={[styles.itemSwipeAction, styles.action_Flag]}>
