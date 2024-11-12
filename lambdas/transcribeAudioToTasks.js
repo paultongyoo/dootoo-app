@@ -37,7 +37,7 @@ export const handler = async (event) => {
 
     // Run transcribed text through moderation API -- if flagged, do not split into tasks and instead report back to user
     const moderation = await openai.moderations.create({
-      mdeol: "omni-moderation-latest",
+      model: "omni-moderation-latest",
       input: transcribedText
     });
 
