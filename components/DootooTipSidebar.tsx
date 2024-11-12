@@ -6,6 +6,14 @@ import { AppContext } from './AppContext';
 const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
     const { username } = useContext(AppContext);
 
+    const formatNumber = (num) => {
+        if (num < 1000) return num.toString();
+        if (num < 1_000_000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+        if (num < 1_000_000_000) return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+        if (num < 1_000_000_000_000) return (num / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B';
+        return (num / 1_000_000_000_000).toFixed(1).replace(/\.0$/, '') + 'T';
+    }
+
     const handleTipFlagContest = async (index: number) => {
         Alert.alert(
             'Tip Flagged', // Title of the alert
@@ -45,7 +53,7 @@ const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
             {
                 (!thing.is_flagged && thing.upvote_count && thing.upvote_count != 0) ?
                     <View style={styles.scoreContainer}>
-                        <Text style={styles.scoreText}>{thing.upvote_count}</Text>
+                        <Text style={styles.scoreText}>{formatNumber(thing.upvote_count)}</Text>
                         {(thing.upvote_count > 0) ?
                             <Image style={styles.scoreIcon} source={require("../assets/images/thumbs_up_556B2F.png")} />
                             : <Image style={styles.scoreIcon} source={require("../assets/images/thumbs_down_A23E48.png")} />
