@@ -34,8 +34,7 @@ export const transcribeAudioToTasks = async (fileUri, anonymous_id) => {
     );
     return response.data;
   } catch (error) {
-    console.error('Error calling API:', error);
-    return `Modified file URI: ${modifiedFileUri} | File length: ${fileData.length} | Binary Data Length: ${binaryData.length} | ${error.message} | ${JSON.stringify(error)}`;
+    console.error('Error calling API:', JSON.stringify(error));
   }
 };
 
@@ -68,7 +67,6 @@ export const transcribeAudioToTips = async (fileUri, anonymous_id) => {
     return response.data;
   } catch (error) {
     console.error('Error calling API:', error);
-    return `Modified file URI: ${fileUri} | File length: ${fileData.length} | Binary Data Length: ${binaryData.length} | ${error.message} | ${JSON.stringify(error)}`;
   }
 };
 
