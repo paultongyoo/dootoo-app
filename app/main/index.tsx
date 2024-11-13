@@ -167,16 +167,16 @@ export default function Index() {
       paddingLeft: 20
     },
     emptyListContainer_words: {
-      fontSize: 50
+      fontSize: 40
     },
     emptyListContainer_arrow: {
       position: 'absolute',
-      bottom: -9,
-      right: 100,
-      height: 150,
+      bottom: -20,
+      right: 120,
+      height: 180,
       width: 50,
       opacity: 0.4,
-      transform: [{ rotate: '18deg' }]
+      transform: [{ rotate: '9deg' }]
     },
     taskContainer: {
       flex: 1
