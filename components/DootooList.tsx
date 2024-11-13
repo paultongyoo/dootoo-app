@@ -6,6 +6,8 @@ import { AppContext } from './AppContext';
 import DootooFooter from './DootooFooter';
 import Toast from 'react-native-toast-message';
 import { RefreshControl } from 'react-native-gesture-handler';
+import * as amplitude from '@amplitude/analytics-react-native';
+import { usePathname } from 'expo-router';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items", listArray, listArraySetter, ListThingSidebar, EmptyThingUX, ThingToDriveEmptyListCTA = null, styles,
     renderLeftActions = (progress, dragX, index) => { return <></> },
@@ -18,7 +20,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     hideRecordButton = false,
     shouldInitialLoad = true }) => {
 
-    const { lastRecordedCount, setLastRecordedCount, initializeLocalUser } = useContext(AppContext);
+    const pathname = usePathname();
+    const {anonymousId, lastRecordedCount, setLastRecordedCount, initializeLocalUser } = useContext(AppContext);
     const [initialLoad, setInitialLoad] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [errorMsg, setErrorMsg] = useState();
@@ -152,6 +155,21 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     };
 
     const renderThing = ({ item, getIndex, drag, isActive }) => {
+
+        useEffect(() => {
+            
+            // If tip is being loaded, fire a Tip Viewed event with its displayed vote count
+            if (thingName == 'tip') {
+                amplitude.track("Tip Viewed", {
+                    anonymousId: anonymousId,
+                    pathname: pathname,
+                    tip_uuid: item.uuid,
+                    vote_value: item.upvote_count
+                });
+            }
+
+        }, [item]);
+
         return (<Swipeable
             key={Math.random()}
             ref={(ref) => {
