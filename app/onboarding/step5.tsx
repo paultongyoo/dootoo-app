@@ -116,12 +116,14 @@ export default function Step5() {
     });
 
     async function handleTermsClick(event: GestureResponderEvent): void {
-        console.log("Inside terms click");
+        //console.log("Inside terms click");
+        amplitude.track("Terms Link Clicked");
         await Linking.openURL('https://dootoo.app/terms.html').catch(err => console.error('Error opening link:', err));
     }
 
     async function handlePrivacyPolicyClick(event: GestureResponderEvent): void {
-        console.log("Inside privacy click");
+        //console.log("Inside privacy click");
+        amplitude.track("Privacy Link Clicked");
         await Linking.openURL('https://dootoo.app/privacy.html').catch(err => console.error('Error opening link:', err));
     }
 
