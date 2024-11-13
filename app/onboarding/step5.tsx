@@ -47,8 +47,10 @@ export default function Step5() {
         underline: {
             textDecorationLine: 'underline'
         },
+        supplementalCopyContainer: {
+            paddingTop: 40
+        },
         supplementalCopy: {
-            paddingTop: 40,
             fontSize: 16,
             textAlign: 'right',
             lineHeight: 23
@@ -56,10 +58,12 @@ export default function Step5() {
     });
 
     async function handleTermsClick(event: GestureResponderEvent): void {
+        console.log("Inside terms click");
         await Linking.openURL('https://dootoo.app/terms.html').catch(err => console.error('Error opening link:', err));
     }
 
     async function handlePrivacyPolicyClick(event: GestureResponderEvent): void {
+        console.log("Inside privacy click");
         await Linking.openURL('https://dootoo.app/privacy.html').catch(err => console.error('Error opening link:', err));
     }
 
@@ -68,7 +72,9 @@ export default function Step5() {
             <View style={styles.container}>
                 <OnboardingHeader />
                 <Text style={styles.centerCopy}>your personal information{'\n'}<Text style={styles.green}>stays with you</Text>.</Text>
-                <Text style={styles.supplementalCopy}>By continuing, you agree to{'\n'}dootoo's <Text style={[styles.green, styles.underline, {backgroundColor: 'red'}]} onPress={handleTermsClick}>Terms of Use</Text> and{'\n'}<Text style={[styles.green, styles.underline]} onPress={handlePrivacyPolicyClick}>Privacy Policy</Text>.</Text>
+                <View style={styles.supplementalCopyContainer}>
+                    <Text style={styles.supplementalCopy}>By continuing, you agree to{'\n'}dootoo's <Text style={[styles.green, styles.underline]} onPress={handleTermsClick}>Terms of Use</Text> and{'\n'}<Text style={[styles.green, styles.underline]} onPress={handlePrivacyPolicyClick}>Privacy Policy</Text>.</Text>
+                </View>
                 <OnboardingFooter step={5} onForwardButtonPress={completeOnboarding} />
             </View>
         </PanGestureHandler>
