@@ -166,6 +166,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
                     tip_uuid: item.uuid,
                     tip_score: item.upvote_count
                 });
+            } else if (item.text && item.text == "(flagged)") {
+                amplitude.track("Flagged Thing Rendered", {
+                    anonymousId: anonymousId,
+                    pathname: pathname,
+                    thing_uuid: item.uuid,
+                    thing_type: thingName
+                });
             }
 
         }, [item]);
@@ -247,6 +254,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
                                 ref={itemFlatList}
                                 data={listArray.filter(item => !item.is_deleted)}
                                 onDragEnd={({ data }) => {
+                                    amplitude.track("List Item Dragged", {
+                                        anonymous_id: anonymousId,
+                                        pathname: pathname
+                                    });
                                     handleThingDrag(data);
                                 }}
                                 keyExtractor={(item, index) => index.toString()}
