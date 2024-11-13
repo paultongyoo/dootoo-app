@@ -55,12 +55,12 @@ export default function Step5() {
         }
     });
 
-    function handleTermsClick(event: GestureResponderEvent): void {
-        Linking.openURL('https://dootoo.app/terms.html').catch(err => console.error('Error opening link:', err));
+    async function handleTermsClick(event: GestureResponderEvent): void {
+        await Linking.openURL('https://dootoo.app/terms.html').catch(err => console.error('Error opening link:', err));
     }
 
-    function handlePrivacyPolicyClick(event: GestureResponderEvent): void {
-        Linking.openURL('https://dootoo.app/privacy.html').catch(err => console.error('Error opening link:', err));
+    async function handlePrivacyPolicyClick(event: GestureResponderEvent): void {
+        await Linking.openURL('https://dootoo.app/privacy.html').catch(err => console.error('Error opening link:', err));
     }
 
     return (
@@ -68,7 +68,7 @@ export default function Step5() {
             <View style={styles.container}>
                 <OnboardingHeader />
                 <Text style={styles.centerCopy}>your personal information{'\n'}<Text style={styles.green}>stays with you</Text>.</Text>
-                <Text style={styles.supplementalCopy}>By continuing, you agree to{'\n'}dootoo's <Text style={[styles.green, styles.underline]} onPress={handleTermsClick}>Terms of Use</Text> and{'\n'}<Text style={[styles.green, styles.underline]} onPress={handlePrivacyPolicyClick}>Privacy Policy</Text>.</Text>
+                <Text style={styles.supplementalCopy}>By continuing, you agree to{'\n'}dootoo's <Text style={[styles.green, styles.underline, {backgroundColor: 'red'}]} onPress={handleTermsClick}>Terms of Use</Text> and{'\n'}<Text style={[styles.green, styles.underline]} onPress={handlePrivacyPolicyClick}>Privacy Policy</Text>.</Text>
                 <OnboardingFooter step={5} onForwardButtonPress={completeOnboarding} />
             </View>
         </PanGestureHandler>
