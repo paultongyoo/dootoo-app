@@ -344,7 +344,11 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         return (
             <View style={styles.footerContainer}>
                 <View style={styles.bannerAdContainer}>
-                    <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
+                    <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} 
+                              onPaid={() => amplitude.track("Banner Ad Paid")} 
+                              onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
+                              onAdOpened={() => amplitude.track("Banner Ad Opened")}
+                              onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
                 </View>
             </View>
         );
