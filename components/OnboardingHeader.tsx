@@ -7,7 +7,7 @@ const OnboardingHeader = () => {
     const styles = StyleSheet.create({
         onboardingHeaderContainer: {
             position: 'absolute',
-            top: 40,
+            top: (Platform.OS == 'ios') ? 60 : 40,
             left: 20,
         }, 
         backButtonContainer: {
