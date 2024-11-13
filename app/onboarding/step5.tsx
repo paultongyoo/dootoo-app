@@ -2,7 +2,7 @@ import OnboardingFooter from '@/components/OnboardingFooter';
 import OnboardingHeader from '@/components/OnboardingHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import { Text, View, StyleSheet } from 'react-native'
+import { Text, View, StyleSheet, Pressable, GestureResponderEvent, Linking } from 'react-native'
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 
 export default function Step5() {
@@ -43,14 +43,32 @@ export default function Step5() {
         },
         green: {
             color: '#556B2F'
+        },
+        underline: {
+            textDecorationLine: 'underline'
+        },
+        supplementalCopy: {
+            paddingTop: 40,
+            fontSize: 16,
+            textAlign: 'right',
+            lineHeight: 23
         }
     });
+
+    function handleTermsClick(event: GestureResponderEvent): void {
+        Linking.openURL('https://dootoo.app/terms.html').catch(err => console.error('Error opening link:', err));
+    }
+
+    function handlePrivacyPolicyClick(event: GestureResponderEvent): void {
+        Linking.openURL('https://dootoo.app/privacy.html').catch(err => console.error('Error opening link:', err));
+    }
 
     return (
         <PanGestureHandler onHandlerStateChange={onSwipe}>
             <View style={styles.container}>
                 <OnboardingHeader />
                 <Text style={styles.centerCopy}>your personal information{'\n'}<Text style={styles.green}>stays with you</Text>.</Text>
+                <Text style={styles.supplementalCopy}>By continuing, you agree to{'\n'}dootoo's <Text style={[styles.green, styles.underline]} onPress={handleTermsClick}>Terms of Use</Text> and{'\n'}<Text style={[styles.green, styles.underline]} onPress={handlePrivacyPolicyClick}>Privacy Policy</Text>.</Text>
                 <OnboardingFooter step={5} onForwardButtonPress={completeOnboarding} />
             </View>
         </PanGestureHandler>
