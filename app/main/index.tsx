@@ -184,7 +184,9 @@ export default function Index() {
     taskTitle: {
       fontSize: 16,
       textAlign: 'left',
-      padding: 5
+      paddingTop: 5,
+      paddingBottom: 5,
+      paddingRight: 5
     },
     taskTitle_isDone: {
       color: '#556B2F',
