@@ -18,6 +18,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const [permissionResponse, requestPermission] = Audio.usePermissions();
     const meteringLevel = useSharedValue(1); // shared value for animated scale
     const recordButtonOpacity = useSharedValue(1);
+    var recordingDurationStart = -1;        // Var used for calculating time
+    var recordingDurationEnd = -1;        // Var used for calculating time
 
     const bannerAdId = __DEV__ ?
         TestIds.ADAPTIVE_BANNER :
@@ -39,6 +41,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     }
 
     const startRecording = async () => {
+        recordingDurationStart = performance.now();
         amplitude.track("Recording Started", {
             anonymous_id: anonymousId,
             pathname: pathname
@@ -96,9 +99,11 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     }
 
     const stopRecording = async (): Promise<string> => {
+        recordingDurationEnd = performance.now();
         amplitude.track("Recording Stopped", {
             anonymous_id: anonymousId,
-            pathname: pathname
+            pathname: pathname,
+            durationMillis: recordingDurationEnd - recordingDurationStart
         });
         //console.log('Stopping recording..');
         setRecording(undefined);
