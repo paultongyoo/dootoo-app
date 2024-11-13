@@ -44,17 +44,17 @@ export default function Step3() {
             position: 'relative',
             marginBottom: 70
         },
-        taskTitle: {
-            fontSize: 16,
-            textAlign: 'left',
-            paddingBottom: 5,
-            paddingTop: 5
-        },
         itemContainer: {
             flexDirection: 'row',
             alignItems: 'center',
             marginRight: 20,
             paddingTop: 4
+        },
+        taskTitle: {
+            fontSize: 16,
+            textAlign: 'left',
+            paddingBottom: 5,
+            paddingTop: 5
         },
         subtaskFiller: {
             width: 20
