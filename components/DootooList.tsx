@@ -109,6 +109,14 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
 
                 updatedTasks![index].counts_updating = true;    // Set this in case new text results in new counts
                 listArraySetter(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
+            
+                amplitude.track("Thing Text Edited", {
+                    anonymous_id: anonymousId,
+                    pathname: pathname,
+                    thing_uuid: updatedTasks![index].uuid,
+                    thing_type: thingName
+                });
+            
             } else {
                 console.log(`${currentValue} not changed on blur, ignoring..`);
             }
