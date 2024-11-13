@@ -1,5 +1,7 @@
-import { View, Text, StyleSheet, Image, ActivityIndicator,
-         Pressable, Alert, Platform, Linking } from "react-native";
+import {
+  View, Text, StyleSheet, Image, ActivityIndicator,
+  Pressable, Alert, Platform, Linking
+} from "react-native";
 import { useEffect, useContext } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
@@ -7,7 +9,9 @@ import { Drawer } from 'expo-router/drawer';
 import { AppProvider, AppContext } from '../../components/AppContext';
 import Toast from 'react-native-toast-message';
 import toastConfig from '../../components/ToastConfig';
-import { useSegments } from 'expo-router';
+import { useSegments, usePathname } from 'expo-router';
+import * as amplitude from '@amplitude/analytics-react-native';
+
 
 const styles = StyleSheet.create({
   headerContainer: {
@@ -75,7 +79,7 @@ const styles = StyleSheet.create({
     //backgroundColor: 'yellow'
   },
   profileDrawerProfileNameContainer: {
-    
+
   },
   profileDrawerProfileNameText: {
     fontSize: 20,
@@ -90,17 +94,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: 190,
     paddingBottom: 10
-  }, 
+  },
   anonIdDisplayText: {
     textAlign: 'center'
-  }, 
+  },
   deleteDataLinkContainer: {
     alignItems: 'center'
   },
   deleteDataLinkText: {
     color: "#A23E48",
     textDecorationLine: 'underline'
-  }, 
+  },
   feedbackLinkContainer: {
     paddingTop: 20,
     alignItems: 'center'
@@ -125,8 +129,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   statIconTask: {
-    width: 26, 
-    height: 26, 
+    width: 26,
+    height: 26,
     borderRadius: 13, // Half of the width and height for a perfect circle
     borderColor: 'black',
     borderWidth: 2,
@@ -168,56 +172,63 @@ const styles = StyleSheet.create({
 
 export default function MainLayout() {
   const segments = useSegments();
+  const pathname = usePathname();
 
   return (
     <>
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <AppProvider>
-        <Drawer 
-          drawerContent={(props) => <ProfileDrawer {...props} />}
-          screenOptions={
-          {
-            drawerPosition: 'right',
-            header: ({ navigation, route, options }) => { 
-              return (
-                <View style={styles.headerContainer}>
-                  <View style={styles.headerLeftContainer}>
-                    { (segments.length == 1) ? 
-                      <View style={styles.mainLogoContainer}>
-                        <Text style={styles.mainLogoPart}>doo</Text>
-                        <Text style={[styles.mainLogoPart, styles.secondLogoPart]}>too</Text>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <AppProvider>
+          <Drawer
+            drawerContent={(props) => <ProfileDrawer {...props} />}
+            screenOptions={
+              {
+                drawerPosition: 'right',
+                header: ({ navigation, route, options }) => {
+                  return (
+                    <View style={styles.headerContainer}>
+                      <View style={styles.headerLeftContainer}>
+                        {(segments.length == 1) ?
+                          <View style={styles.mainLogoContainer}>
+                            <Text style={styles.mainLogoPart}>doo</Text>
+                            <Text style={[styles.mainLogoPart, styles.secondLogoPart]}>too</Text>
+                          </View>
+                          : <View style={styles.backButtonContainer}>
+                            <Pressable onPress={navigation.goBack}>
+                              {(Platform.OS == 'ios') ? <Image style={styles.backIcon_ios} source={require('@/assets/images/back_arrow_556B2F_ios.png')} />
+                                : <Image style={styles.backIcon_android} source={require('@/assets/images/back_arrow_556B2F_android.png')} />}
+                            </Pressable>
+                          </View>}
                       </View>
-                    : <View style={styles.backButtonContainer}>
-                        <Pressable onPress={navigation.goBack}>
-                        {(Platform.OS == 'ios') ? <Image style={styles.backIcon_ios} source={require('@/assets/images/back_arrow_556B2F_ios.png')} />
-                                                : <Image style={styles.backIcon_android} source={require('@/assets/images/back_arrow_556B2F_android.png')} />}
+                      <View style={styles.headerRightContainer}>
+                        <Pressable style={styles.mainProfileIconContainer}
+                          onPress={() => {
+                            amplitude.track("Profile Drawer Opened", {
+                              pathname: pathname
+                            });
+                            navigation.openDrawer()
+                          }}>
+                          <Image style={styles.profileIcon} source={require('@/assets/images/profile_icon_green.png')} />
                         </Pressable>
-                      </View> }
-                  </View>
-                  <View style={styles.headerRightContainer}>
-                    <Pressable style={styles.mainProfileIconContainer}
-                              onPress={() => navigation.openDrawer()}>
-                      <Image style={styles.profileIcon} source={require('@/assets/images/profile_icon_green.png')} />
-                    </Pressable>
-                  </View>
-              </View>
-              );
-            }
-          }
-        }/>
-      </AppProvider>
-      <Toast config={toastConfig} />
-    </GestureHandlerRootView>
-    <StatusBar style="dark" />
+                      </View>
+                    </View>
+                  );
+                }
+              }
+            } />
+        </AppProvider>
+        <Toast config={toastConfig} />
+      </GestureHandlerRootView>
+      <StatusBar style="dark" />
     </>
   );
 }
 
 function ProfileDrawer({ navigation }) {
-  const {username, anonymousId, 
-         doneCount, tipCount,
-         resetUserContext
-        } = useContext(AppContext);
+  const pathname = usePathname();
+  const { username, anonymousId,
+    doneCount, tipCount,
+    resetUserContext
+  } = useContext(AppContext);
 
   const showConfirmationPrompt = () => {
     Alert.alert(
@@ -245,10 +256,12 @@ function ProfileDrawer({ navigation }) {
     const email = 'contact@thoughtswork.co'; // Replace with the desired email address
     const subject = `Feedback from User ${username}`; // Optional: add a subject
     const body = '';
-    
+
     // Construct the mailto URL
     const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  
+
+
+
     // Use Linking API to open email client
     Linking.openURL(url).catch(err => console.error('Error opening email client:', err));
   };
@@ -256,17 +269,23 @@ function ProfileDrawer({ navigation }) {
   return (
     <View style={styles.profileDrawerContainer}>
       <Pressable style={styles.profileDrawerCloseContainer}
-                 onPress={() => navigation.closeDrawer()}>
+        onPress={() => {
+          amplitude.track("Profile Drawer Closed", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+          });
+          navigation.closeDrawer();
+        }}>
         <Image style={styles.profileDrawerCloseIcon} source={require('@/assets/images/cancel_icon_black.png')} />
       </Pressable>
       <View style={styles.profileDrawerProfileIconContainer}>
         <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_green.png')} />
         <View style={styles.profileDrawerProfileNameContainer}>
-        { (!username || username.length == 0) ? 
-            <ActivityIndicator size={"large"} color="black" /> 
-          : 
-          <Text style={styles.profileDrawerProfileNameText}>{username}</Text>
-        }
+          {(!username || username.length == 0) ?
+            <ActivityIndicator size={"large"} color="black" />
+            :
+            <Text style={styles.profileDrawerProfileNameText}>{username}</Text>
+          }
         </View>
       </View>
       <View style={styles.statsContainer}>
@@ -279,7 +298,7 @@ function ProfileDrawer({ navigation }) {
         </View>
         <View style={styles.statContainer}>
           <View style={styles.statIconContainer}>
-              <Image style={styles.statIcon_Tips} source={require('@/assets/images/give_icon_556B2F.png')}/>
+            <Image style={styles.statIcon_Tips} source={require('@/assets/images/give_icon_556B2F.png')} />
           </View>
           <Text style={styles.statNumber}>{tipCount || '0'}</Text>
           <Text style={styles.statName}>Tips</Text>
