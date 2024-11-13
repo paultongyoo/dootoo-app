@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Text, View, StyleSheet, Image, GestureResponderEvent, Linking, Animated, Platform } from 'react-native'
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
+import * as amplitude from '@amplitude/analytics-react-native';
 
 export default function Step5() {
     const router = useRouter();
@@ -28,6 +29,10 @@ export default function Step5() {
     ]);
 
     useEffect(() => {
+        amplitude.track("Onboarding Step 5 Viewed");
+    },[]);
+
+    useEffect(() => {
         fadeInOutAnimation.start(() => {
             if (counter <= 2) {
                 setCurrentUsername(generateUsername())
@@ -45,7 +50,9 @@ export default function Step5() {
             if (result === RESULTS.DENIED) {
 
                 // The permission has not been requested, so request it.
-                await request(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
+                amplitude.track("iOS ATT Prompt Started");
+                const result = await request(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
+                amplitude.track("iOS ATT Prompt Completed", { result: result});
             }
         }
 

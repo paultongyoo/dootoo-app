@@ -4,9 +4,15 @@ import OnboardingHeader from '@/components/OnboardingHeader';
 import { useRouter } from 'expo-router';
 import { Text, View, StyleSheet, Image } from 'react-native'
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import * as amplitude from '@amplitude/analytics-react-native';
+import { useEffect } from 'react';
 
 export default function Step4() {
     const router = useRouter();
+
+    useEffect(() => {
+        amplitude.track("Onboarding Step 4 Viewed");
+    },[]);
 
     const onSwipe = ({ nativeEvent }) => {
         if (nativeEvent.state === State.END) {

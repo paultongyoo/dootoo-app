@@ -3,6 +3,8 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { Text, View, StyleSheet, Animated } from 'react-native'
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import * as amplitude from '@amplitude/analytics-react-native';
+
 
 export default function Step1() {
     const router = useRouter();
@@ -15,6 +17,7 @@ export default function Step1() {
 
     useEffect(() => {
         fadeInAnimation.start();
+        amplitude.track("Onboarding Step 1 Viewed");
     },[]);
 
     const onSwipe = ({ nativeEvent }) => {
