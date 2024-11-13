@@ -164,7 +164,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
                     anonymousId: anonymousId,
                     pathname: pathname,
                     tip_uuid: item.uuid,
-                    vote_value: item.upvote_count
+                    tip_score: item.upvote_count
                 });
             }
 
