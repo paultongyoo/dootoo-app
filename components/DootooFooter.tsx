@@ -6,8 +6,11 @@ import { useState, useContext, useRef, useEffect } from "react";
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
 import Reanimated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import Toast from "react-native-toast-message";
+import * as amplitude from '@amplitude/analytics-react-native';
+import { usePathname } from 'expo-router'; 
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
+    const pathname = usePathname();
     const { anonymousId,
         setLastRecordedCount } = useContext(AppContext);
     const [loading, setLoading] = useState(false);
@@ -36,10 +39,16 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     }
 
     const startRecording = async () => {
+        amplitude.track("Recording Started", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
         try {
             if (permissionResponse!.status !== 'granted') {
-                console.log('Requesting permission..');
-                await requestPermission();
+                //console.log('Requesting permission..');
+                amplitude.track("Recording Permission Prompt Started");
+                const result = await requestPermission();
+                amplitude.track("Recording Permission Prompt Completed", {result: result});
             }
             await Audio.setAudioModeAsync({
                 allowsRecordingIOS: true,
@@ -75,19 +84,60 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 startRecording();
                 retryCount += 1;
             } else {
-                console.error('Failed to start recording', err);
+                //console.error('Failed to start recording', err);
+                amplitude.track("Recording Error Occurred", { 
+                    anonymous_id: anonymousId,
+                    pathname: pathname,
+                    error: err
+                 });
                 //setErrorMsg(err);
             }
         }
     }
 
+    const stopRecording = async (): Promise<string> => {
+        amplitude.track("Recording Stopped", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+        //console.log('Stopping recording..');
+        setRecording(undefined);
+        await recording.stopAndUnloadAsync();
+        await Audio.setAudioModeAsync(
+            {
+                allowsRecordingIOS: false,
+            }
+        );
+        meteringLevel.value = withTiming(1); // reset scale when stopped
+        const uri = recording.getURI();
+        //console.log('Recording stopped and stored at', uri);
+        return uri;
+    }
+
     const processRecording = async () => {
+        amplitude.track("Recording Processing Started", {
+            anonymous_id: anonymousId
+        });
         setLoading(true);
         const fileUri = await stopRecording();
         const response = await callBackendTranscribeService(fileUri);
+        amplitude.track("Recording Processing Completed", {
+            anonymous_id: anonymousId,
+            flagged: (response == "flagged"),
+            thing_count: (response && response.length >= 0) ? response.length : -1,
+            pathname: pathname
+        });
 
         if (response == "flagged") {
-            console.log(`Audio flagged, displaying alert prompt`);
+            //console.log(`Audio flagged, displaying alert prompt`);
+            amplitude.track("Recording Flagged", {
+                anonymous_id: anonymousId,
+                pathname: pathname  
+            });
+            amplitude.track("Recording Flagged Prompt Displayed", {
+                anonymous_id: anonymousId,
+                pathname: pathname  
+            });
             Alert.alert(
                 'Content Advisory', // Title of the alert
                 'Our app detected language that may not align with our guidelines for a safe and supportive experience. Please consider using positive, constructive expressions.', // Message of the alert
@@ -95,7 +145,11 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                     {
                         text: 'I Understand',
                         onPress: () => {
-                            console.log('Audio Content Advisory Acknowledgement button Pressed');
+                            //console.log('Audio Content Advisory Acknowledgement button Pressed');
+                            amplitude.track("Recording Flagged Prompt Dismissed", {
+                                anonymous_id: anonymousId,
+                                pathname: pathname  
+                            });
                         },
                     },
                 ]
@@ -119,6 +173,10 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 saveAllThingsFunc(updatedItems);
             } else {
                 console.log("Did not call setter with updated list, attempting to show toast.");
+                amplitude.track("Empty Recording Toast Displayed", {
+                    anonymous_id: anonymousId,
+                    pathname: pathname  
+                });
                 Toast.show({
                     type: 'msgOnlyToast',
                     text1: `Please try again.`,
@@ -130,21 +188,6 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         setLoading(false);
         console.log("Finished parsing file, deleting...");
         deleteFile(fileUri);
-    }
-
-    const stopRecording = async (): Promise<string> => {
-        console.log('Stopping recording..');
-        setRecording(undefined);
-        await recording.stopAndUnloadAsync();
-        await Audio.setAudioModeAsync(
-            {
-                allowsRecordingIOS: false,
-            }
-        );
-        meteringLevel.value = withTiming(1); // reset scale when stopped
-        const uri = recording.getURI();
-        console.log('Recording stopped and stored at', uri);
-        return uri;
     }
 
     const callBackendTranscribeService = async (fileUri: string) => {
