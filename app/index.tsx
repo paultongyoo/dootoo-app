@@ -1,4 +1,3 @@
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Redirect } from 'expo-router';
@@ -18,22 +17,7 @@ export default function Index() {
     checkFirstLaunch();
   }, []);
 
-  const styles = StyleSheet.create({
-        container: {
-            flex: 1,
-            backgroundColor: '#DCC7AA',
-            justifyContent: 'center',
-            alignItems: 'center'
-        }
-    });
-
-  if (isFirstLaunch === null) {
-    return (
-        <View style={styles.container}>
-            <ActivityIndicator size={"large"} color={"black"}/>
-        </View>
-    );
-  }
+  if (isFirstLaunch == null) return null;
 
   return (
     <>
