@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   profileDrawerCloseContainer: {
     position: 'absolute',
     right: 20,
-    top: 40
+    top: (Platform.OS == 'ios') ? 60 : 40
   },
   profileDrawerCloseIcon: {
     opacity: 0.4,
@@ -286,7 +286,7 @@ function ProfileDrawer({ navigation }) {
         </View>
       </View>
       <View style={styles.privacyContainer}>
-        <View style={styles.anonIdDisplayContainer}>
+        {/* <View style={styles.anonIdDisplayContainer}>
           <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
           <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId}</Text>
         </View>
@@ -294,7 +294,7 @@ function ProfileDrawer({ navigation }) {
           <Pressable onPress={showConfirmationPrompt}>
             <Text style={styles.deleteDataLinkText}>Delete My Data</Text>
           </Pressable>
-        </View>
+        </View> */}
         <View style={styles.feedbackLinkContainer}>
           <Pressable onPress={sendEmail}>
             <Text style={styles.feedbackLinkText}>Email Feedback</Text>
