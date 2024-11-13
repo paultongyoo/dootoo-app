@@ -236,7 +236,7 @@ export default function ItemTips() {
       alignItems: 'center',
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333',
-      marginLeft: 10
+      marginLeft: 25
     },
     listContainer: {
       flex: 1,
@@ -259,7 +259,14 @@ export default function ItemTips() {
       backgroundColor: '#556B2F50'
     },
     itemNameContainer: {
-      marginLeft: 15,
+      paddingBottom: 10,
+      paddingTop: 10,
+      paddingRight: 20,
+      flex: 1,
+      flexDirection: 'row'
+    },
+    headerItemNameContainer: {
+      paddingLeft: 15,
       paddingBottom: 10,
       paddingTop: 10,
       paddingRight: 20,
@@ -447,7 +454,7 @@ export default function ItemTips() {
         <View style={styles.taskContainer}>
           <View style={styles.headerItemContainer}>
             <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick()}></Pressable>
-            <View style={styles.itemNameContainer}>
+            <View style={styles.headerItemNameContainer}>
               <View style={styles.itemNamePressable}>
                 <Text style={[styles.taskTitle, selectedItem.is_done && styles.taskTitle_isDone]}>{selectedItem.text}</Text>
               </View>
