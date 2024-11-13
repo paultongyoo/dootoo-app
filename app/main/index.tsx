@@ -73,6 +73,11 @@ export default function Index() {
     updateItemHierarchy(updatedTasks![index].uuid, updatedTasks![index].is_child);
 
     setDootooItems(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
+
+    amplitude.track("Item Made Into Parent", {
+      anonymous_id: anonymousId,
+      item_uuid: updatedTasks![index].uuid
+    });
   }
 
   const handleMakeChild = (index: number) => {
@@ -84,6 +89,11 @@ export default function Index() {
     updateItemHierarchy(updatedTasks![index].uuid, updatedTasks![index].is_child);
 
     setDootooItems(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
+
+    amplitude.track("Item Made Into Child", {
+      anonymous_id: anonymousId,
+      item_uuid: updatedTasks![index].uuid
+    });
   }
 
   const handleDoneClick = (index: number) => {
@@ -104,6 +114,12 @@ export default function Index() {
       //console.log("firstDoneItemIdx before changing list: " + firstDoneItemIdx);
 
       updatedTasks![index].is_done = !updatedTasks![index].is_done;
+
+      amplitude.track("Item Done Clicked", {
+        anonymous_id: anonymousId,
+        item_uuid: updatedTasks![index].uuid,
+        is_done: updatedTasks![index].is_done
+      });
 
       // Set this to instruct UI to hide item counts until async save op returns and removes the value
       updatedTasks![index].counts_updating = true;  
@@ -344,6 +360,10 @@ export default function Index() {
             <Pressable
               onPress={() => {
                 console.log("Give Tips button tapped on item: " + dootooItems![index].text);
+                amplitude.track("Give Tips Clicked", {
+                  anonymous_id: anonymousId,
+                  item_uuid: dootooItems![index].uuid
+                });
                 setSelectedItem(dootooItems![index]);
                 router.navigate('/main/tips');
               }}>
@@ -354,6 +374,10 @@ export default function Index() {
             <Reanimated.View style={[styles.itemSwipeAction, styles.action_Give]}>
               <Pressable
                 onPress={() => {
+                  amplitude.track("Receive Tips Clicked", {
+                    anonymous_id: anonymousId,
+                    item_uuid: dootooItems![index].uuid
+                  });
                   console.log("Similar Tips button tapped on item: " + dootooItems![index].text);
                   setSelectedItem(dootooItems![index]);
                   router.navigate('/main/tips');

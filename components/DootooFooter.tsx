@@ -116,7 +116,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
     const processRecording = async () => {
         amplitude.track("Recording Processing Started", {
-            anonymous_id: anonymousId
+            anonymous_id: anonymousId,
+            pathname: pathname
         });
         setLoading(true);
         const fileUri = await stopRecording();

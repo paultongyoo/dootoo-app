@@ -2,12 +2,13 @@ import { Pressable, Image, Alert } from 'react-native';
 import Reanimated from 'react-native-reanimated';
 import { AppContext } from './AppContext';
 import { useContext } from 'react';
+import * as amplitude from '@amplitude/analytics-react-native';
 
-const DootooSwipeAction_Delete = ({ 
-    styles, listArray, listArraySetter, listThingIndex, 
+const DootooSwipeAction_Delete = ({
+    styles, listArray, listArraySetter, listThingIndex,
     deleteThing, thingNameStr = "Item" }) => {
-    const { setLastRecordedCount } = useContext(AppContext);
- 
+    const { anonymousId, setLastRecordedCount } = useContext(AppContext);
+
     const handleThingDelete = (index: number) => {
         console.log("Entering handle delete item...");
         setLastRecordedCount(0);
@@ -65,6 +66,13 @@ const DootooSwipeAction_Delete = ({
             //setItemIdxToEdit(-1) TODO: Deprecate if nolonger need!
             listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
         }
+
+        amplitude.track(`${thingNameStr.toUpperCase()} Deleted`, {
+            anonymous_id: anonymousId,
+            thing_uuid: updatedThings[index].uuid,
+            thing_type: thingNameStr
+        });
+
         console.log(`Exiting handle delete ${thingNameStr.toLowerCase()} at index ${index}...`);
     }
 

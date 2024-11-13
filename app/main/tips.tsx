@@ -16,9 +16,11 @@ import DootooTipEmptyUX from "../../components/DootooTipEmptyUX";
 import DootooList from "@/components/DootooList";
 import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
+import * as amplitude from '@amplitude/analytics-react-native';
+
 
 export default function ItemTips() {
-  const { setLastRecordedCount, updateUserCountContext,
+  const {anonymousId, setLastRecordedCount, updateUserCountContext,
     selectedItem, setSelectedItem } = useContext(AppContext);
   const [tips, setTips] = useState([]);
 
@@ -74,12 +76,22 @@ export default function ItemTips() {
   );
 
   const handleDoneClick = async () => {
+    amplitude.track("Selected Item Done Clicked", {
+      anonymous_id: anonymousId
+    });
+
     setLastRecordedCount(0);
     // For now just navigate user back to full list if they press this
     router.back();
   }
 
   const handleTipVote = async (index, voteValue: number) => {
+
+    amplitude.track("Tip Voted", {
+      anonymous_id: anonymousId,
+      tip_uuid: tips[index].uuid,
+      vote_value: voteValue
+    });
 
     const updatedTips = [...tips];
     if (tips[index].user_vote_value == voteValue) {
@@ -103,13 +115,25 @@ export default function ItemTips() {
   }
 
   const handleTipFlag = async (index: number) => {
+
+    amplitude.track("Tip Flag Started", {
+      anonymous_id: anonymousId,
+      tip_uuid: tips[index].uuid
+    });
+
     Alert.alert(
       'Report Abuse', // Title of the alert
       'Are you sure you want to report this tip as abusive? Reporting helps us keep our community safe. Your report will remain anonymous.', // Message of the alert
       [
         {
           text: 'Cancel',
-          onPress: () => console.log('Tip Flag Cancel Pressed'),
+          onPress: () => {
+            console.log('Tip Flag Cancel Pressed');
+            amplitude.track("Tip Flag Cancelled", {
+              anonymous_id: anonymousId,
+              tip_uuid: tips[index].uuid
+            });
+          },
           style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
         },
         {
@@ -125,6 +149,11 @@ export default function ItemTips() {
   }
 
   const handleFlagTip = async (index) => {
+
+    amplitude.track("Tip Flag Completed", {
+      anonymous_id: anonymousId,
+      tip_uuid: tips[index].uuid
+    });
 
     // Asynchronously send tip flag to backend
     flagTip(tips[index].uuid);
@@ -448,6 +477,12 @@ export default function ItemTips() {
     //console.log("Selected Item is null, aborting render of tips page");
     return;
   } else {
+
+    if (selectedItem.is_done) {
+      amplitude.track("Owned Tips Section Viewed");
+    } else {
+      amplitude.track("Community Tips Section Viewed");
+    }
 
     return (
       <View style={styles.container}>

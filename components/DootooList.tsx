@@ -194,6 +194,14 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
             childrenContainerStyle={styles.swipeableContainer}
             overshootLeft={false}
             overshootRight={false}
+            onSwipeableWillOpen={(direction) => {
+                amplitude.track(`Swipe ${direction.toUpperCase()} Actions Opened`, {
+                    anonymous_id: anonymousId,
+                    pathname: pathname,
+                    thing_uuid: listArray[getIndex()].uuid,
+                    thing_type: thingName
+                });
+            }}
             renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(progress, dragX, getIndex()) } else { return <></> } }}
             renderRightActions={(progress, dragX) => { if (renderRightActions) { return renderRightActions(progress, dragX, getIndex()) } else { return <></> } }}>
             <ScaleDecorator>
