@@ -2,7 +2,7 @@ import OnboardingFooter from '@/components/OnboardingFooter';
 import { useRouter } from 'expo-router';
 import { Text, View, StyleSheet } from 'react-native'
 
-export default function Step2() {
+export default function Step3() {
     const router = useRouter();
 
     const styles = StyleSheet.create({
