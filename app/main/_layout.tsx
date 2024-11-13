@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   profileDrawerCloseContainer: {
     position: 'absolute',
     right: 20,
-    top: (Platform.OS == 'ios') ? 60 : 40
+    top: (Platform.OS == 'ios') ? 62 : 40
   },
   profileDrawerCloseIcon: {
     opacity: 0.4,
