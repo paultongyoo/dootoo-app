@@ -1,4 +1,5 @@
 import OnboardingFooter from '@/components/OnboardingFooter';
+import OnboardingHeader from '@/components/OnboardingHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Text, View, StyleSheet } from 'react-native'
@@ -48,6 +49,7 @@ export default function Step5() {
     return (
         <PanGestureHandler onHandlerStateChange={onSwipe}>
             <View style={styles.container}>
+                <OnboardingHeader />
                 <Text style={styles.centerCopy}>your personal information{'\n'}<Text style={styles.green}>stays with you</Text>.</Text>
                 <OnboardingFooter step={5} onForwardButtonPress={completeOnboarding} />
             </View>

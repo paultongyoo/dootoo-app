@@ -1,4 +1,5 @@
 import OnboardingFooter from '@/components/OnboardingFooter';
+import OnboardingHeader from '@/components/OnboardingHeader';
 import { useRouter } from 'expo-router';
 import { Text, View, StyleSheet } from 'react-native'
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
@@ -41,6 +42,7 @@ export default function Step2() {
     return (
         <PanGestureHandler onHandlerStateChange={onSwipe}>
             <View style={styles.container}>
+                <OnboardingHeader />
                 <Text style={styles.centerCopy}>start by <Text style={styles.green}>naturally speaking</Text> what you have to do.</Text>
                 <OnboardingFooter step={2} onForwardButtonPress={() => router.navigate('/onboarding/step3')} />
             </View>
