@@ -4,8 +4,9 @@ import { generateUsername } from '@/components/Storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Text, View, StyleSheet, Image, GestureResponderEvent, Linking, Animated } from 'react-native'
+import { Text, View, StyleSheet, Image, GestureResponderEvent, Linking, Animated, Platform } from 'react-native'
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 
 export default function Step5() {
     const router = useRouter();
@@ -26,7 +27,7 @@ export default function Step5() {
         })
     ]);
 
-    useEffect(() => {      
+    useEffect(() => {
         fadeInOutAnimation.start(() => {
             if (counter <= 2) {
                 setCurrentUsername(generateUsername())
@@ -38,6 +39,16 @@ export default function Step5() {
     }, [currentUsername]);
 
     const completeOnboarding = async () => {
+
+        if (Platform.OS == 'ios') {
+            const result = await check(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
+            if (result === RESULTS.DENIED) {
+
+                // The permission has not been requested, so request it.
+                await request(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
+            }
+        }
+
         await AsyncStorage.setItem('isFirstLaunch', 'false');
         router.replace('/main'); // Navigate to the main app
     };
