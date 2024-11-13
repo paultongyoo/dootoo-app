@@ -410,7 +410,7 @@ const saveTipsLocally = async(item_obj, tip_list_obj) => {
   }
 }
 
-const generateUsername = () => {
+export const generateUsername = () => {
   const numberDictionary = NumberDictionary.generate({ min: 100, max: 999 });
   const characterName = uniqueNamesGenerator({
     dictionaries: [adjectives, animals, numberDictionary],

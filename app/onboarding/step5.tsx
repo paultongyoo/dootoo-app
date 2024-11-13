@@ -1,12 +1,41 @@
 import OnboardingFooter from '@/components/OnboardingFooter';
 import OnboardingHeader from '@/components/OnboardingHeader';
+import { generateUsername } from '@/components/Storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import { Text, View, StyleSheet, Pressable, GestureResponderEvent, Linking } from 'react-native'
+import { useEffect, useRef, useState } from 'react';
+import { Text, View, StyleSheet, Image, GestureResponderEvent, Linking, Animated } from 'react-native'
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 
 export default function Step5() {
     const router = useRouter();
+    const [currentUsername, setCurrentUsername] = useState(generateUsername());
+    const [counter, setCounter] = useState(0);
+    const fadeInOut = useRef(new Animated.Value(1)).current;
+    const fadeInOutAnimation = Animated.sequence([
+        Animated.timing(fadeInOut, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true
+        }),
+        Animated.delay(5000),
+        Animated.timing(fadeInOut, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: true
+        })
+    ]);
+
+    useEffect(() => {      
+        fadeInOutAnimation.start(() => {
+            if (counter <= 2) {
+                setCurrentUsername(generateUsername())
+                setCounter((prev) => prev + 1);
+            }
+        });
+
+        return () => fadeInOutAnimation.stop();
+    }, [currentUsername]);
 
     const completeOnboarding = async () => {
         await AsyncStorage.setItem('isFirstLaunch', 'false');
@@ -54,6 +83,17 @@ export default function Step5() {
             fontSize: 16,
             textAlign: 'right',
             lineHeight: 23
+        },
+        profileDrawerProfileIconContainer: {
+            alignItems: 'center',
+            paddingBottom: 60
+        },
+        profileDrawerProfileIcon: {
+            height: 150,
+            width: 150
+        },
+        profileNameText: {
+            fontSize: 20
         }
     });
 
@@ -71,9 +111,15 @@ export default function Step5() {
         <PanGestureHandler onHandlerStateChange={onSwipe}>
             <View style={styles.container}>
                 <OnboardingHeader />
+                <View style={styles.profileDrawerProfileIconContainer}>
+                    <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_green.png')} />
+                    <View>
+                        <Animated.Text style={[styles.profileNameText, { opacity: fadeInOut }]}>{currentUsername}</Animated.Text>
+                    </View>
+                </View>
                 <Text style={styles.centerCopy}>your personal information{'\n'}<Text style={styles.green}>stays with you</Text>.</Text>
                 <View style={styles.supplementalCopyContainer}>
-                    <Text style={styles.supplementalCopy}>By continuing, you agree to{'\n'}dootoo's <Text style={[styles.green, styles.underline]} onPress={handleTermsClick}>Terms of Use</Text> and{'\n'}<Text style={[styles.green, styles.underline]} onPress={handlePrivacyPolicyClick}>Privacy Policy</Text>.</Text>
+                    <Text style={styles.supplementalCopy}>By continuing, you agree to{'\n'}dootoo's <Text style={[styles.green, styles.underline]} onPress={handleTermsClick}>Terms</Text> and understand{'\n'}how we protect your <Text style={[styles.green, styles.underline]} onPress={handlePrivacyPolicyClick}>Privacy</Text>.</Text>
                 </View>
                 <OnboardingFooter step={5} onForwardButtonPress={completeOnboarding} />
             </View>
