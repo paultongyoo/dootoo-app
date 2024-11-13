@@ -6,6 +6,7 @@ import DootooItemEmptyUX from "../../components/DootooItemEmptyUX";
 import DootooList from "../../components/DootooList";
 import DootooItemSidebar from "../../components/DootooItemSidebar";
 import DootooSwipeAction_Delete from "../../components/DootooSwipeAction_Delete";
+import * as amplitude from '@amplitude/analytics-react-native';
 
 import {
   Image, StyleSheet, Pressable
@@ -18,7 +19,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 
 export default function Index() {
-  const { dootooItems, setDootooItems,
+  const { anonymousId, dootooItems, setDootooItems,
     setLastRecordedCount, setSelectedItem,
     updateUserCountContext, queue } = useContext(AppContext);
 
@@ -423,6 +424,18 @@ export default function Index() {
           displayedListToUpdate[j].tip_count = currUpdatedItem.tip_count;
           displayedListToUpdate[j].similar_count = currUpdatedItem.similar_count;
           displayedListToUpdate[j].counts_updating = false;
+
+          // Fire a tracking event if user is displayed an item with non zero count(s)
+          if (displayedListToUpdate[j].tip_count + displayedListToUpdate[j].similar_count > 0) {
+            amplitude.track("Item Counts UI Refreshed", {
+              anonymous_id: anonymousId,
+              item_uuid: displayedListToUpdate[j].uuid,
+              item_is_done: displayedListToUpdate[j].is_done,
+              tip_count: displayedListToUpdate[j].tip_count,
+              similar_count: displayedListToUpdate[j].similar_count
+            });
+          }
+
           break;
         }
       }
