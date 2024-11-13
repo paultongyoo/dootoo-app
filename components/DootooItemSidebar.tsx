@@ -28,7 +28,7 @@ const DootooItemSidebar = ({ thing, styles }) => {
                 {(thing.similar_count && thing.similar_count > 0) ?
                     <View style={styles.similarCountContainer}>
                         <Text style={styles.similarCountText}>{formatNumber(thing.similar_count)}</Text>
-                        <Image style={styles.similarCountIcon} source={require("../assets/images/person_icon_556B2F.png")} />
+                        <Image style={styles.similarCountIcon} source={require("@/assets/images/person_icon_556B2F.png")} />
                     </View> : <></>}
             </>
         );

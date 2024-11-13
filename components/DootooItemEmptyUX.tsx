@@ -61,7 +61,7 @@ const DootooItemEmptyUX = ({ styles }) => {
       <Animated.View style={[{ opacity: fadeAnimChallenges }]}>
         <Text style={[styles.emptyListContainer_words, { color: '#556B2F' }]}>challenges?</Text>
       </Animated.View>
-      <Image style={styles.emptyListContainer_arrow} source={require("../assets/images/sketch_arrow_556B2F.png")} />
+      <Image style={styles.emptyListContainer_arrow} source={require("@/assets/images/sketch_arrow_556B2F.png")} />
     </Animated.View>;
   };
 

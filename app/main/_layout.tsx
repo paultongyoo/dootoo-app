@@ -4,9 +4,9 @@ import { useEffect, useContext } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { Drawer } from 'expo-router/drawer';
-import { AppProvider, AppContext } from '../components/AppContext';
+import { AppProvider, AppContext } from '../../components/AppContext';
 import Toast from 'react-native-toast-message';
-import toastConfig from '../components/ToastConfig';
+import toastConfig from '../../components/ToastConfig';
 import { useSegments } from 'expo-router';
 
 const styles = StyleSheet.create({
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   }
 });
 
-export default function RootLayout() {
+export default function MainLayout() {
   const segments = useSegments();
 
   return (
@@ -182,22 +182,22 @@ export default function RootLayout() {
               return (
                 <View style={styles.headerContainer}>
                   <View style={styles.headerLeftContainer}>
-                    { (segments.length == 0) ? 
+                    { (segments.length == 1) ? 
                       <View style={styles.mainLogoContainer}>
                         <Text style={styles.mainLogoPart}>doo</Text>
                         <Text style={[styles.mainLogoPart, styles.secondLogoPart]}>too</Text>
                       </View>
                     : <View style={styles.backButtonContainer}>
                         <Pressable onPress={navigation.goBack}>
-                        {(Platform.OS == 'ios') ? <Image style={styles.backIcon_ios} source={require('../assets/images/back_arrow_556B2F_ios.png')} />
-                                                : <Image style={styles.backIcon_android} source={require('../assets/images/back_arrow_556B2F_android.png')} />}
+                        {(Platform.OS == 'ios') ? <Image style={styles.backIcon_ios} source={require('@/assets/images/back_arrow_556B2F_ios.png')} />
+                                                : <Image style={styles.backIcon_android} source={require('@/assets/images/back_arrow_556B2F_android.png')} />}
                         </Pressable>
                       </View> }
                   </View>
                   <View style={styles.headerRightContainer}>
                     <Pressable style={styles.mainProfileIconContainer}
                               onPress={() => navigation.openDrawer()}>
-                      <Image style={styles.profileIcon} source={require('../assets/images/profile_icon_green.png')} />
+                      <Image style={styles.profileIcon} source={require('@/assets/images/profile_icon_green.png')} />
                     </Pressable>
                   </View>
               </View>
@@ -257,10 +257,10 @@ function ProfileDrawer({ navigation }) {
     <View style={styles.profileDrawerContainer}>
       <Pressable style={styles.profileDrawerCloseContainer}
                  onPress={() => navigation.closeDrawer()}>
-        <Image style={styles.profileDrawerCloseIcon} source={require('../assets/images/cancel_icon_black.png')} />
+        <Image style={styles.profileDrawerCloseIcon} source={require('@/assets/images/cancel_icon_black.png')} />
       </Pressable>
       <View style={styles.profileDrawerProfileIconContainer}>
-        <Image style={styles.profileDrawerProfileIcon} source={require('../assets/images/profile_icon_green.png')} />
+        <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_green.png')} />
         <View style={styles.profileDrawerProfileNameContainer}>
         { (!username || username.length == 0) ? 
             <ActivityIndicator size={"large"} color="black" /> 
@@ -279,7 +279,7 @@ function ProfileDrawer({ navigation }) {
         </View>
         <View style={styles.statContainer}>
           <View style={styles.statIconContainer}>
-              <Image style={styles.statIcon_Tips} source={require('../assets/images/give_icon_556B2F.png')}/>
+              <Image style={styles.statIcon_Tips} source={require('@/assets/images/give_icon_556B2F.png')}/>
           </View>
           <Text style={styles.statNumber}>{tipCount || '0'}</Text>
           <Text style={styles.statName}>Tips</Text>

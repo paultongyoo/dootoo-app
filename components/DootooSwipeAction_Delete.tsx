@@ -72,7 +72,7 @@ const DootooSwipeAction_Delete = ({
         <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
             <Pressable
                 onPress={() => handleThingDelete(listThingIndex)}>
-                <Image style={styles.swipeActionIcon_trash} source={require("../assets/images/trash_icon_white.png")} />
+                <Image style={styles.swipeActionIcon_trash} source={require("@/assets/images/trash_icon_white.png")} />
             </Pressable>
         </Reanimated.View>
     );

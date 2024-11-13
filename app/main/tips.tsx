@@ -8,11 +8,11 @@ import Reanimated, {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
-import { AppContext } from '../components/AppContext';
-import { transcribeAudioToTips } from '../components/BackendServices';
-import { loadTips, saveTips, tipVote, flagTip, deleteTip } from '../components/Storage';
-import DootooTipSidebar from "../components/DootooTipSidebar";
-import DootooTipEmptyUX from "../components/DootooTipEmptyUX";
+import { AppContext } from '../../components/AppContext';
+import { transcribeAudioToTips } from '../../components/BackendServices';
+import { loadTips, saveTips, tipVote, flagTip, deleteTip } from '../../components/Storage';
+import DootooTipSidebar from "../../components/DootooTipSidebar";
+import DootooTipEmptyUX from "../../components/DootooTipEmptyUX";
 import DootooList from "@/components/DootooList";
 import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
@@ -161,19 +161,19 @@ export default function ItemTips() {
             <Reanimated.View style={[styles.itemSwipeAction, styles.action_Upvote, (tips[index].user_vote_value == 1) && styles.action_vote_selected]}>
               <Pressable
                 onPress={() => { handleTipVote(index, 1) }}>
-                <Image style={styles.voteThumbIcon} source={require("../assets/images/thumbs_up_white.png")} />
+                <Image style={styles.voteThumbIcon} source={require("@/assets/images/thumbs_up_white.png")} />
               </Pressable>
             </Reanimated.View>
             <Reanimated.View style={[styles.itemSwipeAction, styles.action_Downvote, (tips[index].user_vote_value == -1) && styles.action_vote_selected]}>
               <Pressable
                 onPress={() => { handleTipVote(index, -1) }}>
-                <Image style={styles.voteThumbIcon} source={require("../assets/images/thumbs_down_white.png")} />
+                <Image style={styles.voteThumbIcon} source={require("@/assets/images/thumbs_down_white.png")} />
               </Pressable>
             </Reanimated.View>
             <Reanimated.View style={[styles.itemSwipeAction, styles.action_Flag]}>
               <Pressable
                 onPress={() => { handleTipFlag(index) }}>
-                <Image style={styles.swipeActionIcon_flag} source={require("../assets/images/flag_white.png")} />
+                <Image style={styles.swipeActionIcon_flag} source={require("@/assets/images/flag_white.png")} />
               </Pressable>
             </Reanimated.View>
           </>

@@ -55,8 +55,8 @@ const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
                     <View style={styles.scoreContainer}>
                         <Text style={styles.scoreText}>{formatNumber(thing.upvote_count)}</Text>
                         {(thing.upvote_count > 0) ?
-                            <Image style={styles.scoreIcon} source={require("../assets/images/thumbs_up_556B2F.png")} />
-                            : <Image style={styles.scoreIcon} source={require("../assets/images/thumbs_down_A23E48.png")} />
+                            <Image style={styles.scoreIcon} source={require("@/assets/images/thumbs_up_556B2F.png")} />
+                            : <Image style={styles.scoreIcon} source={require("@/assets/images/thumbs_down_A23E48.png")} />
                         }
                     </View> : (thing.is_flagged) ?
                         <Pressable 
@@ -64,7 +64,7 @@ const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
                             style={styles.flaggedContainer}
                             onPress={() => handleTipFlagContest(listThingIndex)}>
                             <Text style={styles.flaggedText}>Flagged</Text>
-                            <Image style={styles.flaggedIcon} source={require("../assets/images/flag_A23E48.png")} />
+                            <Image style={styles.flaggedIcon} source={require("@/assets/images/flag_A23E48.png")} />
                         </Pressable>
                         : <View style={styles.scoreContainer}></View>
             }

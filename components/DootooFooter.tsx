@@ -269,7 +269,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                     <Pressable
                         style={[styles.footerButton, styles.cancelButton]}
                         onPress={cancelRecording}>
-                        <Image style={styles.footerButtonImage_Cancel} source={require("../assets/images/cancel_icon_black.png")} />
+                        <Image style={styles.footerButtonImage_Cancel} source={require("@/assets/images/cancel_icon_black.png")} />
                     </Pressable>
                     : <></>} */}
                 <View style={styles.footerButton_Underlay}></View>
@@ -283,7 +283,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                                 <ActivityIndicator size={"large"} color="white" />
                             </View> : (recording) ?
                                 <View style={styles.footerButtonIcon_Stop}></View> :
-                                <Image style={styles.footerButtonImage_Record} source={require("../assets/images/microphone_white.png")} />}
+                                <Image style={styles.footerButtonImage_Record} source={require("@/assets/images/microphone_white.png")} />}
                     </Pressable>
                 </Reanimated.View>
                 <View style={styles.bannerAdContainer}>
