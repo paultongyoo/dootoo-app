@@ -1,6 +1,9 @@
 import OpenAI from "openai";
 import { toFile } from "openai/uploads";
 import { v4 as uuidv4 } from 'uuid';
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
 const openai = new OpenAI();
 
 export const handler = async (event) => {
@@ -10,13 +13,13 @@ export const handler = async (event) => {
     let fileBuffer;
     console.log("Event object: " + JSON.stringify(event));
     if (event.isBase64Encoded) {
-        console.log("Event is encoded base 64");
-        fileBuffer = Buffer.from(event.body, 'base64');
+      console.log("Event is encoded base 64");
+      fileBuffer = Buffer.from(event.body, 'base64');
     } else {
       console.log("Event is NOT encoded base 64");
       fileBuffer = Buffer.from(event.body);
     }
-    
+
     // Hacky way to pass filename that has correct audio file extension (content-type needs to specify m4a, mp4, etc)
     var hackFilename = event.headers["content-type"].replace("/", ".");
     console.log("Hack Filename: " + hackFilename);
@@ -48,27 +51,44 @@ export const handler = async (event) => {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
-        {"role": "system", 
+        {
+          "role": "system",
           "content": "Input text contains one or pieces of advice." +
-                    "Reply in the following JSON format: { tips: [<array of objects of the format { text: '<advice (do NOT add words or embellish)>' }]"},
-        {"role": "user", "content": transcribedText }
+            "Reply in the following JSON format: { tips: [<array of objects of the format { text: '<advice (do NOT add words or embellish)>' }]"
+        },
+        { "role": "user", "content": transcribedText }
       ], response_format: { "type": "json_object" }
     });
 
     var object_from_chat = JSON.parse(completion.choices[0].message.content);
     var tip_array = object_from_chat.tips;
 
-    for (var i = 0; i < tip_array.length; i++) {
-      const tip = tip_array[i];
-      tip.uuid = uuidv4();
+    // Retrieve user id to append to task
+    var response = null;
+    console.log("Attempting user ID lookup for anonymous_id: " + event.headers.anonymous_id);
+    const user = await prisma.user.findUnique({
+      where: { anonymous_id: event.headers.anonymous_id }
+    });
+    console.log(user);
+    if (user) {
+      for (var i = 0; i < tip_array.length; i++) {
+        const tip = tip_array[i];
+        tip.uuid = uuidv4();
+        tip.user_id = user.id
+      }
+      console.log("Final Output: ", tip_array);
+      response = {
+        statusCode: 200,
+        body: JSON.stringify(tip_array)
+      };
+    } else {
+      console.log("Couldn't find anonymous_id");
+      response = {
+        statusCode: 403,
+        body: "Couldn't find anonymous_id!!"
+      };
     }
-
-    console.log("Final Output: ", tip_array);
-
-    const response = {
-      statusCode: 200,
-      body: JSON.stringify(tip_array)
-    };
+    await prisma.$disconnect();
     return response;
   } catch (error) {
     console.log("Error occurred transcribing the tips!", error);
@@ -77,5 +97,5 @@ export const handler = async (event) => {
       body: JSON.stringify(error)
     };
     return response;
-  } 
+  }
 };
