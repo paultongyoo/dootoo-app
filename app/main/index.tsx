@@ -129,9 +129,14 @@ export default function Index() {
         //console.log(`Backing index of item ${updatedTasks![index].text}: ${index}`);
         updatedTasks![index].index_backup = index;
 
-        // Move item to the bottom of the list
+        // Move item to the bottom of the list if it's the only done item, otherwise make it the new first done item
         const [item] = updatedTasks.splice(index, 1);   // remove the item
-        updatedTasks = updatedTasks.concat(item);
+        if (firstDoneItemIdx == -1) {
+          updatedTasks = updatedTasks.concat(item);         // Place at end of list
+        } else {
+          //console.log("Attempting to insert at top of first item list - firstDoneItemIdx: " + firstDoneItemIdx);
+          updatedTasks.splice(firstDoneItemIdx-1, 0, item)    // Insert it at firstDoneItem location
+        }
 
       } else {
         const backupVal = updatedTasks![index].index_backup;
