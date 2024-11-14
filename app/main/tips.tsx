@@ -447,6 +447,13 @@ export default function ItemTips() {
       fontSize: 15,
       textAlign: 'center'
     },
+    action_Delete: {
+      backgroundColor: 'red',
+      borderRightWidth: 1,
+      borderRightColor: '#3E272333',
+      borderBottomWidth: 1,
+      borderBottomColor: '#3E272333'
+    },
     action_Flag: {
       backgroundColor: 'red',
       borderRightWidth: 1,
