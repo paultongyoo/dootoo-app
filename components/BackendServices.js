@@ -2,9 +2,14 @@ import axios from 'axios';
 import RNFS from 'react-native-fs';
 import { Buffer } from 'buffer';
 
-const BACKEND_TRANSCRIPTION_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/transcribeAudioToTasks_Dev';
-const BACKEND_TRANSCRIPTION_TIPS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/transcribeAudioToTips_Dev';
-const BACKEND_GENERATETIPCTA_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/generateTipCTA_Dev';
+const BACKEND_TRANSCRIPTION_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/transcribeAudioToTasks_Dev'
+                                            : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/transcribeAudioToTasks';
+
+const BACKEND_TRANSCRIPTION_TIPS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/transcribeAudioToTips_Dev' 
+                                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/transcribeAudioToTips';
+
+const BACKEND_GENERATETIPCTA_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/generateTipCTA_Dev'
+                                             : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/generateTipCTA';
 
 export const transcribeAudioToTasks = async (fileUri, anonymous_id) => {
   console.log("Entering transcribeAudiToTasks with anonymous Id: " + anonymous_id);

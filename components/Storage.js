@@ -11,16 +11,35 @@ const ANON_ID_KEY = "user_anonymous_id";
 const ITEM_LIST_KEY = "item_list";
 const TIP_LIST_KEY_PREFIX = "tip_list_";    // Append item UUID to key
 
-const CREATEUSER_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev';
-const LOADITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItems_Dev';
-const SAVEITEMS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev';
-const LOADTIPS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadTips_Dev';
-const SAVETIPS_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveTips_Dev';
-const TIPVOTE_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/tipVote_Dev';
-const FLAGTIP_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/flagTip_Dev';
-const DELETEITEM_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/deleteItem_Dev';
-const UPDATEITEMHIERARCHY_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemHierarchy_Dev';
-const DELETETIP_URL = 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/deleteTip_Dev';
+const CREATEUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev' 
+                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/createUser';
+
+const DELETEITEM_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/deleteItem_Dev'
+                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/deleteItem';
+
+const LOADITEMS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItems_Dev'
+                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadItems';
+
+const SAVEITEMS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev'
+                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveItems';
+
+const LOADTIPS_URL =  (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadTips_Dev'
+                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadTips';
+
+const SAVETIPS_URL =  (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveTips_Dev'
+                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveTips';
+
+const TIPVOTE_URL =  (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/tipVote_Dev'
+                               : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/tipVote';
+
+const FLAGTIP_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/flagTip_Dev'
+                              : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/flagTip';
+
+const UPDATEITEMHIERARCHY_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemHierarchy_Dev'
+                                          : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemHierarchy';
+
+const DELETETIP_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/deleteTip_Dev'
+                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/deleteTip';
 
 
 export const saveItems = async (item_list_obj, callback) => {
