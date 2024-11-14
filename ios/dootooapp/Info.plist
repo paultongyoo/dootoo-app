@@ -33,7 +33,7 @@
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>59</string>
     <key>GADApplicationIdentifier</key>
     <string>ca-app-pub-6723010005352574~7767841279</string>
     <key>GADDelayAppMeasurementInit</key>
@@ -66,9 +66,10 @@
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
+      <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
     </array>
     <key>NSUserTrackingUsageDescription</key>
-    <string>This identifier will be used to deliver personalized ads to you.</string>
+    <string>This will help our ads be more useful to you.</string>
     <key>SKAdNetworkItems</key>
     <array>
       <dict>

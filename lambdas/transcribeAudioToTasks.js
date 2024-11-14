@@ -80,7 +80,8 @@ export const handler = async (event) => {
         // Obtain embedding for item text
         console.log(`Begin retrieval and storing of embedding for recorded item ...`);
         const embedding_response = await axios.post(
-          "http://ip-172-31-28-150.us-east-2.compute.internal:8000/embed",
+          //"http://ip-172-31-31-53.us-east-2.compute.internal:8000/embed",    // PROD EC2 Instance
+          "http://ip-172-31-28-150.us-east-2.compute.internal:8000/embed",    // DEV EC2 Instance
           { text: item.text }
         );
         const embedding = embedding_response.data.embedding;
