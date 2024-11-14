@@ -478,6 +478,9 @@ export default function ItemTips() {
       height: 20,
       width: 20,
       opacity: 0.8
+    },
+    itemCountsRefreshingAnimContainer: {
+      justifyContent: 'center'
     }
   });
 
