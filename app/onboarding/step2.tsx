@@ -75,8 +75,7 @@ export default function Step2() {
                         <Image style={styles.micImage} source={require('@/assets/images/microphone_white.png')} />
                     </View>
                     <View style={styles.voiceContainer}>
-                        <Text style={styles.voiceCopy}>"alright...first I gotta{'\n'}  
-                            <Text style={styles.green}>drop off my kid at school</Text>...and then I'm 
+                        <Text style={styles.voiceCopy}>"alright...first I gotta <Text style={styles.green}>drop off my kid at school</Text>...and then I'm 
                             gonna <Text style={styles.green}>go for a run</Text>...when I come back I 
                             gotta <Text style={styles.green}>resume my job search</Text>....which 
                             starts with <Text style={styles.green}>updating my resume</Text>..”</Text>
