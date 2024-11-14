@@ -30,7 +30,7 @@ const saveItems = async(anonymous_id, items_str) => {
         user = await prisma.user.findUnique({
             where: { anonymous_id: anonymous_id}
         });
-        console.log(user);
+        //console.log(user);
         if (user == null) {
             console.log(`Anonymous ID ${anonymous_id} not found in DB, aborting save!`);
             return -1;
@@ -55,12 +55,12 @@ const saveItems = async(anonymous_id, items_str) => {
             try {
                 // Encrypt the string
                 const encryptParams = {
-                KeyId: ITEMS_KEY_ID,
-                Plaintext: Buffer.from(array_item.text)
+                    KeyId: ITEMS_KEY_ID,
+                    Plaintext: Buffer.from(array_item.text)
                 };
                 const encryptedData = await kms.encrypt(encryptParams).promise();
                 const encryptedString = encryptedData.CiphertextBlob.toString('base64');
-                console.log("Encrypted Item Text.");
+                //console.log("Encrypted Item Text.");
 
                 const item = await prisma.item.upsert({
                     where: { uuid: array_item.uuid},
@@ -83,22 +83,22 @@ const saveItems = async(anonymous_id, items_str) => {
                         is_deleted: array_item.is_deleted
                     }
                 });
-                console.log(item); 
+                //console.log(item); 
 
                 // Retrieve embedding for task and insert into table
-                console.log(`Begin retrieval and storing of embedding for item ${item.id}...`);
+                //console.log(`Begin retrieval and storing of embedding for item ${item.id}...`);
                 const embedding_response = await axios.post(
-                    //"http://ip-172-31-31-53.us-east-2.compute.internal:8000/embed",    // PROD EC2 Instance
-                    "http://ip-172-31-28-150.us-east-2.compute.internal:8000/embed",    // DEV EC2 Instance
+                    "http://ip-172-31-31-53.us-east-2.compute.internal:8000/embed",    // PROD EC2 Instance
+                    //"http://ip-172-31-28-150.us-east-2.compute.internal:8000/embed",    // DEV EC2 Instance
                     { text: array_item.text }
                 );
                 const embedding = embedding_response.data.embedding;
-                console.log("Embedding: " + embedding);
+                //console.log("Embedding: " + embedding);
                 const embeddingArray = embedding.join(',');
-                console.log("Embedding Array: " + embeddingArray);
+                //console.log("Embedding Array: " + embeddingArray);
                 await prisma.$executeRawUnsafe(`UPDATE "Item" SET embedding = '[` + 
                     embeddingArray + `]'::vector WHERE id = ` + item.id + `;`);
-                console.log("End retreival and storage complete ..");
+                //console.log("End retreival and storage complete ..");
 
                 itemSaveCount += 1;
             } catch (error) {
@@ -110,12 +110,12 @@ const saveItems = async(anonymous_id, items_str) => {
         console.error('Unexpected Prisma error', error);
         return null;
     } 
-    console.log("Inside saveItems - checking user obj: " + user);
+    //console.log("Inside saveItems - checking user obj: " + user);
     return user;
 }
 
 const refreshUpdatedCounts = async(loadedUser) => {
-    console.log("User loaded: " + JSON.stringify(loadedUser));
+    //console.log("User loaded: " + JSON.stringify(loadedUser));
 
     // Count user's completed tasks 
     loadedUser.doneCount = await prisma.item.count({
@@ -126,7 +126,7 @@ const refreshUpdatedCounts = async(loadedUser) => {
             is_done: true
         }
     });
-    console.log("User Task Done Count: " + loadedUser.doneCount);
+    //console.log("User Task Done Count: " + loadedUser.doneCount);
 
     // Count user's tips
     loadedUser.tipCount = await prisma.tip.count({
@@ -137,22 +137,22 @@ const refreshUpdatedCounts = async(loadedUser) => {
             is_deleted: false
         }
     });
-    console.log("User Tip Count: " + loadedUser.tipCount);
+    //console.log("User Tip Count: " + loadedUser.tipCount);
     
     return loadedUser;
 }
 
 const loadItems = async (anonymous_id) => {
     const lambdaParams = {
-        FunctionName: "loadItems_Dev", // Replace with the name of the other Lambda
-        InvocationType: "RequestResponse", // Use "Event" for asynchronous invocation
+        FunctionName: "loadItems_Dev:prod", 
+        InvocationType: "RequestResponse", 
         Payload: JSON.stringify({ anonymous_id: anonymous_id })
     };
 
     try {
         const response = await lambda.invoke(lambdaParams).promise();
         const updatedItems = JSON.parse(JSON.parse(response.Payload).body);
-        console.log("Number of updated items: " + updatedItems.length);
+        //console.log("Number of updated items: " + updatedItems.length);
         return updatedItems;
     } catch (error) {
         console.error("Error invoking Lambda function:", error);
