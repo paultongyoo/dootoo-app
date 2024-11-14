@@ -230,6 +230,27 @@ function ProfileDrawer({ navigation }) {
     resetUserContext
   } = useContext(AppContext);
 
+  const showComingSoonAlert = (featureName)  => {
+    Alert.alert(
+      `${featureName} Feature Coming Soon`, // Title of the alert
+      "Look for this in a future release.  We've noted you're looking for it.  Thanks!", // Message of the alert
+      [
+        {
+          text: 'OK',
+          onPress: () => {
+            console.log('Data Deletion OK Pressed');
+            amplitude.track("Coming Soon Popup Displayed", {
+              anonymous_id: anonymousId,
+              pathname: pathname,
+              featureName: featureName
+            });
+          },
+        },
+      ],
+      { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+    );
+  };
+
   const showConfirmationPrompt = () => {
     Alert.alert(
       'Are you sure?', // Title of the alert
@@ -289,20 +310,22 @@ function ProfileDrawer({ navigation }) {
         </View>
       </View>
       <View style={styles.statsContainer}>
-        <View style={styles.statContainer}>
+        <Pressable style={styles.statContainer}
+                   onPress={() => showComingSoonAlert("'All Done'")}>
           <View style={styles.statIconContainer}>
             <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
           </View>
           <Text style={styles.statNumber}>{doneCount || '0'}</Text>
           <Text style={styles.statName}>Done</Text>
-        </View>
-        <View style={styles.statContainer}>
+        </Pressable>
+        <Pressable style={styles.statContainer}
+                   onPress={() => showComingSoonAlert("'All Tips'")}>
           <View style={styles.statIconContainer}>
             <Image style={styles.statIcon_Tips} source={require('@/assets/images/give_icon_556B2F.png')} />
           </View>
           <Text style={styles.statNumber}>{tipCount || '0'}</Text>
           <Text style={styles.statName}>Tips</Text>
-        </View>
+        </Pressable>
       </View>
       <View style={styles.privacyContainer}>
         {/* <View style={styles.anonIdDisplayContainer}>
