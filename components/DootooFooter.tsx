@@ -18,8 +18,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const [permissionResponse, requestPermission] = Audio.usePermissions();
     const meteringLevel = useSharedValue(1); // shared value for animated scale
     const recordButtonOpacity = useSharedValue(1);
-    var recordingDurationStart = -1;        // Var used for calculating time
-    var recordingDurationEnd = -1;        // Var used for calculating time
+    const recordingTimeStart = useRef(null);        // Var used for calculating time
 
     const bannerAdId = __DEV__ ?
         TestIds.ADAPTIVE_BANNER :
@@ -41,7 +40,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     }
 
     const startRecording = async () => {
-        recordingDurationStart = performance.now();
+        recordingTimeStart.current = performance.now();
+        //console.log("Logging start time: " + new Date(recordingTimeStart.current).toLocaleString());
         amplitude.track("Recording Started", {
             anonymous_id: anonymousId,
             pathname: pathname
@@ -99,11 +99,14 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     }
 
     const stopRecording = async (): Promise<string> => {
-        recordingDurationEnd = performance.now();
+        const recordingDurationEnd = performance.now();
+        // console.log("Logging end time: " + new Date(recordingDurationEnd).toLocaleString());
+        // console.log("Recalling start time: " + new Date(recordingTimeStart.current).toLocaleString());
+        // console.log("Recording Duration: " + (recordingDurationEnd - recordingTimeStart.current)/1000);
         amplitude.track("Recording Stopped", {
             anonymous_id: anonymousId,
             pathname: pathname,
-            durationMillis: recordingDurationEnd - recordingDurationStart
+            durationSeconds: (recordingDurationEnd - recordingTimeStart.current)/1000
         });
         //console.log('Stopping recording..');
         setRecording(undefined);
@@ -328,7 +331,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                     : <></>} */}
                 <View style={styles.footerButton_Underlay}></View>
                 <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || loading) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
-                    <Pressable
+                    <Pressable disabled={loading}
                         onPress={(recording) ? processRecording : startRecording }
                         onPressIn={recordButton_handlePressIn}
                         onPressOut={recordButton_handlePressOut}>
