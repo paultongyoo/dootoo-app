@@ -27,7 +27,7 @@ const DootooSwipeAction_Delete = ({
                 }
             }
             Alert.alert(
-                `${thingNameStr.toUpperCase()} Has ${numSubtasks} Sub${thingNameStr.toLowerCase()}${numSubtasks > 1 ? 's' : ''}`,
+                `${thingNameStr} Has ${numSubtasks} Sub${thingNameStr.toLowerCase()}${numSubtasks > 1 ? 's' : ''}`,
                 `Deleting this ${thingNameStr.toLowerCase()} will delete its sub${thingNameStr.toLowerCase()}${numSubtasks > 1 ? 's' : ''} too.  Continue?`,
                 [
                     {
@@ -67,7 +67,7 @@ const DootooSwipeAction_Delete = ({
             listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
         }
 
-        amplitude.track(`${thingNameStr.toUpperCase()} Deleted`, {
+        amplitude.track(`${thingNameStr} Deleted`, {
             anonymous_id: anonymousId,
             thing_uuid: updatedThings[index].uuid,
             thing_type: thingNameStr
