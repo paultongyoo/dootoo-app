@@ -55,11 +55,10 @@ export const handler = async (event) => {
       messages: [
         {
           "role": "system",
-          "content": "Identify the main tasks and sub tasks described in the input text, ordering each sub task after each main task in the list. " +
-            "Only identify a task as a sub task if the input refers to the task as part of another task.  " +
-            "Reply in the following JSON format: { tasks: [<array of task objects of the format { text: '<task name>', is_child: <false if task is main task, true otherwise>}]"
+          "content": "You are a helpful assistant that listens to user-provided information and organizes it into main tasks and associated subtasks (if the user specified any)." +
+          "Reply in the following JSON format: { tasks: [<array of main and subtask objects of the format { text: '<task name>', is_child: <false if task is main task, true otherwise>}]"
         },
-        { "role": "user", "content": transcribedText }
+        { "role": "user", "content": `Here is a description of what I need to do: ${transcribedText}. Please list the main tasks and identify any subtasks under each main task.`}
       ], response_format: { "type": "json_object" }
     });
 
