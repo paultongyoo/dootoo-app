@@ -13,7 +13,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const pathname = usePathname();
     const { anonymousId,
         setLastRecordedCount } = useContext(AppContext);
-    const [loading, setLoading] = useState(false);
+    const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
     const [recording, setRecording] = useState();
     const [permissionResponse, requestPermission] = Audio.usePermissions();
     const meteringLevel = useSharedValue(1); // shared value for animated scale
@@ -122,12 +122,27 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         return uri;
     }
 
+    // if button was pressed while recording was already processed,
+    // the current processing may be taking too long; treat the user action as
+    // an attempt to cancel the recording and try again
+    const cancelRecordingProcessing = async() => {
+        console.log("Cancelling recording...");
+        const fileUri = await stopRecording();
+        deleteFile(fileUri);
+        setIsRecordingProcessing(false);
+        console.log("Recording cancelled...");
+        amplitude.track("Recording Processing Cancelled", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+    }
+
     const processRecording = async () => {
         amplitude.track("Recording Processing Started", {
             anonymous_id: anonymousId,
             pathname: pathname
         });
-        setLoading(true);
+        setIsRecordingProcessing(true);
         const fileUri = await stopRecording();
         const response = await callBackendTranscribeService(fileUri);
         amplitude.track("Recording Processing Completed", {
@@ -194,7 +209,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 });
             }
         }
-        setLoading(false);
+        setIsRecordingProcessing(false);
         console.log("Finished parsing file, deleting...");
         deleteFile(fileUri);
     }
@@ -330,17 +345,18 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                     </Pressable>
                     : <></>} */}
                 <View style={styles.footerButton_Underlay}></View>
-                <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || loading) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
-                    <Pressable disabled={loading}
-                        onPress={(recording) ? processRecording : startRecording }
+                <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || isRecordingProcessing) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
+                    <Pressable
+                        onPress={(isRecordingProcessing) ? cancelRecordingProcessing : ((recording) ? processRecording : startRecording) }
                         onPressIn={recordButton_handlePressIn}
                         onPressOut={recordButton_handlePressOut}>
-                        {(loading) ?
+                        {(isRecordingProcessing) ?
                             <View style={styles.loadingAnim}>
                                 <ActivityIndicator size={"large"} color="white" />
-                            </View> : (recording) ?
-                                <View style={styles.footerButtonIcon_Stop}></View> :
-                                <Image style={styles.footerButtonImage_Record} source={require("@/assets/images/microphone_white.png")} />}
+                            </View> 
+                            : (recording) ?
+                                <View style={styles.footerButtonIcon_Stop}></View> 
+                                : <Image style={styles.footerButtonImage_Record} source={require("@/assets/images/microphone_white.png")} />}
                     </Pressable>
                 </Reanimated.View>
                 <View style={styles.bannerAdContainer}>
