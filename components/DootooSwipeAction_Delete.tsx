@@ -41,6 +41,12 @@ const DootooSwipeAction_Delete = ({
 
                                 // Call asyncronous delete to mark item as deleted in backend to sync database
                                 deleteThing(updatedThings[i].uuid);
+
+                                amplitude.track(`${thingNameStr} Deleted`, {
+                                    anonymous_id: anonymousId,
+                                    thing_uuid: updatedThings[i].uuid,
+                                    thing_type: thingNameStr
+                                });
                             }
                             updatedThings.splice(index, 1 + numSubtasks);  // Remove item and its subtasks from array
                             //setItemIdxToEdit(-1);  //TODO: Move Delete into List component
@@ -61,17 +67,18 @@ const DootooSwipeAction_Delete = ({
             // Call asyncronous delete to mark item as deleted in backend to sync database
             deleteThing(updatedThings[index].uuid);
 
+            amplitude.track(`${thingNameStr} Deleted`, {
+                anonymous_id: anonymousId,
+                thing_uuid: updatedThings[index].uuid,
+                thing_type: thingNameStr
+            });
+
             // Remove item from displayed list
             updatedThings.splice(index, 1);
+
             //setItemIdxToEdit(-1) TODO: Deprecate if nolonger need!
             listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
         }
-
-        amplitude.track(`${thingNameStr} Deleted`, {
-            anonymous_id: anonymousId,
-            thing_uuid: updatedThings[index].uuid,
-            thing_type: thingNameStr
-        });
 
         console.log(`Exiting handle delete ${thingNameStr.toLowerCase()} at index ${index}...`);
     }
