@@ -517,7 +517,7 @@ export default function ItemTips() {
             renderRightActions={renderRightActions}
             saveAllThings={saveAllTips}
             saveSingleThing={saveSingleTip}
-            loadAllThings={() => loadTips(selectedItem.uuid)}
+            loadAllThings={(page) => loadTips(selectedItem.uuid, page)}
             transcribeAudioToThings={transcribeAudioToTips}
             ListThingSidebar={DootooTipSidebar}
             EmptyThingUX={() => <DootooTipEmptyUX styles={styles} ThingToDriveEmptyListCTA={selectedItem} />}

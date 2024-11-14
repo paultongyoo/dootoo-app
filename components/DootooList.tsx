@@ -30,6 +30,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     const [thingIdxToEdit, setThingIdxToEdit] = useState(-1);
     const [thingTextOnTap, setThingTextOnTap] = useState('');
     const inputValueRef = useRef('');
+    const [page, setPage] = useState(1);
+    const [isPageLoading, setPageLoading] = useState(false);
+    const [hasMoreThings, setHasMoreThings] = useState(true);
 
     useEffect(() => {
         //console.log(`useEffect([]) - shouldInitialLoad ${shouldInitialLoad}`);
@@ -38,7 +41,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
             if (shouldInitialLoad) {
                 if (!isNew) {
                     setInitialLoad(false);
-                    loadThingsFromBackend();
+                    resetListWithFirstPageLoad();
                 } else {
                     //console.log("Skipping loading things for user as they are brand new.");
                 }
@@ -92,6 +95,55 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
         }
     }, [listArray]);
 
+    const resetListWithFirstPageLoad = async () => {
+        //console.log("Setting page var to 1 to trigger loadThingsForCurrentPage().")
+        setPage(1);
+    };
+
+    const loadNextPage = () => {
+        //console.log("loadNextPage called");
+        if (hasMoreThings) {
+            if (!refreshing && !isPageLoading) {
+                //console.log(`List end reached, incrementing current page var (currently ${page}).`);
+                setPageLoading(true);
+                setPage((prevPage) => prevPage + 1);
+            } else {
+                console.log(`Ignoring pull down action as page ${page} currently loading or full list is refreshing.`);  
+            }
+        } else {
+            console.log(`Ignoring onEndReach call as user doesn't have more ${thingName} to return`);    
+        }
+    };
+
+    useEffect(() => {
+        loadThingsForCurrentPage();
+    }, [page]);
+
+    const loadThingsForCurrentPage = async () => {
+        //console.log(`Calling loadAllThings(page) with page = ${page}.`);
+        const loadResponse = await loadAllThings(page);
+        const things = loadResponse.things;
+        const hasMore = loadResponse.hasMore;
+        
+        // Immediately update hasMore state to prevent future backend calls if hasMore == false
+        setHasMoreThings(hasMore);
+        
+        // If we're loading the first page, assume we want to reset the displays list to only the first page
+        // (e.g. on a pull-down-to-refresh action).  If page > 1, assume we want to append the page to what's currently
+        // displayed.
+        if (page == 1) {
+            console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
+            listArraySetter(things);
+            setPageLoading(false);
+            setInitialLoad(true);
+            setRefreshing(false);
+        } else {
+            console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
+            listArraySetter(listArray.concat(things));
+            setPageLoading(false);
+        }
+    }
+
     const handleBlur = (index: number) => {
         //console.log(`Inside handleBlur for index ${index}`);
         setThingIdxToEdit(-1);
@@ -143,15 +195,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
             console.log("Ignoring drag operation given isThingDraggable(data) == false");
         }
     }
-
-    const loadThingsFromBackend = async () => {
-        const savedItems = await loadAllThings();
-        //console.log("Loaded things: " + JSON.stringify(savedItems));
-        //console.log(`Loaded ${(savedItems && savedItems.length > 0) ? savedItems.length : 'empty list'} ${thingName}(s) from backend`);
-        listArraySetter(savedItems);
-        setInitialLoad(true);
-        setRefreshing(false);
-    };
 
     // Function to close all Swipeables except the one being opened
     const closeOtherSwipeables = (index) => {
@@ -278,17 +321,28 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
                                 }}
                                 keyExtractor={(item, index) => index.toString()}
                                 ListHeaderComponent={<View style={{ height: 0 }} />}
-                                ListFooterComponent={<View style={{ height: 60 }} />}
                                 refreshControl={
                                     <RefreshControl
                                         onRefresh={() => {
                                             setLastRecordedCount(0);
                                             setRefreshing(true);
-                                            loadThingsFromBackend(false);
+                                            resetListWithFirstPageLoad();
                                         }}
                                         refreshing={refreshing} />
                                 }
                                 renderItem={renderThing}
+                                onEndReached={({distanceFromEnd}) => {
+                                    //console.log("onEndReached called, distance from end: " + distanceFromEnd);
+                                    if (distanceFromEnd > 0) {
+                                        loadNextPage();
+                                    }
+                                }}
+                                onEndReachedThreshold={0.1}
+                                ListFooterComponent={
+                                    <View style={{paddingTop: 20}}>
+                                        {isPageLoading && <ActivityIndicator size={"large"} color="black" />}
+                                        <View style={{ height: 40 }} />
+                                    </View>}
                             /> : (initialLoad == true) ? <EmptyThingUX styles={styles} ThingToDriveEmptyListCTA={ThingToDriveEmptyListCTA} /> : <></>
                         }
                         {(errorMsg) ?

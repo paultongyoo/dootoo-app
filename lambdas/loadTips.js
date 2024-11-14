@@ -17,6 +17,10 @@ export const handler = async (event) => {
     // ELSE return the tips of items similar to the specified item.
 
     var retrievedTips = []
+    const pageSize = 15   // hardcode this for now
+    const page = event.page || 1;
+    const skip = (page - 1) * pageSize;
+    const take = pageSize + 1;  // Take one more than pageSize to determine if there are more items
 
     if (selectedItem.is_done) {
         console.log("Specified item is done, returning its tips (if any)...");
@@ -31,7 +35,8 @@ export const handler = async (event) => {
                 WHERE "Tip".is_deleted IS false AND "Tip".item_id = ${selectedItem.id}
                 GROUP BY 1) tip_votes on "Tip".id = tip_votes.tip_id
             WHERE "Tip".is_deleted IS false AND "Tip".item_id = ${selectedItem.id}
-            ORDER BY rank_idx ASC;`);
+            ORDER BY rank_idx ASC
+            LIMIT ${take} OFFSET ${skip};`);
         console.log("Query returned " + retrievedTips.length + " tip(s).");
     } else {
         console.log("Specified item is NOT done, returning tips of similar items (if any)...");
@@ -51,13 +56,18 @@ export const handler = async (event) => {
                 WHERE "Tip".is_deleted IS false AND "Tip".is_flagged IS false AND "Tip".user_id <> ${user.id} AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}')
                 GROUP BY 1) tip_votes on "Tip".id = tip_votes.tip_id
             WHERE "Tip".is_deleted IS false AND "Tip".is_flagged IS false AND "Tip".user_id <> ${user.id} AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}')
-            ORDER BY upvote_count DESC;`);
+            ORDER BY upvote_count DESC
+            LIMIT ${take} OFFSET ${skip};`);
         console.log("Query returned " + retrievedTips.length + " tip(s).");
     }
 
+
+    const hasMore = retrievedTips.length > pageSize;
+    console.log(`User does${(!hasMore) ? ' not' : ''} have more tips.`);
+
     const response = {
         statusCode: 200,
-        body: JSON.stringify(retrievedTips)
+        body: { hasMore: hasMore, tips: retrievedTips }
     };
     await prisma.$disconnect();
     return response;

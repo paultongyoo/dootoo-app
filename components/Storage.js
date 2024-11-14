@@ -133,7 +133,7 @@ export const loadLocalUser = async() => {
   }
 };
 
-export const loadItems = async () => {
+export const loadItems = async (page) => {
   try {
 
     const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
@@ -143,19 +143,21 @@ export const loadItems = async () => {
     }
     const response = await axios.post(LOADITEMS_URL,
       {
-        anonymous_id : localAnonId
+        anonymous_id : localAnonId,
+        page: page
       }
     );
-    const item_array = JSON.parse(response.data.body);
-    //console.log(`Retrieved ${item_array.length} items from backend.`);
-    //console.log("Item JSON: " + JSON.stringify(item_array));
-    return item_array;
+    const item_array = response.data.body.items;
+    const hasMore = response.data.body.hasMore;
+    // console.log(`item_array: ${item_array}`);
+    // console.log(`hasMore: ${hasMore}`);
+    return { hasMore: hasMore, things: item_array };
   } catch (error) {
     console.error('Error calling loadItems API:', error);
   }
 };
 
-export const loadTips = async (item_uuid) => {
+export const loadTips = async (item_uuid, page) => {
   //console.log("loadTips called with item_uuid: " + item_uuid);
   try {
 
@@ -167,14 +169,15 @@ export const loadTips = async (item_uuid) => {
     const response = await axios.post(LOADTIPS_URL,
       {
         anonymous_id : localAnonId,
-        item_uuid: item_uuid
+        item_uuid: item_uuid,
+        page: page
       }
     );
-    const tip_array = JSON.parse(response.data.body);
-    //console.log(`Retrieved CTA from backend: ${tip_cta}`);
-    //console.log(`Retrieved ${tip_array.length} tips from backend.`);
-    //console.log("Tip JSON: " + JSON.stringify(tip_array));
-    return tip_array;
+    const tip_array = response.data.body.tips;
+    const hasMore = response.data.body.hasMore;
+    // console.log(`tip_array: ${tip_array}`);
+    // console.log(`hasMore: ${hasMore}`);
+    return { hasMore: hasMore, things: tip_array };
   } catch (error) {
     console.error('Error calling loadTips API:', error);
   }
