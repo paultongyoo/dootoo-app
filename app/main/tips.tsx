@@ -181,6 +181,7 @@ export default function ItemTips() {
       <>
         {(tips[index].user_id == selectedItem.user_id) ?
           <DootooSwipeAction_Delete
+            thingNameStr="Tip"
             styles={styles}
             listArray={tips} listArraySetter={setTips}
             listThingIndex={index}
