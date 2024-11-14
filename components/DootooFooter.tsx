@@ -73,7 +73,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 const metering_divisor = (Platform.OS == 'ios') ? 30 : 100;
                 if (status.isRecording) {
                     meteringLevel.value = withTiming(1 + Math.max(0, 1 + (status.metering / metering_divisor)), { duration: 100 });
-                    console.log(`Platform: ${Platform.OS} - status.metering: ${status.metering} - Metering Level: ${meteringLevel.value} - Metering modifier: ${1 + (status.metering / metering_divisor)}`);
+                    //console.log(`Platform: ${Platform.OS} - status.metering: ${status.metering} - Metering Level: ${meteringLevel.value} - Metering modifier: ${1 + (status.metering / metering_divisor)}`);
                 }
             }, 100);
 
