@@ -181,7 +181,7 @@ export default function MainLayout() {
         Animated.delay(500),
         Animated.timing(headerPosition, {
           toValue: 0,
-          duration: 500,
+          duration: 800,
           useNativeDriver: true
         })
       ]).start();

@@ -35,7 +35,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             Animated.delay(500),
             Animated.timing(footerPosition, {
               toValue: 0,
-              duration: 500,
+              duration: 800,
               useNativeDriver: true
             })
           ]).start();
