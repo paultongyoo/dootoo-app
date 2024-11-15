@@ -17,6 +17,20 @@ export const AppProvider = ({ children }) => {
     const [selectedItem, setSelectedItem] = useState(null);
     const [fadeInListOnRender, setFadeInListOnRender] = useState(false);
 
+    const emptyListCTAOpacity = useRef(new Animated.Value(0)).current;
+    const emptyListCTAFadeInAnimation = Animated.timing(emptyListCTAOpacity, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true
+    });
+    const emptyListCTAFadeOutAnimation = Animated.timing(emptyListCTAOpacity, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true
+    });
+
     const listOpacity = useRef(new Animated.Value(0)).current;
     const listFadeInAnimation = Animated.timing(listOpacity, {
         toValue: 1,
@@ -73,7 +87,10 @@ export const AppProvider = ({ children }) => {
             fadeInListOnRender, setFadeInListOnRender,
             listOpacity,
             listFadeInAnimation,
-            listFadeOutAnimation
+            listFadeOutAnimation,
+            emptyListCTAOpacity,
+            emptyListCTAFadeInAnimation,
+            emptyListCTAFadeOutAnimation
              }}>
           {children}
         </AppContext.Provider>
