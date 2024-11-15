@@ -301,8 +301,6 @@ function ProfileDrawer({ navigation }) {
     // Construct the mailto URL
     const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-
-
     // Use Linking API to open email client
     Linking.openURL(url).catch(err => console.error('Error opening email client:', err));
   };
@@ -348,7 +346,7 @@ function ProfileDrawer({ navigation }) {
         </Pressable>
       </View>
       <View style={styles.privacyContainer}>
-        {/* <View style={styles.anonIdDisplayContainer}>
+        <View style={styles.anonIdDisplayContainer}>
           <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
           <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId}</Text>
         </View>
@@ -356,7 +354,7 @@ function ProfileDrawer({ navigation }) {
           <Pressable onPress={showConfirmationPrompt}>
             <Text style={styles.deleteDataLinkText}>Delete My Data</Text>
           </Pressable>
-        </View> */}
+        </View>
         <View style={styles.feedbackLinkContainer}>
           <Pressable onPress={sendEmail}>
             <Text style={styles.feedbackLinkText}>Email Feedback</Text>
