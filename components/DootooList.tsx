@@ -96,8 +96,14 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     }, [listArray]);
 
     const resetListWithFirstPageLoad = async () => {
-        //console.log("Setting page var to 1 to trigger loadThingsForCurrentPage().")
-        setPage(1);
+        if (page == 1) {
+            // If current page is already 1, manually invoke LoadThingsForCurrentPage 
+            // as useEffect(page) won't be called
+            loadThingsForCurrentPage(); 
+        } else {
+            //console.log("Setting page var to 1 to trigger loadThingsForCurrentPage().")
+            setPage(1);
+        }
     };
 
     const loadNextPage = () => {
@@ -116,11 +122,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     };
 
     useEffect(() => {
+        //console.log("useEffect(page) called");
         loadThingsForCurrentPage();
     }, [page]);
 
     const loadThingsForCurrentPage = async () => {
-        //console.log(`Calling loadAllThings(page) with page = ${page}.`);
+        console.log(`Calling loadAllThings(page) with page = ${page}.`);
         const loadResponse = await loadAllThings(page);
         const things = loadResponse.things;
         const hasMore = loadResponse.hasMore;
