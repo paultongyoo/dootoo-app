@@ -1,8 +1,9 @@
 import {
   View, Text, StyleSheet, Image, ActivityIndicator,
-  Pressable, Alert, Platform, Linking
+  Pressable, Alert, Platform, Linking,
+  Animated
 } from "react-native";
-import { useEffect, useContext } from "react";
+import { useEffect, useContext, useRef } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { Drawer } from 'expo-router/drawer';
@@ -173,6 +174,18 @@ const styles = StyleSheet.create({
 export default function MainLayout() {
   const segments = useSegments();
   const pathname = usePathname();
+  const headerPosition = useRef(new Animated.Value(-200)).current;
+
+  useEffect(() => {
+      Animated.sequence([
+        Animated.delay(500),
+        Animated.timing(headerPosition, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true
+        })
+      ]).start();
+  },[]);
 
   return (
     <>
@@ -183,9 +196,10 @@ export default function MainLayout() {
             screenOptions={
               {
                 drawerPosition: 'right',
+                headerTransparent: true,
                 header: ({ navigation, route, options }) => {
                   return (
-                    <View style={styles.headerContainer}>
+                    <Animated.View style={[styles.headerContainer, { transform: [{ translateY: headerPosition}]}]}>
                       <View style={styles.headerLeftContainer}>
                         {(segments.length == 1) ?
                           <View style={styles.mainLogoContainer}>
@@ -210,7 +224,7 @@ export default function MainLayout() {
                           <Image style={styles.profileIcon} source={require('@/assets/images/profile_icon_green.png')} />
                         </Pressable>
                       </View>
-                    </View>
+                    </Animated.View>
                   );
                 }
               }

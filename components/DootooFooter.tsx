@@ -27,8 +27,18 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const bannerRef = useRef<BannerAd>(null);
     var retryCount = 0;
 
+    const footerPosition = useRef(new Animated.Value(200)).current;
+
     useEffect(() => {
         initializeMobileAds();
+        Animated.sequence([
+            Animated.delay(500),
+            Animated.timing(footerPosition, {
+              toValue: 0,
+              duration: 500,
+              useNativeDriver: true
+            })
+          ]).start();
     }, []);
 
     useForeground(() => {
@@ -336,7 +346,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
     if (!hideRecordButton) {
         return (
-            <View style={styles.footerContainer}>
+            <Animated.View style={[styles.footerContainer, { transform: [{ translateY: footerPosition}]}]}>
                 {/* {recording ?
                     <Pressable
                         style={[styles.footerButton, styles.cancelButton]}
@@ -362,7 +372,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 <View style={styles.bannerAdContainer}>
                     <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
                 </View>
-            </View>
+            </Animated.View>
         );
     } else {
         return (

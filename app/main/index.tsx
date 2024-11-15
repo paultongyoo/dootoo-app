@@ -186,17 +186,17 @@ export default function Index() {
       //flexDirection: 'row',
       //backgroundColor: 'yellow',
       justifyContent: 'center',
-      paddingLeft: 20
+      paddingLeft: 30
     },
     emptyListContainer_words: {
       fontSize: 40
     },
     emptyListContainer_arrow: {
       position: 'absolute',
-      bottom: -20,
-      right: 120,
-      height: 180,
-      width: 50,
+      bottom: -240,
+      right: 100,
+      height: 250,
+      width: 80,
       opacity: 0.4,
       transform: [{ rotate: '9deg' }]
     },
