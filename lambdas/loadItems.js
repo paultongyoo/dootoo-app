@@ -58,13 +58,15 @@ export const handler = async (event) => {
 
     hasMore = retrievedItems.length > pageSize;
     console.log(`User does${(!hasMore) ? ' not' : ''} have more items.`);
+    
+    // Remove the extra item if it exists
+    if (hasMore) {
+      retrievedItems.pop();
+    }
   }
   console.log(`Returned ${((retrievedItems && retrievedItems.length) || 0)} items.`);
   
-  // Remove the extra item if it exists
-  if (hasMore) {
-    retrievedItems.pop();
-  }
+
 
   for (var i = 0; i < retrievedItems.length; i++) {
     const item = retrievedItems[i];
