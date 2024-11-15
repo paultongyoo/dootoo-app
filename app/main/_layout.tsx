@@ -181,7 +181,7 @@ export default function MainLayout() {
   const INDEX_PATHNAME_2 = "/main";
 
   useEffect(() => {
-    console.log("Main Layout pathname: " + pathname);
+    //console.log("Main Layout pathname: " + pathname);
     Animated.sequence([
       Animated.delay(500),
       Animated.timing(headerPosition, {
