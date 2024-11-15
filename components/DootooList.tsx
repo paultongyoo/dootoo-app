@@ -143,7 +143,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
         if (screenInitialized) {
             loadThingsForCurrentPage();
         } else {
-            console.log("Not calling loadThingsForCurrentPage in useEffect(page) as it was called during useEffect([]) init code.");
+            console.log("Not calling loadThingsForCurrentPage in useEffect(page) as it was called during first useEffect([]) call.");
         }
     }, [page]);
 
