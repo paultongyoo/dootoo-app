@@ -366,7 +366,7 @@ export default function Index() {
           <Reanimated.View style={[styles.itemSwipeAction, styles.action_Give]}>
             <Pressable
               onPress={() => {
-                console.log("Give Tips button tapped on item: " + dootooItems![index].text);
+                //console.log("Give Tips button tapped on item: " + dootooItems![index].text);
                 amplitude.track("Give Tips Clicked", {
                   anonymous_id: anonymousId,
                   item_uuid: dootooItems![index].uuid
@@ -385,9 +385,9 @@ export default function Index() {
                     anonymous_id: anonymousId,
                     item_uuid: dootooItems![index].uuid
                   });
-                  console.log("Similar Tips button tapped on item: " + dootooItems![index].text);
+                  //console.log("Similar Tips button tapped on item: " + dootooItems![index].text);
                   setSelectedItem(dootooItems![index]);
-                  router.navigate('/main/screens/tips');
+                  router.push('/main/screens/tips');
                 }}>
                 {/* <View style={styles.simliarTipsIcon}></View> */}
                 <Image style={styles.receiveTipIcon} source={require("@/assets/images/receive_tip_white.png")} />
