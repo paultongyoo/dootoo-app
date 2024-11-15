@@ -27,6 +27,16 @@ export const handler = async (event) => {
       }
     });
     retrievedItems.push(item);
+  } else if (event.loadAll) {
+    retrievedItems = await prisma.item.findMany({
+      where: {
+        user: { id: user.id },
+        is_deleted: false
+      },
+      orderBy: {
+        rank_idx: 'asc'
+      }
+    });
   } else {
 
     const pageSize = 15   // hardcode this for now
@@ -125,10 +135,18 @@ export const handler = async (event) => {
     }
   }
 
-  const response = {
-    statusCode: 200,
-    body: { hasMore: hasMore, items: retrievedItems }
-  };
+  var response = null;
+  if (event.loadAll) {
+    response = {
+      statusCode: 200,
+      body: retrievedItems
+    };
+  } else {
+    response = {
+      statusCode: 200,
+      body: { hasMore: hasMore, items: retrievedItems }
+    };
+  }
   await prisma.$disconnect();
   return response;
 };

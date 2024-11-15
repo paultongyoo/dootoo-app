@@ -146,14 +146,14 @@ const loadItems = async (anonymous_id) => {
     const lambdaParams = {
         FunctionName: "loadItems_Dev:prod", 
         InvocationType: "RequestResponse", 
-        Payload: JSON.stringify({ anonymous_id: anonymous_id })
+        Payload: JSON.stringify({ anonymous_id: anonymous_id, loadAll: true })
     };
 
     try {
         const response = await lambda.invoke(lambdaParams).promise();
-        const updatedItems = JSON.parse(JSON.parse(response.Payload).body);
+        const latestItems = JSON.parse(response.Payload).body;
         //console.log("Number of updated items: " + updatedItems.length);
-        return updatedItems;
+        return latestItems;
     } catch (error) {
         console.error("Error invoking Lambda function:", error);
         throw error;
