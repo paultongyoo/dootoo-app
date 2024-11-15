@@ -6,8 +6,9 @@ import { uniqueNamesGenerator, adjectives, animals, NumberDictionary } from 'uni
 // Local storage column keys
 const DONE_COUNT_KEY = "user_done_count";
 const TIP_COUNT_KEY = "user_tip_count";
-const USERNAME_KEY = "user_username";
-const ANON_ID_KEY = "user_anonymous_id";
+// const USERNAME_KEY = "user_username";
+// const ANON_ID_KEY = "user_anonymous_id";
+const USER_OBJ_KEY = "user_obj";
 const ITEM_LIST_KEY = "item_list";
 const TIP_LIST_KEY_PREFIX = "tip_list_";    // Append item UUID to key
 
@@ -48,17 +49,17 @@ export const saveItems = async (item_list_obj, callback) => {
     return;
   }
 
-  // Local data is the source of truth for the app (most reliable and lowest latency)
-  // STRATEGY UPDATED 11.7.24: We no longer save items locally because we want to requery latest
-  // data on every save in case items text and therefore tips, similar items, etc counts should be updated.
-  // We actually never loaded the UI from local data anyway.
-  //
-  //await saveItemsLocally(item_list_obj);
-
   // Asyncronously save to backend to enable community features and refresh user counts.
   // Ensure all UI data uses only locally stored data and is not reliant on real-time backend state.
   saveItemsToBackend(item_list_obj, (updatedUser, updatedItems) => {
-    updateLocalUserCounts(updatedUser)
+
+    // LATEST STRATEGY 11.14 - Asynchronously save items locally to accelerate return launch UX by
+    // "immediately" loading last locally saved list to user first and then refreshing it with latest backend counts
+    // See loadItems/Tips methods for more details.
+    saveItemsLocally(updatedItems);
+    saveUserLocally(updatedUser);
+
+    //updateLocalUserCounts(updatedUser)
     callback(updatedItems);
   });
 }
@@ -81,66 +82,34 @@ export const saveTips = async (item_obj, tip_list_obj, callback) => {
 }
 
 export const initalizeUser = async() => {
+  console.log("initalizeUser");
   try {  
 
     // Populate user vars with what's in local storage, if anything
-    var username = await AsyncStorage.getItem(USERNAME_KEY);
-    var anonId = await AsyncStorage.getItem(ANON_ID_KEY);
-    var isNewUser = null;
-    var doneCountStr = '-1';
-    var tipCountStr = '-1';
-    
-    // Username and/or anonId are empty, assume we're at first launch or corrupt and recreate user 
-    if (!username || !anonId) {
-        const userData = await createUser();
-        username = userData.name;
-        anonId = userData.anonymousId;
-        doneCountStr = userData.doneCountStr;
-        tipCountStr = userData.tipCountStr;
-        isNewUser = true;
+    const localUser = await loadLocalUser();
+    if (localUser) {
+      localUser.isNew = false;
+      return localUser;
     } else {
-
-      // Syncronously retrieve existing user's done and tip counts from backend
-      // because they can count historical items not currently listed in local storage
-      doneCountStr = await AsyncStorage.getItem(DONE_COUNT_KEY);
-      tipCountStr = await AsyncStorage.getItem(TIP_COUNT_KEY);
-      isNewUser = false;
+      const newUserData = await createUser();
+      newUserData.isNew = true;
+      return newUserData;
     }
-    return { 
-      name: username, 
-      anonymousId: anonId, 
-      doneCountStr: doneCountStr,
-      tipCountStr: tipCountStr,
-      isNew: isNewUser
-    };
   } catch (e) {
-      console.log("initializeUser: Error reading user data:", e);
+      console.log("Error reading user data:", e);
   }
 };
 
-export const loadLocalUser = async() => {
-  try {
-    const loadedUser  = {
-      username: await AsyncStorage.getItem(USERNAME_KEY),
-      anonymousId: await AsyncStorage.getItem(ANON_ID_KEY),
-      doneCountStr: await AsyncStorage.getItem(DONE_COUNT_KEY),
-      tipCountStr: await AsyncStorage.getItem(TIP_COUNT_KEY)
-    }
-    //console.log("Retrieved user from local storage: " + JSON.stringify(loadedUser));
-    return loadedUser;
-  } catch (error) {
-    console.error('Error loading user from local storage:', error);
-  }
-};
-
-export const loadItems = async (page) => {
+export const loadItems = async (page, callback) => {
   try {
 
-    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
-    if (!localAnonId) {
+    const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserStr) {
       console.log("Received null local anon Id, aborting loadItems!");
       return [];
     }
+    const localUser = JSON.parse(localUserStr);
+    const localAnonId = localUser.anonymous_id;
     const response = await axios.post(LOADITEMS_URL,
       {
         anonymous_id : localAnonId,
@@ -161,11 +130,13 @@ export const loadTips = async (item_uuid, page) => {
   //console.log("loadTips called with item_uuid: " + item_uuid);
   try {
 
-    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
-    if (!localAnonId) {
-      console.log("Received null local anon Id, aborting loadItems!");
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      console.log("Received null local anon Id, aborting tipVote!");
       return [];
     }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
     const response = await axios.post(LOADTIPS_URL,
       {
         anonymous_id : localAnonId,
@@ -186,11 +157,13 @@ export const loadTips = async (item_uuid, page) => {
 export const tipVote = async(tip_uuid, voteValue) => {
   try {
     //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
-    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
-    if (!localAnonId) {
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
       console.log("Received null local anon Id, aborting tipVote!");
-      return [];
+      return;
     }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
     const response = await axios.post(TIPVOTE_URL,
       {
         anonymous_id : localAnonId,
@@ -207,11 +180,13 @@ export const tipVote = async(tip_uuid, voteValue) => {
 export const flagTip = async(tip_uuid) => {
   try {
     console.log("Entering flag tip, uuid: " + tip_uuid);
-    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
-    if (!localAnonId) {
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
       console.log("Received null local anon Id, aborting tipVote!");
-      return [];
+      return;
     }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
     const response = await axios.post(FLAGTIP_URL,
       {
         anonymous_id : localAnonId,
@@ -227,11 +202,13 @@ export const flagTip = async(tip_uuid) => {
 export const deleteItem = async(item_uuid) => {
   try {
     console.log("Entering delete item, uuid: " + item_uuid);
-    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
-    if (!localAnonId) {
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
       console.log("Received null local anon Id, aborting tipVote!");
-      return [];
+      return;
     }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
     const response = await axios.post(DELETEITEM_URL,
       {
         anonymous_id : localAnonId,
@@ -247,11 +224,13 @@ export const deleteItem = async(item_uuid) => {
 export const updateItemHierarchy = async(item_uuid, is_child) => {
   try {
     console.log("Entering updateItemHierarchy, uuid: " + item_uuid + " is_child: " + is_child);
-    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
-    if (!localAnonId) {
-      console.log("Received null local anon Id, aborting updateItemHierarchy!");
-      return [];
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      console.log("Received null local anon Id, aborting tipVote!");
+      return;
     }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
     const response = await axios.post(UPDATEITEMHIERARCHY_URL,
       {
         anonymous_id : localAnonId,
@@ -268,11 +247,13 @@ export const updateItemHierarchy = async(item_uuid, is_child) => {
 export const deleteTip = async(tip_uuid) => {
   try {
     console.log("Entering deleteTip, uuid: " + tip_uuid);
-    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
-    if (!localAnonId) {
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
       console.log("Received null local anon Id, aborting tipVote!");
-      return [];
+      return ;
     }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
     const response = await axios.post(DELETETIP_URL,
       {
         anonymous_id : localAnonId,
@@ -295,6 +276,43 @@ export const resetAllData = async () => {
 };
 
 // ******** BEGIN Non-EXPORTED METHODS *********
+
+const saveUserLocally = async(user_obj) => {
+  console.log("Saving new user data to local storage...");
+
+  try {
+    //console.log("Saving user to local storage...");
+    const user_obj_str = JSON.stringify(user_obj);
+    await AsyncStorage.setItem(USER_OBJ_KEY, user_obj_str);
+    await AsyncStorage.setItem(DONE_COUNT_KEY, user_obj.doneCount || '0');
+    await AsyncStorage.setItem(TIP_COUNT_KEY, user_obj.tipCount || '0');
+    //console.log(`Saved user to local storage.`)
+  } catch (e) {
+    console.log("Error saving user to local storage.", e);
+  }
+  //console.log("Saved user data to local storage successfully.");
+}
+
+const loadLocalUser = async() => {
+  console.log("loadLocalUser");
+  try {
+
+    const local_user_str = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (local_user_str != null) {
+      const localUserObj = JSON.parse(local_user_str);
+      localUserObj.doneCountStr = await AsyncStorage.getItem(DONE_COUNT_KEY);
+      localUserObj.tipCountStr = await AsyncStorage.getItem(TIP_COUNT_KEY);
+      return localUserObj;
+    } else {
+      return null;
+    }
+    //console.log("Retrieved user from local storage: " + JSON.stringify(loadedUser));
+    return loadedUser;
+  } catch (error) {
+    console.error('Error loading user from local storage:', error);
+  }
+};
+
 
 // Update this to account for pre-existing done/tips in DB
 const updateLocalUserCounts = async(updatedUser) => {
@@ -319,7 +337,7 @@ const updateLocalUserCounts = async(updatedUser) => {
 }
 
 const createUser = async () => {
-
+  console.log("createUser");
   try {
     // If username or anonymous doesn't exist, assume we're at first launch OR data has gotten corrupt.
     // (Re)initialize user name and anonymous UUID and store locally
@@ -332,11 +350,12 @@ const createUser = async () => {
     const tipCountStr = '0';
     //console.log(`Username created ${newUsername} with Anon ID ${newAnonymousId}`);
 
-    // Store user data locally
-    await saveUserLocally(newUsername, newAnonymousId, doneCountStr, tipCountStr);
-
     // Asyncronously pass generated user name and anonymous ID to backend to store on server
-    saveUserToBackend(newUsername, newAnonymousId);
+    saveUserToBackend(newUsername, newAnonymousId, (savedUserObj) => {
+
+        // Store user data locally to accelerate future loads
+        saveUserLocally(savedUserObj);
+    });
     
     return { 
       name: newUsername, 
@@ -443,21 +462,16 @@ export const generateUsername = () => {
   return characterName;
 };
 
-const saveUserLocally = async(newUsername, newAnonymousId, doneCount, tipCount) => {
-  console.log("Saving user data to local storage...");
-  await AsyncStorage.setItem(USERNAME_KEY, newUsername);
-  await AsyncStorage.setItem(ANON_ID_KEY, newAnonymousId);
-  await AsyncStorage.setItem(DONE_COUNT_KEY, doneCount);
-  await AsyncStorage.setItem(TIP_COUNT_KEY, tipCount);
-  //console.log("Saved user data to local storage successfully.");
-}
-
 // Pass generated user name and anonymous ID to backend to store on server
-const saveUserToBackend = async(newUsername, newAnonymousId) => {
+const saveUserToBackend = async(newUsername, newAnonymousId, callback) => {
   const response = await axios.post(CREATEUSER_URL, {
     username: newUsername,
     anonymous_id: newAnonymousId
   });
+
+  if (callback) {
+    callback(response.data.body);
+  }
   //console.log('User saved to backend storage');
 }
 

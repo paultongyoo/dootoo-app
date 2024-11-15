@@ -35,18 +35,18 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     const [hasMoreThings, setHasMoreThings] = useState(true);
 
     useEffect(() => {
-        //console.log(`useEffect([]) - shouldInitialLoad ${shouldInitialLoad}`);
+        console.log(`useEffect([]) - shouldInitialLoad ${shouldInitialLoad}`);
         initializeLocalUser((isNew: boolean) => {
-            //console.log("initializeLocalUser callback method started...");
+            console.log("initializeLocalUser callback method");
             if (shouldInitialLoad) {
                 if (!isNew) {
                     setInitialLoad(false);
                     resetListWithFirstPageLoad();
                 } else {
-                    //console.log("Skipping loading things for user as they are brand new.");
+                    console.log("Skipping loading things for user as they are brand new.");
                 }
             } else {
-                //console.log("Skipping initial load for user per shouldInitialLoad == false.");
+                console.log("Skipping initial load for user per shouldInitialLoad == false.");
             }
         });
     }, []);
@@ -122,14 +122,14 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     };
 
     useEffect(() => {
-        //console.log("useEffect(page) called");
+        console.log("useEffect(page) called");
         loadThingsForCurrentPage();
     }, [page]);
 
     const loadThingsForCurrentPage = async () => {
         console.log(`Calling loadAllThings(page) with page = ${page}.`);
         const loadResponse = await loadAllThings(page);
-        const things = loadResponse.things;
+        const things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;
         
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
@@ -140,15 +140,14 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
         // displayed.
         if (page == 1) {
             console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
-            listArraySetter(things);
-            setPageLoading(false);
-            setInitialLoad(true);
-            setRefreshing(false);
+            listArraySetter(things);         
         } else {
             console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
-            listArraySetter(listArray.concat(things));
-            setPageLoading(false);
+            listArraySetter(listArray.concat(things));  
         }
+        setRefreshing(false);
+        setInitialLoad(true);
+        setPageLoading(false);
     }
 
     const handleBlur = (index: number) => {
