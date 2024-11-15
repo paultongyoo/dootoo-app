@@ -7,7 +7,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 const DootooSwipeAction_Delete = ({
     styles, listArray, listArraySetter, listThingIndex,
     deleteThing, thingNameStr = "Item" }) => {
-    const { anonymousId, setLastRecordedCount, thingRowPositionXs } = useContext(AppContext);
+    const { anonymousId, setLastRecordedCount, thingRowPositionXs, thingRowHeights } = useContext(AppContext);
 
     const handleThingDelete = (index: number) => {
         console.log("Entering handle delete item...");
@@ -64,12 +64,21 @@ const DootooSwipeAction_Delete = ({
 
             //console.log("thingRowPositionXs contents: " + JSON.stringify(thingRowPositionXs.current));
             const currentRowPositionX = thingRowPositionXs.current[index];
-            Animated.timing(currentRowPositionX, {
-                toValue: -1000,
-                duration: 300,
-                easing: Easing.in(Easing.quad),
-                useNativeDriver: true
-            }).start(() => {
+            const currentRowHeight = thingRowHeights.current[index]
+            Animated.sequence([
+                Animated.timing(currentRowPositionX, {
+                    toValue: -1000,
+                    duration: 300,
+                    easing: Easing.in(Easing.quad),
+                    useNativeDriver: false
+                }),
+                Animated.timing(currentRowHeight, {
+                    toValue: 0,
+                    duration: 300,
+                    easing: Easing.in(Easing.quad),
+                    useNativeDriver: false
+                })
+            ]).start(() => {
                 console.log(`Deleting sole item at index ${index}: ${updatedThings[index].text}`);
 
                 amplitude.track(`${thingNameStr} Deleted`, {
@@ -85,7 +94,7 @@ const DootooSwipeAction_Delete = ({
                 updatedThings.splice(index, 1);
                 thingRowPositionXs.current.splice(index, 1);
 
-                console.log("updatedThings post delete: " + JSON.stringify(updatedThings));
+                console.log(`updatedThings post delete (${updatedThings.length}): ${JSON.stringify(updatedThings)}`);
 
                 listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
                 currentRowPositionX.setValue(0);

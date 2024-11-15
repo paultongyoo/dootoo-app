@@ -23,7 +23,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, setLastRecordedCount, initializeLocalUser,
         fadeInListOnRender, setFadeInListOnRender, listOpacity, listFadeInAnimation, listFadeOutAnimation,
-        thingRowPositionXs
+        thingRowPositionXs, thingRowHeights
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [initialLoad, setInitialLoad] = useState(true);
@@ -252,6 +252,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     const renderThing = ({ item, getIndex, drag, isActive }) => {
         const rowPositionX = useRef(new Animated.Value(0)).current;
         thingRowPositionXs.current[getIndex()] = rowPositionX;
+        const [rowHeightKnown, setRowHeightKnown] = useState(false);
+        var fullRowHeight = -1;                                      // Placeholder set in onLayout handler
+        const rowHeight =  useRef(new Animated.Value(1)).current;   // Set once onLayout event fires for Animated.View
+        thingRowHeights.current[getIndex()] = rowHeight;
 
         // useEffect(() => {
 
@@ -274,7 +278,17 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
         // }, [item]);
 
         return (
-            <Animated.View style={{ transform: [{ translateX: rowPositionX }] }}>
+            <Animated.View style={[
+                    { transform: [{ translateX: rowPositionX }] }, 
+                      rowHeightKnown && { height: rowHeight } ] }
+                        onLayout={(event) => {    
+                            if (!rowHeightKnown) {
+                                fullRowHeight = event.nativeEvent.layout.height;
+                                console.log("Row height determined: " + fullRowHeight);
+                                rowHeight.setValue(fullRowHeight);
+                                setRowHeightKnown(true);
+                            }
+                        }}>
                 <Swipeable
                     key={Math.random()}
                     ref={(ref) => {

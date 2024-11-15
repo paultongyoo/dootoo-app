@@ -163,7 +163,7 @@ export default function Index() {
     listContainer: {
       //padding: 10,
       flex: 1,
-      justifyContent: "center",
+      //justifyContent: "center",
       backgroundColor: "#DCC7AA",
       paddingTop: 100
       //alignItems: "center"
