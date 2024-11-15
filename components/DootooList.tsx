@@ -1,5 +1,5 @@
-import { View, Text, ActivityIndicator, Pressable, TextInput, Image, TouchableWithoutFeedback, Keyboard, Animated, Easing } from 'react-native';
-import { useState, useRef, useContext, useEffect, useCallback } from 'react';
+import { View, Text, ActivityIndicator, Pressable, TextInput, TouchableWithoutFeedback, Keyboard, Animated, Easing } from 'react-native';
+import { useState, useRef, useContext, useEffect } from 'react';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { AppContext } from './AppContext';
@@ -21,7 +21,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     shouldInitialLoad = true }) => {
 
     const pathname = usePathname();
-    const {anonymousId, lastRecordedCount, setLastRecordedCount, initializeLocalUser } = useContext(AppContext);
+    const {anonymousId, lastRecordedCount, setLastRecordedCount, initializeLocalUser,
+           fadeInListOnRender, setFadeInListOnRender, listOpacity, listFadeInAnimation, listFadeOutAnimation
+     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [initialLoad, setInitialLoad] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -34,23 +36,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     const [page, setPage] = useState(1);
     const [isPageLoading, setPageLoading] = useState(false);
     const [hasMoreThings, setHasMoreThings] = useState(true);
-    const [fadeInListOnRender, setFadeInListOnRender] = useState(false);
     const initialLoadFadeInOpacity = useRef(new Animated.Value(0)).current;
     const initialLoadFadeInAnimation = Animated.timing(initialLoadFadeInOpacity, {
         toValue: 1,
-        duration: 300,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true
-    });
-    const listOpacity = useRef(new Animated.Value(0)).current;
-    const listFadeInAnimation = Animated.timing(listOpacity, {
-        toValue: 1,
-        duration: 300,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true
-    });
-    const listFadeOutAnimation = Animated.timing(listOpacity, {
-        toValue: 0,
         duration: 300,
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: true
@@ -182,10 +170,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
                     });
                 });
             } else {
+                setFadeInListOnRender(true);
+
                 //console.log("Loading page 1 outside of pulldown refresh, simply fading in list");
                 listArraySetter(things);    
-    
-                setFadeInListOnRender(true);
+             
                 listFadeInAnimation.start(() => {
                     setFadeInListOnRender(false);
                     //listFadeInAnimation.reset();
