@@ -1,4 +1,4 @@
-import { Platform, Image, Text, View, StyleSheet, Pressable, ActivityIndicator, Animated, Alert } from "react-native";
+import { Platform, Image, Text, View, StyleSheet, Pressable, ActivityIndicator, Animated, Alert, Easing } from "react-native";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import RNFS from 'react-native-fs';
 import { AppContext } from './AppContext.js';
@@ -36,6 +36,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             Animated.timing(footerPosition, {
               toValue: 0,
               duration: 800,
+              easing: Easing.out(Easing.quad),
               useNativeDriver: true
             })
           ]).start();

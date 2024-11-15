@@ -1,7 +1,8 @@
 import {
   View, Text, StyleSheet, Image, ActivityIndicator,
   Pressable, Alert, Platform, Linking,
-  Animated
+  Animated,
+  Easing
 } from "react-native";
 import { useEffect, useContext, useRef } from "react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -182,6 +183,7 @@ export default function MainLayout() {
         Animated.timing(headerPosition, {
           toValue: 0,
           duration: 800,
+          easing: Easing.out(Easing.quad),
           useNativeDriver: true
         })
       ]).start();
