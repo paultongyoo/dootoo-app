@@ -216,7 +216,8 @@ export default function ItemTips() {
     container: {
       flex: 1,
       justifyContent: "center",
-      backgroundColor: "#DCC7AA"
+      backgroundColor: "#DCC7AA",
+      paddingTop: 100
     },
     initialLoadAnimContainer: {
       flex: 1,
