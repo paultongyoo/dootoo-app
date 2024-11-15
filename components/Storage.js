@@ -359,7 +359,7 @@ const createUser = async () => {
     
     return { 
       name: newUsername, 
-      anonymousId: newAnonymousId, 
+      anonymous_id: newAnonymousId, 
       doneCountStr: doneCountStr, 
       tipCountStr: tipCountStr 
     }
