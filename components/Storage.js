@@ -6,8 +6,6 @@ import { uniqueNamesGenerator, adjectives, animals, NumberDictionary } from 'uni
 // Local storage column keys
 const DONE_COUNT_KEY = "user_done_count";
 const TIP_COUNT_KEY = "user_tip_count";
-// const USERNAME_KEY = "user_username";
-// const ANON_ID_KEY = "user_anonymous_id";
 const USER_OBJ_KEY = "user_obj";
 const ITEM_LIST_KEY = "item_list";
 const TIP_LIST_KEY_PREFIX = "tip_list_";    // Append item UUID to key
@@ -375,8 +373,13 @@ const saveItemsToBackend = async(item_list_obj, callback) => {
   }
 
   try {
-
-    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      console.log("Received null local anon Id, aborting tipVote!");
+      return ;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
     //console.log("Saving to backend for anon Id: " + localAnonId);
     const response = await axios.post(SAVEITEMS_URL,
       {
@@ -406,8 +409,13 @@ const saveTipsToBackend = async(item_obj, tip_list_obj, callback) => {
   }
 
   try {
-
-    const localAnonId = await AsyncStorage.getItem(ANON_ID_KEY);
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      console.log("Received null local anon Id, aborting tipVote!");
+      return ;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
     //console.log("Saving to backend for anon Id: " + localAnonId);
     const response = await axios.post(SAVETIPS_URL,
       {
