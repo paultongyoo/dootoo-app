@@ -26,7 +26,7 @@ export const AppProvider = ({ children }) => {
     });
     const emptyListCTAFadeOutAnimation = Animated.timing(emptyListCTAOpacity, {
         toValue: 0,
-        duration: 300,
+        duration: 200,
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: true
     });
