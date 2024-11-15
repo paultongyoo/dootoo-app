@@ -1,4 +1,4 @@
-import { View, Text, ActivityIndicator, Pressable, TextInput, Image, TouchableWithoutFeedback, Keyboard, Animated } from 'react-native';
+import { View, Text, ActivityIndicator, Pressable, TextInput, Image, TouchableWithoutFeedback, Keyboard, Animated, Easing } from 'react-native';
 import { useState, useRef, useContext, useEffect, useCallback } from 'react';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -39,12 +39,20 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     const initialLoadFadeInAnimation = Animated.timing(initialLoadFadeInOpacity, {
         toValue: 1,
         duration: 300,
+        easing: Easing.inOut(Easing.ease),
         useNativeDriver: true
     });
-    const listFadeInOpacity = useRef(new Animated.Value(0)).current;
-    const listFadeInAnimation = Animated.timing(listFadeInOpacity, {
+    const listOpacity = useRef(new Animated.Value(0)).current;
+    const listFadeInAnimation = Animated.timing(listOpacity, {
         toValue: 1,
         duration: 300,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true
+    });
+    const listFadeOutAnimation = Animated.timing(listOpacity, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.inOut(Easing.ease),
         useNativeDriver: true
     });
 
@@ -112,11 +120,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
         }
     }, [listArray]);
 
-    const resetListWithFirstPageLoad = async () => {
+    const resetListWithFirstPageLoad = async (isPullDown = false) => {
         if (page == 1) {
             // If current page is already 1, manually invoke LoadThingsForCurrentPage 
             // as useEffect(page) won't be called
-            loadThingsForCurrentPage(); 
+            loadThingsForCurrentPage(isPullDown); 
         } else {
             //console.log("Setting page var to 1 to trigger loadThingsForCurrentPage().")
             setPage(1);
@@ -147,7 +155,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
         }
     }, [page]);
 
-    const loadThingsForCurrentPage = async () => {
+    const loadThingsForCurrentPage = async (isPullDown = false) => {
         console.log(`Calling loadAllThings(page) with page = ${page}.`);
         const loadResponse = await loadAllThings(page);
         const things = loadResponse.things || [];
@@ -161,12 +169,28 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
         // displayed.
         if (page == 1) {
             console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
-            listArraySetter(things);    
-            setFadeInListOnRender(true);
-            listFadeInAnimation.start(() => {
-                setFadeInListOnRender(false);
-                listFadeInAnimation.reset();
-            });
+
+            if (isPullDown) {
+                //console.log("Loading page 1 as part of pulldown refresh, attempting to fade out current list before fading in new list");
+                setFadeInListOnRender(true);
+                listFadeOutAnimation.start(() => {
+                    listArraySetter(things);    
+                    
+                    listFadeInAnimation.start(() => {
+                        setFadeInListOnRender(false);
+                        //listFadeInAnimation.reset();
+                    });
+                });
+            } else {
+                //console.log("Loading page 1 outside of pulldown refresh, simply fading in list");
+                listArraySetter(things);    
+    
+                setFadeInListOnRender(true);
+                listFadeInAnimation.start(() => {
+                    setFadeInListOnRender(false);
+                    //listFadeInAnimation.reset();
+                });
+            }
         } else {
             console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
             listArraySetter(listArray.concat(things));  
@@ -340,7 +364,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
                         <ActivityIndicator size={"large"} color="black" />
                     </Animated.View>
                     :
-                    <Animated.View style={[styles.taskContainer, fadeInListOnRender && { opacity: listFadeInOpacity }]}>
+                    <Animated.View style={[styles.taskContainer, fadeInListOnRender && { opacity: listOpacity }]}>
                         {listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0 ?
                             <DraggableFlatList
                                 ref={itemFlatList}
@@ -359,7 +383,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
                                         onRefresh={() => {
                                             setLastRecordedCount(0);
                                             setRefreshing(true);
-                                            resetListWithFirstPageLoad();
+                                            resetListWithFirstPageLoad(true);
                                         }}
                                         refreshing={refreshing} />
                                 }
