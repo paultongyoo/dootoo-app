@@ -177,17 +177,19 @@ export default function MainLayout() {
   const pathname = usePathname();
   const headerPosition = useRef(new Animated.Value(-200)).current;
 
+  const INDEX_PATHNAME = "/main/screens";
+
   useEffect(() => {
-      Animated.sequence([
-        Animated.delay(500),
-        Animated.timing(headerPosition, {
-          toValue: 0,
-          duration: 800,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true
-        })
-      ]).start();
-  },[pathname]);
+    Animated.sequence([
+      Animated.delay(500),
+      Animated.timing(headerPosition, {
+        toValue: 0,
+        duration: 800,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true
+      })
+    ]).start();
+  }, [pathname]);
 
   return (
     <>
@@ -201,9 +203,9 @@ export default function MainLayout() {
                 headerTransparent: true,
                 header: ({ navigation, route, options }) => {
                   return (
-                    <Animated.View style={[styles.headerContainer, { transform: [{ translateY: headerPosition}]}]}>
+                    <Animated.View style={[styles.headerContainer, { transform: [{ translateY: headerPosition }] }]}>
                       <View style={styles.headerLeftContainer}>
-                        {(segments.length == 1) ?
+                        {(pathname == INDEX_PATHNAME) ?
                           <View style={styles.mainLogoContainer}>
                             <Text style={styles.mainLogoPart}>doo</Text>
                             <Text style={[styles.mainLogoPart, styles.secondLogoPart]}>too</Text>
@@ -230,7 +232,7 @@ export default function MainLayout() {
                   );
                 }
               }
-            }/>
+            } />
         </AppProvider>
         <Toast config={toastConfig} />
       </GestureHandlerRootView>
@@ -246,7 +248,7 @@ function ProfileDrawer({ navigation }) {
     resetUserContext
   } = useContext(AppContext);
 
-  const showComingSoonAlert = (featureName)  => {
+  const showComingSoonAlert = (featureName) => {
     Alert.alert(
       `${featureName} Feature Coming Soon`, // Title of the alert
       "Look for this in a future release.  We've noted you're looking for it.  Thanks!", // Message of the alert
@@ -327,7 +329,7 @@ function ProfileDrawer({ navigation }) {
       </View>
       <View style={styles.statsContainer}>
         <Pressable style={styles.statContainer}
-                   onPress={() => showComingSoonAlert("'All Done'")}>
+          onPress={() => showComingSoonAlert("'All Done'")}>
           <View style={styles.statIconContainer}>
             <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
           </View>
@@ -335,7 +337,7 @@ function ProfileDrawer({ navigation }) {
           <Text style={styles.statName}>Done</Text>
         </Pressable>
         <Pressable style={styles.statContainer}
-                   onPress={() => showComingSoonAlert("'All Tips'")}>
+          onPress={() => showComingSoonAlert("'All Tips'")}>
           <View style={styles.statIconContainer}>
             <Image style={styles.statIcon_Tips} source={require('@/assets/images/give_icon_556B2F.png')} />
           </View>
