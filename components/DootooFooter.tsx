@@ -12,7 +12,7 @@ import { usePathname } from 'expo-router';
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
     const { anonymousId, setFadeInListOnRender, listFadeInAnimation,
-        setLastRecordedCount } = useContext(AppContext);
+        setLastRecordedCount, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
     const [recording, setRecording] = useState();
     const [permissionResponse, requestPermission] = Audio.usePermissions();
@@ -209,12 +209,16 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 var updatedItems = response.concat(listArray);
                 if (listArray.length == 0) {
 
-                    //If list is initially empty, fade in the new list
-                    listArraySetterFunc(updatedItems);    
-        
-                    setFadeInListOnRender(true);
-                    listFadeInAnimation.start(() => {
-                        setFadeInListOnRender(false);
+                    // Assume the empty list CTA is visible, so fade it out first
+                    emptyListCTAFadeOutAnimation.start(() => {
+
+                        //If list is initially empty, fade in the new list
+                        listArraySetterFunc(updatedItems);    
+            
+                        setFadeInListOnRender(true);
+                        listFadeInAnimation.start(() => {
+                            setFadeInListOnRender(false);
+                        });
                     });
                 } else {
 
