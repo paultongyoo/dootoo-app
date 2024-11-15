@@ -16,6 +16,7 @@ export const AppProvider = ({ children }) => {
     const [lastRecordedCount, setLastRecordedCount] = useState(0);
     const [selectedItem, setSelectedItem] = useState(null);
     const [fadeInListOnRender, setFadeInListOnRender] = useState(false);
+    const thingRowPositionXs = useRef([]);
 
     const emptyListCTAOpacity = useRef(new Animated.Value(0)).current;
     const emptyListCTAFadeInAnimation = Animated.timing(emptyListCTAOpacity, {
@@ -90,7 +91,8 @@ export const AppProvider = ({ children }) => {
             listFadeOutAnimation,
             emptyListCTAOpacity,
             emptyListCTAFadeInAnimation,
-            emptyListCTAFadeOutAnimation
+            emptyListCTAFadeOutAnimation,
+            thingRowPositionXs
              }}>
           {children}
         </AppContext.Provider>

@@ -1,4 +1,4 @@
-import { Pressable, Image, Alert } from 'react-native';
+import { Pressable, Image, Alert, Animated, Easing } from 'react-native';
 import Reanimated from 'react-native-reanimated';
 import { AppContext } from './AppContext';
 import { useContext } from 'react';
@@ -7,7 +7,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 const DootooSwipeAction_Delete = ({
     styles, listArray, listArraySetter, listThingIndex,
     deleteThing, thingNameStr = "Item" }) => {
-    const { anonymousId, setLastRecordedCount } = useContext(AppContext);
+    const { anonymousId, setLastRecordedCount, thingRowPositionXs } = useContext(AppContext);
 
     const handleThingDelete = (index: number) => {
         console.log("Entering handle delete item...");
@@ -62,22 +62,34 @@ const DootooSwipeAction_Delete = ({
             );
         } else {
 
-            console.log(`Deleting sole item at index ${index}: ${updatedThings[index].text}`);
+            //console.log("thingRowPositionXs contents: " + JSON.stringify(thingRowPositionXs.current));
+            const currentRowPositionX = thingRowPositionXs.current[index];
+            Animated.timing(currentRowPositionX, {
+                toValue: -1000,
+                duration: 300,
+                easing: Easing.in(Easing.quad),
+                useNativeDriver: true
+            }).start(() => {
+                console.log(`Deleting sole item at index ${index}: ${updatedThings[index].text}`);
 
-            // Call asyncronous delete to mark item as deleted in backend to sync database
-            deleteThing(updatedThings[index].uuid);
+                amplitude.track(`${thingNameStr} Deleted`, {
+                    anonymous_id: anonymousId,
+                    thing_uuid: updatedThings[index].uuid,
+                    thing_type: thingNameStr
+                });
 
-            amplitude.track(`${thingNameStr} Deleted`, {
-                anonymous_id: anonymousId,
-                thing_uuid: updatedThings[index].uuid,
-                thing_type: thingNameStr
+                // Call asyncronous delete to mark item as deleted in backend to sync database
+                deleteThing(updatedThings[index].uuid);
+
+                // Remove item from displayed and thingRowPositionXs lists
+                updatedThings.splice(index, 1);
+                thingRowPositionXs.current.splice(index, 1);
+
+                console.log("updatedThings post delete: " + JSON.stringify(updatedThings));
+
+                listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
+                currentRowPositionX.setValue(0);
             });
-
-            // Remove item from displayed list
-            updatedThings.splice(index, 1);
-
-            //setItemIdxToEdit(-1) TODO: Deprecate if nolonger need!
-            listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
         }
 
         console.log(`Exiting handle delete ${thingNameStr.toLowerCase()} at index ${index}...`);
