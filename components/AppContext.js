@@ -16,7 +16,7 @@ export const AppProvider = ({ children }) => {
     const [selectedItem, setSelectedItem] = useState(null);
 
     const initializeLocalUser = async(callback) => {
-      console.log("initializeLocalUser");
+      //console.log("initializeLocalUser");
       const userData = await initalizeUser();
       setUserId(userData.id);
       setUsername(userData.name);

@@ -1,4 +1,4 @@
-import { View, Text, ActivityIndicator, Pressable, TextInput, Image, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, Text, ActivityIndicator, Pressable, TextInput, Image, TouchableWithoutFeedback, Keyboard, Animated } from 'react-native';
 import { useState, useRef, useContext, useEffect, useCallback } from 'react';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -22,6 +22,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
 
     const pathname = usePathname();
     const {anonymousId, lastRecordedCount, setLastRecordedCount, initializeLocalUser } = useContext(AppContext);
+    const [screenInitialized, setScreenInitialized] = useState(false);
     const [initialLoad, setInitialLoad] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [errorMsg, setErrorMsg] = useState();
@@ -33,14 +34,29 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     const [page, setPage] = useState(1);
     const [isPageLoading, setPageLoading] = useState(false);
     const [hasMoreThings, setHasMoreThings] = useState(true);
+    const [fadeInListOnRender, setFadeInListOnRender] = useState(false);
+    const initialLoadFadeInOpacity = useRef(new Animated.Value(0)).current;
+    const initialLoadFadeInAnimation = Animated.timing(initialLoadFadeInOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+    });
+    const listFadeInOpacity = useRef(new Animated.Value(0)).current;
+    const listFadeInAnimation = Animated.timing(listFadeInOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+    });
 
     useEffect(() => {
-        console.log(`useEffect([]) - shouldInitialLoad ${shouldInitialLoad}`);
+        console.log(`useEffect([]) ${Date.now()}`);
         initializeLocalUser((isNew: boolean) => {
-            console.log("initializeLocalUser callback method");
+            //console.log("initializeLocalUser callback method");
             if (shouldInitialLoad) {
                 if (!isNew) {
                     setInitialLoad(false);
+                    initialLoadFadeInAnimation.start();
+
                     resetListWithFirstPageLoad();
                 } else {
                     console.log("Skipping loading things for user as they are brand new.");
@@ -48,6 +64,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
             } else {
                 console.log("Skipping initial load for user per shouldInitialLoad == false.");
             }
+            setScreenInitialized(true);
         });
     }, []);
 
@@ -122,8 +139,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     };
 
     useEffect(() => {
-        console.log("useEffect(page) called");
-        loadThingsForCurrentPage();
+        console.log("useEffect(page) called for pathname " + Date.now());
+        if (screenInitialized) {
+            loadThingsForCurrentPage();
+        } else {
+            console.log("Not calling loadThingsForCurrentPage in useEffect(page) as it was called during useEffect([]) init code.");
+        }
     }, [page]);
 
     const loadThingsForCurrentPage = async () => {
@@ -140,13 +161,19 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
         // displayed.
         if (page == 1) {
             console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
-            listArraySetter(things);         
+            listArraySetter(things);    
+            setFadeInListOnRender(true);
+            listFadeInAnimation.start(() => {
+                setFadeInListOnRender(false);
+                listFadeInAnimation.reset();
+            });
         } else {
             console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
             listArraySetter(listArray.concat(things));  
         }
         setRefreshing(false);
         setInitialLoad(true);
+        initialLoadFadeInAnimation.reset();
         setPageLoading(false);
     }
 
@@ -308,12 +335,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
         }} >
             <View style={styles.listContainer}>
                 {(initialLoad == false) ?
-                    <View style={styles.initialLoadAnimContainer}>
+                    <Animated.View style={[styles.initialLoadAnimContainer, { opacity: initialLoadFadeInOpacity }]}>
                         <Text style={styles.initialLoadMsg}>{loadingAnimMsg}</Text>
                         <ActivityIndicator size={"large"} color="black" />
-                    </View>
+                    </Animated.View>
                     :
-                    <View style={styles.taskContainer}>
+                    <Animated.View style={[styles.taskContainer, fadeInListOnRender && { opacity: listFadeInOpacity }]}>
                         {listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0 ?
                             <DraggableFlatList
                                 ref={itemFlatList}
@@ -358,7 +385,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
                             : <View style={styles.errorTextContainer}>
                                 <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
                             </View>}
-                    </View>
+                    </Animated.View>
                 }
                 <DootooFooter hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveAllThingsFunc={saveAllThings} />
             </View>

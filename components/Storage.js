@@ -80,7 +80,7 @@ export const saveTips = async (item_obj, tip_list_obj, callback) => {
 }
 
 export const initalizeUser = async() => {
-  console.log("initalizeUser");
+  //console.log("initalizeUser");
   try {  
 
     // Populate user vars with what's in local storage, if anything
@@ -100,6 +100,8 @@ export const initalizeUser = async() => {
 
 export const loadItems = async (page, callback) => {
   try {
+
+
 
     const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserStr) {
@@ -292,7 +294,7 @@ const saveUserLocally = async(user_obj) => {
 }
 
 const loadLocalUser = async() => {
-  console.log("loadLocalUser");
+  //console.log("loadLocalUser");
   try {
 
     const local_user_str = await AsyncStorage.getItem(USER_OBJ_KEY);
