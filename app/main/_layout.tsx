@@ -11,7 +11,7 @@ import { Drawer } from 'expo-router/drawer';
 import { AppProvider, AppContext } from '../../components/AppContext';
 import Toast from 'react-native-toast-message';
 import toastConfig from '../../components/ToastConfig';
-import { useSegments, usePathname } from 'expo-router';
+import { useSegments, usePathname, Stack } from 'expo-router';
 import * as amplitude from '@amplitude/analytics-react-native';
 
 
@@ -187,7 +187,7 @@ export default function MainLayout() {
           useNativeDriver: true
         })
       ]).start();
-  },[]);
+  },[pathname]);
 
   return (
     <>
@@ -230,7 +230,7 @@ export default function MainLayout() {
                   );
                 }
               }
-            } />
+            }/>
         </AppProvider>
         <Toast config={toastConfig} />
       </GestureHandlerRootView>

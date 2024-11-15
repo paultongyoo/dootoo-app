@@ -8,11 +8,11 @@ import Reanimated, {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
-import { AppContext } from '../../components/AppContext';
-import { transcribeAudioToTips } from '../../components/BackendServices';
-import { loadTips, saveTips, tipVote, flagTip, deleteTip } from '../../components/Storage';
-import DootooTipSidebar from "../../components/DootooTipSidebar";
-import DootooTipEmptyUX from "../../components/DootooTipEmptyUX";
+import { AppContext } from '@/components/AppContext';
+import { transcribeAudioToTips } from '@/components/BackendServices';
+import { loadTips, saveTips, tipVote, flagTip, deleteTip } from '@/components/Storage';
+import DootooTipSidebar from "@/components/DootooTipSidebar";
+import DootooTipEmptyUX from "@/components/DootooTipEmptyUX";
 import DootooList from "@/components/DootooList";
 import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
@@ -314,7 +314,8 @@ export default function ItemTips() {
     },
     itemNamePressable: {
       flex: 1,
-      width: '100%'
+      width: '100%',
+      paddingRight: 10
     },
     tipNamePressable: {
       flex: 1,

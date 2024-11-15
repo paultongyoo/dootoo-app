@@ -57,7 +57,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     });
 
     useEffect(() => {
-        console.log(`useEffect([]) ${Date.now()}`);
+        //console.log(`useEffect([]) ${Date.now()}`);
         initializeLocalUser((isNew: boolean) => {
             //console.log("initializeLocalUser callback method");
             if (shouldInitialLoad) {
@@ -147,7 +147,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     };
 
     useEffect(() => {
-        console.log("useEffect(page) called for pathname " + Date.now());
+        //console.log("useEffect(page) called for pathname " + Date.now());
         if (screenInitialized) {
             loadThingsForCurrentPage();
         } else {

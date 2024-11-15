@@ -28,19 +28,24 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     var retryCount = 0;
 
     const footerPosition = useRef(new Animated.Value(200)).current;
+    const INDEX_PATHNAME = "/main/screens";
 
     useEffect(() => {
         initializeMobileAds();
-        Animated.sequence([
-            Animated.delay(500),
-            Animated.timing(footerPosition, {
-              toValue: 0,
-              duration: 800,
-              easing: Easing.out(Easing.quad),
-              useNativeDriver: true
-            })
-          ]).start();
-    }, []);
+        //console.log(`Pathname: ${pathname}`);
+        if (pathname == INDEX_PATHNAME) {
+            //console.log("Attempting to animate footer in...");
+            Animated.sequence([
+                Animated.delay(500),
+                Animated.timing(footerPosition, {
+                    toValue: 0,
+                    duration: 800,
+                    easing: Easing.out(Easing.quad),
+                    useNativeDriver: true
+                })
+            ]).start();
+        }
+    }, [pathname]);
 
     useForeground(() => {
         Platform.OS === 'ios' && bannerRef.current?.load();
@@ -347,7 +352,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
     if (!hideRecordButton) {
         return (
-            <Animated.View style={[styles.footerContainer, { transform: [{ translateY: footerPosition}]}]}>
+            <Animated.View style={[styles.footerContainer, (pathname == INDEX_PATHNAME) && { transform: [{ translateY: footerPosition}]}]}>
                 {/* {recording ?
                     <Pressable
                         style={[styles.footerButton, styles.cancelButton]}

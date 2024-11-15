@@ -1,17 +1,17 @@
 import { useContext } from "react";
 import { router } from 'expo-router';
-import { saveItems, loadItems, deleteItem, updateItemHierarchy } from '../../components/Storage';
-import { transcribeAudioToTasks } from '../../components/BackendServices';
-import DootooItemEmptyUX from "../../components/DootooItemEmptyUX";
-import DootooList from "../../components/DootooList";
-import DootooItemSidebar from "../../components/DootooItemSidebar";
-import DootooSwipeAction_Delete from "../../components/DootooSwipeAction_Delete";
+import { saveItems, loadItems, deleteItem, updateItemHierarchy } from '@/components/Storage';
+import { transcribeAudioToTasks } from '@/components/BackendServices';
+import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
+import DootooList from "@/components/DootooList";
+import DootooItemSidebar from "@/components/DootooItemSidebar";
+import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
 import * as amplitude from '@amplitude/analytics-react-native';
 
 import {
   Image, StyleSheet, Pressable
 } from "react-native";
-import { AppContext } from '../../components/AppContext';
+import { AppContext } from '@/components/AppContext';
 import Reanimated, {
   SharedValue,
   configureReanimatedLogger,
@@ -249,7 +249,8 @@ export default function Index() {
     },
     itemNamePressable: {
       flex: 1,
-      width: '100%'
+      width: '100%',
+      paddingRight: 10
     },
     itemTextInput: {
       fontSize: 16,
@@ -371,7 +372,7 @@ export default function Index() {
                   item_uuid: dootooItems![index].uuid
                 });
                 setSelectedItem(dootooItems![index]);
-                router.navigate('/main/tips');
+                router.push('/main/screens/tips');
               }}>
               <Image style={styles.giveTipIcon} source={require("@/assets/images/give_icon_white.png")} />
             </Pressable>
@@ -386,7 +387,7 @@ export default function Index() {
                   });
                   console.log("Similar Tips button tapped on item: " + dootooItems![index].text);
                   setSelectedItem(dootooItems![index]);
-                  router.navigate('/main/tips');
+                  router.navigate('/main/screens/tips');
                 }}>
                 {/* <View style={styles.simliarTipsIcon}></View> */}
                 <Image style={styles.receiveTipIcon} source={require("@/assets/images/receive_tip_white.png")} />
