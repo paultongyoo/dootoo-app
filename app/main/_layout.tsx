@@ -177,9 +177,11 @@ export default function MainLayout() {
   const pathname = usePathname();
   const headerPosition = useRef(new Animated.Value(-200)).current;
 
-  const INDEX_PATHNAME = "/main/screens";
+  const INDEX_PATHNAME_1 = "/main/screens";
+  const INDEX_PATHNAME_2 = "/main";
 
   useEffect(() => {
+    console.log("Main Layout pathname: " + pathname);
     Animated.sequence([
       Animated.delay(500),
       Animated.timing(headerPosition, {
@@ -205,7 +207,7 @@ export default function MainLayout() {
                   return (
                     <Animated.View style={[styles.headerContainer, { transform: [{ translateY: headerPosition }] }]}>
                       <View style={styles.headerLeftContainer}>
-                        {(pathname == INDEX_PATHNAME) ?
+                        {((pathname == INDEX_PATHNAME_1) || (pathname == INDEX_PATHNAME_2)) ?
                           <View style={styles.mainLogoContainer}>
                             <Text style={styles.mainLogoPart}>doo</Text>
                             <Text style={[styles.mainLogoPart, styles.secondLogoPart]}>too</Text>
