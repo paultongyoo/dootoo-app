@@ -522,7 +522,7 @@ export default function ItemTips() {
             loadAllThings={(page) => loadTips(selectedItem.uuid, page)}
             transcribeAudioToThings={transcribeAudioToTips}
             ListThingSidebar={DootooTipSidebar}
-            EmptyThingUX={() => <DootooTipEmptyUX styles={styles} ThingToDriveEmptyListCTA={selectedItem} />}
+            EmptyThingUX={() => <DootooTipEmptyUX styles={styles} selectedItem={selectedItem} tipArray={tips} />}
             isThingPressable={(item) => { return (item.user_id == selectedItem.user_id); }}
             isThingDraggable={(data) => { return data[0].user_id == selectedItem.user_id; }}
             hideRecordButton={!selectedItem.is_done}

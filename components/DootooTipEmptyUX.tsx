@@ -4,9 +4,9 @@ import { useFocusEffect } from 'expo-router';
 import { generateTipCTA } from './BackendServices';
 import { AppContext } from './AppContext';
 
-const DootooTipEmptyUX = ({ styles, ThingToDriveEmptyListCTA }) => {
-    const { anonymousId } = useContext(AppContext);
-    const [ctaLoading, setCTALoading] = useState(false);
+const DootooTipEmptyUX = ({ styles, selectedItem, tipArray }) => {
+    const { anonymousId, emptyListCTAOpacity, emptyListCTAFadeInAnimation, tips  } = useContext(AppContext);
+    const [ctaLoading, setCTALoading] = useState(true);
     const [emptyListCTA, setEmptyListCTA] = useState('');
     const fadeCTA = useRef(new Animated.Value(0)).current;
     const ctaAnimation = Animated.timing(fadeCTA, {
@@ -15,12 +15,9 @@ const DootooTipEmptyUX = ({ styles, ThingToDriveEmptyListCTA }) => {
         useNativeDriver: true
     });
 
-    const generateEmptyListCTA = async (thing) => {
-        ctaAnimation.reset();
-        //console.log("Calling generateTipCTA for thing: " + JSON.stringify(thing));
-        setCTALoading(true);
-        const emptyListCTA = await generateTipCTA(anonymousId, thing.uuid)
-        //console.log("Setting emptyListCTA to: " + JSON.stringify(emptyListCTA));
+    const generateEmptyListCTA = async () => {
+        const emptyListCTA = await generateTipCTA(anonymousId, selectedItem.uuid)
+        //console.log("Setting empty tip list CTA to: " + emptyListCTA);
         setEmptyListCTA(emptyListCTA);
         setCTALoading(false);
         ctaAnimation.start();
@@ -28,10 +25,15 @@ const DootooTipEmptyUX = ({ styles, ThingToDriveEmptyListCTA }) => {
 
     useFocusEffect(
         useCallback(() => {
-            if (!ThingToDriveEmptyListCTA.tip_count || ThingToDriveEmptyListCTA == 0) {
-                generateEmptyListCTA(ThingToDriveEmptyListCTA);
-            }
+            emptyListCTAFadeInAnimation.start(() => {
+                if (tipArray.length == 0) {
+                    generateEmptyListCTA();
+                } else {
+                    console.log(`Unexpected scenario:  Inside Empty List useEffect but passed a non-empty Tip Array!  Fix me?`)
+                }
+            });
             return () => {
+                emptyListCTAFadeInAnimation.reset();
                 ctaAnimation.reset();
             }
         }, [])
@@ -41,11 +43,11 @@ const DootooTipEmptyUX = ({ styles, ThingToDriveEmptyListCTA }) => {
     return (
         <>
             {(ctaLoading) ?
-                <View style={styles.initialLoadAnimContainer}>
+                <Animated.View style={[styles.initialLoadAnimContainer, { opacity: emptyListCTAOpacity }]}>
                     <ActivityIndicator size={"large"} color="black" />
-                </View>
+                </Animated.View>
                 :
-                <Animated.View style={[styles.emptyListContainer, { opacity: fadeCTA }]}>
+                <Animated.View style={[styles.emptyListContainer, {opacity: emptyListCTAOpacity }, !ctaLoading && {opacity: fadeCTA}]}>
                     <Text style={styles.emptyListContainer_words}>{emptyListCTA}</Text>
                     <Image style={styles.emptyListContainer_arrow} source={require("@/assets/images/sketch_arrow_556B2F.png")} />
                 </Animated.View>

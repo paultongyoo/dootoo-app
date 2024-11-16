@@ -9,7 +9,7 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 
-const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items", listArray, listArraySetter, ListThingSidebar, EmptyThingUX, ThingToDriveEmptyListCTA = null, styles,
+const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items", listArray, listArraySetter, ListThingSidebar, EmptyThingUX, selectedItem = null, styles,
     renderLeftActions = (progress, dragX, index) => { return <></> },
     renderRightActions = (progress, dragX, index) => { return <></> },
     isDoneable = true, handleDoneClick = (index) => { return; },
@@ -411,7 +411,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
                                         {isPageLoading && <ActivityIndicator size={"large"} color="black" />}
                                         <View style={{ height: 40 }} />
                                     </View>}
-                            /> : (initialLoad == true) ? <EmptyThingUX styles={styles} ThingToDriveEmptyListCTA={ThingToDriveEmptyListCTA} /> : <></>
+                            /> : (initialLoad == true) ? <EmptyThingUX styles={styles} /> : <></>
                         }
                         {(errorMsg) ?
                             <View style={styles.errorTextContainer}>
