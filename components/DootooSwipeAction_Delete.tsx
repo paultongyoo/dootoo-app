@@ -34,9 +34,11 @@ const DootooSwipeAction_Delete = ({
                         text: 'Yes',
                         onPress: () => {
 
-                            // Two step process:
-                            // 1) Delete each item from backend
-                            // 2) Remove each item from UI array
+                            // Three step process:
+                            // 1) Animate away the item and its subitems
+                            // 2) Delete each item from backend
+                            // 3) Remove each item from UI array
+                            var animationArray = [];
                             for (var i = index; i <= index + numSubtasks; i++) {
 
                                 // Call asyncronous delete to mark item as deleted in backend to sync database
@@ -47,14 +49,45 @@ const DootooSwipeAction_Delete = ({
                                     thing_uuid: updatedThings[i].uuid,
                                     thing_type: thingNameStr
                                 });
+
+                                // Add the animation to slide the item off the screen
+                                animationArray.push(
+                                    Animated.timing(thingRowPositionXs.current[i], {
+                                        toValue: -600,
+                                        duration: 300,
+                                        easing: Easing.in(Easing.quad),
+                                        useNativeDriver: false
+                                    })
+                                );
+
+                                // // If the item is NOT the last item in the list, add the animatino
+                                // // to shrink its height as well
+                                // if (i < (updatedThings.length - 1)) {
+                                //     Animated.timing(thingRowHeights.current[i], {
+                                //         toValue: 0,
+                                //         duration: 300,
+                                //         easing: Easing.in(Easing.quad),
+                                //         useNativeDriver: false
+                                //     })   
+                                // }
                             }
+                            Animated.parallel(animationArray).start(() => {
 
+                                updatedThings.splice(index, 1 + numSubtasks);  // Remove item and its subtasks from array
+                                thingRowPositionXs.current.splice(index, 1 + numSubtasks);
+                                thingRowHeights.current.splice(index, 1 + numSubtasks);
 
+                                for (var i = index; i <= index + numSubtasks; i++) {
+                                    if (updatedThings[i]) {
+                                        updatedThings[i].resetHeight = true    
+                                    }
+                                    if (thingRowPositionXs.current[i]) {
+                                        thingRowPositionXs.current[i].setValue(0);
+                                    } 
+                                }
 
-
-
-                            updatedThings.splice(index, 1 + numSubtasks);  // Remove item and its subtasks from array
-                            listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
+                                listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
+                            });
                         }
                     },
                     {
@@ -73,7 +106,7 @@ const DootooSwipeAction_Delete = ({
             //console.log(`Stats of row before deleting - positionX ${JSON.stringify(currentRowPositionX)}, rowHeight ${JSON.stringify(currentRowHeight)}`);
             var animationArray = [
                 Animated.timing(currentRowPositionX, {
-                    toValue: -300,
+                    toValue: -600,
                     duration: 300,
                     easing: Easing.in(Easing.quad),
                     useNativeDriver: false
