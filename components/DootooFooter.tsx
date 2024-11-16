@@ -367,16 +367,45 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         transform: [{ scale: meteringLevel.value }],
     }));
 
+    const makeTestData = () => {
+        const testData = [
+          { 
+            "uuid": 1,
+            "text": "take a bath", 
+            "is_done": false, 
+            "is_deleted": false
+          },
+          { 
+            "uuid": 2,
+            "text": "make waffles", 
+            "is_done": false, 
+            "is_deleted": false
+          },
+          { 
+            "uuid": 3,
+            "text": "do some jumping jacks", 
+            "is_done": false, 
+            "is_deleted": false
+          },
+          { 
+            "uuid": 4,
+            "text": "take a ride a bike", 
+            "is_done": false, 
+            "is_deleted": false
+          }
+        ];
+        listArraySetterFunc(testData);
+    
+      }
+
     if (!hideRecordButton) {
         return (
             <Animated.View style={[styles.footerContainer, (pathname == INDEX_PATHNAME) && { transform: [{ translateY: footerPosition}]}]}>
-                {/* {recording ?
-                    <Pressable
-                        style={[styles.footerButton, styles.cancelButton]}
-                        onPress={cancelRecording}>
-                        <Image style={styles.footerButtonImage_Cancel} source={require("@/assets/images/cancel_icon_black.png")} />
-                    </Pressable>
-                    : <></>} */}
+                {/* <Pressable
+                    style={[styles.footerButton, styles.cancelButton]}
+                    onPress={makeTestData}>
+                    <Text>Test Data</Text>
+                </Pressable> */}
                 <View style={styles.footerButton_Underlay}></View>
                 <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || isRecordingProcessing) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
                     <Pressable
