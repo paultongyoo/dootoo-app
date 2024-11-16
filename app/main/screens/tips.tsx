@@ -185,7 +185,14 @@ export default function ItemTips() {
             styles={styles}
             listArray={tips} listArraySetter={setTips}
             listThingIndex={index}
-            deleteThing={deleteTip} />
+            deleteThing={(tip_uuid) => {
+              deleteTip(tip_uuid);
+
+              // Update tip count in displayed header
+              const updatedSelectedItem = selectedItem;
+              updatedSelectedItem.tip_count -= 1;   // Will roll the dice this never becomes a negative number ;-)
+              setSelectedItem(updatedSelectedItem);
+            }} />
           :
           <>
             <Reanimated.View style={[styles.itemSwipeAction, styles.action_Upvote, (tips[index].user_vote_value == 1) && styles.action_vote_selected]}>
