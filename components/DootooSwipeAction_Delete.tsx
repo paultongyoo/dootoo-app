@@ -48,8 +48,12 @@ const DootooSwipeAction_Delete = ({
                                     thing_type: thingNameStr
                                 });
                             }
+
+
+
+
+
                             updatedThings.splice(index, 1 + numSubtasks);  // Remove item and its subtasks from array
-                            //setItemIdxToEdit(-1);  //TODO: Move Delete into List component
                             listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
                         }
                     },
@@ -65,21 +69,30 @@ const DootooSwipeAction_Delete = ({
             //console.log("thingRowPositionXs contents: " + JSON.stringify(thingRowPositionXs.current));
             const currentRowPositionX = thingRowPositionXs.current[index];
             const currentRowHeight = thingRowHeights.current[index]
-            Animated.parallel([
+
+            //console.log(`Stats of row before deleting - positionX ${JSON.stringify(currentRowPositionX)}, rowHeight ${JSON.stringify(currentRowHeight)}`);
+            var animationArray = [
                 Animated.timing(currentRowPositionX, {
                     toValue: -300,
                     duration: 300,
                     easing: Easing.in(Easing.quad),
                     useNativeDriver: false
-                }),
-                Animated.timing(currentRowHeight, {
-                    toValue: 0,
-                    duration: 300,
-                    easing: Easing.in(Easing.quad),
-                    useNativeDriver: false
                 })
-            ]).start(() => {
-                console.log(`Deleting sole item at index ${index}: ${updatedThings[index].text}`);
+            ];
+
+            // Only animate reduction of the height of the item if there are items underneath it
+            if (index < (updatedThings.length - 1)) {
+                animationArray.push(
+                    Animated.timing(currentRowHeight, {
+                        toValue: 0,
+                        duration: 300,
+                        easing: Easing.in(Easing.quad),
+                        useNativeDriver: false
+                    })
+                );
+            }
+            Animated.parallel(animationArray).start(() => {
+                //console.log(`Deleting sole item at index ${index}: ${updatedThings[index].text}`);
 
                 amplitude.track(`${thingNameStr} Deleted`, {
                     anonymous_id: anonymousId,
@@ -97,11 +110,13 @@ const DootooSwipeAction_Delete = ({
 
                 //console.log(`updatedThings post delete (${updatedThings.length}): ${JSON.stringify(updatedThings)}`);
 
-                updatedThings[index].resetHeight = true
+                if (updatedThings[index]) {
+                    updatedThings[index].resetHeight = true           
+                }
                 currentRowPositionX.setValue(0);
 
                 listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
-                
+               
             });
         }
 
