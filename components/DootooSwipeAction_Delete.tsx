@@ -65,9 +65,9 @@ const DootooSwipeAction_Delete = ({
             //console.log("thingRowPositionXs contents: " + JSON.stringify(thingRowPositionXs.current));
             const currentRowPositionX = thingRowPositionXs.current[index];
             const currentRowHeight = thingRowHeights.current[index]
-            Animated.sequence([
+            Animated.parallel([
                 Animated.timing(currentRowPositionX, {
-                    toValue: -1000,
+                    toValue: -300,
                     duration: 300,
                     easing: Easing.in(Easing.quad),
                     useNativeDriver: false
@@ -93,11 +93,15 @@ const DootooSwipeAction_Delete = ({
                 // Remove item from displayed and thingRowPositionXs lists
                 updatedThings.splice(index, 1);
                 thingRowPositionXs.current.splice(index, 1);
+                thingRowHeights.current.splice(index, 1);
 
-                console.log(`updatedThings post delete (${updatedThings.length}): ${JSON.stringify(updatedThings)}`);
+                //console.log(`updatedThings post delete (${updatedThings.length}): ${JSON.stringify(updatedThings)}`);
+
+                updatedThings[index].resetHeight = true
+                currentRowPositionX.setValue(0);
 
                 listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
-                currentRowPositionX.setValue(0);
+                
             });
         }
 

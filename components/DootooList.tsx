@@ -277,6 +277,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
         //     } 
         // }, [item]);
 
+        useEffect(() => {
+           if (item.resetHeight) {
+            //console.log("Resetting height of index location that was just deleted");
+            setRowHeightKnown(false);
+           }
+        }, [listArray]);
+
         return (
             <Animated.View style={[
                     { transform: [{ translateX: rowPositionX }] }, 
@@ -284,7 +291,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
                         onLayout={(event) => {    
                             if (!rowHeightKnown) {
                                 fullRowHeight = event.nativeEvent.layout.height;
-                                console.log("Row height determined: " + fullRowHeight);
+                                //console.log("Row height determined: " + fullRowHeight);
                                 rowHeight.setValue(fullRowHeight);
                                 setRowHeightKnown(true);
                             }
