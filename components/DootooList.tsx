@@ -141,7 +141,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
     }, [page]);
 
     const loadThingsForCurrentPage = async (isPullDown = false) => {
-        console.log(`Calling loadAllThings(page) with page = ${page}.`);
+        //console.log(`Calling loadAllThings(page) with page = ${page}.`);
         const loadResponse = await loadAllThings(page);
         const things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;
@@ -153,7 +153,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
         // (e.g. on a pull-down-to-refresh action).  If page > 1, assume we want to append the page to what's currently
         // displayed.
         if (page == 1) {
-            console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
+            //console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
 
             if (isPullDown) {
                 //console.log("Loading page 1 as part of pulldown refresh, attempting to fade out current list before fading in new list");
@@ -178,7 +178,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
                 });
             }
         } else {
-            console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
+            //console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
             listArraySetter(listArray.concat(things));
         }
         setRefreshing(false);
@@ -253,7 +253,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
         const rowPositionX = useRef(new Animated.Value(0)).current;
         thingRowPositionXs.current[getIndex()] = rowPositionX;
         const [rowHeightKnown, setRowHeightKnown] = useState(false);
-        var fullRowHeight = -1;                                      // Placeholder set in onLayout handler
+        const fullRowHeight = useRef(-1);                                    // Placeholder set in onLayout handler
         const rowHeight =  useRef(new Animated.Value(1)).current;   // Set once onLayout event fires for Animated.View
         thingRowHeights.current[getIndex()] = rowHeight;
 
@@ -279,20 +279,19 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
 
         useEffect(() => {
            if (item.resetHeight) {
-            //console.log("Resetting height of index location that was just deleted");
             setRowHeightKnown(false);
            }
         }, [listArray]);
 
         return (
-            <Animated.View style={[
+            <Animated.View style={[ 
                     { transform: [{ translateX: rowPositionX }] }, 
-                      rowHeightKnown && { height: rowHeight } ] }
+                    rowHeightKnown && { height: rowHeight } ] }
                         onLayout={(event) => {    
                             if (!rowHeightKnown) {
-                                fullRowHeight = event.nativeEvent.layout.height;
-                                //console.log("Row height determined: " + fullRowHeight);
-                                rowHeight.setValue(fullRowHeight);
+                                //console.log("Setting currRowHeight and enabling height override.")
+                                fullRowHeight.current = event.nativeEvent.layout.height;
+                                rowHeight.setValue(fullRowHeight.current);
                                 setRowHeightKnown(true);
                             }
                         }}>
@@ -388,7 +387,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = "Loading your items",
                                     });
                                     handleThingDrag(data);
                                 }}
-                                keyExtractor={(item, index) => index.toString()}
+                                keyExtractor={(item, index) => item.uuid}
                                 ListHeaderComponent={<View style={{ height: 0 }} />}
                                 refreshControl={
                                     <RefreshControl

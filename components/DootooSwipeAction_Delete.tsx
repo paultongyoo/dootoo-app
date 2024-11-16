@@ -38,7 +38,8 @@ const DootooSwipeAction_Delete = ({
                             // 1) Animate away the item and its subitems
                             // 2) Delete each item from backend
                             // 3) Remove each item from UI array
-                            var animationArray = [];
+                            var slideAnimationArray = [];
+                            var heightAnimationArray = [];
                             for (var i = index; i <= index + numSubtasks; i++) {
 
                                 // Call asyncronous delete to mark item as deleted in backend to sync database
@@ -51,7 +52,7 @@ const DootooSwipeAction_Delete = ({
                                 });
 
                                 // Add the animation to slide the item off the screen
-                                animationArray.push(
+                                slideAnimationArray.push(
                                     Animated.timing(thingRowPositionXs.current[i], {
                                         toValue: -600,
                                         duration: 300,
@@ -60,33 +61,30 @@ const DootooSwipeAction_Delete = ({
                                     })
                                 );
 
-                                // // If the item is NOT the last item in the list, add the animatino
-                                // // to shrink its height as well
-                                // if (i < (updatedThings.length - 1)) {
-                                //     Animated.timing(thingRowHeights.current[i], {
-                                //         toValue: 0,
-                                //         duration: 300,
-                                //         easing: Easing.in(Easing.quad),
-                                //         useNativeDriver: false
-                                //     })   
-                                // }
-                            }
-                            Animated.parallel(animationArray).start(() => {
-
-                                updatedThings.splice(index, 1 + numSubtasks);  // Remove item and its subtasks from array
-                                thingRowPositionXs.current.splice(index, 1 + numSubtasks);
-                                thingRowHeights.current.splice(index, 1 + numSubtasks);
-
-                                for (var i = index; i <= index + numSubtasks; i++) {
-                                    if (updatedThings[i]) {
-                                        updatedThings[i].resetHeight = true    
-                                    }
-                                    if (thingRowPositionXs.current[i]) {
-                                        thingRowPositionXs.current[i].setValue(0);
-                                    } 
+                                if (i < (updatedThings.length - 1)) {
+                                    heightAnimationArray.push(
+                                        Animated.timing(thingRowHeights.current[i], {
+                                            toValue: 0,
+                                            duration: 300,
+                                            easing: Easing.in(Easing.quad),
+                                            useNativeDriver: false
+                                        })
+                                    );
                                 }
+                            }
+                            Animated.parallel(slideAnimationArray).start(() => {
+                                Animated.parallel(heightAnimationArray).start(() => {
 
-                                listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
+                                    updatedThings.splice(index, 1 + numSubtasks);  // Remove item and its subtasks from array
+                                    thingRowPositionXs.current.splice(index, 1 + numSubtasks);
+                                    thingRowHeights.current.splice(index, 1 + numSubtasks);
+
+                                    // console.log("thingRowPositionXs: " + JSON.stringify(thingRowPositionXs));
+                                    // console.log("thingRowHeights: " + JSON.stringify(thingRowHeights));
+                                    // console.log("updatedThings: " + JSON.stringify(updatedThings));
+                                    listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
+                                    
+                                })
                             });
                         }
                     },
@@ -143,13 +141,7 @@ const DootooSwipeAction_Delete = ({
 
                 //console.log(`updatedThings post delete (${updatedThings.length}): ${JSON.stringify(updatedThings)}`);
 
-                if (updatedThings[index]) {
-                    updatedThings[index].resetHeight = true           
-                }
-                currentRowPositionX.setValue(0);
-
                 listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
-               
             });
         }
 
