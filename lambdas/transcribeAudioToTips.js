@@ -53,8 +53,8 @@ export const handler = async (event) => {
       messages: [
         {
           "role": "system",
-          "content": "Input text contains one or pieces of advice." +
-            "Reply in the following JSON format: { tips: [<array of objects of the format { text: '<advice (do NOT add words or embellish)>' }]"
+          "content": "The user is listing one or more things they've done to accomplish a given task.  " +
+            "Transform the thing(s) they've done into the following JSON format: { tips: [<array of objects of the format { text: '<user's input (do NOT add words or embellish)>' }]"
         },
         { "role": "user", "content": transcribedText }
       ], response_format: { "type": "json_object" }
