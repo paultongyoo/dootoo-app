@@ -1,7 +1,7 @@
 import {
   Image, Text, View, StyleSheet, Pressable, Alert
 } from "react-native";
-import { useState, useContext, useCallback } from 'react';
+import { useState, useContext, useCallback, useEffect } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import Reanimated, {
   SharedValue,
@@ -179,7 +179,7 @@ export default function ItemTips() {
   const renderRightActions = (progress: SharedValue<number>, dragX: SharedValue<number>, index: number) => {
     return (
       <>
-        {(tips[index].user_id == selectedItem.user_id) ?
+        {(selectedItem.is_done) ?
           <DootooSwipeAction_Delete
             thingNameStr="Tip"
             styles={styles}
@@ -530,8 +530,8 @@ export default function ItemTips() {
             transcribeAudioToThings={transcribeAudioToTips}
             ListThingSidebar={DootooTipSidebar}
             EmptyThingUX={() => <DootooTipEmptyUX styles={styles} selectedItem={selectedItem} tipArray={tips} />}
-            isThingPressable={(item) => { return (item.user_id == selectedItem.user_id); }}
-            isThingDraggable={(data) => { return data[0].user_id == selectedItem.user_id; }}
+            isThingPressable={() => { return selectedItem.is_done; }}
+            isThingDraggable={() => { return selectedItem.is_done; }}
             hideRecordButton={!selectedItem.is_done}
             shouldInitialLoad={selectedItem.tip_count && (Number(selectedItem.tip_count) > 0)} />
         </View>
