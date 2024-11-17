@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 
 export default function Index() {
     const router = useRouter();
@@ -9,7 +10,7 @@ export default function Index() {
         const checkFirstLaunch = async () => {
             const launchStatus = await AsyncStorage.getItem('isFirstLaunch');
             if (launchStatus === null) {
-                router.navigate('/step1');
+                router.navigate('/onboarding');
             } else {
                 router.navigate('/drawer/stack');
             }
@@ -17,19 +18,18 @@ export default function Index() {
         checkFirstLaunch();
     }, []);
   
-    // const styles = StyleSheet.create({
-    //     container: {
-    //         flex: 1,
-    //         backgroundColor: '#DCC7AA',
-    //         justifyContent: 'center',
-    //         alignItems: 'center'
-    //     }
-    // });
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: '#DCC7AA',
+            justifyContent: 'center',
+            alignItems: 'center'
+        }
+    });
 
-    return null;
-    // return (
-    //     <View style={styles.container}>
-    //         <ActivityIndicator size={"large"} color="black" />
-    //     </View>
-    // );
+    return (
+        <View style={styles.container}>
+            {/* <ActivityIndicator size={"large"} color="black" /> */}
+        </View>
+    );
 }
