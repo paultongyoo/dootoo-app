@@ -12,7 +12,7 @@ import { usePathname } from 'expo-router';
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
     const { anonymousId, setFadeInListOnRender, listFadeInAnimation,
-        setLastRecordedCount, emptyListCTAFadeOutAnimation } = useContext(AppContext);
+        setLastRecordedCount, emptyListCTAOpacity, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
     const [recording, setRecording] = useState();
     const [permissionResponse, requestPermission] = Audio.usePermissions();
@@ -210,6 +210,12 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 if (listArray.length == 0) {
 
                     // Assume the empty list CTA is visible, so fade it out first
+                    console.log("Attempting to fade out empty CTA animation...");
+                    // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
+                    // emptyListCTAFadeOutAnimation.reset();
+                    // emptyListCTAOpacity.current = 1;
+                    // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
+
                     emptyListCTAFadeOutAnimation.start(() => {
 
                         //If list is initially empty, fade in the new list
@@ -218,7 +224,10 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                         setFadeInListOnRender(true);
                         listFadeInAnimation.start(() => {
                             setFadeInListOnRender(false);
+                            listFadeInAnimation.reset();
                         });
+
+                        emptyListCTAFadeOutAnimation.reset();
                     });
                 } else {
 

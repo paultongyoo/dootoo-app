@@ -22,13 +22,13 @@ export const AppProvider = ({ children }) => {
     const emptyListCTAOpacity = useRef(new Animated.Value(0)).current;
     const emptyListCTAFadeInAnimation = Animated.timing(emptyListCTAOpacity, {
         toValue: 1,
-        duration: 1000,
+        duration: 300,
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: true
     });
     const emptyListCTAFadeOutAnimation = Animated.timing(emptyListCTAOpacity, {
         toValue: 0,
-        duration: 200,
+        duration: 300,
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: true
     });
@@ -36,7 +36,7 @@ export const AppProvider = ({ children }) => {
     const listOpacity = useRef(new Animated.Value(0)).current;
     const listFadeInAnimation = Animated.timing(listOpacity, {
         toValue: 1,
-        duration: 300,
+        duration: 600,
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: true
     });
