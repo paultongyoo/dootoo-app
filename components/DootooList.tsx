@@ -254,7 +254,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         thingRowPositionXs.current[getIndex()] = rowPositionX;
         const [rowHeightKnown, setRowHeightKnown] = useState(false);
         const fullRowHeight = useRef(-1);                                    // Placeholder set in onLayout handler
-        const rowHeight =  useRef(new Animated.Value(1)).current;   // Set once onLayout event fires for Animated.View
+        const rowHeight = useRef(new Animated.Value(1)).current;   // Set once onLayout event fires for Animated.View
         thingRowHeights.current[getIndex()] = rowHeight;
 
         // useEffect(() => {
@@ -278,23 +278,31 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         // }, [item]);
 
         useEffect(() => {
-           if (item.resetHeight) {
-            setRowHeightKnown(false);
-           }
+            console.log("listArray length " + listArray.length);
+            console.log("thingRowHeights: " + JSON.stringify(thingRowHeights));
+            if (item.shouldAnimateIntoView) {
+                console.log("Inside shouldAnimateIntoView for index " + getIndex());
+                Animated.timing(rowHeight, {
+                    toValue: fullRowHeight.current,
+                    duration: 300,
+                    easing: Easing.out(Easing.quad),
+                    useNativeDriver: false
+                }).start();
+            }
         }, [listArray]);
 
         return (
-            <Animated.View style={[ 
-                    { transform: [{ translateX: rowPositionX }] }, 
-                    rowHeightKnown && { height: rowHeight } ] }
-                        onLayout={(event) => {    
-                            if (!rowHeightKnown) {
-                                //console.log("Setting currRowHeight and enabling height override.")
-                                fullRowHeight.current = event.nativeEvent.layout.height;
-                                rowHeight.setValue(fullRowHeight.current);
-                                setRowHeightKnown(true);
-                            }
-                        }}>
+            <Animated.View style={[
+                { transform: [{ translateX: rowPositionX }] },
+                rowHeightKnown && { height: rowHeight }]}
+                onLayout={(event) => {
+                    if (!rowHeightKnown) {
+                        //console.log("Setting currRowHeight and enabling height override.")
+                        fullRowHeight.current = event.nativeEvent.layout.height;
+                        rowHeight.setValue(fullRowHeight.current);
+                        setRowHeightKnown(true);
+                    }
+                }}>
                 <Swipeable
                     key={Math.random()}
                     ref={(ref) => {

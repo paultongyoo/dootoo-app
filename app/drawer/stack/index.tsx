@@ -9,7 +9,9 @@ import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
 import * as amplitude from '@amplitude/analytics-react-native';
 
 import {
-  Image, StyleSheet, Pressable
+  Image, StyleSheet, Pressable,
+  Animated,
+  Easing
 } from "react-native";
 import { AppContext } from '@/components/AppContext';
 import Reanimated, {
@@ -21,7 +23,7 @@ import Reanimated, {
 export default function Index() {
   const { anonymousId, dootooItems, setDootooItems,
     setLastRecordedCount, setSelectedItem,
-    updateUserCountContext, queue } = useContext(AppContext);
+    updateUserCountContext, thingRowHeights } = useContext(AppContext);
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
@@ -29,7 +31,7 @@ export default function Index() {
   });
 
   const saveAllItems = async (latestItems) => {
-   // console.log("saveAllItems called with latestItems length: " + dootooItems.length);
+    // console.log("saveAllItems called with latestItems length: " + dootooItems.length);
     if (latestItems && latestItems.length > 0) {
       //console.log(`Passing ${latestItems.length} to saveItems method...`);
 
@@ -37,16 +39,16 @@ export default function Index() {
       // Asynchronously sync DB with latest items
       saveItems(latestItems, (updatedItems) => {
 
-          //console.log("Updating user counts asyncronously after saving all items")
-          updateUserCountContext();
+        //console.log("Updating user counts asyncronously after saving all items")
+        updateUserCountContext();
 
-          // Apply latest counts to displayed list without affecting list order
-          // This is hack workaround to avoid jolting behavior if/when
-          // item order changes
-          var displayedListToUpdate = refreshItemCounts(latestItems, updatedItems);
-          setDootooItems(displayedListToUpdate);
-          //console.log("saveAllItems finished...");
-        });
+        // Apply latest counts to displayed list without affecting list order
+        // This is hack workaround to avoid jolting behavior if/when
+        // item order changes
+        var displayedListToUpdate = refreshItemCounts(latestItems, updatedItems);
+        setDootooItems(displayedListToUpdate);
+        //console.log("saveAllItems finished...");
+      });
       //console.log("saveAllItems successful.");
     }
   };
@@ -122,38 +124,54 @@ export default function Index() {
       });
 
       // Set this to instruct UI to hide item counts until async save op returns and removes the value
-      updatedTasks![index].counts_updating = true;  
+      updatedTasks![index].counts_updating = true;
 
-      if (updatedTasks![index].is_done == true) {
+      // Set this to instruct list to animate new item into view
+      updatedTasks![index].shouldAnimateIntoView = true
 
-        //console.log(`Backing index of item ${updatedTasks![index].text}: ${index}`);
-        updatedTasks![index].index_backup = index;
+      // TODO: Shrink height of item to zero before moving it to new location
+      const heightRefOfCurrentRow = thingRowHeights.current[index];
+      Animated.timing(heightRefOfCurrentRow, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: false
+      }).start(() => {
 
-        // Move item to the bottom of the list if it's the only done item, otherwise make it the new first done item
-        const [item] = updatedTasks.splice(index, 1);   // remove the item
-        if (firstDoneItemIdx == -1) {
-          updatedTasks = updatedTasks.concat(item);         // Place at end of list
+        if (updatedTasks![index].is_done == true) {
+
+          //console.log(`Backing index of item ${updatedTasks![index].text}: ${index}`);
+          updatedTasks![index].index_backup = index;
+
+          // Move item to the bottom of the list if it's the only done item, otherwise make it the new first done item
+          const [item] = updatedTasks.splice(index, 1);   // remove the item from its current location
+          thingRowHeights.current.splice(index, 1);       // remove the item from the thingrowheights tracker to keep lists in sync
+
+          if (firstDoneItemIdx == -1) {
+            updatedTasks = updatedTasks.concat(item);         // Place at end of list
+          } else {
+            //console.log("Attempting to insert at top of first item list - firstDoneItemIdx: " + firstDoneItemIdx);
+            updatedTasks.splice(firstDoneItemIdx - 1, 0, item)    // Insert it at firstDoneItem location
+          }
+
         } else {
-          //console.log("Attempting to insert at top of first item list - firstDoneItemIdx: " + firstDoneItemIdx);
-          updatedTasks.splice(firstDoneItemIdx-1, 0, item)    // Insert it at firstDoneItem location
+          const backupVal = updatedTasks![index].index_backup;
+          const [item] = updatedTasks.splice(index, 1);   // remove the item
+          if (backupVal != null && (backupVal > firstDoneItemIdx)) {
+            //console.log("Placing item at firstDoneItemIdx: " + firstDoneItemIdx);
+            updatedTasks.splice(firstDoneItemIdx, 0, item)  // insert it in new location
+          } else {
+            //console.log("Placing item at backup index: " + backupVal);
+            updatedTasks.splice(backupVal, 0, item)  // insert it in new location
+          }
         }
 
-      } else {
-        const backupVal = updatedTasks![index].index_backup;
-        const [item] = updatedTasks.splice(index, 1);   // remove the item
-        if (backupVal != null && (backupVal > firstDoneItemIdx)) {
-          //console.log("Placing item at firstDoneItemIdx: " + firstDoneItemIdx);
-          updatedTasks.splice(firstDoneItemIdx, 0, item)  // insert it in new location
-        } else {
-          //console.log("Placing item at backup index: " + backupVal);
-          updatedTasks.splice(backupVal, 0, item)  // insert it in new location
-        }
-      }
+        // Asyncronously save all items to DB as rank_idxes will have changed
+        saveAllItems(updatedTasks);
 
-      // Asyncronously save all items to DB as rank_idxes will have changed
-      saveAllItems(updatedTasks);
+        setDootooItems(updatedTasks);  // This should update UI only and not invoke any synchronous backend operations
+      });
 
-      setDootooItems(updatedTasks);  // This should update UI only and not invoke any synchronous backend operations
     } catch (error) {
       console.log("Error occurred during done logic!", error);
     }
@@ -431,19 +449,19 @@ export default function Index() {
 
   return (
     <DootooList listArray={dootooItems}
-                listArraySetter={setDootooItems}
-                styles={styles}
-                renderLeftActions={renderLeftActions}
-                renderRightActions={renderRightActions}
-                handleDoneClick={handleDoneClick}
-                saveAllThings={saveAllItems}
-                saveSingleThing={saveSingleItem}
-                loadAllThings={loadItems}
-                transcribeAudioToThings={transcribeAudioToTasks}
-                ListThingSidebar={DootooItemSidebar}
-                EmptyThingUX={DootooItemEmptyUX} 
-                isThingPressable={() => { return true}} 
-                isThingDraggable={() => { return true}} />
+      listArraySetter={setDootooItems}
+      styles={styles}
+      renderLeftActions={renderLeftActions}
+      renderRightActions={renderRightActions}
+      handleDoneClick={handleDoneClick}
+      saveAllThings={saveAllItems}
+      saveSingleThing={saveSingleItem}
+      loadAllThings={loadItems}
+      transcribeAudioToThings={transcribeAudioToTasks}
+      ListThingSidebar={DootooItemSidebar}
+      EmptyThingUX={DootooItemEmptyUX}
+      isThingPressable={() => { return true }}
+      isThingDraggable={() => { return true }} />
   );
 
   function refreshItemCounts(latestItems: any, updatedItems: any) {
