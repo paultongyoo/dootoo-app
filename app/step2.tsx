@@ -18,7 +18,7 @@ export default function Step2() {
             const { translationX } = nativeEvent;
 
             if (translationX < -50) {
-                router.navigate('/screens/step3');
+                router.navigate('/step3');
             } else if (translationX > 50) {
                 router.back();
             }
@@ -82,7 +82,7 @@ export default function Step2() {
                     </View>
                 </View>
                 <Text style={styles.centerCopy}>start by <Text style={styles.green}>naturally speaking</Text> what you have to do.</Text>
-                <OnboardingFooter step={2} onForwardButtonPress={() => router.navigate('/screens/step3')} />
+                <OnboardingFooter step={2} onForwardButtonPress={() => router.navigate('/step3')} />
             </View>
         </PanGestureHandler>
     );

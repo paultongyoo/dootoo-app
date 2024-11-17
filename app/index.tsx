@@ -18,11 +18,9 @@ export default function Index() {
             const launchStatus = await AsyncStorage.getItem('isFirstLaunch');
             console.log("launchStatus: " + launchStatus);
             if (launchStatus === null) {
-                console.log("Attempting to navigate to /screens/step1");
-                router.navigate('/screens');
+                router.navigate('/step1');
             } else {
-                console.log("Attempting to navigate to /screens/items");
-                router.navigate('/screens/items');
+                router.navigate('/drawer/stack');
             }
         };
         checkFirstLaunch();
@@ -42,9 +40,10 @@ export default function Index() {
         }
     });
 
-    return (
-        <View style={styles.container}>
-            <ActivityIndicator size={"large"} color="black" />
-        </View>
-    );
+    return null;
+    // return (
+    //     <View style={styles.container}>
+    //         <ActivityIndicator size={"large"} color="black" />
+    //     </View>
+    // );
 }

@@ -28,7 +28,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     var retryCount = 0;
 
     const footerPosition = useRef(new Animated.Value(200)).current;
-    const ITEMS_PATHNAME = "/screens/items";
+    const ITEMS_PATHNAME = "/drawer/stack";
 
     useEffect(() => {
         initializeMobileAds();

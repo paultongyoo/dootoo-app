@@ -19,7 +19,7 @@ export default function Step4() {
             const { translationX } = nativeEvent;
 
             if (translationX < -50) {
-                router.navigate('/screens/step5');
+                router.navigate('/step5');
             } else if (translationX > 50) {
                 router.back();
             }
@@ -202,7 +202,7 @@ export default function Step4() {
                     <Text style={styles.centerCopy}>get tips to <Text style={styles.green}>get things done</Text>.</Text>
                     <Text style={styles.centerCopy}>share tips to{'\n'}<Text style={styles.green}>give back</Text>.</Text>
                 </View>
-                <OnboardingFooter step={4} onForwardButtonPress={() => router.navigate('/screens/step5')} />
+                <OnboardingFooter step={4} onForwardButtonPress={() => router.navigate('/step5')} />
             </View>
         </PanGestureHandler>
     );

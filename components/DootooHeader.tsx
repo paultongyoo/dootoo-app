@@ -7,7 +7,7 @@ const DootooHeader = ({ navigation, route }) => {
     const pathname = usePathname();
     const headerPosition = useRef(new Animated.Value(-200)).current;
 
-    const ITEMS_PATHNAME = "/screens/items";
+    const ITEMS_PATHNAME = "/drawer/stack";
 
     useEffect(() => {
         Animated.sequence([
