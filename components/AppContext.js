@@ -22,7 +22,7 @@ export const AppProvider = ({ children }) => {
     const emptyListCTAOpacity = useRef(new Animated.Value(0)).current;
     const emptyListCTAFadeInAnimation = Animated.timing(emptyListCTAOpacity, {
         toValue: 1,
-        duration: 300,
+        duration: 1000,
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: true
     });

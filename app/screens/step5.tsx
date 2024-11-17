@@ -57,7 +57,7 @@ export default function Step5() {
         }
 
         await AsyncStorage.setItem('isFirstLaunch', 'false');
-        router.replace('/main'); // Navigate to the main app
+        router.replace('/screens/items'); 
     };
 
     const onSwipe = ({ nativeEvent }) => {

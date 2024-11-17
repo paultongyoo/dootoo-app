@@ -28,12 +28,12 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     var retryCount = 0;
 
     const footerPosition = useRef(new Animated.Value(200)).current;
-    const INDEX_PATHNAME = "/main/screens";
+    const ITEMS_PATHNAME = "/screens/items";
 
     useEffect(() => {
         initializeMobileAds();
         //console.log(`Pathname: ${pathname}`);
-        if (pathname == INDEX_PATHNAME) {
+        if (pathname == ITEMS_PATHNAME) {
             //console.log("Attempting to animate footer in...");
             Animated.sequence([
                 Animated.delay(500),
@@ -409,7 +409,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
     if (!hideRecordButton) {
         return (
-            <Animated.View style={[styles.footerContainer, (pathname == INDEX_PATHNAME) && { transform: [{ translateY: footerPosition}]}]}>
+            <Animated.View style={[styles.footerContainer, (pathname == ITEMS_PATHNAME) && { transform: [{ translateY: footerPosition}]}]}>
                 {/* <Pressable
                     style={[styles.footerButton, styles.cancelButton]}
                     onPress={makeTestData}>

@@ -19,7 +19,7 @@ export default function Step3() {
             const { translationX } = nativeEvent;
 
             if (translationX < -50) {
-                router.navigate('/onboarding/step4');
+                router.navigate('/screens/step4');
             } else if (translationX > 50) {
                 router.back();
             }
@@ -175,7 +175,7 @@ export default function Step3() {
                 <View style={styles.onboardingCopyContainer}>
                     <Text style={styles.centerCopy}>see which things were <Text style={styles.green}>done by the community</Text>.</Text>
                 </View>
-                <OnboardingFooter step={3} onForwardButtonPress={() => router.navigate('/onboarding/step4')} />
+                <OnboardingFooter step={3} onForwardButtonPress={() => router.navigate('/screens/step4')} />
             </View>
         </PanGestureHandler>
     );

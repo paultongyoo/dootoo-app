@@ -372,7 +372,7 @@ export default function Index() {
                   item_uuid: dootooItems![index].uuid
                 });
                 setSelectedItem(dootooItems![index]);
-                router.push('/main/screens/tips');
+                router.push('/screens/tips');
               }}>
               <Image style={styles.giveTipIcon} source={require("@/assets/images/give_icon_white.png")} />
             </Pressable>
@@ -387,7 +387,7 @@ export default function Index() {
                   });
                   //console.log("Similar Tips button tapped on item: " + dootooItems![index].text);
                   setSelectedItem(dootooItems![index]);
-                  router.push('/main/screens/tips');
+                  router.push('/screens/tips');
                 }}>
                 {/* <View style={styles.simliarTipsIcon}></View> */}
                 <Image style={styles.receiveTipIcon} source={require("@/assets/images/receive_tip_white.png")} />

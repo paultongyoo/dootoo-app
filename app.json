@@ -7,6 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "dootoo",
     "userInterfaceStyle": "automatic",
+    "backgroundColor": "#DCC7AA",
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",

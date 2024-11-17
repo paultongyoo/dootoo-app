@@ -1,27 +1,29 @@
-import { Slot, usePathname } from 'expo-router';
-import * as amplitude from '@amplitude/analytics-react-native';
-import { useEffect } from 'react';
-import { View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Drawer } from 'expo-router/drawer';
+import { AppProvider } from '../components/AppContext';
+import Toast from "react-native-toast-message";
+import toastConfig from "@/components/ToastConfig";
+import ProfileDrawer from "@/components/ProfileDrawer";
 
-const AMPLITUDE_KEY_DEV = "28fd28b2a8714bea3efa4a0bc73fbd0b";
-const AMPLITUDE_KEY_PROD = "ac9cdda8bd0d54ba50553219f407d353";
-
-export default function Index() {
-    const pathname = usePathname();
-
-    useEffect(() => {
-        amplitude.init((__DEV__) ? AMPLITUDE_KEY_DEV : AMPLITUDE_KEY_PROD);
-    }, []);
-
-    useEffect(() => {
-        //console.log("Pathname logged: " + pathname);
-        amplitude.track('Screen Viewed', { pathname: pathname });
-    }, [pathname]);
-
-    return (
-        <View style={{ flex: 1, backgroundColor: '#DCC7AA' }}>
-            <Slot />
-        </View>
-    );
+export default function MainLayout() {
+  
+  return (
+    <>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <AppProvider>
+          <Drawer
+            drawerContent={(props) => <ProfileDrawer {...props} />}
+            screenOptions={
+              {
+                drawerPosition: 'right',
+                headerShown: false
+              }}>
+                <Drawer.Screen name="screens"/>
+              </Drawer>
+        </AppProvider>
+        <Toast config={toastConfig} />
+      </GestureHandlerRootView>
+    </>
+  );
 }
 

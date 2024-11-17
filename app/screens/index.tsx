@@ -25,7 +25,7 @@ export default function Step1() {
             const { translationX } = nativeEvent;
 
             if (translationX < -50) {
-                router.navigate('/onboarding/step2');
+                router.navigate('/screens/step2');
             } 
         }
     };
@@ -59,7 +59,7 @@ export default function Step1() {
                 <Animated.View style={[styles.containerToAnimate, { opacity: fadeIn}]}>
                     <Text style={styles.centerCopy}>doing things{'\n'}can be <Text style={styles.red}>hard</Text>.</Text>
                     <Text style={styles.centerCopy}>doing things{'\n'}<Text style={styles.green}>together is{'\n'}easier</Text>.</Text>
-                    <OnboardingFooter step={1} onForwardButtonPress={() => router.navigate('/onboarding/step2')} />
+                    <OnboardingFooter step={1} onForwardButtonPress={() => router.navigate('/screens/step2')} />
                 </Animated.View>
             </View>
         </PanGestureHandler>
