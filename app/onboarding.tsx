@@ -109,7 +109,7 @@ const Step1 = () => {
     const fadeIn = useRef(new Animated.Value(0)).current;
     const fadeInAnimation = Animated.timing(fadeIn, {
         toValue: 1,
-        duration: 500,
+        duration: 300,
         useNativeDriver: true
     });
 
@@ -144,8 +144,15 @@ const Step1 = () => {
 }
 
 const Step2 = () => {
+    const fadeIn = useRef(new Animated.Value(0)).current;
+    const fadeInAnimation = Animated.timing(fadeIn, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+    });
 
     useEffect(() => {
+        fadeInAnimation.start();
         amplitude.track("Onboarding Step 2 Viewed");
     }, []);
 
@@ -185,7 +192,7 @@ const Step2 = () => {
     });
 
     return (
-        <View style={styles.container}>
+        <Animated.View style={[styles.container, { opacity: fadeIn }]}>
             <View style={styles.micAndVoice}>
                 <View style={styles.micContainer}>
                     <Image style={styles.micImage} source={require('@/assets/images/microphone_white.png')} />
@@ -198,13 +205,20 @@ const Step2 = () => {
                 </View>
             </View>
             <Text style={styles.centerCopy}>start by <Text style={styles.green}>naturally speaking</Text> what you have to do.</Text>
-        </View>
+        </Animated.View>
     );
 }
 
 const Step3 = () => {
+    const fadeIn = useRef(new Animated.Value(0)).current;
+    const fadeInAnimation = Animated.timing(fadeIn, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+    });
 
     useEffect(() => {
+        fadeInAnimation.start();
         amplitude.track("Onboarding Step 3 Viewed");
     }, []);
 
@@ -311,7 +325,7 @@ const Step3 = () => {
     });
 
     return (
-        <>
+        <Animated.View style={{opacity: fadeIn}}>
             <View style={styles.itemsContainer}>
                 <View style={styles.itemContainer}>
                     <View style={styles.itemCircleOpen}></View>
@@ -355,13 +369,20 @@ const Step3 = () => {
             <View style={styles.onboardingCopyContainer}>
                 <Text style={styles.centerCopy}>see which things were <Text style={styles.green}>done by the community</Text>.</Text>
             </View>
-        </>
+        </Animated.View>
     );
 }
 
 const Step4 = () => {
+    const fadeIn = useRef(new Animated.Value(0)).current;
+    const fadeInAnimation = Animated.timing(fadeIn, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+    });
 
     useEffect(() => {
+        fadeInAnimation.start();
         amplitude.track("Onboarding Step 4 Viewed");
     }, []);
 
@@ -488,7 +509,7 @@ const Step4 = () => {
     });
 
     return (
-        <>
+        <Animated.View style={{opacity: fadeIn}}>
             <View style={styles.itemAndTipsContainer}>
                 <View style={styles.itemContainer}>
                     <View style={styles.itemCircleOpen}></View>
@@ -539,22 +560,28 @@ const Step4 = () => {
                 <Text style={styles.centerCopy}>get tips to <Text style={styles.green}>get things done</Text>.</Text>
                 <Text style={styles.centerCopy}>share tips to{'\n'}<Text style={styles.green}>give back</Text>.</Text>
             </View>
-        </>
+        </Animated.View>
     );
 }
 
 const Step5 = () => {
     const [currentUsername, setCurrentUsername] = useState(generateUsername());
     const [counter, setCounter] = useState(0);
-    const fadeInOut = useRef(new Animated.Value(1)).current;
-    const fadeInOutAnimation = Animated.sequence([
-        Animated.timing(fadeInOut, {
+    const stepFadeIn =  useRef(new Animated.Value(0)).current;
+    const stepFadeInAnimation = Animated.timing(stepFadeIn, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+    });
+    const usernameFadeInOut = useRef(new Animated.Value(1)).current;
+    const usernameFadeInOutAnimation = Animated.sequence([
+        Animated.timing(usernameFadeInOut, {
             toValue: 1,
             duration: 1000,
             useNativeDriver: true
         }),
         Animated.delay(5000),
-        Animated.timing(fadeInOut, {
+        Animated.timing(usernameFadeInOut, {
             toValue: 0,
             duration: 1000,
             useNativeDriver: true
@@ -562,18 +589,19 @@ const Step5 = () => {
     ]);
 
     useEffect(() => {
+        stepFadeInAnimation.start();
         amplitude.track("Onboarding Step 5 Viewed");
     }, []);
 
     useEffect(() => {
-        fadeInOutAnimation.start(() => {
+        usernameFadeInOutAnimation.start(() => {
             if (counter <= 2) {
                 setCurrentUsername(generateUsername())
                 setCounter((prev) => prev + 1);
             }
         });
 
-        return () => fadeInOutAnimation.stop();
+        return () => usernameFadeInOutAnimation.stop();
     }, [currentUsername]);
 
     async function handleTermsClick(event: GestureResponderEvent): void {
@@ -626,18 +654,18 @@ const Step5 = () => {
     });
 
     return (
-        <View style={styles.container}>
+        <Animated.View style={[styles.container, {opacity: stepFadeIn }]}>
             <View style={styles.profileDrawerProfileIconContainer}>
                 <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_green.png')} />
                 <View>
-                    <Animated.Text style={[styles.profileNameText, { opacity: fadeInOut }]}>{currentUsername}</Animated.Text>
+                    <Animated.Text style={[styles.profileNameText, { opacity: usernameFadeInOut }]}>{currentUsername}</Animated.Text>
                 </View>
             </View>
             <Text style={styles.centerCopy}>your personal information{'\n'}<Text style={styles.green}>stays with you</Text>.</Text>
             <View style={styles.supplementalCopyContainer}>
                 <Text style={styles.supplementalCopy}>By continuing, you agree to{'\n'}dootoo's <Text style={[styles.green, styles.underline]} onPress={handleTermsClick}>Terms</Text> and understand{'\n'}how we protect your <Text style={[styles.green, styles.underline]} onPress={handlePrivacyPolicyClick}>Privacy</Text>.</Text>
             </View>
-        </View>
+        </Animated.View>
     );
 }
 
