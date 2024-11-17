@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Animated, Dimensions, StyleSheet, Platform, Pressable, Image, Alert, GestureResponderEvent, Linking } from 'react-native';
+import { View, Text, Animated, Dimensions, StyleSheet, Platform, Pressable, Image, Alert, GestureResponderEvent, Linking, Easing } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
@@ -670,7 +670,16 @@ const Step5 = () => {
 }
 
 const OnboardingHeader = ({ swipeLeft }) => {
-    const router = useRouter();
+    const fadeIn = useRef(new Animated.Value(0)).current;
+    const fadeInAnimation = Animated.timing(fadeIn, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+    });
+
+    useEffect(() => {
+        fadeInAnimation.start();
+    },[]);
 
     const styles = StyleSheet.create({
         onboardingHeaderContainer: {
@@ -688,18 +697,22 @@ const OnboardingHeader = ({ swipeLeft }) => {
     });
 
     return (
-        <View style={styles.onboardingHeaderContainer}>
+        <Animated.View style={[styles.onboardingHeaderContainer, {opacity: fadeIn}]}>
             <Pressable style={styles.backButtonContainer} onPress={swipeLeft}>
                 {(Platform.OS == 'ios') ?
                     <Image style={styles.backButtonIcon} source={require('@/assets/images/back_arrow_FAF3E0_ios.png')} />
                     : <Image style={styles.backButtonIcon} source={require('@/assets/images/back_arrow_FAF3E0_android.png')} />
                 }
             </Pressable>
-        </View>
+        </Animated.View>
     );
 }
 
-const OnboardingFooter = ({ step = 1, onForwardButtonPress = () => { Alert.alert('Implement Me') } }) => {
+const OnboardingFooter = ({ step = 1, onForwardButtonPress = () => { return; } }) => {
+
+    const currentStepCirclePosition = useRef(new Animated.Value(0)).current;
+    const circleSize = 20;
+    const spaceBetweenCircles = 7;
 
     const styles = StyleSheet.create({
         onboardingFooterContainer: {
@@ -711,15 +724,20 @@ const OnboardingFooter = ({ step = 1, onForwardButtonPress = () => { Alert.alert
             left: 0,
             right: 0
         },
-        stepCircle: {
-            height: 20,
-            width: 20,
-            borderRadius: 10,
+        backgroundCirclesContainer: {
+            flexDirection: 'row'
+        },
+        backgroundStepCircle: {
+            height: circleSize,
+            width: circleSize,
+            borderRadius: (circleSize / 2),
             backgroundColor: '#FAF3E0',
-            marginRight: 7
+            marginRight: spaceBetweenCircles
         },
         stepCurrent: {
-            backgroundColor: '#556B2F'
+            backgroundColor: '#556B2F',
+            position: 'absolute',
+            left: 0
         },
         forwardButtonContainer: {
             position: 'absolute',
@@ -731,13 +749,29 @@ const OnboardingFooter = ({ step = 1, onForwardButtonPress = () => { Alert.alert
         }
     });
 
+    useEffect(() => {
+        // Animate the white circle to the new position whenever the step changes
+        Animated.timing(currentStepCirclePosition, {
+          toValue: (step - 1) * (circleSize + spaceBetweenCircles), // adjust spacing between circles
+          duration: 300,
+          easing: Easing.out(Easing.exp),
+          useNativeDriver: true,
+        }).start();
+      }, [step]);
+
     return (
         <View style={styles.onboardingFooterContainer}>
-            <View style={[styles.stepCircle, (step == 1) && styles.stepCurrent]}></View>
-            <View style={[styles.stepCircle, (step == 2) && styles.stepCurrent]}></View>
-            <View style={[styles.stepCircle, (step == 3) && styles.stepCurrent]}></View>
-            <View style={[styles.stepCircle, (step == 4) && styles.stepCurrent]}></View>
-            <View style={[styles.stepCircle, (step == 5) && styles.stepCurrent]}></View>
+            <View style={styles.backgroundCirclesContainer}>
+                <View style={styles.backgroundStepCircle}></View>
+                <View style={styles.backgroundStepCircle}></View>
+                <View style={styles.backgroundStepCircle}></View>
+                <View style={styles.backgroundStepCircle}></View>
+                <View style={styles.backgroundStepCircle}></View>
+                <Animated.View style={[
+                    styles.backgroundStepCircle, styles.stepCurrent, 
+                    {transform: [{ translateX: currentStepCirclePosition}]}
+                    ]}></Animated.View>
+            </View>
             <Pressable style={styles.forwardButtonContainer} onPress={onForwardButtonPress}>
                 {(Platform.OS == 'ios') ?
                     <Image style={styles.forwardButtonIcon} source={require('@/assets/images/forward_arrow_556B2F_ios.png')} />
