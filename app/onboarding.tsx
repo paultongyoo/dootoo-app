@@ -97,7 +97,7 @@ const OnboardingScreen = () => {
         },
         container: {
             flex: 1,
-            justifyContent: 'center'  
+            justifyContent: 'center'
         }
     });
 
@@ -108,7 +108,7 @@ const OnboardingScreen = () => {
                     : <></>}
 
                 <PanGestureHandler onHandlerStateChange={onSwipe}>
-                    <Animated.View style={{ transform: [{ translateX: translationX }] }}>
+                    <Animated.View style={[styles.container, { transform: [{ translateX: translationX }]}]}>
                         {
                             (step == 1) ? <Step1 />
                                 : (step == 2) ? <Step2 />
