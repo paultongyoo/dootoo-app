@@ -12,7 +12,7 @@ const BACKEND_GENERATETIPCTA_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.u
                                              : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/generateTipCTA';
 
 export const transcribeAudioToTasks = async (fileUri, anonymous_id) => {
-  console.log("Entering transcribeAudiToTasks with anonymous Id: " + anonymous_id);
+ //console.log("Entering transcribeAudiToTasks with anonymous Id: " + anonymous_id);
 
   // Read the file as a binary base64 string
   const fileData = await RNFS.readFile(fileUri, 'base64');
@@ -20,10 +20,10 @@ export const transcribeAudioToTasks = async (fileUri, anonymous_id) => {
   // Convert base64 string to binary Buffer
   const binaryData = Buffer.from(fileData, 'base64');
 
-  console.log("Created BinaryData object with length: " + fileData.length);
+  //console.log("Created BinaryData object with length: " + fileData.length);
 
   const fileExtension = fileUri.split('.').pop();
-  console.log("Audio File Extension: " + fileExtension);
+  //console.log("Audio File Extension: " + fileExtension);
 
   try {
 
@@ -44,7 +44,7 @@ export const transcribeAudioToTasks = async (fileUri, anonymous_id) => {
 };
 
 export const transcribeAudioToTips = async (fileUri, anonymous_id) => {
-  console.log("Entering transcribeAudioToTips with anonymous Id: " + anonymous_id);
+  //console.log("Entering transcribeAudioToTips with anonymous Id: " + anonymous_id);
 
   // Read the file as a binary base64 string
   const fileData = await RNFS.readFile(fileUri, 'base64');
@@ -52,10 +52,10 @@ export const transcribeAudioToTips = async (fileUri, anonymous_id) => {
   // Convert base64 string to binary Buffer
   const binaryData = Buffer.from(fileData, 'base64');
 
-  console.log("Created BinaryData object with length: " + fileData.length);
+  //console.log("Created BinaryData object with length: " + fileData.length);
 
   const fileExtension = fileUri.split('.').pop();
-  console.log("Audio File Extension: " + fileExtension);
+  //console.log("Audio File Extension: " + fileExtension);
 
   try {
 

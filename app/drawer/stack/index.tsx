@@ -54,7 +54,7 @@ export default function Index() {
   };
 
   const saveSingleItem = async (item) => {
-    console.log("saveSingleItem started...");
+    //console.log("saveSingleItem started...");
     // The DootooList component will have set the "counts_updating" flag 
     // prior to calling back end to update this item so that we can
     // reset the flag after retrieving the latest tip/similar counts for the item
@@ -62,7 +62,7 @@ export default function Index() {
     saveItems([item], (updatedItems) => {
       var displayedListToUpdate = refreshItemCounts(dootooItems, updatedItems);
       setDootooItems(displayedListToUpdate);
-      console.log("saveSingleItem finished.");
+      //console.log("saveSingleItem finished.");
     });
   }
 

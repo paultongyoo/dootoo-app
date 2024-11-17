@@ -22,14 +22,14 @@ const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
                 {
                     text: 'Email Admins',
                     onPress: () => {
-                        console.log('Tip Flag Contest Email Pressed')
+                        //console.log('Tip Flag Contest Email Pressed')
                         sendFlagContextEmail(index);
                     }
                 },
                 {
                     text: 'I Understand',
                     onPress: () => {
-                        console.log('Tip Flag Contest Understood Pressed');
+                        //console.log('Tip Flag Contest Understood Pressed');
                     },
                 },
             ]

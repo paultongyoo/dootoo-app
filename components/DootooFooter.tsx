@@ -275,9 +275,9 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             if (fileExists) {
                 // Delete the file
                 await RNFS.unlink(fileUri);
-                console.log('File deleted successfully');
+                //console.log('File deleted successfully');
             } else {
-                console.log('File does not exist');
+                //console.log('File does not exist');
             }
         } catch (error) {
             console.error('Error deleting file:', error);

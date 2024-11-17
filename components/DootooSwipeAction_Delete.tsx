@@ -10,7 +10,7 @@ const DootooSwipeAction_Delete = ({
     const { anonymousId, setLastRecordedCount, thingRowPositionXs, thingRowHeights } = useContext(AppContext);
 
     const handleThingDelete = (index: number) => {
-        console.log("Entering handle delete item...");
+        //console.log("Entering handle delete item...");
         setLastRecordedCount(0);
         var updatedThings = [...listArray];
 
@@ -145,7 +145,7 @@ const DootooSwipeAction_Delete = ({
             });
         }
 
-        console.log(`Exiting handle delete ${thingNameStr.toLowerCase()} at index ${index}...`);
+       //console.log(`Exiting handle delete ${thingNameStr.toLowerCase()} at index ${index}...`);
     }
 
     return (

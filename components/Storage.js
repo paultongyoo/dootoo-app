@@ -43,7 +43,7 @@ const DELETETIP_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amaz
 
 export const saveItems = async (item_list_obj, callback) => {
   if (item_list_obj === undefined) {
-    console.log("saveItems called with undefined parameter, exiting...");
+    //console.log("saveItems called with undefined parameter, exiting...");
     return;
   }
 
@@ -64,7 +64,7 @@ export const saveItems = async (item_list_obj, callback) => {
 
 export const saveTips = async (item_obj, tip_list_obj, callback) => {
   if (tip_list_obj === undefined) {
-    console.log("saveTips called with undefined parameter, exiting...");
+    //console.log("saveTips called with undefined parameter, exiting...");
     return;
   }
 
@@ -94,7 +94,7 @@ export const initalizeUser = async() => {
       return newUserData;
     }
   } catch (e) {
-      console.log("Error reading user data:", e);
+      //console.log("Error reading user data:", e);
   }
 };
 
@@ -105,7 +105,7 @@ export const loadItems = async (page, callback) => {
 
     const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserStr) {
-      console.log("Received null local anon Id, aborting loadItems!");
+      //console.log("Received null local anon Id, aborting loadItems!");
       return [];
     }
     const localUser = JSON.parse(localUserStr);
@@ -132,7 +132,7 @@ export const loadTips = async (item_uuid, page) => {
 
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserSr) {
-      console.log("Received null local anon Id, aborting tipVote!");
+      //console.log("Received null local anon Id, aborting tipVote!");
       return [];
     }
     const localUser = JSON.parse(localUserSr);
@@ -159,7 +159,7 @@ export const tipVote = async(tip_uuid, voteValue) => {
     //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserSr) {
-      console.log("Received null local anon Id, aborting tipVote!");
+      //console.log("Received null local anon Id, aborting tipVote!");
       return;
     }
     const localUser = JSON.parse(localUserSr);
@@ -179,10 +179,10 @@ export const tipVote = async(tip_uuid, voteValue) => {
 
 export const flagTip = async(tip_uuid) => {
   try {
-    console.log("Entering flag tip, uuid: " + tip_uuid);
+    //console.log("Entering flag tip, uuid: " + tip_uuid);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserSr) {
-      console.log("Received null local anon Id, aborting tipVote!");
+      //console.log("Received null local anon Id, aborting tipVote!");
       return;
     }
     const localUser = JSON.parse(localUserSr);
@@ -193,7 +193,7 @@ export const flagTip = async(tip_uuid) => {
         tip_uuid: tip_uuid
       }
     );
-    console.log("Flag Tip Response Obj: " + JSON.stringify(response.data.body));
+    //console.log("Flag Tip Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling flagTip API:', error);
   }
@@ -201,10 +201,10 @@ export const flagTip = async(tip_uuid) => {
 
 export const deleteItem = async(item_uuid) => {
   try {
-    console.log("Entering delete item, uuid: " + item_uuid);
+    //console.log("Entering delete item, uuid: " + item_uuid);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserSr) {
-      console.log("Received null local anon Id, aborting tipVote!");
+      //console.log("Received null local anon Id, aborting tipVote!");
       return;
     }
     const localUser = JSON.parse(localUserSr);
@@ -223,10 +223,10 @@ export const deleteItem = async(item_uuid) => {
 
 export const updateItemHierarchy = async(item_uuid, is_child) => {
   try {
-    console.log("Entering updateItemHierarchy, uuid: " + item_uuid + " is_child: " + is_child);
+    //console.log("Entering updateItemHierarchy, uuid: " + item_uuid + " is_child: " + is_child);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserSr) {
-      console.log("Received null local anon Id, aborting tipVote!");
+      //console.log("Received null local anon Id, aborting tipVote!");
       return;
     }
     const localUser = JSON.parse(localUserSr);
@@ -246,10 +246,10 @@ export const updateItemHierarchy = async(item_uuid, is_child) => {
 
 export const deleteTip = async(tip_uuid) => {
   try {
-    console.log("Entering deleteTip, uuid: " + tip_uuid);
+    //console.log("Entering deleteTip, uuid: " + tip_uuid);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserSr) {
-      console.log("Received null local anon Id, aborting tipVote!");
+      //console.log("Received null local anon Id, aborting tipVote!");
       return ;
     }
     const localUser = JSON.parse(localUserSr);
@@ -269,7 +269,7 @@ export const deleteTip = async(tip_uuid) => {
 export const resetAllData = async () => {
   try {
     await AsyncStorage.clear();
-    console.log('All storage cleared');
+    //console.log('All storage cleared');
   } catch (e) {
     console.error('Failed to clear AsyncStorage', e);
   }
@@ -288,7 +288,7 @@ const saveUserLocally = async(user_obj) => {
     await AsyncStorage.setItem(TIP_COUNT_KEY, `${user_obj.tipCount  || '0'}`);
     //console.log(`Saved user to local storage.`)
   } catch (e) {
-    console.log("Error saving user to local storage.", e);
+    //console.log("Error saving user to local storage.", e);
   }
   //console.log("Saved user data to local storage successfully.");
 }
@@ -332,16 +332,16 @@ const updateLocalUserCounts = async(updatedUser) => {
     await AsyncStorage.setItem(TIP_COUNT_KEY, `${tipCount}`);
     //console.log(`Updated local counts: Done Count (${doneCount}) Tip Count (${tipCount})`);
   } catch (e) {
-    console.log("Error updated user counts in local storage.", e);
+    //console.log("Error updated user counts in local storage.", e);
   }
 }
 
 const createUser = async () => {
-  console.log("createUser");
+  //console.log("createUser");
   try {
     // If username or anonymous doesn't exist, assume we're at first launch OR data has gotten corrupt.
     // (Re)initialize user name and anonymous UUID and store locally
-    console.log("Generating new username and anonymous ID...");
+    //console.log("Generating new username and anonymous ID...");
 
     // Create username, anonymous ID, and initial user counts
     const newUsername = generateUsername();
@@ -364,20 +364,20 @@ const createUser = async () => {
       tipCountStr: tipCountStr 
     }
   } catch (error) {
-    console.error('Error calling create User API:', error);
+    //console.error('Error calling create User API:', error);
   }
 };
 
 const saveItemsToBackend = async(item_list_obj, callback) => {
   if (!item_list_obj || item_list_obj.length == 0) {
-    console.log("saveItemsToBackend called with empty list, aborting backend call!");
+    //console.log("saveItemsToBackend called with empty list, aborting backend call!");
     return null;
   }
 
   try {
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserSr) {
-      console.log("Received null local anon Id, aborting tipVote!");
+      //console.log("Received null local anon Id, aborting tipVote!");
       return ;
     }
     const localUser = JSON.parse(localUserSr);
@@ -400,20 +400,20 @@ const saveItemsToBackend = async(item_list_obj, callback) => {
     }
 
   } catch (e) {
-    console.log("Error saving item list to backend", e);
+    //console.log("Error saving item list to backend", e);
   }
 }
 
 const saveTipsToBackend = async(item_obj, tip_list_obj, callback) => {
   if (!tip_list_obj || tip_list_obj.length == 0) {
-    console.log("saveTipsToBackend called with empty list, aborting backend call!");
+    //console.log("saveTipsToBackend called with empty list, aborting backend call!");
     return null;
   }
 
   try {
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserSr) {
-      console.log("Received null local anon Id, aborting tipVote!");
+      //console.log("Received null local anon Id, aborting tipVote!");
       return ;
     }
     const localUser = JSON.parse(localUserSr);
@@ -435,7 +435,7 @@ const saveTipsToBackend = async(item_obj, tip_list_obj, callback) => {
     }
 
   } catch (e) {
-    console.log("Error saving tip list to backend", e);
+    //console.log("Error saving tip list to backend", e);
   }
 }
 
@@ -446,7 +446,7 @@ const saveItemsLocally = async(item_list_obj) => {
     await AsyncStorage.setItem(ITEM_LIST_KEY, item_list_str);
     //console.log(`Saved list to local storage with ${item_list_obj.length} items.`)
   } catch (e) {
-    console.log("Error saving list to local storage.", e);
+    //console.log("Error saving list to local storage.", e);
   }
 }
 
@@ -457,7 +457,7 @@ const saveTipsLocally = async(item_obj, tip_list_obj) => {
     await AsyncStorage.setItem(`${TIP_LIST_KEY_PREFIX}_${item_obj.uuid}`, tip_list_str);
     //console.log(`Saved tip list to local storage with ${tip_list_obj.length} tips.`)
   } catch (e) {
-    console.log("Error saving list to local storage.", e);
+    //console.log("Error saving list to local storage.", e);
   }
 }
 

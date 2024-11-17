@@ -10,7 +10,7 @@ export const handler = async (event) => {
             console.error(e)
             await prisma.$disconnect()
         });
-  console.log(`Returned item delete count: ${itemDeleteCount}`);
+  //console.log(`Returned item delete count: ${itemDeleteCount}`);
   const response = {
     statusCode: (itemDeleteCount >= 0) ? 200 : 400,
     body: itemDeleteCount,
@@ -22,9 +22,9 @@ const deleteAllItems = async(anonymous_id, items_str) => {
     const user = await prisma.user.findUnique({
         where: { anonymous_id: anonymous_id}
     });
-    console.log(user);
+    //console.log(user);
     if (user == null) {
-        console.log(`Anonymous ID ${anonymous_id} not found in DB, aborting delete!`);
+        //console.log(`Anonymous ID ${anonymous_id} not found in DB, aborting delete!`);
         return -1;
     }
 
@@ -35,6 +35,6 @@ const deleteAllItems = async(anonymous_id, items_str) => {
            } 
         }
     });
-    console.log(`Number of items deleted: ${deletedItemsCount.count}`);
+    //console.log(`Number of items deleted: ${deletedItemsCount.count}`);
     return deletedItemsCount.count;
 }

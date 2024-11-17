@@ -11,7 +11,7 @@ export const handler = async (event) => {
             body: JSON.stringify({ error: 'Can\'t find user!' })
         };
     }
-    console.log(user);
+    //console.log(user);
     const tip = await prisma.tip.findUnique({
         where: {
             user: { id: user.id },

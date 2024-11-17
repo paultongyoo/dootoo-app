@@ -29,11 +29,11 @@ const DootooTipEmptyUX = ({ styles, selectedItem, tipArray }) => {
                 if (tipArray.length == 0) {
                     generateEmptyListCTA();
                 } else {
-                    console.log(`Unexpected scenario:  Inside Empty List useEffect but passed a non-empty Tip Array!  Fix me?`)
+                    //console.log(`Unexpected scenario:  Inside Empty List useEffect but passed a non-empty Tip Array!  Fix me?`)
                 }
             });
             return () => {
-                console.log("Inside return callback form TipEmptyUX.useFocusEffect([])");
+                //console.log("Inside return callback form TipEmptyUX.useFocusEffect([])");
                 // emptyListCTAFadeInAnimation.reset();
                 // ctaAnimation.reset();
             }

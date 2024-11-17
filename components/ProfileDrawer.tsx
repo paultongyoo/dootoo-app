@@ -20,7 +20,7 @@ const ProfileDrawer = ({ navigation }) => {
           {
             text: 'OK',
             onPress: () => {
-              console.log('Data Deletion OK Pressed');
+              //console.log('Data Deletion OK Pressed');
               amplitude.track("Coming Soon Popup Displayed", {
                 anonymous_id: anonymousId,
                 pathname: pathname,
@@ -40,13 +40,13 @@ const ProfileDrawer = ({ navigation }) => {
         [
           {
             text: 'Cancel',
-            onPress: () => console.log('Data Deletion Cancel Pressed'),
+            //onPress: () => console.log('Data Deletion Cancel Pressed'),
             style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
           },
           {
             text: 'OK',
             onPress: () => {
-              console.log('Data Deletion OK Pressed');
+              //console.log('Data Deletion OK Pressed');
               resetUserContext();
             },
           },

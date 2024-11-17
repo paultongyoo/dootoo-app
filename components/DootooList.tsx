@@ -56,10 +56,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
                     resetListWithFirstPageLoad();
                 } else {
-                    console.log("Skipping loading things for user as they are brand new.");
+                    //console.log("Skipping loading things for user as they are brand new.");
                 }
             } else {
-                console.log("Skipping initial load for user per shouldInitialLoad == false.");
+                //console.log("Skipping initial load for user per shouldInitialLoad == false.");
             }
             setScreenInitialized(true);
         });
@@ -83,11 +83,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         onUndoPress: () => {
 
                             // Remove the things just added to the list
-                            console.log(`Undoing recording op; removing first ${lastRecordedCount} things(s).`);
+                            //console.log(`Undoing recording op; removing first ${lastRecordedCount} things(s).`);
                             var updatedItems = [...listArray];
-                            console.log("listArray length: " + listArray.length);
+                            //console.log("listArray length: " + listArray.length);
                             updatedItems.splice(0, lastRecordedCount);
-                            console.log("List to update now has " + updatedItems.length + " in it.");
+                            //console.log("List to update now has " + updatedItems.length + " in it.");
                             setLastRecordedCount(0);
                             listArraySetter(updatedItems); // This should update UI only and not invoke any syncronous backend operations
                         }
@@ -124,10 +124,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 setPageLoading(true);
                 setPage((prevPage) => prevPage + 1);
             } else {
-                console.log(`Ignoring pull down action as page ${page} currently loading or full list is refreshing.`);
+                //console.log(`Ignoring pull down action as page ${page} currently loading or full list is refreshing.`);
             }
         } else {
-            console.log(`Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
+            //console.log(`Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
         }
     };
 
@@ -136,7 +136,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         if (screenInitialized) {
             loadThingsForCurrentPage();
         } else {
-            console.log("Not calling loadThingsForCurrentPage in useEffect(page) as it was called during first useEffect([]) call.");
+            //("Not calling loadThingsForCurrentPage in useEffect(page) as it was called during first useEffect([]) call.");
         }
     }, [page]);
 
@@ -213,10 +213,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 });
 
             } else {
-                console.log(`${currentValue} not changed on blur, ignoring..`);
+                //console.log(`${currentValue} not changed on blur, ignoring..`);
             }
         } else {
-            console.log(`Previous field ${thingIdxToEdit} exited with no change, ignoring blur`);
+            //console.log(`Previous field ${thingIdxToEdit} exited with no change, ignoring blur`);
         }
     }
 
@@ -278,10 +278,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         // }, [item]);
 
         useEffect(() => {
-            console.log("listArray length " + listArray.length);
-            console.log("thingRowHeights: " + JSON.stringify(thingRowHeights));
+            // console.log("listArray length " + listArray.length);
+            // console.log("thingRowHeights: " + JSON.stringify(thingRowHeights));
             if (item.shouldAnimateIntoView) {
-                console.log("Inside shouldAnimateIntoView for index " + getIndex());
+                //console.log("Inside shouldAnimateIntoView for index " + getIndex());
                 Animated.timing(rowHeight, {
                     toValue: fullRowHeight.current,
                     duration: 300,

@@ -7,11 +7,11 @@ export const handler = async (event) => {
 
       const newName = event.username;
       const newAnonId = event.anonymous_id;
-      console.log("Retrieved username and anonymousId from client: " + newName + " " + newAnonId);
+      //console.log("Retrieved username and anonymousId from client: " + newName + " " + newAnonId);
       
-      console.log("Saving new user data to disk...");
+      //console.log("Saving new user data to disk...");
       const newUser = await saveUser(newName, newAnonId);
-      console.log(`Saved new user to DB: ${JSON.stringify(newUser)}.`);
+      //console.log(`Saved new user to DB: ${JSON.stringify(newUser)}.`);
 
       const response = {
         statusCode: 200,
@@ -20,7 +20,7 @@ export const handler = async (event) => {
       await prisma.$disconnect();
       return response;
   } catch (e) {
-      console.log("Error saving user data", e);
+      //console.log("Error saving user data", e);
       await prisma.$disconnect();
   }
 };

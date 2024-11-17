@@ -31,7 +31,7 @@ export default function ItemTips() {
   });
 
   const saveAllTips = async (latestTips) => {
-    console.log("saveAllTips started...");
+    //console.log("saveAllTips started...");
     if (latestTips && latestTips.length > 0) {
 
       // Immediately update displayed tip count within selected item header
@@ -39,22 +39,22 @@ export default function ItemTips() {
       updatedSelectedItem.tip_count = latestTips.length;
       setSelectedItem(updatedSelectedItem);
 
-      console.log(`Passing ${latestTips.length} tips to saveTips method...`);
+      //console.log(`Passing ${latestTips.length} tips to saveTips method...`);
 
       // Asynchronously sync DB with latest tips
       saveTips(selectedItem, latestTips, () => {
         updateUserCountContext();
-        console.log("saveAllTips successful.");
+        //console.log("saveAllTips successful.");
       });
     }
   };
 
   const saveSingleTip = async (tip) => {
-    console.log("saveSingleTip started...");
+    //console.log("saveSingleTip started...");
     // Asynchronously sync DB with latest tips
     saveTips(selectedItem, [tip], () => {
       updateUserCountContext();
-      console.log("saveSingleTip successful.");
+      //console.log("saveSingleTip successful.");
     });
   }
 
@@ -128,7 +128,7 @@ export default function ItemTips() {
         {
           text: 'Cancel',
           onPress: () => {
-            console.log('Tip Flag Cancel Pressed');
+            //console.log('Tip Flag Cancel Pressed');
             amplitude.track("Tip Flag Cancelled", {
               anonymous_id: anonymousId,
               tip_uuid: tips[index].uuid
@@ -139,7 +139,7 @@ export default function ItemTips() {
         {
           text: 'Yes',
           onPress: () => {
-            console.log('Tip Flag OK Pressed');
+            //console.log('Tip Flag OK Pressed');
             handleFlagTip(index);
           },
         },
@@ -168,7 +168,7 @@ export default function ItemTips() {
       [
         {
           text: 'OK',
-          onPress: () => console.log('Tip Flag Cancel Pressed'),
+          //onPress: () => console.log('Tip Flag Cancel Pressed'),
           style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
         }
       ],
