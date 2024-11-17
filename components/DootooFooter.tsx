@@ -79,7 +79,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 staysActiveInBackground: true
             });
 
-            console.log('Starting recording..');
+            //console.log('Starting recording..');
             const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
             setRecording(recording);
 
@@ -96,7 +96,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             recording.setOnRecordingStatusUpdate((status: Audio.RecordingStatus) => {
                 if (!status.isRecording) clearInterval(interval);
             });
-            console.log('Recording started');
+            //console.log('Recording started');
             //setErrorMsg(undefined);   // Clear error message if no error
         } catch (err) {
             if (retryCount < 99999999999) { // TODO: Resolve this hack to prevent the "recorder not prepared error"
@@ -142,11 +142,11 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     // the current processing may be taking too long; treat the user action as
     // an attempt to cancel the recording and try again
     const cancelRecordingProcessing = async() => {
-        console.log("Cancelling recording...");
+        //console.log("Cancelling recording...");
         const fileUri = await stopRecording();
         deleteFile(fileUri);
         setIsRecordingProcessing(false);
-        console.log("Recording cancelled...");
+        //console.log("Recording cancelled...");
         amplitude.track("Recording Processing Cancelled", {
             anonymous_id: anonymousId,
             pathname: pathname
@@ -196,7 +196,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             );
         } else {
             //const response =  generateStubData(); 
-            console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
+            //console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
             
             if (listArray && response && response.length > 0) {
                 setLastRecordedCount(response.length);  // Set for future toast undo potential
@@ -210,7 +210,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 if (listArray.length == 0) {
 
                     // Assume the empty list CTA is visible, so fade it out first
-                    console.log("Attempting to fade out empty CTA animation...");
+                    //("Attempting to fade out empty CTA animation...");
                     // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
                     // emptyListCTAFadeOutAnimation.reset();
                     // emptyListCTAOpacity.current = 1;
@@ -238,7 +238,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 // Make sure this function is asynchronous!!!
                 saveAllThingsFunc(updatedItems);
             } else {
-                console.log("Did not call setter with updated list, attempting to show toast.");
+                //console.log("Did not call setter with updated list, attempting to show toast.");
                 amplitude.track("Empty Recording Toast Displayed", {
                     anonymous_id: anonymousId,
                     pathname: pathname  
@@ -252,7 +252,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             }
         }
         setIsRecordingProcessing(false);
-        console.log("Finished parsing file, deleting...");
+        //console.log("Finished parsing file, deleting...");
         deleteFile(fileUri);
     }
 
@@ -261,9 +261,9 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     }
 
     const cancelRecording = async () => {
-        console.log("Cancelling recording...");
+        //console.log("Cancelling recording...");
         const fileUri = await stopRecording();
-        console.log("Deleting file..");
+        //console.log("Deleting file..");
         deleteFile(fileUri);
     }
 
