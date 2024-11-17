@@ -33,8 +33,9 @@ const DootooTipEmptyUX = ({ styles, selectedItem, tipArray }) => {
                 }
             });
             return () => {
-                emptyListCTAFadeInAnimation.reset();
-                ctaAnimation.reset();
+                console.log("Inside return callback form TipEmptyUX.useFocusEffect([])");
+                // emptyListCTAFadeInAnimation.reset();
+                // ctaAnimation.reset();
             }
         }, [])
     );
@@ -47,7 +48,8 @@ const DootooTipEmptyUX = ({ styles, selectedItem, tipArray }) => {
                     <ActivityIndicator size={"large"} color="black" />
                 </Animated.View>
                 :
-                <Animated.View style={[styles.emptyListContainer, {opacity: emptyListCTAOpacity }, !ctaLoading && {opacity: fadeCTA}]}>
+                <Animated.View style={[styles.emptyListContainer, {opacity: emptyListCTAOpacity }]}>
+                {/* <Animated.View style={[styles.emptyListContainer, {opacity: emptyListCTAOpacity }, !ctaLoading && {opacity: fadeCTA}]}> */}
                     <Text style={styles.emptyListContainer_words}>{emptyListCTA}</Text>
                     <Image style={styles.emptyListContainer_arrow} source={require("@/assets/images/sketch_arrow_556B2F.png")} />
                 </Animated.View>
