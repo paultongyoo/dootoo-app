@@ -15,7 +15,17 @@ const OnboardingScreen = () => {
     const router = useRouter();
     const [step, setStep] = useState(1);
     const translationX = useRef(new Animated.Value(0)).current;
+    const onboardingOpacity = useRef(new Animated.Value(0)).current
 
+    useEffect(() => {
+        Animated.timing(onboardingOpacity, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.in(Easing.quad),
+            useNativeDriver: true
+        }).start();
+    },[]);
+    
     const onSwipe = ({ nativeEvent }) => {
         if (nativeEvent.state === State.END) {
             const { translationX } = nativeEvent;
@@ -69,38 +79,49 @@ const OnboardingScreen = () => {
                 amplitude.track("iOS ATT Prompt Completed", { result: result });
             }
         }
-
         await AsyncStorage.setItem('isFirstLaunch', 'false');
-        router.replace('/drawer/stack');
+        Animated.timing(onboardingOpacity, {
+            toValue: 0,
+            duration: 300,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true
+        }).start(() => {    
+            router.replace('/drawer/stack');
+        });
     };
 
     const styles = StyleSheet.create({
+        background: {
+            flex: 1,
+            backgroundColor: '#DCC7AA',        
+        },
         container: {
             flex: 1,
-            backgroundColor: '#DCC7AA',
-            justifyContent: 'center'
+            justifyContent: 'center'  
         }
     });
 
     return (
-        <View style={styles.container}>
-            {(step > 1) ? <OnboardingHeader swipeLeft={swipeRight} />
-                : <></>}
+        <View style={styles.background}>
+            <Animated.View style={[styles.container, {opacity: onboardingOpacity}]}>
+                {(step > 1) ? <OnboardingHeader swipeLeft={swipeRight} />
+                    : <></>}
 
-            <PanGestureHandler onHandlerStateChange={onSwipe}>
-                <Animated.View style={{ transform: [{ translateX: translationX }] }}>
-                    {
-                        (step == 1) ? <Step1 />
-                            : (step == 2) ? <Step2 />
-                                : (step == 3) ? <Step3 />
-                                    : (step == 4) ? <Step4 />
-                                        : (step == 5) ? <Step5 />
-                                            : <Text>You should never see this!!</Text>
-                    }
-                </Animated.View>
-            </PanGestureHandler>
+                <PanGestureHandler onHandlerStateChange={onSwipe}>
+                    <Animated.View style={{ transform: [{ translateX: translationX }] }}>
+                        {
+                            (step == 1) ? <Step1 />
+                                : (step == 2) ? <Step2 />
+                                    : (step == 3) ? <Step3 />
+                                        : (step == 4) ? <Step4 />
+                                            : (step == 5) ? <Step5 />
+                                                : <Text>You should never see this!!</Text>
+                        }
+                    </Animated.View>
+                </PanGestureHandler>
 
-            <OnboardingFooter step={step} onForwardButtonPress={swipeLeft} />
+                <OnboardingFooter step={step} onForwardButtonPress={swipeLeft} />
+            </Animated.View>
         </View>
     );
 };
