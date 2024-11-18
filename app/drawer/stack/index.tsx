@@ -279,7 +279,8 @@ export default function Index() {
     },
     itemTextInput: {
       fontSize: 16,
-      padding: 5,
+      paddingTop: 5,
+      paddingBottom: 5,
       paddingRight: 25,
       flex: 1
     },
