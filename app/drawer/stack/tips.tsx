@@ -2,7 +2,7 @@ import {
   Image, Text, View, StyleSheet, Pressable, Alert
 } from "react-native";
 import { useState, useContext, useCallback, useEffect } from 'react';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, usePathname } from 'expo-router';
 import Reanimated, {
   SharedValue,
   configureReanimatedLogger,
@@ -23,12 +23,21 @@ export default function ItemTips() {
   const {anonymousId, setLastRecordedCount, updateUserCountContext,
     selectedItem, setSelectedItem } = useContext(AppContext);
   const [tips, setTips] = useState([]);
+  const pathname = usePathname();
 
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
     strict: false
   });
+
+  useEffect(() => {
+    if (selectedItem.is_done) {
+      amplitude.track("Owned Tips Section Viewed");
+    } else {
+      amplitude.track("Community Tips Section Viewed");
+    }
+  }, [pathname]);
 
   const saveAllTips = async (latestTips) => {
     //console.log("saveAllTips started...");
@@ -497,12 +506,6 @@ export default function ItemTips() {
     //console.log("Selected Item is null, aborting render of tips page");
     return;
   } else {
-
-    if (selectedItem.is_done) {
-      amplitude.track("Owned Tips Section Viewed");
-    } else {
-      amplitude.track("Community Tips Section Viewed");
-    }
 
     return (
       <View style={styles.container}>
