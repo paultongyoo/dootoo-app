@@ -130,7 +130,7 @@ export default function Index() {
       // Set this to instruct list to animate new item into view
       updatedTasks![index].shouldAnimateIntoView = true
 
-      // TODO: Shrink height of item to zero before moving it to new location
+      // Shrink height of item to zero before moving it to new location
       const heightRefOfCurrentRow = thingRowHeights.current[index];
       Animated.timing(heightRefOfCurrentRow, {
         toValue: 0,
