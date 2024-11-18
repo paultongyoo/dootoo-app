@@ -278,7 +278,7 @@ export const resetAllData = async () => {
 // ******** BEGIN Non-EXPORTED METHODS *********
 
 const saveUserLocally = async(user_obj) => {
-  console.log("Saving new user data to local storage...");
+  //console.log("Saving new user data to local storage...");
 
   try {
     //console.log("Saving user to local storage...");
