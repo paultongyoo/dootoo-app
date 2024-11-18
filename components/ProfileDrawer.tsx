@@ -36,7 +36,7 @@ const ProfileDrawer = ({ navigation }) => {
     const showConfirmationPrompt = () => {
       Alert.alert(
         'Are you sure?', // Title of the alert
-        'This will delete all data stored by dootoo and generate a new username and anonymous ID for you.', // Message of the alert
+        'This will delete all your dootoo data and generate a new username.  This cannot be undone.', // Message of the alert
         [
           {
             text: 'Cancel',
@@ -217,10 +217,10 @@ const ProfileDrawer = ({ navigation }) => {
           </Pressable>
         </View>
         <View style={styles.privacyContainer}>
-          <View style={styles.anonIdDisplayContainer}>
+          {/* <View style={styles.anonIdDisplayContainer}>
             <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
             <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId}</Text>
-          </View>
+          </View> */}
           <View style={styles.deleteDataLinkContainer}>
             <Pressable onPress={showConfirmationPrompt}>
               <Text style={styles.deleteDataLinkText}>Delete My Data</Text>
