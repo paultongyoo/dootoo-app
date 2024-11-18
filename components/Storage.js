@@ -40,6 +40,9 @@ const UPDATEITEMHIERARCHY_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-e
 const DELETETIP_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/deleteTip_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/deleteTip';
 
+const DELETEUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/deleteUser_Dev'
+                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/deleteUser';
+
 
 export const saveItems = async (item_list_obj, callback) => {
   if (item_list_obj === undefined) {
@@ -267,11 +270,34 @@ export const deleteTip = async(tip_uuid) => {
 }
 
 export const resetAllData = async () => {
+  console.log("Inside resetAllData");
+
   try {
-    await AsyncStorage.clear();
-    //console.log('All storage cleared');
+    //console.log("Entering deleteTip, uuid: " + tip_uuid);
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      console.log("Received null local anon Id, aborting tipVote!");
+      return ;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(DELETEUSER_URL,
+      {
+        anonymous_id : localAnonId
+      }
+    );
+    const deletionInfo = response.data.body;
+    console.log("Deleted Info: " + JSON.stringify(deletionInfo));
+
+    if (response.data.statusCode == 200) {
+      await AsyncStorage.clear();
+      //console.log('All storage cleared');
+      return deletionInfo;
+    } else {
+      throw new Error(response.data.body);
+    }
   } catch (e) {
-    console.error('Failed to clear AsyncStorage', e);
+    console.error('Error calling deleteTip API:', error);
   }
 };
 
