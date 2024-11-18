@@ -1,9 +1,10 @@
-import { usePathname } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Animated, Platform, View, StyleSheet, Easing, Text, Pressable, Image } from "react-native";
 import * as amplitude from '@amplitude/analytics-react-native';
 
 const DootooHeader = ({ navigation, route }) => {
+    const router = useRouter();
     const pathname = usePathname();
     const headerPosition = useRef(new Animated.Value(-200)).current;
 
@@ -81,7 +82,7 @@ const DootooHeader = ({ navigation, route }) => {
                         <Text style={[styles.mainLogoPart, styles.secondLogoPart]}>too</Text>
                     </View>
                     : <View style={styles.backButtonContainer}>
-                        <Pressable onPress={navigation.goBack}>
+                        <Pressable onPress={router.back}>
                             {(Platform.OS == 'ios') ? <Image style={styles.backIcon_ios} source={require('@/assets/images/back_arrow_556B2F_ios.png')} />
                                 : <Image style={styles.backIcon_android} source={require('@/assets/images/back_arrow_556B2F_android.png')} />}
                         </Pressable>
