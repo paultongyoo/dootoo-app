@@ -30,7 +30,6 @@ const DootooItemEmptyUX = ({ styles }) => {
       easing: Easing.inOut(Easing.ease),
       useNativeDriver: true
     }),
-    Animated.delay(1000),
     Animated.timing(fadeAnimArrow, {
       toValue: 1,
       duration: 800,
