@@ -34,19 +34,32 @@ const ProfileDrawer = ({ navigation }) => {
     };
 
     const showConfirmationPrompt = () => {
+      amplitude.track("User Data Deletion Started", {
+        anonymous_id: anonymousId,
+        pathname: pathname
+      });
       Alert.alert(
         'Are you sure?', // Title of the alert
         'This will delete all your dootoo data and generate a new username.  This cannot be undone.', // Message of the alert
         [
           {
             text: 'Cancel',
-            //onPress: () => console.log('Data Deletion Cancel Pressed'),
+            onPress: () => {
+              amplitude.track("User Data Deletion Cancelled", {
+                anonymous_id: anonymousId,
+                pathname: pathname
+              });
+            },
             style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
           },
           {
             text: 'OK',
             onPress: () => {
               //console.log('Data Deletion OK Pressed');
+              amplitude.track("User Data Deletion Ceompleted", {
+                anonymous_id: anonymousId,
+                pathname: pathname
+              });
               resetUserContext();
             },
           },
@@ -56,6 +69,11 @@ const ProfileDrawer = ({ navigation }) => {
     };
 
     const sendEmail = () => {
+      amplitude.track("Email Feedback Link Clicked", {
+        anonymous_id: anonymousId,
+        pathname: pathname
+      });
+
       const email = 'contact@thoughtswork.co'; // Replace with the desired email address
       const subject = `Feedback from ${username}`; // Optional: add a subject
       const body = '';
@@ -65,6 +83,11 @@ const ProfileDrawer = ({ navigation }) => {
 
       // Use Linking API to open email client
       Linking.openURL(url).catch(err => console.error('Error opening email client:', err));
+
+      amplitude.track("Email Feedback Link Opened", {
+        anonymous_id: anonymousId,
+        pathname: pathname
+      });
     };
 
     const styles = StyleSheet.create({
