@@ -24,6 +24,7 @@ export default function Index() {
   const { anonymousId, dootooItems, setDootooItems,
     setLastRecordedCount, setSelectedItem,
     updateUserCountContext, thingRowHeights } = useContext(AppContext);
+  const TIPS_PATHNAME = '/drawer/stack/tips';
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
@@ -383,6 +384,7 @@ export default function Index() {
     }
   });
 
+
   const renderRightActions = (progress: SharedValue<number>, dragX: SharedValue<number>, index: number) => {
     return (
       <>
@@ -396,7 +398,7 @@ export default function Index() {
                   item_uuid: dootooItems![index].uuid
                 });
                 setSelectedItem(dootooItems![index]);
-                router.push('/screens/tips');
+                router.push('/drawer/stack/tips');
               }}>
               <Image style={styles.giveTipIcon} source={require("@/assets/images/give_icon_white.png")} />
             </Pressable>
@@ -411,7 +413,7 @@ export default function Index() {
                   });
                   //console.log("Similar Tips button tapped on item: " + dootooItems![index].text);
                   setSelectedItem(dootooItems![index]);
-                  router.push('/screens/tips');
+                  router.push(TIPS_PATHNAME);
                 }}>
                 {/* <View style={styles.simliarTipsIcon}></View> */}
                 <Image style={styles.receiveTipIcon} source={require("@/assets/images/receive_tip_white.png")} />
