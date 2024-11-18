@@ -145,24 +145,30 @@ export default function Index() {
 
           // Move item to the bottom of the list if it's the only done item, otherwise make it the new first done item
           const [item] = updatedTasks.splice(index, 1);   // remove the item from its current location
-          thingRowHeights.current.splice(index, 1);       // remove the item from the thingrowheights tracker to keep lists in sync
+          const [height] = thingRowHeights.current.splice(index, 1);       // remove the item from the thingrowheights tracker to keep lists in sync
 
           if (firstDoneItemIdx == -1) {
             updatedTasks = updatedTasks.concat(item);         // Place at end of list
+            thingRowHeights.current.concat(height);
           } else {
             //console.log("Attempting to insert at top of first item list - firstDoneItemIdx: " + firstDoneItemIdx);
             updatedTasks.splice(firstDoneItemIdx - 1, 0, item)    // Insert it at firstDoneItem location
+            thingRowHeights.current.splice(firstDoneItemIdx - 1, 0, height);
           }
 
         } else {
           const backupVal = updatedTasks![index].index_backup;
           const [item] = updatedTasks.splice(index, 1);   // remove the item
+          const [height] = thingRowHeights.current.splice(index, 1);
+
           if (backupVal != null && (backupVal > firstDoneItemIdx)) {
             //console.log("Placing item at firstDoneItemIdx: " + firstDoneItemIdx);
             updatedTasks.splice(firstDoneItemIdx, 0, item)  // insert it in new location
+            thingRowHeights.current.splice(firstDoneItemIdx, 0, height);
           } else {
             //console.log("Placing item at backup index: " + backupVal);
             updatedTasks.splice(backupVal, 0, item)  // insert it in new location
+            thingRowHeights.current.splice(backupVal, 0, height);
           }
         }
 
