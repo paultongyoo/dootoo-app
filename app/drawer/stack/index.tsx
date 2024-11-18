@@ -398,7 +398,7 @@ export default function Index() {
                   item_uuid: dootooItems![index].uuid
                 });
                 setSelectedItem(dootooItems![index]);
-                router.push('/drawer/stack/tips');
+                router.push(TIPS_PATHNAME);
               }}>
               <Image style={styles.giveTipIcon} source={require("@/assets/images/give_icon_white.png")} />
             </Pressable>
