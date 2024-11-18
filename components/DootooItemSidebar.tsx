@@ -20,7 +20,7 @@ const DootooItemSidebar = ({ thing, styles }) => {
     } else {
         return (
             <> 
-                {(thing.tip_count || thing.is_done) ?
+                {(thing.tip_count > 0) ?
                     <View style={styles.tipCountContainer}>
                         <Text style={styles.tipCountText}>{formatNumber(thing.tip_count) || '0'}</Text>
                         <View style={styles.tipCountIcon}></View>
