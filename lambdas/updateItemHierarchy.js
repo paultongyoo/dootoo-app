@@ -28,8 +28,9 @@ export const handler = async (event) => {
 
         const updatedItem = await prisma.item.update({
             where: { id: item.id },
-            data: { is_child: event.is_child === 'true'}
+            data: { is_child: event.is_child }
         });
+        console.log("Updated Item: " + JSON.stringify(updatedItem));
 
         const response = {
             statusCode: 200,
