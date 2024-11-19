@@ -3,6 +3,7 @@ import { useContext } from "react";
 import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Linking, Platform } from "react-native";
 import { AppContext } from "./AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
+import { formatNumber } from './Helpers';
 
 
 const ProfileDrawer = ({ navigation }) => {
@@ -56,7 +57,7 @@ const ProfileDrawer = ({ navigation }) => {
             text: 'OK',
             onPress: () => {
               //console.log('Data Deletion OK Pressed');
-              amplitude.track("User Data Deletion Ceompleted", {
+              amplitude.track("User Data Deletion Completed", {
                 anonymous_id: anonymousId,
                 pathname: pathname
               });
@@ -227,7 +228,7 @@ const ProfileDrawer = ({ navigation }) => {
             <View style={styles.statIconContainer}>
               <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
             </View>
-            <Text style={styles.statNumber}>{doneCount || '0'}</Text>
+            <Text style={styles.statNumber}>{formatNumber(doneCount) || '0'}</Text>
             <Text style={styles.statName}>Done</Text>
           </Pressable>
           <Pressable style={styles.statContainer}
@@ -235,7 +236,7 @@ const ProfileDrawer = ({ navigation }) => {
             <View style={styles.statIconContainer}>
               <Image style={styles.statIcon_Tips} source={require('@/assets/images/give_icon_556B2F.png')} />
             </View>
-            <Text style={styles.statNumber}>{tipCount || '0'}</Text>
+            <Text style={styles.statNumber}>{formatNumber(tipCount) || '0'}</Text>
             <Text style={styles.statName}>Tips</Text>
           </Pressable>
         </View>
