@@ -11,7 +11,8 @@ import * as amplitude from '@amplitude/analytics-react-native';
 import {
   Image, StyleSheet, Pressable,
   Animated,
-  Easing
+  Easing,
+  Platform
 } from "react-native";
 import { AppContext } from '@/components/AppContext';
 import Reanimated, {
@@ -190,7 +191,7 @@ export default function Index() {
       flex: 1,
       //justifyContent: "center",
       backgroundColor: "#DCC7AA",
-      paddingTop: 100
+      paddingTop: (Platform.OS == 'ios') ? 100 : 75
       //alignItems: "center"
     },
     link: {

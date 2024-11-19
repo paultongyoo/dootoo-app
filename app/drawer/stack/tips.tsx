@@ -1,5 +1,6 @@
 import {
-  Image, Text, View, StyleSheet, Pressable, Alert
+  Image, Text, View, StyleSheet, Pressable, Alert,
+  Platform
 } from "react-native";
 import { useState, useContext, useCallback, useEffect } from 'react';
 import { router, useFocusEffect, usePathname } from 'expo-router';
@@ -233,7 +234,7 @@ export default function ItemTips() {
       flex: 1,
       justifyContent: "center",
       backgroundColor: "#DCC7AA",
-      paddingTop: 100
+      paddingTop: (Platform.OS == 'ios') ? 100 : 75
     },
     initialLoadAnimContainer: {
       flex: 1,
