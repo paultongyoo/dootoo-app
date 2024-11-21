@@ -41,9 +41,12 @@ export const handler = async (event) => {
     } else {
         console.log("Specified item is NOT done, returning tips of similar items (if any)...");
         retrievedTips = await prisma.$queryRawUnsafe(
-            `SELECT COALESCE(tip_net_vote::integer, 0) as upvote_count, COALESCE(tip_user_vote, 0) as user_vote_value, "Tip".* 
+            `SELECT COALESCE(tip_net_vote::integer, 0) as upvote_count, 
+                    COALESCE(tip_user_vote, 0) as user_vote_value, 
+                    "Tip".uuid, "Tip".text, "Tip".is_flagged, "User".name
             FROM "Tip" 
             LEFT JOIN "Item" on "Tip".item_id = "Item".id
+            LEFT JOIN "User" on "Tip".user_id = "User".id
             LEFT JOIN (
                 SELECT tip_id, value as tip_user_vote 
                 FROM "TipVote"

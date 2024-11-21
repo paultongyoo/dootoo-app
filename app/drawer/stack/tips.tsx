@@ -21,7 +21,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 
 
 export default function ItemTips() {
-  const {anonymousId, setLastRecordedCount, updateUserCountContext,
+  const { anonymousId, setLastRecordedCount, updateUserCountContext,
     selectedItem, setSelectedItem } = useContext(AppContext);
   const [tips, setTips] = useState([]);
   const pathname = usePathname();
@@ -74,7 +74,7 @@ export default function ItemTips() {
         //console.log("Aborting useFocusEffect call on null selected item");
         return;
       }
-      //console.log("Selected item: " + JSON.stringify(selectedItem));
+      console.log("Selected item: " + JSON.stringify(selectedItem));
 
       return () => {
         //console.log('User has navigated away from this tips route - Nulling out selectedItem and tips contexts.');
@@ -115,8 +115,8 @@ export default function ItemTips() {
     } else {
 
       // If user is voting in the opposite direction of their current vote, cancel their current vote first before adding the new vote
-      updatedTips[index].upvote_count += (tips[index].user_vote_value == (voteValue * -1)) ? (tips[index].user_vote_value * -1) + voteValue : voteValue;   
-      updatedTips[index].user_vote_value = voteValue; 
+      updatedTips[index].upvote_count += (tips[index].user_vote_value == (voteValue * -1)) ? (tips[index].user_vote_value * -1) + voteValue : voteValue;
+      updatedTips[index].user_vote_value = voteValue;
 
       // Asynchronously send tip vote to backend 
       tipVote(tips[index].uuid, voteValue);
@@ -224,6 +224,29 @@ export default function ItemTips() {
               </Pressable>
             </Reanimated.View>
           </>
+        }
+      </>
+    );
+  };
+
+  const renderLeftActions = (progress: SharedValue<number>, dragX: SharedValue<number>, index: number) => {
+    return (
+      <>
+        {(tips[index].name) ?
+          <Reanimated.View style={styles.itemSwipeArea}>
+            <Pressable
+              onPress={() => Alert.alert('Implement Me')}>
+              <View style={[styles.tipProfileContainer]}>
+                <View style={styles.tipProfileIconContainer}>
+                  <Image style={styles.tipProfileIcon} source={require("@/assets/images/profile_icon_red.png")} />
+                </View>
+                <View style={styles.tipProfileNameContainer}>
+                  <Text style={styles.tipProfileName}>{tips[index].name}</Text>
+                </View>
+              </View>
+            </Pressable>
+          </Reanimated.View>
+          : <></>
         }
       </>
     );
@@ -500,6 +523,31 @@ export default function ItemTips() {
     },
     itemCountsRefreshingAnimContainer: {
       justifyContent: 'center'
+    },
+    itemSwipeArea: {
+      position: 'relative'
+    },
+    tipProfileContainer: {
+      height: '100%',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingLeft: 10,
+      paddingRight: 15,
+      backgroundColor: '#FAF3E0'
+    },
+    tipProfileIconContainer: {
+
+    },
+    tipProfileIcon: {
+      width: 39,
+      height: 28.6
+    },
+    tipProfileNameContainer: {
+
+    },
+    tipProfileName: {
+
     }
   });
 
@@ -528,6 +576,7 @@ export default function ItemTips() {
             styles={styles}
             isDoneable={false}
             renderRightActions={renderRightActions}
+            renderLeftActions={renderLeftActions}
             saveAllThings={saveAllTips}
             saveSingleThing={saveSingleTip}
             loadAllThings={(page) => loadTips(selectedItem.uuid, page)}
