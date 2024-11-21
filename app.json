@@ -17,6 +17,9 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.thoughtswork.dootoo",
       "buildNumber": "59",
+      "config" : {
+        "usesNonExemptEncryption": false
+      }, 
       "infoPlist": {
         "UIBackgroundModes": [
           "audio"
