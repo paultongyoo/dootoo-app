@@ -56,15 +56,15 @@ export const handler = async (event) => {
         {
           "role": "system",
           "content": `
-                You are given a user-provided description of tasks. Your role is to identify the main tasks and sub-tasks described in this user-provided content, ordering each sub-task immediately after its corresponding main task. Only consider a task as a sub-task if it is described as part of another task.
-                The user-provided description of tasks is below. Please return your analysis in the following JSON format:
+                The user is speaking a list of items. Your role is to identify the main tasks and sub-tasks described in their input, ordering each sub-task immediately after its corresponding main task. Only consider a task as a sub-task if it is described as part of another task.
+                "Do NOT guess additional items beyond what the user stays in their input.  Return your analysis in the following JSON format:
                 {
                   "tasks": [
                     {"text": "<task name>", "is_child": <false if main task, true otherwise>}
                   ]
                 }`
         },
-        { "role": "user", "content": `User-provided content: ${transcribedText}`}
+        { "role": "user", "content": `User-provided input: ${transcribedText}`}
       ], response_format: { "type": "json_object" }
     });
 
