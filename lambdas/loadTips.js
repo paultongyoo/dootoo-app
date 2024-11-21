@@ -58,7 +58,20 @@ export const handler = async (event) => {
                 LEFT JOIN "Item" on "Item".id = "Tip".item_id
                 WHERE "Tip".is_deleted IS false AND "Tip".is_flagged IS false AND "Tip".user_id <> ${user.id} AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}')
                 GROUP BY 1) tip_votes on "Tip".id = tip_votes.tip_id
-            WHERE "Tip".is_deleted IS false AND "Tip".is_flagged IS false AND "Tip".user_id <> ${user.id} AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}')
+            WHERE "Tip".is_deleted IS false 
+              AND "Tip".is_flagged IS false 
+              AND "Tip".user_id <> ${user.id} 
+              AND 0.7 >= embedding <-> (select embedding from "Item" where uuid = '${selectedItem.uuid}')
+              AND "Tip".user_id NOT IN (
+                    SELECT blocked_user_id 
+                    FROM "UserBlock" 
+                    WHERE blocking_user_id = ${user.id}
+                )
+              AND "Tip".user_id NOT IN (
+                    SELECT blocking_user_id 
+                    FROM "UserBlock" 
+                    WHERE blocked_user_id = ${user.id}
+                )          
             ORDER BY upvote_count DESC
             LIMIT ${take} OFFSET ${skip};`);
         console.log("Query returned " + retrievedTips.length + " tip(s).");
