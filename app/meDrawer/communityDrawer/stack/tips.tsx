@@ -3,7 +3,7 @@ import {
   Platform
 } from "react-native";
 import { useState, useContext, useCallback, useEffect } from 'react';
-import { router, useFocusEffect, useNavigation, usePathname } from 'expo-router';
+import { router, useFocusEffect, useNavigation, usePathname, useRouter } from 'expo-router';
 import Reanimated, {
   SharedValue,
   configureReanimatedLogger,
@@ -21,6 +21,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 
 
 export default function ItemTips() {
+  const router = useRouter();
   const { anonymousId, setLastRecordedCount, updateUserCountContext,
     selectedItem, setSelectedItem, setSelectedProfile } = useContext(AppContext);
   const [tips, setTips] = useState([]);
@@ -72,17 +73,19 @@ export default function ItemTips() {
   useFocusEffect(
     useCallback(() => {
       if (selectedItem == null) {
-        //console.log("Aborting useFocusEffect call on null selected item");
+        console.log("Aborting useFocusEffect call on null selected item");
         return;
       }
-      //console.log("Selected item: " + JSON.stringify(selectedItem));
 
-      return () => {
-        // console.log('User has navigated away from this tips route - Nulling out selectedItem and tips contexts.');
-        // setSelectedItem(null);
-        // setTips([]);
-        // setLastRecordedCount(0);
+      if (selectedItem && !selectedItem.is_done && (tips.length == 0)) {
+
+        // If we reached this page with an empty tips page, we
+        // may have just discovered that there are no tips for this
+        // item from users that the user hasn't blocked.
+        // We assume this is the case and will navigate them back to the items page.
+        router.back();
       }
+
     }, [])
   );
 
