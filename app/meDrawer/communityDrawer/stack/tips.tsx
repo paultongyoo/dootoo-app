@@ -78,10 +78,10 @@ export default function ItemTips() {
       //console.log("Selected item: " + JSON.stringify(selectedItem));
 
       return () => {
-        //console.log('User has navigated away from this tips route - Nulling out selectedItem and tips contexts.');
-        setSelectedItem(null);
-        setTips([]);
-        setLastRecordedCount(0);
+        // console.log('User has navigated away from this tips route - Nulling out selectedItem and tips contexts.');
+        // setSelectedItem(null);
+        // setTips([]);
+        // setLastRecordedCount(0);
       }
     }, [])
   );
@@ -566,7 +566,7 @@ export default function ItemTips() {
   });
 
   if (selectedItem == null) {
-    //console.log("Selected Item is null, aborting render of tips page");
+    console.log("Selected Item is null, aborting render of tips page");
     return;
   } else {
 

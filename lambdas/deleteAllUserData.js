@@ -13,6 +13,14 @@ export const handler = async (event) => {
             };
         }
 
+        const deletedUserBlocks = await prisma.userBlock.deleteMany({
+            where: {
+                blockingUser: {
+                    id: user.id
+                }
+            }
+        });
+
         const deletedVotesCount = await prisma.tipVote.deleteMany({
             where: {
                 user: {
@@ -39,11 +47,12 @@ export const handler = async (event) => {
         });
 
         await prisma.$disconnect();
-        const deletedInfo = { 
+        const deletedInfo = {
             deletedUser: deletedUser.name, 
             deletedItems: deletedItemsCount,
             deletedTips: deletedTipsCount,
-            deletedVotes: deletedVotesCount
+            deletedVotes: deletedVotesCount,
+            deletedUserBlocks: deletedUserBlocks
         };
         console.log("Deleted Info: " + JSON.stringify(deletedInfo));
         return {

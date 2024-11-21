@@ -46,6 +46,9 @@ const DELETEUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.ama
 const LOADUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadUser_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadUser';
 
+const BLOCKUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/blockUser_Dev'
+                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/blockUser';
+
 
 export const saveItems = async (item_list_obj, callback) => {
   if (item_list_obj === undefined) {
@@ -283,9 +286,34 @@ export const loadUsername = async(name) => {
     //console.log("deleteTip Response Obj: " + JSON.stringify(response.data.body));
     return response.data.body
   } catch (error) {
-    console.error('Error calling deleteTip API:', error);
+    console.error('Error calling loadUsername API:', error);
   }
 }
+
+export const blockUser = async(name, reason) => {
+  try {
+    //console.log("Entering deleteTip, uuid: " + tip_uuid);
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return ;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(BLOCKUSER_URL,
+      {
+        anonymous_id : localAnonId,
+        name: name,
+        reason: reason
+      }
+    );
+    const wasUserBlockSuccessful = response.data.body;
+    return wasUserBlockSuccessful;
+  } catch (error) {
+    console.error('Error calling blockUser API:', error);
+  }
+}
+
 
 export const resetAllData = async () => {
   console.log("Inside resetAllData");

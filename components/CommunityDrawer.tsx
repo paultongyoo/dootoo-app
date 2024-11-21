@@ -1,28 +1,34 @@
-import { usePathname } from "expo-router";
-import { useContext, useEffect } from "react";
-import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator } from "react-native";
+import { usePathname, useRouter } from "expo-router";
+import { useContext, useEffect, useState } from "react";
+import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, TextInput } from "react-native";
 import { AppContext } from "./AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, showComingSoonAlert } from './Helpers';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import { loadUsername } from "./Storage";
+import { blockUser, loadUsername } from "./Storage";
+import Dialog from "react-native-dialog";
+import {Picker} from '@react-native-picker/picker';
 
 
 const CommunityDrawer = ({ navigation }) => {
   const pathname = usePathname();
-  const { anonymousId, selectedProfile, setSelectedProfile
+  const router = useRouter();
+  const { anonymousId, selectedProfile, setSelectedProfile, selectedItem, setSelectedItem,
   } = useContext(AppContext);
+  const [blockDialogVisible, setBlockDialogVisible] = useState(false);
+  const [blockSuccessDialogVisible, setBlockSuccessDialogVisible] = useState(false);
+  const [selectedBlockReason, setSelectedBlockReason] = useState('no_reason');
+  const [blockReasonOtherText, setBlockReasonOtherText] = useState();
   const animatedOpacity = useSharedValue(0);
   const animatedOpacityStyle = useAnimatedStyle(() => {
     return { opacity: animatedOpacity.value }
   });
+  const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
 
   useEffect(() => {
-    //console.log("Inside CommunityDrawer.useEffect([])");
-    //console.log("Selected Profile: " + JSON.stringify(selectedProfile)); 
+    console.log("Checking selectedItem context: " + JSON.stringify(selectedItem));
+
     animatedOpacity.value = 0;
-    //console.log("Attempting to fade in loading animation...");
-    //console.log("animatedOpacty.value: " + animatedOpacity.value)
     animatedOpacity.value = withTiming(1, {
       duration: 300
     });
@@ -30,7 +36,6 @@ const CommunityDrawer = ({ navigation }) => {
     if (selectedProfile && !selectedProfile.doneCount) {
       loadSelectedProfile();
     }
-
   }, [selectedProfile]);
 
   const loadSelectedProfile = async () => {
@@ -38,11 +43,11 @@ const CommunityDrawer = ({ navigation }) => {
     animatedOpacity.value = withTiming(0, {
       duration: 300
     }, (isFinished) => { if (isFinished) runOnJS(setSelectedProfile)(loadedProfile) });
-   ;
+    ;
   }
 
   const handleBlockProfileTap = () => {
-    Alert.alert("Implement me!");
+    setBlockDialogVisible(true);
   }
 
   const styles = StyleSheet.create({
@@ -155,8 +160,36 @@ const CommunityDrawer = ({ navigation }) => {
     loadingProfileText: {
       fontSize: 20,
       marginBottom: 15
+    },
+    dialogContainer: {
+      position: 'absolute',
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center'
     }
   });
+
+  function handleBlockCancel(): void {
+    setBlockDialogVisible(false);
+  }
+
+  function handleBlockSubmit(): void {
+    console.log("Selected Block Reason: " + selectedBlockReason);
+    if (blockReasonOtherText) console.log("Block Reason Other Text: " + blockReasonOtherText);
+    submitUserBlock();
+  }
+
+  const submitUserBlock = async() => {
+    console.log("Attempting user block...");
+    const reasonString = (selectedBlockReason == "other") ? `${selectedBlockReason}: ${blockReasonOtherText}`: selectedBlockReason
+    const wasBlockSuccessful = await blockUser(selectedProfile.name, reasonString)
+    setBlockDialogVisible(false)
+    if (wasBlockSuccessful) {
+      setBlockSuccessDialogVisible(true)
+    } else {
+      Alert.alert("Unexpected error occurred", "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
+    }
+  }
 
   if (!selectedProfile || !selectedProfile.doneCount) {
     return (
@@ -168,6 +201,7 @@ const CommunityDrawer = ({ navigation }) => {
       </View>
     );
   } else {
+
     return (
       <View style={styles.profileDrawerContainer}>
         <Animated.View style={[animatedOpacityStyle]}>
@@ -206,6 +240,44 @@ const CommunityDrawer = ({ navigation }) => {
             </Pressable>
           </View>
         </Animated.View>
+        <View style={styles.dialogContainer}>
+          <Dialog.Container visible={blockDialogVisible}>
+            <Dialog.Title>Report & Block User</Dialog.Title>
+            <Picker
+                selectedValue={selectedBlockReason}
+                onValueChange={(itemValue, itemIndex) =>
+                  setSelectedBlockReason(itemValue)
+                }>
+              <Picker.Item label="Select a reason" value="no_reason" />
+              <Picker.Item label="Just don't want to see their tips" value="just_dont_want_to_see" />
+              <Picker.Item label="Hate Speech" value="hate_speech" />
+              <Picker.Item label="Cyberbullying" value="cyberbulling" />
+              <Picker.Item label="Violent threats" value="violent_threats" />
+              <Picker.Item label="Selling, Promoting Services, Spam" value="sell_promote_spam" />
+              <Picker.Item label="Other" value="other" />
+            </Picker>
+            { (selectedBlockReason == 'other') ?
+                <TextInput
+                  multiline={true}
+                  placeholder={'Enter reason'}
+                  onChangeText={(text) => {
+                      setBlockReasonOtherText(text);
+                  }}/>
+                  : <></>
+              }
+            <Dialog.Button label="Cancel" onPress={(handleBlockCancel)} />
+            <Dialog.Button label="Block" onPress={handleBlockSubmit} />
+          </Dialog.Container>
+          <Dialog.Container visible={blockSuccessDialogVisible}>
+            <Dialog.Title>User Reported & Blocked</Dialog.Title>
+            <Dialog.Description>You will no longer see each other's tips or profile.</Dialog.Description>
+            <Dialog.Button label="Dismiss" onPress={() => {
+              setBlockSuccessDialogVisible(false);
+              router.replace(TIPS_PATHNAME);
+              navigation.closeDrawer();
+            }} />
+          </Dialog.Container>
+        </View>
       </View>
     );
   }
