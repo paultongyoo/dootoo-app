@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Linking, Platform } from "react-native";
 import { AppContext } from "./AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
-import { formatNumber } from './Helpers';
+import { formatNumber, showComingSoonAlert } from './Helpers';
 
 
 const ProfileDrawer = ({ navigation }) => {
@@ -12,27 +12,6 @@ const ProfileDrawer = ({ navigation }) => {
       doneCount, tipCount,
       resetUserContext
     } = useContext(AppContext);
-
-    const showComingSoonAlert = (featureName) => {
-      Alert.alert(
-        `${featureName} Feature Coming Soon`, // Title of the alert
-        "Look for this in a future release.  We've noted you're looking for it.  Thanks!", // Message of the alert
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              //console.log('Data Deletion OK Pressed');
-              amplitude.track("Coming Soon Popup Displayed", {
-                anonymous_id: anonymousId,
-                pathname: pathname,
-                featureName: featureName
-              });
-            },
-          },
-        ],
-        { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
-      );
-    };
 
     const showConfirmationPrompt = () => {
       amplitude.track("User Data Deletion Started", {
@@ -241,10 +220,10 @@ const ProfileDrawer = ({ navigation }) => {
           </Pressable>
         </View>
         <View style={styles.privacyContainer}>
-          {/* <View style={styles.anonIdDisplayContainer}>
+          <View style={styles.anonIdDisplayContainer}>
             <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
             <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId}</Text>
-          </View> */}
+          </View>
           <View style={styles.deleteDataLinkContainer}>
             <Pressable onPress={showConfirmationPrompt}>
               <Text style={styles.deleteDataLinkText}>Delete My Data</Text>

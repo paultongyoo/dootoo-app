@@ -3,7 +3,7 @@ import {
   Platform
 } from "react-native";
 import { useState, useContext, useCallback, useEffect } from 'react';
-import { router, useFocusEffect, usePathname } from 'expo-router';
+import { router, useFocusEffect, useNavigation, usePathname } from 'expo-router';
 import Reanimated, {
   SharedValue,
   configureReanimatedLogger,
@@ -25,6 +25,7 @@ export default function ItemTips() {
     selectedItem, setSelectedItem } = useContext(AppContext);
   const [tips, setTips] = useState([]);
   const pathname = usePathname();
+  const communityDrawerNavigation = useNavigation();
 
 
   configureReanimatedLogger({
@@ -186,6 +187,17 @@ export default function ItemTips() {
     );
   }
 
+  const handleTipProfileClick = (index) => {
+
+    amplitude.track("Tip Profile Tapped", {
+      anonymous_id: anonymousId,
+      username: tips[index].name
+    });
+
+    communityDrawerNavigation.openDrawer();
+
+  }
+
   const renderRightActions = (progress: SharedValue<number>, dragX: SharedValue<number>, index: number) => {
     return (
       <>
@@ -235,7 +247,7 @@ export default function ItemTips() {
         {(tips[index].name) ?
           <Reanimated.View style={styles.itemSwipeArea}>
             <Pressable
-              onPress={() => Alert.alert('Implement Me')}>
+              onPress={() => handleTipProfileClick(index)}>
               <View style={[styles.tipProfileContainer]}>
                 <View style={styles.tipProfileIconContainer}>
                   <Image style={styles.tipProfileIcon} source={require("@/assets/images/profile_icon_red.png")} />

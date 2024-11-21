@@ -1,18 +1,18 @@
 import { Drawer } from 'expo-router/drawer';
-import ProfileDrawer from "@/components/ProfileDrawer";
 import DootooHeader from '@/components/DootooHeader';
 import { useNavigation } from 'expo-router';
+import CommunityDrawer from '@/components/CommunityDrawer';
 
 export default function CommunityDrawerLayout() {
-    const parentNavigation = useNavigation();
+    const meDrawerNavigation = useNavigation();
     return (
             <Drawer
-                drawerContent={(props) => <ProfileDrawer {...props} />}
+                drawerContent={(props) => <CommunityDrawer {...props} />}
                 screenOptions={
                     {
                         drawerPosition: 'left',
                         headerTransparent: true,
-                        header: ({ navigation, route }) => <DootooHeader meDrawerNavigation={parentNavigation} />
+                        header: ({ navigation, route }) => <DootooHeader meDrawerNavigation={meDrawerNavigation} />
                     }}>
                 <Drawer.Screen name="stack" />
             </Drawer>
