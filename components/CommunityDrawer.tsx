@@ -4,7 +4,7 @@ import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator } fr
 import { AppContext } from "./AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, showComingSoonAlert } from './Helpers';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { loadUsername } from "./Storage";
 
 
@@ -14,28 +14,31 @@ const CommunityDrawer = ({ navigation }) => {
   } = useContext(AppContext);
   const animatedOpacity = useSharedValue(0);
   const animatedOpacityStyle = useAnimatedStyle(() => {
-   return { opacity: animatedOpacity.value }
+    return { opacity: animatedOpacity.value }
   });
 
   useEffect(() => {
     //console.log("Inside CommunityDrawer.useEffect([])");
-    //console.log("Selected Profile: " + JSON.stringify(selectedProfile));  
+    //console.log("Selected Profile: " + JSON.stringify(selectedProfile)); 
+    animatedOpacity.value = 0;
     console.log("Attempting to fade in loading animation...");
+    console.log("animatedOpacty.value: " + animatedOpacity.value)
     animatedOpacity.value = withTiming(1, {
-      duration: 500
-    });
+      duration: 300
+    }, (isFinished) => { if (isFinished) console.log("Animation 'finished'.") });
 
-    if (!selectedProfile || !selectedProfile.doneCount) {
+    if (selectedProfile && !selectedProfile.doneCount) {
       loadSelectedProfile();
     }
 
   }, [selectedProfile]);
 
-  const loadSelectedProfile = async() => {
-    //console.log("Loading user counts for selected Username: " + selectedProfile.name);
+  const loadSelectedProfile = async () => {
     const loadedProfile = await loadUsername(selectedProfile.name);
-    //console.log("Loaded Profile: " + JSON.stringify(loadedProfile));
-    setSelectedProfile(loadedProfile);
+    animatedOpacity.value = withTiming(0, {
+      duration: 300
+    }, (isFinished) => { if (isFinished) runOnJS(setSelectedProfile)(loadedProfile) });
+   ;
   }
 
   const handleBlockProfileTap = () => {
@@ -46,7 +49,7 @@ const CommunityDrawer = ({ navigation }) => {
     profileDrawerContainer: {
       backgroundColor: '#FAF3E0',
       flex: 1,
-      borderLeftWidth: 1,
+      borderRightWidth: 1,
       borderTopWidth: 1,
       borderBottomWidth: 1,
       borderColor: '#3E2723',
@@ -62,7 +65,7 @@ const CommunityDrawer = ({ navigation }) => {
     },
     profileBlockIconContainer: {
       position: 'absolute',
-      right: -20,
+      right: 0,
       top: -30
     },
     profileBlockIcon: {
@@ -157,51 +160,53 @@ const CommunityDrawer = ({ navigation }) => {
 
   if (!selectedProfile || !selectedProfile.doneCount) {
     return (
-        <Animated.View style={[styles.profileDrawerContainer, animatedOpacityStyle]}>
-          <View style={styles.loadingAnimContainer}>
-            <Text style={styles.loadingProfileText}>Loading profile</Text>
-            <ActivityIndicator size={"large"} color={"#3E2723"} />
-          </View>
+      <View style={styles.profileDrawerContainer}>
+        <Animated.View style={[styles.loadingAnimContainer, animatedOpacityStyle]}>
+          <Text style={styles.loadingProfileText}>Loading profile</Text>
+          <ActivityIndicator size={"large"} color={"#3E2723"} />
         </Animated.View>
-      );
+      </View>
+    );
   } else {
     return (
-      <Animated.View style={[styles.profileDrawerContainer, animatedOpacityStyle]}>
-        <View style={styles.profileDrawerProfileIconContainer}>
-          <Pressable style={styles.profileBlockIconContainer}
-            onPress={() => {
-              amplitude.track("Block Profile Button Tapped", {
-                anonymous_id: anonymousId,
-                usrename: pathname
-              });
-              handleBlockProfileTap();
-            }}>
-            <Image style={styles.profileBlockIcon} source={require('@/assets/images/block_icon_3E2723.png')} />
-          </Pressable>
-          <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_red.png')} />
-          <View style={styles.profileDrawerProfileNameContainer}>
-            <Text style={styles.profileDrawerProfileNameText}>{selectedProfile.name}</Text>
+      <View style={styles.profileDrawerContainer}>
+        <Animated.View style={[animatedOpacityStyle]}>
+          <View style={styles.profileDrawerProfileIconContainer}>
+            <Pressable style={styles.profileBlockIconContainer}
+              onPress={() => {
+                amplitude.track("Block Profile Button Tapped", {
+                  anonymous_id: anonymousId,
+                  usrename: pathname
+                });
+                handleBlockProfileTap();
+              }}>
+              <Image style={styles.profileBlockIcon} source={require('@/assets/images/block_icon_3E2723.png')} />
+            </Pressable>
+            <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_red.png')} />
+            <View style={styles.profileDrawerProfileNameContainer}>
+              <Text style={styles.profileDrawerProfileNameText}>{selectedProfile.name}</Text>
+            </View>
           </View>
-        </View>
-        <View style={styles.statsContainer}>
-          <Pressable style={styles.statContainer}
-            onPress={() => showComingSoonAlert("'All Done'")}>
-            <View style={styles.statIconContainer}>
-              <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
-            </View>
-            <Text style={styles.statNumber}>{formatNumber(selectedProfile.doneCount) || '0'}</Text>
-            <Text style={styles.statName}>Done</Text>
-          </Pressable>
-          <Pressable style={styles.statContainer}
-            onPress={() => showComingSoonAlert("'All Tips'")}>
-            <View style={styles.statIconContainer}>
-              <Image style={styles.statIcon_Tips} source={require('@/assets/images/give_icon_556B2F.png')} />
-            </View>
-            <Text style={styles.statNumber}>{formatNumber(selectedProfile.tipCount) || '0'}</Text>
-            <Text style={styles.statName}>Tips</Text>
-          </Pressable>
-        </View>
-      </Animated.View>
+          <View style={styles.statsContainer}>
+            <Pressable style={styles.statContainer}
+              onPress={() => showComingSoonAlert("'All Done'")}>
+              <View style={styles.statIconContainer}>
+                <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
+              </View>
+              <Text style={styles.statNumber}>{formatNumber(selectedProfile.doneCount) || '0'}</Text>
+              <Text style={styles.statName}>Done</Text>
+            </Pressable>
+            <Pressable style={styles.statContainer}
+              onPress={() => showComingSoonAlert("'All Tips'")}>
+              <View style={styles.statIconContainer}>
+                <Image style={styles.statIcon_Tips} source={require('@/assets/images/give_icon_556B2F.png')} />
+              </View>
+              <Text style={styles.statNumber}>{formatNumber(selectedProfile.tipCount) || '0'}</Text>
+              <Text style={styles.statName}>Tips</Text>
+            </Pressable>
+          </View>
+        </Animated.View>
+      </View>
     );
   }
 }
