@@ -21,11 +21,11 @@ const CommunityDrawer = ({ navigation }) => {
     //console.log("Inside CommunityDrawer.useEffect([])");
     //console.log("Selected Profile: " + JSON.stringify(selectedProfile)); 
     animatedOpacity.value = 0;
-    console.log("Attempting to fade in loading animation...");
-    console.log("animatedOpacty.value: " + animatedOpacity.value)
+    //console.log("Attempting to fade in loading animation...");
+    //console.log("animatedOpacty.value: " + animatedOpacity.value)
     animatedOpacity.value = withTiming(1, {
       duration: 300
-    }, (isFinished) => { if (isFinished) console.log("Animation 'finished'.") });
+    });
 
     if (selectedProfile && !selectedProfile.doneCount) {
       loadSelectedProfile();
