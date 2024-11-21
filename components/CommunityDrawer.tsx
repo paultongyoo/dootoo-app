@@ -26,7 +26,7 @@ const CommunityDrawer = ({ navigation }) => {
   const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
 
   useEffect(() => {
-    console.log("Checking selectedItem context: " + JSON.stringify(selectedItem));
+    //console.log("Checking selectedItem context: " + JSON.stringify(selectedItem));
 
     animatedOpacity.value = 0;
     animatedOpacity.value = withTiming(1, {
@@ -243,6 +243,7 @@ const CommunityDrawer = ({ navigation }) => {
         <View style={styles.dialogContainer}>
           <Dialog.Container visible={blockDialogVisible}>
             <Dialog.Title>Report & Block User</Dialog.Title>
+            <Dialog.Description>This currently cannot be undone.</Dialog.Description>
             <Picker
                 selectedValue={selectedBlockReason}
                 onValueChange={(itemValue, itemIndex) =>
@@ -270,7 +271,7 @@ const CommunityDrawer = ({ navigation }) => {
           </Dialog.Container>
           <Dialog.Container visible={blockSuccessDialogVisible}>
             <Dialog.Title>User Reported & Blocked</Dialog.Title>
-            <Dialog.Description>You will no longer see each other's tips or profile.</Dialog.Description>
+            <Dialog.Description>You will no longer see each other's tips.</Dialog.Description>
             <Dialog.Button label="Dismiss" onPress={() => {
               setBlockSuccessDialogVisible(false);
               router.replace(TIPS_PATHNAME);
