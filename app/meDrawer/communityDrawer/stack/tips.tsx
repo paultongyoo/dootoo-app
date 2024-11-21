@@ -194,13 +194,7 @@ export default function ItemTips() {
       username: tips[index].name
     });
 
-    const stubProfile = {
-      name: "TestProfile1234",
-      doneCount: 1234,
-      tipCount: 4234
-    };
-    setSelectedProfile(stubProfile);
-
+    setSelectedProfile({ name: tips[index].name });
     communityDrawerNavigation.openDrawer();
 
   }

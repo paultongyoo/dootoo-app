@@ -43,6 +43,9 @@ const DELETETIP_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amaz
 const DELETEUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/deleteUser_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/deleteUser';
 
+const LOADUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadUser_Dev'
+                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadUser';
+
 
 export const saveItems = async (item_list_obj, callback) => {
   if (item_list_obj === undefined) {
@@ -264,6 +267,21 @@ export const deleteTip = async(tip_uuid) => {
       }
     );
     //console.log("deleteTip Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling deleteTip API:', error);
+  }
+}
+
+export const loadUsername = async(name) => {
+  try {
+    //console.log("Entering deleteTip, uuid: " + tip_uuid);
+    const response = await axios.post(LOADUSER_URL,
+      {
+        name: name
+      }
+    );
+    //console.log("deleteTip Response Obj: " + JSON.stringify(response.data.body));
+    return response.data.body
   } catch (error) {
     console.error('Error calling deleteTip API:', error);
   }

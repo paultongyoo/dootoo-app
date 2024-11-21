@@ -1,15 +1,16 @@
 import { usePathname } from "expo-router";
 import { useContext, useEffect } from "react";
-import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Linking, Platform } from "react-native";
+import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator } from "react-native";
 import { AppContext } from "./AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, showComingSoonAlert } from './Helpers';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { loadUsername } from "./Storage";
 
 
 const CommunityDrawer = ({ navigation }) => {
   const pathname = usePathname();
-  const { anonymousId, selectedProfile
+  const { anonymousId, selectedProfile, setSelectedProfile
   } = useContext(AppContext);
   const animatedOpacity = useSharedValue(0);
   const animatedOpacityStyle = useAnimatedStyle(() => {
@@ -17,11 +18,25 @@ const CommunityDrawer = ({ navigation }) => {
   });
 
   useEffect(() => {
-    console.log("Inside CommunityDrawer.useEFfect([])");
+    //console.log("Inside CommunityDrawer.useEffect([])");
+    //console.log("Selected Profile: " + JSON.stringify(selectedProfile));  
+    console.log("Attempting to fade in loading animation...");
     animatedOpacity.value = withTiming(1, {
       duration: 500
     });
-  }, [])
+
+    if (!selectedProfile || !selectedProfile.doneCount) {
+      loadSelectedProfile();
+    }
+
+  }, [selectedProfile]);
+
+  const loadSelectedProfile = async() => {
+    //console.log("Loading user counts for selected Username: " + selectedProfile.name);
+    const loadedProfile = await loadUsername(selectedProfile.name);
+    //console.log("Loaded Profile: " + JSON.stringify(loadedProfile));
+    setSelectedProfile(loadedProfile);
+  }
 
   const handleBlockProfileTap = () => {
     Alert.alert("Implement me!");
@@ -36,6 +51,10 @@ const CommunityDrawer = ({ navigation }) => {
       borderBottomWidth: 1,
       borderColor: '#3E2723',
       alignItems: 'center'
+    },
+    loadingAnimContainer: {
+      justifyContent: 'center',
+      flex: 1
     },
     profileDrawerProfileIconContainer: {
       marginTop: 100,
@@ -136,10 +155,10 @@ const CommunityDrawer = ({ navigation }) => {
     }
   });
 
-  if (selectedProfile == null) {
+  if (!selectedProfile || !selectedProfile.doneCount) {
     return (
         <Animated.View style={[styles.profileDrawerContainer, animatedOpacityStyle]}>
-          <View>
+          <View style={styles.loadingAnimContainer}>
             <Text style={styles.loadingProfileText}>Loading profile</Text>
             <ActivityIndicator size={"large"} color={"#3E2723"} />
           </View>
