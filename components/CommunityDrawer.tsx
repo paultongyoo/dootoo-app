@@ -4,22 +4,28 @@ import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Lin
 import { AppContext } from "./AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, showComingSoonAlert } from './Helpers';
-//import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 
 const CommunityDrawer = ({ navigation }) => {
   const pathname = usePathname();
   const { anonymousId, selectedProfile
   } = useContext(AppContext);
-  //const animatedOpacity = useSharedValue(0);
-  //const animatedOpacityStyle = useAnimatedStyle(() => {
-  //  return { opacity: animatedOpacity.value }
-  //});
+  const animatedOpacity = useSharedValue(0);
+  const animatedOpacityStyle = useAnimatedStyle(() => {
+   return { opacity: animatedOpacity.value }
+  });
 
   useEffect(() => {
+    console.log("Inside CommunityDrawer.useEFfect([])");
+    animatedOpacity.value = withTiming(1, {
+      duration: 500
+    });
+  }, [])
 
-
-  }, [selectedProfile])
+  const handleBlockProfileTap = () => {
+    Alert.alert("Implement me!");
+  }
 
   const styles = StyleSheet.create({
     profileDrawerContainer: {
@@ -29,33 +35,28 @@ const CommunityDrawer = ({ navigation }) => {
       borderTopWidth: 1,
       borderBottomWidth: 1,
       borderColor: '#3E2723',
-      alignItems: 'center',
-      justifyContent: 'center'
-    },
-    profileDrawerCloseContainer: {
-      position: 'absolute',
-      right: 20,
-      top: (Platform.OS == 'ios') ? 62 : 40
-    },
-    profileDrawerCloseIcon: {
-      opacity: 0.4,
-      height: 32,
-      width: 30
+      alignItems: 'center'
     },
     profileDrawerProfileIconContainer: {
       marginTop: 100,
-      // position: 'relative',
-      // top: 100,
-      //backgroundColor: 'red',
       alignItems: 'center'
+    },
+    profileBlockIconContainer: {
+      position: 'absolute',
+      right: -20,
+      top: -30
+    },
+    profileBlockIcon: {
+      opacity: 0.6,
+      height: 30,
+      width: 30
     },
     profileDrawerProfileIcon: {
       height: 150,
-      width: 150,
-      //backgroundColor: 'yellow'
+      width: 150
     },
     profileDrawerProfileNameContainer: {
-
+      paddingTop: 15
     },
     profileDrawerProfileNameText: {
       fontSize: 20,
@@ -137,32 +138,30 @@ const CommunityDrawer = ({ navigation }) => {
 
   if (selectedProfile == null) {
     return (
-        <View style={styles.profileDrawerContainer}>
-          {/* <Animated.View style={animatedOpacityStyle}> */}
+        <Animated.View style={[styles.profileDrawerContainer, animatedOpacityStyle]}>
           <View>
             <Text style={styles.loadingProfileText}>Loading profile</Text>
             <ActivityIndicator size={"large"} color={"#3E2723"} />
           </View>
-        </View>
+        </Animated.View>
       );
   } else {
-
     return (
-      <View style={styles.profileDrawerContainer}>
-        <Pressable style={styles.profileDrawerCloseContainer}
-          onPress={() => {
-            amplitude.track("Block Profile Button Tapped", {
-              anonymous_id: anonymousId,
-              usrename: pathname
-            });
-            navigation.closeDrawer();
-          }}>
-          <Image style={styles.profileDrawerCloseIcon} source={require('@/assets/images/cancel_icon_black.png')} />
-        </Pressable>
+      <Animated.View style={[styles.profileDrawerContainer, animatedOpacityStyle]}>
         <View style={styles.profileDrawerProfileIconContainer}>
+          <Pressable style={styles.profileBlockIconContainer}
+            onPress={() => {
+              amplitude.track("Block Profile Button Tapped", {
+                anonymous_id: anonymousId,
+                usrename: pathname
+              });
+              handleBlockProfileTap();
+            }}>
+            <Image style={styles.profileBlockIcon} source={require('@/assets/images/block_icon_3E2723.png')} />
+          </Pressable>
           <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_red.png')} />
           <View style={styles.profileDrawerProfileNameContainer}>
-            <Text style={styles.profileDrawerProfileNameText}>{username}</Text>
+            <Text style={styles.profileDrawerProfileNameText}>{selectedProfile.name}</Text>
           </View>
         </View>
         <View style={styles.statsContainer}>
@@ -171,7 +170,7 @@ const CommunityDrawer = ({ navigation }) => {
             <View style={styles.statIconContainer}>
               <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
             </View>
-            <Text style={styles.statNumber}>{formatNumber(doneCount) || '0'}</Text>
+            <Text style={styles.statNumber}>{formatNumber(selectedProfile.doneCount) || '0'}</Text>
             <Text style={styles.statName}>Done</Text>
           </Pressable>
           <Pressable style={styles.statContainer}
@@ -179,11 +178,11 @@ const CommunityDrawer = ({ navigation }) => {
             <View style={styles.statIconContainer}>
               <Image style={styles.statIcon_Tips} source={require('@/assets/images/give_icon_556B2F.png')} />
             </View>
-            <Text style={styles.statNumber}>{formatNumber(tipCount) || '0'}</Text>
+            <Text style={styles.statNumber}>{formatNumber(selectedProfile.tipCount) || '0'}</Text>
             <Text style={styles.statName}>Tips</Text>
           </Pressable>
         </View>
-      </View>
+      </Animated.View>
     );
   }
 }

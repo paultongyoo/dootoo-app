@@ -22,7 +22,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 
 export default function ItemTips() {
   const { anonymousId, setLastRecordedCount, updateUserCountContext,
-    selectedItem, setSelectedItem } = useContext(AppContext);
+    selectedItem, setSelectedItem, setSelectedProfile } = useContext(AppContext);
   const [tips, setTips] = useState([]);
   const pathname = usePathname();
   const communityDrawerNavigation = useNavigation();
@@ -75,7 +75,7 @@ export default function ItemTips() {
         //console.log("Aborting useFocusEffect call on null selected item");
         return;
       }
-      console.log("Selected item: " + JSON.stringify(selectedItem));
+      //console.log("Selected item: " + JSON.stringify(selectedItem));
 
       return () => {
         //console.log('User has navigated away from this tips route - Nulling out selectedItem and tips contexts.');
@@ -193,6 +193,13 @@ export default function ItemTips() {
       anonymous_id: anonymousId,
       username: tips[index].name
     });
+
+    const stubProfile = {
+      name: "TestProfile1234",
+      doneCount: 1234,
+      tipCount: 4234
+    };
+    setSelectedProfile(stubProfile);
 
     communityDrawerNavigation.openDrawer();
 
