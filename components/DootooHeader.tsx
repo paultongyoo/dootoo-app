@@ -50,11 +50,12 @@ const DootooHeader = ({ meDrawerNavigation }) => {
         },
         mainProfileIconContainer: {
             position: 'relative',
-            bottom: -4
+            paddingRight: 2,
+            paddingBottom: 2
         },
         profileIcon: {
-            height: 40,
-            width: 40
+            height: 30,
+            width: 30
         },
         backButtonContainer: {
             width: 40,

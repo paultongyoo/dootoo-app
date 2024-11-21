@@ -549,11 +549,12 @@ export default function ItemTips() {
       backgroundColor: '#FAF3E0'
     },
     tipProfileIconContainer: {
-
+      paddingLeft: 5,
+      paddingRight: 10
     },
     tipProfileIcon: {
-      width: 39,
-      height: 28.6
+      width: 30,
+      height: 30
     },
     tipProfileNameContainer: {
 

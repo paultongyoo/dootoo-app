@@ -92,9 +92,6 @@ const ProfileDrawer = ({ navigation }) => {
         },
         profileDrawerProfileIconContainer: {
           marginTop: 100,
-          // position: 'relative',
-          // top: 100,
-          //backgroundColor: 'red',
           alignItems: 'center'
         },
         profileDrawerProfileIcon: {
@@ -103,7 +100,7 @@ const ProfileDrawer = ({ navigation }) => {
           //backgroundColor: 'yellow'
         },
         profileDrawerProfileNameContainer: {
-      
+          paddingTop: 15
         },
         profileDrawerProfileNameText: {
           fontSize: 20,
