@@ -86,7 +86,7 @@ const OnboardingScreen = () => {
             easing: Easing.out(Easing.quad),
             useNativeDriver: true
         }).start(() => {    
-            router.replace('/drawer/stack');
+            router.replace('/meDrawer/communityDrawer/stack');
         });
     };
 
