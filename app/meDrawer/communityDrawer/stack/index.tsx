@@ -25,7 +25,7 @@ export default function Index() {
   const { anonymousId, dootooItems, setDootooItems,
     setLastRecordedCount, setSelectedItem,
     updateUserCountContext, thingRowHeights } = useContext(AppContext);
-  const TIPS_PATHNAME = '/drawer/stack/tips';
+  const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,

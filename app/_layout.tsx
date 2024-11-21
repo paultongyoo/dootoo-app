@@ -14,7 +14,6 @@ export default function StackLayout() {
   }, []);
 
   useEffect(() => {
-    //console.log("Pathname logged: " + pathname);
     amplitude.track('Screen Viewed', { pathname: pathname });
   }, [pathname]);
 
@@ -25,12 +24,7 @@ export default function StackLayout() {
       }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="onboarding" options={{ animation: 'none' }} />
-        {/* <Stack.Screen name="step1" options={{ animation: 'none' }} />
-        <Stack.Screen name="step2" />
-        <Stack.Screen name="step3" />
-        <Stack.Screen name="step4" />
-        <Stack.Screen name="step5" /> */}
-        <Stack.Screen name="drawer" options={{ animation: 'none' }} />
+        <Stack.Screen name="meDrawer" options={{ animation: 'none' }} />
       </Stack>
     </GestureHandlerRootView>
   )

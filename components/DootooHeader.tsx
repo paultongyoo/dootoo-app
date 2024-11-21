@@ -1,14 +1,14 @@
-import { usePathname, useRouter } from "expo-router";
+import { useNavigation, usePathname, useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Animated, Platform, View, StyleSheet, Easing, Text, Pressable, Image } from "react-native";
 import * as amplitude from '@amplitude/analytics-react-native';
 
-const DootooHeader = ({ navigation, route }) => {
+const DootooHeader = ({ meDrawerNavigation }) => {
     const router = useRouter();
     const pathname = usePathname();
     const headerPosition = useRef(new Animated.Value(-200)).current;
 
-    const ITEMS_PATHNAME = "/drawer/stack";
+    const ITEMS_PATHNAME = "/meDrawer/communityDrawer/stack";
 
     useEffect(() => {
         Animated.sequence([
@@ -94,7 +94,7 @@ const DootooHeader = ({ navigation, route }) => {
                         amplitude.track("Profile Drawer Opened", {
                             pathname: pathname
                         });
-                        navigation.openDrawer()
+                        meDrawerNavigation.openDrawer()
                     }}>
                     <Image style={styles.profileIcon} source={require('@/assets/images/profile_icon_green.png')} />
                 </Pressable>
