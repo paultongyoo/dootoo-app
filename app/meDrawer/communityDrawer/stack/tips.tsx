@@ -70,24 +70,17 @@ export default function ItemTips() {
     });
   }
 
-  useFocusEffect(
-    useCallback(() => {
-      if (selectedItem == null) {
-        console.log("Aborting useFocusEffect call on null selected item");
-        return;
-      }
-
-      if (selectedItem && !selectedItem.is_done && (tips.length == 0)) {
-
-        // If we reached this page with an empty tips page, we
-        // may have just discovered that there are no tips for this
-        // item from users that the user hasn't blocked.
-        // We assume this is the case and will navigate them back to the items page.
-        router.back();
-      }
-
-    }, [])
-  );
+  useEffect(() => {
+    if (selectedItem && !selectedItem.is_done && (tips.length == 0)) {
+      console.log("Inside empty tips case on useEffect([tips])")
+      // If we reached this page with an empty tips page, we
+      // may have just discovered that there are no tips for this
+      // item from users that the user hasn't blocked.
+      // We assume this is the case and will navigate them back to the items page.
+      //router.back();
+      // TODO:  Needs to be done _after_ load attempt occurs (need loadAllthings callback?)
+    }
+  }, [tips])
 
   const handleDoneClick = async () => {
     amplitude.track("Selected Item Done Clicked", {
