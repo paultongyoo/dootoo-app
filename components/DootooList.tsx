@@ -407,6 +407,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 ListHeaderComponent={<View style={{ height: 0 }} />}
                                 refreshControl={
                                     <RefreshControl
+                                        tintColor="#3E3723"
                                         onRefresh={() => {
                                             setLastRecordedCount(0);
                                             setRefreshing(true);
@@ -424,7 +425,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 onEndReachedThreshold={0.1}
                                 ListFooterComponent={
                                     <View style={{ paddingTop: 20 }}>
-                                        {isPageLoading && <ActivityIndicator size={"large"} color="black" />}
+                                        {isPageLoading && <ActivityIndicator size={"large"} color="#3E3723" />}
                                         <View style={{ height: 40 }} />
                                     </View>}
                             /> : (initialLoad == true) ? <EmptyThingUX styles={styles} /> : <></>
