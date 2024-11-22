@@ -406,21 +406,22 @@ export default function Index() {
             </Pressable>
           </Reanimated.View>
           : (dootooItems![index].tip_count && dootooItems![index].tip_count > 0) ?
-            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Give]}>
-              <Pressable
-                onPress={() => {
-                  amplitude.track("Receive Tips Clicked", {
-                    anonymous_id: anonymousId,
-                    item_uuid: dootooItems![index].uuid
-                  });
-                  //console.log("Similar Tips button tapped on item: " + dootooItems![index].text);
-                  setSelectedItem(dootooItems![index]);
-                  router.push(TIPS_PATHNAME);
-                }}>
-                {/* <View style={styles.simliarTipsIcon}></View> */}
-                <Image style={styles.receiveTipIcon} source={require("@/assets/images/receive_tip_white.png")} />
-              </Pressable>
-            </Reanimated.View>
+            // <Reanimated.View style={[styles.itemSwipeAction, styles.action_Give]}>
+            //   <Pressable
+            //     onPress={() => {
+            //       amplitude.track("Receive Tips Clicked", {
+            //         anonymous_id: anonymousId,
+            //         item_uuid: dootooItems![index].uuid
+            //       });
+            //       //console.log("Similar Tips button tapped on item: " + dootooItems![index].text);
+            //       setSelectedItem(dootooItems![index]);
+            //       router.push(TIPS_PATHNAME);
+            //     }}>
+            //     {/* <View style={styles.simliarTipsIcon}></View> */}
+            //     <Image style={styles.receiveTipIcon} source={require("@/assets/images/receive_tip_white.png")} />
+            //   </Pressable>
+            // </Reanimated.View>
+            <></>
             : <></>
         }
         <DootooSwipeAction_Delete
