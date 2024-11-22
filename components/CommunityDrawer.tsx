@@ -149,8 +149,8 @@ const CommunityDrawer = ({ navigation }) => {
       backgroundColor: '#556B2F70'
     },
     statIcon_Tips: {
-      height: 35,
-      width: 55
+      height: 30,
+      width: 30
     },
     statNumber: {
       fontWeight: 'bold',
@@ -282,7 +282,7 @@ const CommunityDrawer = ({ navigation }) => {
             <Pressable style={styles.statContainer}
               onPress={() => showComingSoonAlert("'All Tips'")}>
               <View style={styles.statIconContainer}>
-                <Image style={styles.statIcon_Tips} source={require('@/assets/images/give_icon_556B2F.png')} />
+                <Image style={styles.statIcon_Tips} source={require('@/assets/images/light_bulb_blackyellow.png')} />
               </View>
               <Text style={styles.statNumber}>{formatNumber(selectedProfile.tipCount) || '0'}</Text>
               <Text style={styles.statName}>Tips</Text>

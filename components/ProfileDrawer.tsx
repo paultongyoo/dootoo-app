@@ -161,8 +161,8 @@ const ProfileDrawer = ({ navigation }) => {
           backgroundColor: '#556B2F70'
         },
         statIcon_Tips: {
-          height: 35,
-          width: 55
+          height: 30,
+          width: 30
         },
         statNumber: {
           fontWeight: 'bold',
@@ -210,17 +210,17 @@ const ProfileDrawer = ({ navigation }) => {
           <Pressable style={styles.statContainer}
             onPress={() => showComingSoonAlert("'All Tips'")}>
             <View style={styles.statIconContainer}>
-              <Image style={styles.statIcon_Tips} source={require('@/assets/images/give_icon_556B2F.png')} />
+              <Image style={styles.statIcon_Tips} source={require('@/assets/images/light_bulb_blackyellow.png')} />
             </View>
             <Text style={styles.statNumber}>{formatNumber(tipCount) || '0'}</Text>
             <Text style={styles.statName}>Tips</Text>
           </Pressable>
         </View>
         <View style={styles.privacyContainer}>
-          <View style={styles.anonIdDisplayContainer}>
+          {/* <View style={styles.anonIdDisplayContainer}>
             <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
             <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId}</Text>
-          </View>
+          </View> */}
           <View style={styles.deleteDataLinkContainer}>
             <Pressable onPress={showConfirmationPrompt}>
               <Text style={styles.deleteDataLinkText}>Delete My Data</Text>
