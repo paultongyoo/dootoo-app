@@ -335,6 +335,12 @@ const Step3 = () => {
             backgroundColor: '#556B2F60',
             marginLeft: 10
         },
+        tipCountImageIcon: {
+            height: 16,
+            width: 16,
+            opacity: 0.5,
+            marginLeft: 8
+        },
         countDisclaimer: {
             fontSize: 14,
             fontStyle: 'italic',
@@ -465,7 +471,7 @@ const Step4 = () => {
             borderBottomColor: '#3E272333'
         },
         headerTipNameContainer: {
-            marginLeft: 25,
+            marginLeft: 13,
             paddingBottom: 10,
             paddingTop: 10,
             flex: 1,
@@ -508,6 +514,12 @@ const Step4 = () => {
             backgroundColor: '#556B2F60',
             marginLeft: 10
         },
+        tipCountImageIcon: {
+            height: 16,
+            width: 16,
+            opacity: 0.5,
+            marginLeft: 8
+        },
         tipsContainer: {
             backgroundColor: '#EBDDC5',
             paddingBottom: 25
@@ -526,6 +538,14 @@ const Step4 = () => {
             width: 16,
             height: 16,
             opacity: 0.5
+        },
+        tipListIconContainer: {
+            marginLeft: 15
+        },
+        tipListIcon: {
+            width: 28,
+            height: 28,
+            opacity: 1
         }
     });
 
@@ -543,6 +563,9 @@ const Step4 = () => {
                 </View>
                 <View style={styles.tipsContainer}>
                     <View style={styles.itemContainer}>
+                        <View style={styles.tipListIconContainer}>
+                            <Image style={styles.tipListIcon} source={require("@/assets/images/light_bulb_blackyellow.png")} />
+                        </View> 
                         <View style={styles.headerTipNameContainer}>
                             <View style={styles.itemNamePressable}>
                                 <Text style={styles.taskTitle}>Take some shot blocks an hour before</Text>
@@ -554,6 +577,9 @@ const Step4 = () => {
                         </View>
                     </View>
                     <View style={styles.itemContainer}>
+                        <View style={styles.tipListIconContainer}>
+                            <Image style={styles.tipListIcon} source={require("@/assets/images/light_bulb_blackyellow.png")} />
+                        </View> 
                         <View style={styles.headerTipNameContainer}>
                             <View style={styles.itemNamePressable}>
                                 <Text style={styles.taskTitle}>Dress appropriately</Text>
@@ -565,6 +591,9 @@ const Step4 = () => {
                         </View>
                     </View>
                     <View style={styles.itemContainer}>
+                        <View style={styles.tipListIconContainer}>
+                            <Image style={styles.tipListIcon} source={require("@/assets/images/light_bulb_blackyellow.png")} />
+                        </View> 
                         <View style={styles.headerTipNameContainer}>
                             <View style={styles.itemNamePressable}>
                                 <Text style={styles.taskTitle}>Pick a scenic route for motivation</Text>
