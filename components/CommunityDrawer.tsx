@@ -15,15 +15,17 @@ const CommunityDrawer = ({ navigation }) => {
   const router = useRouter();
   const { anonymousId, selectedProfile, setSelectedProfile, selectedItem, setSelectedItem,
   } = useContext(AppContext);
-  const [blockDialogVisible, setBlockDialogVisible] = useState(false);
-  const [blockSuccessDialogVisible, setBlockSuccessDialogVisible] = useState(false);
-  const [selectedBlockReason, setSelectedBlockReason] = useState('no_reason');
-  const [blockReasonOtherText, setBlockReasonOtherText] = useState();
   const animatedOpacity = useSharedValue(0);
   const animatedOpacityStyle = useAnimatedStyle(() => {
     return { opacity: animatedOpacity.value }
   });
   const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
+
+  const [blockDialogVisible, setBlockDialogVisible] = useState(false);
+  const [blockSuccessDialogVisible, setBlockSuccessDialogVisible] = useState(false);
+  const [selectedBlockReason, setSelectedBlockReason] = useState('no_reason');
+  const [blockReasonOtherText, setBlockReasonOtherText] = useState();
+  const [isBlockProcessing, setBlockProcessing] = useState(false);
 
   useEffect(() => {
     //console.log("Checking selectedItem context: " + JSON.stringify(selectedItem));
@@ -47,6 +49,8 @@ const CommunityDrawer = ({ navigation }) => {
   }
 
   const handleBlockProfileTap = () => {
+    setSelectedBlockReason('no_reason');
+    setBlockSuccessDialogVisible(false)
     setBlockDialogVisible(true);
   }
 
@@ -162,8 +166,12 @@ const CommunityDrawer = ({ navigation }) => {
       marginBottom: 15
     },
     dialogContainer: {
-      position: 'absolute',
       flex: 1,
+      //justifyContent: 'center',
+      //alignItems: 'center',
+    },
+    dialogBoxContainer: {
+      height: 220,
       justifyContent: 'center',
       alignItems: 'center'
     },
@@ -171,7 +179,13 @@ const CommunityDrawer = ({ navigation }) => {
       borderWidth: 1,
       borderColor: "3E3723",
       height: 50,
-      padding: 10
+      padding: 10,
+      width: '100%'
+    },
+    dialogBoxLoadingContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      flex: 1
     }
   });
 
@@ -185,14 +199,15 @@ const CommunityDrawer = ({ navigation }) => {
     submitUserBlock();
   }
 
-  const submitUserBlock = async() => {
-    console.log("Attempting user block...");
-    const reasonString = (selectedBlockReason == "other") ? `${selectedBlockReason}: ${blockReasonOtherText}`: selectedBlockReason
+  const submitUserBlock = async () => {
+    setBlockProcessing(true);
+    const reasonString = (selectedBlockReason == "other") ? `${selectedBlockReason}: ${blockReasonOtherText}` : selectedBlockReason
     const wasBlockSuccessful = await blockUser(selectedProfile.name, reasonString)
-    setBlockDialogVisible(false)
+    setBlockProcessing(false);
     if (wasBlockSuccessful) {
       setBlockSuccessDialogVisible(true)
     } else {
+      setBlockDialogVisible(false);
       Alert.alert("Unexpected error occurred", "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
     }
   }
@@ -247,42 +262,46 @@ const CommunityDrawer = ({ navigation }) => {
           </View>
         </Animated.View>
         <View style={styles.dialogContainer}>
-          <Dialog.Container visible={blockDialogVisible}>
-            <Dialog.Title>Report & Block User</Dialog.Title>
-            <Dialog.Description>This currently cannot be undone.</Dialog.Description>
-            <RNPickerSelect
-              onValueChange={(value) => setSelectedBlockReason(value)}
-              placeholder={{ label: 'Select a reason', value: 'no_reason' }}
-              items={[
-                { label: 'Just don\'t want to see their tips', value: 'just_dont_want_to_see' },
-                { label: 'Hate Speech', value: 'hate_speech' },
-                { label: 'Cyberbullying', value: 'cyberbulling' },
-                { label: 'Violent threats', value: 'violent_threats' },
-                { label: 'Selling, Promoting Services, Spam', value: 'sell_promote_spam' },
-                { label: 'Other', value: 'other' },
-              ]}
-            />
-            { (selectedBlockReason == 'other') ?
-                <TextInput
-                  multiline={true}
-                  style={styles.blockedReasonTextInput}
-                  placeholder={'Enter reason'}
-                  onChangeText={(text) => {
-                      setBlockReasonOtherText(text);
-                  }}/>
-                  : <></>
-              }
-            <Dialog.Button label="Cancel" onPress={(handleBlockCancel)} />
-            <Dialog.Button label="Block" onPress={handleBlockSubmit} />
-          </Dialog.Container>
-          <Dialog.Container visible={blockSuccessDialogVisible}>
-            <Dialog.Title>User Reported & Blocked</Dialog.Title>
-            <Dialog.Description>You will no longer see each other's tips.</Dialog.Description>
-            <Dialog.Button label="Dismiss" onPress={() => {
-              setBlockSuccessDialogVisible(false);
-              router.replace(TIPS_PATHNAME);
-              navigation.closeDrawer();
-            }} />
+          <Dialog.Container contentStyle={styles.dialogBoxContainer} visible={blockDialogVisible}>
+            {(blockSuccessDialogVisible) ? <><Dialog.Title>User Reported & Blocked</Dialog.Title>
+              <Dialog.Description>You will no longer see each other's tips.</Dialog.Description>
+              <Dialog.Button label="Dismiss" onPress={() => {
+                setBlockDialogVisible(false);
+                navigation.closeDrawer();
+                router.replace(TIPS_PATHNAME);
+              }} />
+            </>
+              : (isBlockProcessing) ? <ActivityIndicator size={"large"} /> :
+                <>
+                  <Dialog.Title>Report & Block User</Dialog.Title>
+                  <Dialog.Description>This currently cannot be undone.</Dialog.Description>
+                  <RNPickerSelect
+                    onValueChange={(value) => setSelectedBlockReason(value)}
+                    placeholder={{ label: 'Select a reason', value: 'no_reason' }}
+                    items={[
+                      { label: 'Just don\'t want to see their tips', value: 'just_dont_want_to_see' },
+                      { label: 'Hate Speech', value: 'hate_speech' },
+                      { label: 'Cyberbullying', value: 'cyberbulling' },
+                      { label: 'Violent threats', value: 'violent_threats' },
+                      { label: 'Selling, Promoting Services, Spam', value: 'sell_promote_spam' },
+                      { label: 'Other', value: 'other' },
+                    ]} />
+                  {(selectedBlockReason == 'other') ?
+                    <TextInput
+                      multiline={true}
+                      style={styles.blockedReasonTextInput}
+                      placeholder={'Enter reason'}
+                      onChangeText={(text) => {
+                        setBlockReasonOtherText(text);
+                      }} />
+                    : <></>
+                  }
+                  <View style={{ flexDirection: 'row' }}>
+                    <Dialog.Button label="Cancel" onPress={(handleBlockCancel)} />
+                    <Dialog.Button label="Block" onPress={handleBlockSubmit} />
+                  </View>
+                </>
+            }
           </Dialog.Container>
         </View>
       </View>
