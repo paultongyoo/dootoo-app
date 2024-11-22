@@ -14,11 +14,11 @@ const DootooItemSidebar = ({ thing, styles }) => {
     const handleSimilarCountTap = (count) => {
         Toast.show({
             type: 'msgOnlyToast',
-            text1: `${count} ${(count > 1) ? 'people' : 'person'} had similar`,
+            text1: `${count} ${(count > 1) ? 'people' : 'person'} did similar things`,
             position: 'bottom',
             bottomOffset: 220,
             props: {
-                width: 190
+                width: 230
             }
         });
     }
