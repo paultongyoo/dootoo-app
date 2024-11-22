@@ -1,4 +1,4 @@
-import { View, Text, ActivityIndicator, Pressable, TextInput, TouchableWithoutFeedback, Keyboard, Animated, Easing } from 'react-native';
+import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, Easing, TouchableWithoutFeedback } from 'react-native';
 import { useState, useRef, useContext, useEffect } from 'react';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -330,6 +330,15 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             {(isDoneable) ?
                                 <Pressable style={[styles.itemCircleOpen, item.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(getIndex())}></Pressable>
                                 : <></>
+                            }
+                            {(thingName == 'tip') ?
+                                <Pressable style={styles.tipListIconContainer}
+                                           onPress={() => {
+                                                console.log("Tapping bulb");
+                                                swipeableRefs.current[getIndex()].openLeft()
+                                            }}>
+                                    <Image style={styles.tipListIcon} source={require("@/assets/images/light_bulb_blackyellow.png")} />
+                                </Pressable> : <></>
                             }
                             <View style={styles.itemNameContainer}>
                                 {(thingIdxToEdit == getIndex()) ?

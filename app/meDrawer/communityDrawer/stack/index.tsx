@@ -353,6 +353,12 @@ export default function Index() {
       backgroundColor: '#556B2F60',
       marginLeft: 10
     },
+    tipCountImageIcon: {
+      height: 16,
+      width: 16,
+      opacity: 0.5,
+      marginLeft: 8
+    },
     swipeActionIcon_trash: {
       height: 30,
       width: 30

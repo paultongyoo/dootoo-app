@@ -43,7 +43,8 @@ const DootooItemSidebar = ({ thing, styles }) => {
                                 style={styles.tipCountContainer}
                                 onPress={() => handleTipCountTap()}>
                         <Text style={styles.tipCountText}>{formatNumber(thing.tip_count) || '0'}</Text>
-                        <View style={styles.tipCountIcon}></View>
+                        <Image style={styles.tipCountImageIcon} source={require("@/assets/images/light_bulb_556B2F.png")} />
+                        {/* <View style={styles.tipCountIcon}></View> */}
                     </Pressable> : <></>}
                 {(thing.similar_count && thing.similar_count > 0) ?
                     <Pressable hitSlop={{ top: 10, bottom: 10, right: 10}}

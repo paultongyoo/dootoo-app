@@ -298,7 +298,9 @@ export default function ItemTips() {
     taskTitle: {
       fontSize: 16,
       textAlign: 'left',
-      padding: 5
+      paddingTop: 5,
+      paddingBottom: 5,
+      paddingRight: 5
     },
     taskTitle_isDone: {
       color: '#556B2F',
@@ -314,9 +316,9 @@ export default function ItemTips() {
     itemContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      borderBottomWidth: 1,
-      borderBottomColor: '#3E272333',
-      marginLeft: 25
+      // borderBottomWidth: 1,
+      // borderBottomColor: '#3E272333',
+      marginLeft: 14
     },
     listContainer: {
       flex: 1,
@@ -342,11 +344,14 @@ export default function ItemTips() {
       paddingBottom: 10,
       paddingTop: 10,
       paddingRight: 20,
+      marginLeft: 17,
       flex: 1,
-      flexDirection: 'row'
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderBottomColor: '#3E272333'
     },
     headerItemNameContainer: {
-      paddingLeft: 15,
+      paddingLeft: 18,
       paddingBottom: 10,
       paddingTop: 10,
       paddingRight: 20,
@@ -482,6 +487,12 @@ export default function ItemTips() {
       backgroundColor: '#556B2F60',
       marginLeft: 10
     },
+    tipCountImageIcon: {
+      height: 16,
+      width: 16,
+      opacity: 0.5,
+      marginLeft: 8
+    },
     initialLoadMsg: {
       fontSize: 20,
       paddingBottom: 15
@@ -558,6 +569,14 @@ export default function ItemTips() {
     },
     tipProfileName: {
 
+    },
+    tipListIconContainer: {
+
+    },
+    tipListIcon: {
+      width: 28,
+      height: 28,
+      opacity: 1
     }
   });
 
