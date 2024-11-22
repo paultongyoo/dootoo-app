@@ -47,7 +47,6 @@ const DootooItemSidebar = ({ thing, styles }) => {
                     </Pressable> : <></>}
                 {(thing.similar_count && thing.similar_count > 0) ?
                     <Pressable hitSlop={{ top: 10, bottom: 10, right: 10}}
-                               disabled={pathname == TIPS_PATHNAME}
                                style={styles.similarCountContainer}
                                onPress={() => handleSimilarCountTap(thing.similar_count)}>
                         <Text style={styles.similarCountText}>{formatNumber(thing.similar_count)}</Text>
