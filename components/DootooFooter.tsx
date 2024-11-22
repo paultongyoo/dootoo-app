@@ -302,7 +302,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         footerContainer: {
             backgroundColor: '#FAF3E0',
             alignItems: 'center',
-            height: 158
+            height: (hideRecordButton) ? 142 : 158
         },
         bannerAdContainer: {
             position: 'absolute',
