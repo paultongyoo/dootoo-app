@@ -19,6 +19,8 @@ export const AppProvider = ({ children }) => {
     const thingRowPositionXs = useRef([]);
     const thingRowHeights = useRef([]);
     const [selectedProfile, setSelectedProfile] = useState(null);
+    const swipeableRefs = useRef([]);
+
 
     const emptyListCTAOpacity = useRef(new Animated.Value(0)).current;
     const emptyListCTAFadeInAnimation = Animated.timing(emptyListCTAOpacity, {
@@ -96,7 +98,8 @@ export const AppProvider = ({ children }) => {
             emptyListCTAFadeOutAnimation,
             thingRowPositionXs,
             thingRowHeights,
-            selectedProfile, setSelectedProfile
+            selectedProfile, setSelectedProfile,
+            swipeableRefs
              }}>
           {children}
         </AppContext.Provider>

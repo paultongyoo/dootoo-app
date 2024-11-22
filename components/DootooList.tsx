@@ -23,7 +23,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, setLastRecordedCount, initializeLocalUser,
         fadeInListOnRender, setFadeInListOnRender, listOpacity, listFadeInAnimation, listFadeOutAnimation,
-        thingRowPositionXs, thingRowHeights
+        thingRowPositionXs, thingRowHeights, swipeableRefs
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [initialLoad, setInitialLoad] = useState(true);
@@ -33,7 +33,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const [thingIdxToEdit, setThingIdxToEdit] = useState(-1);
     const [thingTextOnTap, setThingTextOnTap] = useState('');
     const inputValueRef = useRef('');
-    const swipeableRefs = useRef([]);
     const [page, setPage] = useState(1);
     const [isPageLoading, setPageLoading] = useState(false);
     const [hasMoreThings, setHasMoreThings] = useState(true);

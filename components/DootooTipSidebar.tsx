@@ -5,7 +5,7 @@ import { formatNumber } from './Helpers';
 
 
 const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
-    const { username, selectedItem } = useContext(AppContext);
+    const { username, selectedItem, swipeableRefs } = useContext(AppContext);
 
     const handleTipFlagContest = async (index: number) => {
         Alert.alert(
@@ -41,17 +41,22 @@ const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
         Linking.openURL(url).catch(err => console.error('Error opening email client:', err));
     }
 
+    const handleVoteThumbTap = (index) => {
+        swipeableRefs.current[index].openRight();
+    }
+
     return (
         <>
             {
                 (!thing.is_flagged && thing.upvote_count && thing.upvote_count != 0) ?
-                    <View style={styles.scoreContainer}>
+                    <Pressable style={styles.scoreContainer}
+                               onPress={() => handleVoteThumbTap(listThingIndex)}>
                         <Text style={styles.scoreText}>{formatNumber(thing.upvote_count)}</Text>
                         {(thing.upvote_count > 0) ?
                             <Image style={styles.scoreIcon} source={require("@/assets/images/thumbs_up_556B2F.png")} />
                             : <Image style={styles.scoreIcon} source={require("@/assets/images/thumbs_down_A23E48.png")} />
                         }
-                    </View> : (thing.is_flagged) ?
+                    </Pressable> : (thing.is_flagged) ?
                         <Pressable 
                             disabled={selectedItem.user_id != thing.user_id}
                             style={styles.flaggedContainer}
