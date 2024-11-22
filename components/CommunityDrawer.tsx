@@ -7,7 +7,7 @@ import { formatNumber, showComingSoonAlert } from './Helpers';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { blockUser, loadUsername } from "./Storage";
 import Dialog from "react-native-dialog";
-import {Picker} from '@react-native-picker/picker';
+import RNPickerSelect from 'react-native-picker-select';
 
 
 const CommunityDrawer = ({ navigation }) => {
@@ -166,6 +166,12 @@ const CommunityDrawer = ({ navigation }) => {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center'
+    },
+    blockedReasonTextInput: {
+      borderWidth: 1,
+      borderColor: "3E3723",
+      height: 50,
+      padding: 10
     }
   });
 
@@ -244,22 +250,22 @@ const CommunityDrawer = ({ navigation }) => {
           <Dialog.Container visible={blockDialogVisible}>
             <Dialog.Title>Report & Block User</Dialog.Title>
             <Dialog.Description>This currently cannot be undone.</Dialog.Description>
-            <Picker
-                selectedValue={selectedBlockReason}
-                onValueChange={(itemValue, itemIndex) =>
-                  setSelectedBlockReason(itemValue)
-                }>
-              <Picker.Item label="Select a reason" value="no_reason" />
-              <Picker.Item label="Just don't want to see their tips" value="just_dont_want_to_see" />
-              <Picker.Item label="Hate Speech" value="hate_speech" />
-              <Picker.Item label="Cyberbullying" value="cyberbulling" />
-              <Picker.Item label="Violent threats" value="violent_threats" />
-              <Picker.Item label="Selling, Promoting Services, Spam" value="sell_promote_spam" />
-              <Picker.Item label="Other" value="other" />
-            </Picker>
+            <RNPickerSelect
+              onValueChange={(value) => setSelectedBlockReason(value)}
+              placeholder={{ label: 'Select a reason', value: 'no_reason' }}
+              items={[
+                { label: 'Just don\'t want to see their tips', value: 'just_dont_want_to_see' },
+                { label: 'Hate Speech', value: 'hate_speech' },
+                { label: 'Cyberbullying', value: 'cyberbulling' },
+                { label: 'Violent threats', value: 'violent_threats' },
+                { label: 'Selling, Promoting Services, Spam', value: 'sell_promote_spam' },
+                { label: 'Other', value: 'other' },
+              ]}
+            />
             { (selectedBlockReason == 'other') ?
                 <TextInput
                   multiline={true}
+                  style={styles.blockedReasonTextInput}
                   placeholder={'Enter reason'}
                   onChangeText={(text) => {
                       setBlockReasonOtherText(text);
