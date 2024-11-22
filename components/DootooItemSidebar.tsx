@@ -3,10 +3,11 @@ import { formatNumber } from './Helpers';
 import Toast from 'react-native-toast-message';
 import { useContext } from 'react';
 import { AppContext } from './AppContext';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 
 const DootooItemSidebar = ({ thing, styles }) => {
     const router = useRouter();
+    const pathname = usePathname();
     const { setSelectedItem } = useContext(AppContext);
     const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
 
@@ -37,13 +38,17 @@ const DootooItemSidebar = ({ thing, styles }) => {
         return (
             <> 
                 {(thing.tip_count > 0) ?
-                    <Pressable style={styles.tipCountContainer}
-                    onPress={() => handleTipCountTap()}>
+                    <Pressable  hitSlop={{ top: 10, bottom: 10, left: 10}}
+                                disabled={pathname == TIPS_PATHNAME}
+                                style={styles.tipCountContainer}
+                                onPress={() => handleTipCountTap()}>
                         <Text style={styles.tipCountText}>{formatNumber(thing.tip_count) || '0'}</Text>
                         <View style={styles.tipCountIcon}></View>
                     </Pressable> : <></>}
                 {(thing.similar_count && thing.similar_count > 0) ?
-                    <Pressable style={styles.similarCountContainer}
+                    <Pressable hitSlop={{ top: 10, bottom: 10, right: 10}}
+                               disabled={pathname == TIPS_PATHNAME}
+                               style={styles.similarCountContainer}
                                onPress={() => handleSimilarCountTap(thing.similar_count)}>
                         <Text style={styles.similarCountText}>{formatNumber(thing.similar_count)}</Text>
                         <Image style={styles.similarCountIcon} source={require("@/assets/images/person_icon_556B2F.png")} />
