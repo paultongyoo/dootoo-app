@@ -388,7 +388,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 {(initialLoad == false) ?
                     <Animated.View style={[styles.initialLoadAnimContainer, { opacity: initialLoadFadeInOpacity }]}>
                         <Text style={styles.initialLoadMsg}>{loadingAnimMsg}</Text>
-                        <ActivityIndicator size={"large"} color="black" />
+                        <ActivityIndicator size={"large"} color="#3E3723" />
                     </Animated.View>
                     :
                     <Animated.View style={[styles.taskContainer, fadeInListOnRender && { opacity: listOpacity }]}>

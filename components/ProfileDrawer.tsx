@@ -192,7 +192,7 @@ const ProfileDrawer = ({ navigation }) => {
           <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_green.png')} />
           <View style={styles.profileDrawerProfileNameContainer}>
             {(!username || username.length == 0) ?
-              <ActivityIndicator size={"large"} color="black" />
+              <ActivityIndicator size={"large"} color="#3E3723" />
               :
               <Text style={styles.profileDrawerProfileNameText}>{username}</Text>
             }

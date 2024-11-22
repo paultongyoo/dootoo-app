@@ -31,7 +31,7 @@ const DootooItemSidebar = ({ thing, styles }) => {
     if (thing.counts_updating) {
         return (
             <View style={styles.itemCountsRefreshingAnimContainer}>
-                <ActivityIndicator size={"small"} color="black" />
+                <ActivityIndicator size={"small"} color="#3E3723" />
             </View>
         );
     } else {

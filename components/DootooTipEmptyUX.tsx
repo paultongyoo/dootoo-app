@@ -45,7 +45,7 @@ const DootooTipEmptyUX = ({ styles, selectedItem, tipArray }) => {
         <>
             {(ctaLoading) ?
                 <Animated.View style={[styles.initialLoadAnimContainer, { opacity: emptyListCTAOpacity }]}>
-                    <ActivityIndicator size={"large"} color="black" />
+                    <ActivityIndicator size={"large"} color="#3E3723" />
                 </Animated.View>
                 :
                 <Animated.View style={[styles.emptyListContainer, {opacity: emptyListCTAOpacity }]}>
