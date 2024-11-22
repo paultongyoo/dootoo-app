@@ -49,7 +49,8 @@ const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
         <>
             {
                 (!thing.is_flagged && thing.upvote_count && thing.upvote_count != 0) ?
-                    <Pressable style={styles.scoreContainer}
+                    <Pressable hitSlop={10}
+                               style={styles.scoreContainer}
                                onPress={() => handleVoteThumbTap(listThingIndex)}>
                         <Text style={styles.scoreText}>{formatNumber(thing.upvote_count)}</Text>
                         {(thing.upvote_count > 0) ?
@@ -57,7 +58,7 @@ const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
                             : <Image style={styles.scoreIcon} source={require("@/assets/images/thumbs_down_A23E48.png")} />
                         }
                     </Pressable> : (thing.is_flagged) ?
-                        <Pressable 
+                        <Pressable hitSlop={10}
                             disabled={selectedItem.user_id != thing.user_id}
                             style={styles.flaggedContainer}
                             onPress={() => handleTipFlagContest(listThingIndex)}>
