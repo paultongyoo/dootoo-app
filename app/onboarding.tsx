@@ -736,6 +736,7 @@ const OnboardingHeader = ({ swipeLeft }) => {
             position: 'absolute',
             top: (Platform.OS == 'ios') ? 60 : 40,
             left: 20,
+            zIndex: 99
         },
         backButtonContainer: {
 
