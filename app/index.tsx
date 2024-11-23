@@ -10,9 +10,9 @@ export default function Index() {
         const checkFirstLaunch = async () => {
             const launchStatus = await AsyncStorage.getItem('isFirstLaunch');
             if (launchStatus === null) {
-                router.navigate('/onboarding');
+                router.replace('/onboarding');
             } else {
-                router.navigate('/meDrawer/communityDrawer/stack');
+                router.replace('/meDrawer/communityDrawer/stack');
             }
         };
         checkFirstLaunch();
