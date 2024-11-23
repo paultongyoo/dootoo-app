@@ -104,7 +104,7 @@ const OnboardingScreen = () => {
     return (
         <View style={styles.background}>
             <Animated.View style={[styles.container, {opacity: onboardingOpacity}]}>
-                {(step > 1) ? <OnboardingHeader swipeLeft={swipeRight} />
+                {(step > 1) ? <OnboardingHeader swipeRight={swipeRight} />
                     : <></>}
 
                 <PanGestureHandler onHandlerStateChange={onSwipe}>
@@ -719,7 +719,7 @@ const Step5 = () => {
     );
 }
 
-const OnboardingHeader = ({ swipeLeft }) => {
+const OnboardingHeader = ({ swipeRight }) => {
     const fadeIn = useRef(new Animated.Value(0)).current;
     const fadeInAnimation = Animated.timing(fadeIn, {
         toValue: 1,
@@ -749,7 +749,7 @@ const OnboardingHeader = ({ swipeLeft }) => {
 
     return (
         <Animated.View style={[styles.onboardingHeaderContainer, {opacity: fadeIn}]}>
-            <Pressable style={styles.backButtonContainer} onPress={swipeLeft}>
+            <Pressable style={styles.backButtonContainer} onPress={swipeRight}>
                 {(Platform.OS == 'ios') ?
                     <Image style={styles.backButtonIcon} source={require('@/assets/images/back_arrow_FAF3E0_ios.png')} />
                     : <Image style={styles.backButtonIcon} source={require('@/assets/images/back_arrow_FAF3E0_android.png')} />
