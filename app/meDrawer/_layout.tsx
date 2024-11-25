@@ -11,6 +11,7 @@ export default function MyProfileDrawerLayout() {
                 drawerContent={(props) => <ProfileDrawer {...props} />}
                 screenOptions={
                     {
+                        swipeEnabled: false,
                         drawerPosition: 'right',
                         headerShown: false
                     }}>
