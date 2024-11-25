@@ -10,6 +10,7 @@ export default function CommunityDrawerLayout() {
                 drawerContent={(props) => <CommunityDrawer {...props} />}
                 screenOptions={
                     {
+                        swipeEnabled: false,
                         drawerPosition: 'left',
                         headerTransparent: true,
                         header: ({ navigation, route }) => <DootooHeader meDrawerNavigation={meDrawerNavigation} />
