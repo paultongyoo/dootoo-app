@@ -33,39 +33,22 @@ export default function Index() {
   });
 
   const saveAllItems = async (latestItems) => {
+
     // console.log("saveAllItems called with latestItems length: " + dootooItems.length);
     if (latestItems && latestItems.length > 0) {
       //console.log(`Passing ${latestItems.length} to saveItems method...`);
 
       //console.log("saveAllItems started...");
       // Asynchronously sync DB with latest items
-      saveItems(latestItems, (updatedItems) => {
-
-        //console.log("Updating user counts asyncronously after saving all items")
+      saveItems(latestItems, () => {
         updateUserCountContext();
-
-        // Apply latest counts to displayed list without affecting list order
-        // This is hack workaround to avoid jolting behavior if/when
-        // item order changes
-        var displayedListToUpdate = refreshItemCounts(latestItems, updatedItems);
-        setDootooItems(displayedListToUpdate);
-        //console.log("saveAllItems finished...");
       });
       //console.log("saveAllItems successful.");
     }
   };
 
   const saveSingleItem = async (item) => {
-    //console.log("saveSingleItem started...");
-    // The DootooList component will have set the "counts_updating" flag 
-    // prior to calling back end to update this item so that we can
-    // reset the flag after retrieving the latest tip/similar counts for the item
-    // based on the updated text
-    saveItems([item], (updatedItems) => {
-      var displayedListToUpdate = refreshItemCounts(dootooItems, updatedItems);
-      setDootooItems(displayedListToUpdate);
-      //console.log("saveSingleItem finished.");
-    });
+    saveItems([item]);
   }
 
   const handleMakeParent = (index: number) => {
@@ -126,7 +109,8 @@ export default function Index() {
       });
 
       // Set this to instruct UI to hide item counts until async save op returns and removes the value
-      updatedTasks![index].counts_updating = true;
+      // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
+      //updatedTasks![index].counts_updating = true;
 
       // Set this to instruct list to animate new item into view
       updatedTasks![index].shouldAnimateIntoView = true
@@ -481,6 +465,8 @@ export default function Index() {
       isThingDraggable={() => { return true }} />
   );
 
+  // Update v1.1.1:  This function will likely be deprecated/removed as now item counts
+  // refresh at the DootooItemSidebar component level
   function refreshItemCounts(latestItems: any, updatedItems: any) {
     var displayedListToUpdate = [...latestItems];
     for (var i = 0; i < updatedItems.length; i++) {

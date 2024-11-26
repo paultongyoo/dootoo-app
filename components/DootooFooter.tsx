@@ -202,9 +202,10 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 setLastRecordedCount(response.length);  // Set for future toast undo potential
 
                 // Set UI flag to inform user that counts may change after async backend save complete
-                for (var i = 0; i < response.length; i++) {
-                    response[i].counts_updating = true; 
-                }
+                // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
+                // for (var i = 0; i < response.length; i++) {
+                //     response[i].counts_updating = true; 
+                // }
 
                 var updatedItems = response.concat(listArray);
                 if (listArray.length == 0) {

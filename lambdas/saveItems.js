@@ -15,7 +15,10 @@ const lambda = new AWS.Lambda();
 export const handler = async (event) => {
   const user = await saveItems(event.anonymous_id, event.items_str);
   const updatedUser = await refreshUpdatedCounts(user);
-  const updatedItems = await loadItems(event.anonymous_id);
+  var updatedItems = [];
+  if (!event.skipLoad) {
+    updatedItems = await loadItems(event.anonymous_id);
+  }
   const response = {
     statusCode: 200,
     body: JSON.stringify({ user: updatedUser, items: updatedItems})

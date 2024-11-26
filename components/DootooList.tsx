@@ -201,7 +201,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 // Asynchronously sync new item text to DB
                 saveSingleThing(updatedTasks![index]);
 
-                updatedTasks![index].counts_updating = true;    // Set this in case new text results in new counts
+                // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
+                //updatedTasks![index].counts_updating = true;    // Set this in case new text results in new counts
+                
                 listArraySetter(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
 
                 amplitude.track("Thing Text Edited", {

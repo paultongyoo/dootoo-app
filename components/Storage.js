@@ -19,6 +19,9 @@ const DELETEITEM_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.ama
 const LOADITEMS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItems_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadItems';
 
+const LOADITEMCOUNTS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItemCounts_Dev'
+                               : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadItemCounts';
+
 const SAVEITEMS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveItems';
 
@@ -50,7 +53,7 @@ const BLOCKUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amaz
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/blockUser';
 
 
-export const saveItems = async (item_list_obj, callback) => {
+export const saveItems = async (item_list_obj, callback = null) => {
   if (item_list_obj === undefined) {
     //console.log("saveItems called with undefined parameter, exiting...");
     return;
@@ -58,16 +61,13 @@ export const saveItems = async (item_list_obj, callback) => {
 
   // Asyncronously save to backend to enable community features and refresh user counts.
   // Ensure all UI data uses only locally stored data and is not reliant on real-time backend state.
-  saveItemsToBackend(item_list_obj, (updatedUser, updatedItems) => {
-
-    // LATEST STRATEGY 11.14 - Asynchronously save items locally to accelerate return launch UX by
-    // "immediately" loading last locally saved list to user first and then refreshing it with latest backend counts
-    // See loadItems/Tips methods for more details.
-    saveItemsLocally(updatedItems);
+  saveItemsToBackend(item_list_obj, (updatedUser) => {
     saveUserLocally(updatedUser);
+    if (callback) {
 
-    //updateLocalUserCounts(updatedUser)
-    callback(updatedItems);
+      // Used to allow UI to update its user UI based on latest user counts
+      callback();
+    }
   });
 }
 
@@ -109,9 +109,6 @@ export const initalizeUser = async() => {
 
 export const loadItems = async (page, callback) => {
   try {
-
-
-
     const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserStr) {
       //console.log("Received null local anon Id, aborting loadItems!");
@@ -132,6 +129,29 @@ export const loadItems = async (page, callback) => {
     return { hasMore: hasMore, things: item_array };
   } catch (error) {
     console.error('Error calling loadItems API:', error);
+  }
+};
+
+export const loadItemCounts = async (item_uuid) => {
+  try {
+    const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserStr) {
+      //console.log("Received null local anon Id, aborting loadItems!");
+      return [];
+    }
+    const localUser = JSON.parse(localUserStr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(LOADITEMCOUNTS_URL,
+      {
+        anonymous_id : localAnonId,
+        item_uuid: item_uuid
+      }
+    );
+    const counts_obj = response.data.body;
+    // console.log(`counts_obj: ${counts_obj}`);
+    return counts_obj;
+  } catch (error) {
+    console.error('Error calling loadItemCounts API:', error);
   }
 };
 
@@ -458,17 +478,16 @@ const saveItemsToBackend = async(item_list_obj, callback) => {
     const response = await axios.post(SAVEITEMS_URL,
       {
         anonymous_id: localAnonId,
-        items_str: JSON.stringify(item_list_obj)
+        items_str: JSON.stringify(item_list_obj),
+        skipLoad: true
       }
     );
     const response_obj = JSON.parse(response.data.body);
     const updatedUser = response_obj.user;
-    const updatedItems = response_obj.items;
-    //console.log("Updated User: " + JSON.stringify(updatedUser));
-    //console.log("Updated items: " + JSON.stringify(updatedItems));
+    // console.log("Updated User: " + JSON.stringify(updatedUser));
     
     if (callback) {
-      callback(updatedUser, updatedItems);
+      callback(updatedUser);
     }
 
   } catch (e) {
