@@ -1,17 +1,41 @@
 import { usePathname } from "expo-router";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Linking, Platform } from "react-native";
 import { AppContext } from "./AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, showComingSoonAlert } from './Helpers';
+import { loadUsername } from "./Storage";
 
 
 const ProfileDrawer = ({ navigation }) => {
     const pathname = usePathname();
     const { username, anonymousId,
-      doneCount, tipCount,
-      resetUserContext
+      resetUserContext, dootooItems
     } = useContext(AppContext);
+
+    const [doneCount, setDoneCount] = useState(0);
+    const [tipCount, setTipCount] = useState(0);
+
+    useEffect(() => {
+      //console.log("Inside Profile Drawer useEffect");
+      let ignore = false;
+
+      const fetchUsernameCounts = async () => {
+        const usernameCounts = await loadUsername(username);
+        if (!ignore) {
+          //console.log("Updating latest profile counts: " + JSON.stringify(usernameCounts));
+          setDoneCount(usernameCounts.doneCount);
+          setTipCount(usernameCounts.tipCount);
+        }
+      }
+      fetchUsernameCounts();
+
+      return () => {
+        // Race Condition Mgmt: Only allow last render of this compononent to update state
+        ignore = true;
+      }
+    }, [dootooItems])
+
 
     const showConfirmationPrompt = () => {
       amplitude.track("User Data Deletion Started", {

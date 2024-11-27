@@ -1,5 +1,5 @@
 import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, Easing, TouchableWithoutFeedback } from 'react-native';
-import { useState, useRef, useContext, useEffect } from 'react';
+import { useState, useRef, useContext, useEffect, useMemo } from 'react';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { AppContext } from './AppContext';
@@ -376,6 +376,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         );
     }
 
+    const memoizedArray = useMemo(() => listArray, [listArray]);
+
     return (
         <TouchableWithoutFeedback onPress={() => {
             if (thingIdxToEdit != -1) {
@@ -397,7 +399,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         {listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0 ?
                             <DraggableFlatList
                                 ref={itemFlatList}
-                                data={listArray.filter(item => !item.is_deleted)}
+                                data={memoizedArray.filter(item => !item.is_deleted)}
                                 onDragEnd={({ data }) => {
                                     amplitude.track("List Item Dragged", {
                                         anonymous_id: anonymousId,

@@ -55,7 +55,10 @@ export default function ItemTips() {
 
       // Asynchronously sync DB with latest tips
       saveTips(selectedItem, latestTips, () => {
-        updateUserCountContext();
+
+        // Fix validation for v1.1.1 race condition
+        // updateUserCountContext();
+
         //console.log("saveAllTips successful.");
       });
     }
@@ -65,7 +68,9 @@ export default function ItemTips() {
     //console.log("saveSingleTip started...");
     // Asynchronously sync DB with latest tips
     saveTips(selectedItem, [tip], () => {
-      updateUserCountContext();
+      
+      // Fix validation for v1.1.1 race condition
+      //updateUserCountContext();
       //console.log("saveSingleTip successful.");
     });
   }

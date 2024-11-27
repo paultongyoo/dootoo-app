@@ -53,7 +53,7 @@ const BLOCKUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amaz
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/blockUser';
 
 
-export const saveItems = async (item_list_obj, callback = null) => {
+export const saveItems = async (item_list_obj, callback) => {
   if (item_list_obj === undefined) {
     //console.log("saveItems called with undefined parameter, exiting...");
     return;

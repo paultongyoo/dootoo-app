@@ -7,12 +7,12 @@ export const AppContext = createContext();
 
 // Create a provider component
 export const AppProvider = ({ children }) => {
+    const [dootooItems, setDootooItems] = useState([]);
     const [userId, setUserId] = useState(-1);
     const [username, setUsername] = useState('');
     const [anonymousId, setAnonymousId] = useState('');
     const [doneCount, setDoneCount] = useState(0);
     const [tipCount, setTipCount] = useState(0);
-    const [dootooItems, setDootooItems] = useState([]);
     const [lastRecordedCount, setLastRecordedCount] = useState(0);
     const [selectedItem, setSelectedItem] = useState(null);
     const [fadeInListOnRender, setFadeInListOnRender] = useState(false);
@@ -20,7 +20,6 @@ export const AppProvider = ({ children }) => {
     const thingRowHeights = useRef([]);
     const [selectedProfile, setSelectedProfile] = useState(null);
     const swipeableRefs = useRef([]);
-
 
     const emptyListCTAOpacity = useRef(new Animated.Value(0)).current;
     const emptyListCTAFadeInAnimation = Animated.timing(emptyListCTAOpacity, {
@@ -56,17 +55,10 @@ export const AppProvider = ({ children }) => {
       setUserId(userData.id);
       setUsername(userData.name);
       setAnonymousId(userData.anonymous_id);
-      updateUserCountContext();
 
       if (callback) {
         callback(userData.isNew);
       }
-    }
-
-    const updateUserCountContext = async() => {
-      const localUser = await initalizeUser();
-      setDoneCount(localUser.doneCountStr);
-      setTipCount(localUser.tipCountStr);
     }
 
     const resetUserContext = async () => {
@@ -78,16 +70,15 @@ export const AppProvider = ({ children }) => {
 
     return (
         <AppContext.Provider value={{ 
+            dootooItems, setDootooItems,
             userId, setUserId,
             username, setUsername,
             anonymousId, setAnonymousId,
-            dootooItems, setDootooItems,
             lastRecordedCount, setLastRecordedCount,
             doneCount, setDoneCount,
             tipCount, setTipCount,
             resetUserContext,
             initializeLocalUser,
-            updateUserCountContext,
             selectedItem, setSelectedItem,
             fadeInListOnRender, setFadeInListOnRender,
             listOpacity,

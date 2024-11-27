@@ -40,14 +40,15 @@ const DootooItemSidebar = ({ thing, styles }) => {
                 const itemCounts = await loadItemCounts(thing.uuid);
                 //console.log(`Returned itemCounts (ignore == ${ignore}) ${thing.text}: ${JSON.stringify(itemCounts)}`);
                 if (!ignore) {
-                    //console.log("Updating counts!");
+                    //console.log(`Updating counts ${thing.text}: ${JSON.stringify(itemCounts)} ${Date.now()}`);
                     setTipCount(itemCounts.tip_count);
                     setSimilarCount(itemCounts.similar_count);
         //            setLoading(false);
                 } else {
-                    console.log("Discarding fetch attempt to avoid race condition " + Date.now());
+                    //console.log("Discarding fetch attempt to avoid race condition " + Date.now());
                 }
             }
+
             fetchCounts();
       //  }  
 
@@ -55,7 +56,7 @@ const DootooItemSidebar = ({ thing, styles }) => {
             //console.log("Cleaning up DootooItemSidebar useEffect " + Date.now());
             ignore = true;
         }
-    }, [thing]);
+    }, []);
 
     
     const handleSimilarCountTap = () => {

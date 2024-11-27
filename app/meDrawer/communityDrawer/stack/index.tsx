@@ -22,9 +22,8 @@ import Reanimated, {
 } from 'react-native-reanimated';
 
 export default function Index() {
-  const { anonymousId, dootooItems, setDootooItems,
-    setLastRecordedCount, setSelectedItem,
-    updateUserCountContext, thingRowHeights } = useContext(AppContext);
+  const { anonymousId, setLastRecordedCount, setSelectedItem, dootooItems, setDootooItems,
+          thingRowHeights } = useContext(AppContext);
   const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
 
   configureReanimatedLogger({
@@ -32,7 +31,7 @@ export default function Index() {
     strict: false
   });
 
-  const saveAllItems = async (latestItems) => {
+  const saveAllItems = async (latestItems, callback) => {
 
     // console.log("saveAllItems called with latestItems length: " + dootooItems.length);
     if (latestItems && latestItems.length > 0) {
@@ -41,7 +40,9 @@ export default function Index() {
       //console.log("saveAllItems started...");
       // Asynchronously sync DB with latest items
       saveItems(latestItems, () => {
-        updateUserCountContext();
+        if (callback) {
+          callback();
+        }
       });
       //console.log("saveAllItems successful.");
     }
@@ -87,7 +88,8 @@ export default function Index() {
     try {
       setLastRecordedCount(0);
       //console.log("Done clicked for item index: " + index);
-      var updatedTasks = [...dootooItems];
+      //var updatedTasks = [...dootooItems];
+      var updatedTasks = dootooItems.map(item => ({ ...item }));
 
       // Before making changes, remember index of first done item in the list, if any
       var firstDoneItemIdx = -1;
@@ -110,7 +112,7 @@ export default function Index() {
 
       // Set this to instruct UI to hide item counts until async save op returns and removes the value
       // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
-      //updatedTasks![index].counts_updating = true;
+      // updatedTasks![index].counts_updating = true;
 
       // Set this to instruct list to animate new item into view
       updatedTasks![index].shouldAnimateIntoView = true
@@ -159,9 +161,9 @@ export default function Index() {
         }
 
         // Asyncronously save all items to DB as rank_idxes will have changed
-        saveAllItems(updatedTasks);
-
-        setDootooItems(updatedTasks);  // This should update UI only and not invoke any synchronous backend operations
+        saveAllItems(updatedTasks, () => {
+          setDootooItems(updatedTasks);  // This should update UI only and not invoke any synchronous backend operations
+        });
       });
 
     } catch (error) {
