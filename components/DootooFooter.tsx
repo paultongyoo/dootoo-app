@@ -8,6 +8,7 @@ import Reanimated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-
 import Toast from "react-native-toast-message";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router'; 
+import { ListItemEventEmitter } from "./ListItemEventEmitter.js";
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
@@ -237,7 +238,9 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 }
 
                 // Make sure this function is asynchronous!!!
-                saveAllThingsFunc(updatedItems);
+                saveAllThingsFunc(updatedItems, () => { 
+                    ListItemEventEmitter.emit("items_saved");
+                });
             } else {
                 //console.log("Did not call setter with updated list, attempting to show toast.");
                 amplitude.track("Empty Recording Toast Displayed", {
