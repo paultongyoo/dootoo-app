@@ -176,7 +176,7 @@ export const saveTips = async (item_obj, tip_list_obj, callback) => {
   });
 }
 
-export const updateTipOrder = async (uuid_array) => {
+export const updateTipOrder = async (selectedItem, uuid_array) => {
   try {
     //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
@@ -189,6 +189,7 @@ export const updateTipOrder = async (uuid_array) => {
     const response = await axios.post(UPDATETIPORDER_URL,
       {
         anonymous_id : localAnonId,
+        item_uuid: selectedItem.uuid,
         uuid_array: JSON.stringify(uuid_array)
       }
     );

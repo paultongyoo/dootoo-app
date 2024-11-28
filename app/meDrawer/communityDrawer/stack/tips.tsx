@@ -69,7 +69,7 @@ export default function ItemTips() {
   }
 
   const saveTipOrder = async (uuidArray) => {
-    updateTipOrder(uuidArray);
+    updateTipOrder(selectedItem, uuidArray);
   }
 
   useEffect(() => {
