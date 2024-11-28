@@ -193,6 +193,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         setCurrentlyTappedThing(thing);
 
         // Remember/baseline future handleBlur comparision with original value
+        // We use a ref instead of state var to not invoke state change / re-render
         onChangeInputValue.current = thing.text;     
     }
 
