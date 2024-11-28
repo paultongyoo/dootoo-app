@@ -6,7 +6,9 @@ import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
+import { ListItemEventEmitter }  from "@/components/ListItemEventEmitter";
 import * as amplitude from '@amplitude/analytics-react-native';
+
 
 import {
   Image, StyleSheet, Pressable,
@@ -112,9 +114,10 @@ export default function Index() {
 
       // Set this to instruct UI to hide item counts until async save op returns and removes the value
       // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
-      // updatedTasks![index].counts_updating = true;
+      //updatedTasks![index].update_counts = true;
 
       // Set this to instruct list to animate new item into view
+      // Update v1.1.1 Deactivating the following feature given removal of post save array overwritting
       updatedTasks![index].shouldAnimateIntoView = true
 
       // Shrink height of item to zero before moving it to new location
@@ -125,6 +128,8 @@ export default function Index() {
         easing: Easing.in(Easing.quad),
         useNativeDriver: false
       }).start(() => {
+
+        const item_uuid = updatedTasks![index].uuid;
 
         if (updatedTasks![index].is_done == true) {
 
@@ -160,10 +165,13 @@ export default function Index() {
           }
         }
 
-        // Asyncronously save all items to DB as rank_idxes will have changed
-        saveAllItems(updatedTasks, () => {
-          setDootooItems(updatedTasks);  // This should update UI only and not invoke any synchronous backend operations
+        // Asyncronously save all items to DB as rank_idxes will have changed5
+        saveAllItems(updatedTasks, () => { 
+          ListItemEventEmitter.emit("items_saved");
         });
+
+        setDootooItems(updatedTasks);  // This should update UI only and not invoke any synchronous backend operations
+
       });
 
     } catch (error) {
