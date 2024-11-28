@@ -631,7 +631,7 @@ export default function ItemTips() {
             renderLeftActions={renderLeftActions}
             saveAllThings={saveAllTips}
             saveTextUpdateFunc={saveTextUpdate}
-            saveThingsOrderFunc={saveTipOrder}
+            saveThingOrderFunc={saveTipOrder}
             loadAllThings={(page) => loadTips(selectedItem.uuid, page)}
             transcribeAudioToThings={transcribeAudioToTips}
             ListThingSidebar={DootooTipSidebar}

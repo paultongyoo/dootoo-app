@@ -473,7 +473,7 @@ export default function Index() {
       handleDoneClick={handleDoneClick}
       saveAllThings={saveAllItems}
       saveTextUpdateFunc={saveTextUpdate}
-      saveThingsOrderFunc={saveItemOrder}
+      saveThingOrderFunc={saveItemOrder}
       loadAllThings={loadItems}
       transcribeAudioToThings={transcribeAudioToTasks}
       ListThingSidebar={DootooItemSidebar}

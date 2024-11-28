@@ -13,7 +13,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     renderLeftActions = (item) => { return <></> },
     renderRightActions = (item) => { return <></> },
     isDoneable = true, handleDoneClick = (index) => { return; },
-    saveAllThings, saveTextUpdateFunc, saveThingsOrderFunc, loadAllThings,
+    saveAllThings, saveTextUpdateFunc, saveThingOrderFunc, loadAllThings,
     transcribeAudioToThings,
     isThingPressable,
     isThingDraggable,
@@ -250,7 +250,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             //saveAllThings(newData);
             // TODO save new order to back end only
             const uuidArray = newData.map((thing) => ({ uuid: thing.uuid }));
-            saveThingsOrderFunc(uuidArray);
+            saveThingOrderFunc(uuidArray);
         } else {
             console.log("Ignoring drag operation given isThingDraggable == false");
         }
