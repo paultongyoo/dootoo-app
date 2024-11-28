@@ -4,7 +4,11 @@ const prisma = new PrismaClient();
 import AWS from 'aws-sdk';
 const kms = new AWS.KMS();
 const ITEMS_KEY_ID = process.env.ITEMS_KEY_ID;
-const lambda = new AWS.Lambda();
+
+import axios from 'axios';
+
+import OpenAI from "openai";
+const openai = new OpenAI();
 
 export const handler = async (event) => {
     try {
@@ -31,54 +35,69 @@ export const handler = async (event) => {
             };
         }
 
+        var textUpdate = event.text
+
+        // Confirm text passes moderation
+        textUpdate = await moderateText(textUpdate);
+
         // Encrypt text before insert
-        const encryptParams = {
-            KeyId: ITEMS_KEY_ID,
-            Plaintext: Buffer.from(event.text)
-        };
-        const encryptedData = await kms.encrypt(encryptParams).promise();
-        const encryptedText = encryptedData.CiphertextBlob.toString('base64');
+        const encryptedText = await encryptText(textUpdate);
 
         var updatedItem = await prisma.item.update({
             where: { id: item.id },
             data: { text: encryptedText }
         });
 
-        updatedItem = await loadItem(user.anonymous_id, item.uuid);
+        // Update embedding for new text
+        await updateItemEmbedding(textUpdate, updatedItem);
+
         const response = {
             statusCode: 200,
             body: JSON.stringify(updatedItem)
         };
-        await prisma.$disconnect();
         return response;
     } catch (error) {
-        await prisma.$disconnect();
         return {
             statusCode: 500,
             body: `Error occurred: ${error}`
         }
+    } finally {
+        await prisma.$disconnect();
     }
 }
 
-const loadItem = async (anonymous_id, item_uuid) => {
-    const lambdaParams = {
-        FunctionName: "loadItems_Dev", // Replace with the name of the other Lambda
-        InvocationType: "RequestResponse", // Use "Event" for asynchronous invocation
-        Payload: JSON.stringify({ anonymous_id: anonymous_id, item_uuid: item_uuid })
-    };
+async function updateItemEmbedding(textUpdate, updatedItem) {
+    const embedding_response = await axios.post(
+        //"http://ip-172-31-31-53.us-east-2.compute.internal:8000/embed",    // PROD EC2 Instance
+        "http://ip-172-31-28-150.us-east-2.compute.internal:8000/embed", // DEV EC2 Instance
+        { text: textUpdate }
+    );
+    const embedding = embedding_response.data.embedding;
+    const embeddingArray = embedding.join(',');
+    await prisma.$executeRawUnsafe(
+        `UPDATE "Item" SET embedding = '[${embeddingArray}]'::vector 
+        WHERE id = ${updatedItem.id};`
+    );
+}
 
-    try {
-        const response = await lambda.invoke(lambdaParams).promise();
-        const arrayOfOne = JSON.parse(JSON.parse(response.Payload).body);
-        console.log("Number of updated items: " + arrayOfOne.length);
-        if (arrayOfOne.length == 1) {
-            return arrayOfOne[0];
-        } else {
-            console.log("Unexpected response from loadItems: " + JSON.stringify(arrayOfOne));
-            return arrayOfOne;
-        }
-    } catch (error) {
-        console.error("Error invoking Lambda function:", error);
-        throw error;
+async function moderateText(textUpdate) {
+    const moderation = await openai.moderations.create({
+        model: "omni-moderation-latest",
+        input: textUpdate
+    });
+    const flagged = moderation.results[0].flagged;
+    if (flagged) {
+        textUpdate = '(flagged)';
     }
+    return textUpdate;
+}
+
+async function encryptText(textUpdate) {
+    const encryptParams = {
+        KeyId: ITEMS_KEY_ID,
+        Plaintext: Buffer.from(textUpdate)
+    };
+    const encryptedData = await kms.encrypt(encryptParams).promise();
+    const encryptedText = encryptedData.CiphertextBlob.toString('base64');
+    return encryptedText;
 }

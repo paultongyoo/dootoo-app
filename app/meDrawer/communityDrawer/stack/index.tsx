@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { router } from 'expo-router';
-import { saveItems, loadItems, deleteItem, updateItemHierarchy } from '@/components/Storage';
+import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList from "@/components/DootooList";
@@ -50,8 +50,10 @@ export default function Index() {
     }
   };
 
-  const saveSingleItem = async (item) => {
-    saveItems([item]);
+  const saveTextUpdate = async (item) => {
+    updateItemText(item, () => { 
+      ListItemEventEmitter.emit("items_saved");
+    });
   }
 
   const handleMakeParent = (item) => {
@@ -466,7 +468,7 @@ export default function Index() {
       renderRightActions={renderRightActions}
       handleDoneClick={handleDoneClick}
       saveAllThings={saveAllItems}
-      saveTextUpdateFunc={saveSingleItem}
+      saveTextUpdateFunc={saveTextUpdate}
       loadAllThings={loadItems}
       transcribeAudioToThings={transcribeAudioToTasks}
       ListThingSidebar={DootooItemSidebar}
