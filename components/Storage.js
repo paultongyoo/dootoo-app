@@ -33,6 +33,9 @@ const LOADTIPS_URL =  (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amaz
 
 const SAVETIPS_URL =  (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveTips_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveTips';
+                                
+const UPDATETIPTEXT_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateTipText_Dev'
+                                    : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateTipText';
 
 const TIPVOTE_URL =  (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/tipVote_Dev'
                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/tipVote';
@@ -98,6 +101,33 @@ export const updateItemText = async (item, callback) => {
     //console.log("updateItemText Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateItemText API:', error);
+  }
+}
+
+export const updateTipText = async (tip, callback) => {
+  try {
+    //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(UPDATETIPTEXT_URL,
+      {
+        anonymous_id : localAnonId,
+        tip_uuid: tip.uuid,
+        text: tip.text
+      }
+    );
+
+    if (callback) {
+      callback();
+    }
+    //console.log("updateTipText Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling updateTipText API:', error);
   }
 }
 

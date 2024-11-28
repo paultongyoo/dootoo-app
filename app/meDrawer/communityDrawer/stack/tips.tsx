@@ -11,7 +11,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { AppContext } from '@/components/AppContext';
 import { transcribeAudioToTips } from '@/components/BackendServices';
-import { loadTips, saveTips, tipVote, flagTip, deleteTip } from '@/components/Storage';
+import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText } from '@/components/Storage';
 import DootooTipSidebar from "@/components/DootooTipSidebar";
 import DootooTipEmptyUX from "@/components/DootooTipEmptyUX";
 import DootooList from "@/components/DootooList";
@@ -64,15 +64,8 @@ export default function ItemTips() {
     }
   };
 
-  const saveSingleTip = async (tip) => {
-    //console.log("saveSingleTip started...");
-    // Asynchronously sync DB with latest tips
-    saveTips(selectedItem, [tip], () => {
-      
-      // Fix validation for v1.1.1 race condition
-      //updateUserCountContext();
-      //console.log("saveSingleTip successful.");
-    });
+  const saveTextUpdate = async (tip) => {
+    updateTipText(tip);
   }
 
   useEffect(() => {
@@ -633,7 +626,7 @@ export default function ItemTips() {
             renderRightActions={renderRightActions}
             renderLeftActions={renderLeftActions}
             saveAllThings={saveAllTips}
-            saveTextUpdateFunc={saveSingleTip}
+            saveTextUpdateFunc={saveTextUpdate}
             loadAllThings={(page) => loadTips(selectedItem.uuid, page)}
             transcribeAudioToThings={transcribeAudioToTips}
             ListThingSidebar={DootooTipSidebar}
