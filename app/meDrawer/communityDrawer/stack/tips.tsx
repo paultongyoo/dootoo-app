@@ -11,7 +11,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { AppContext } from '@/components/AppContext';
 import { transcribeAudioToTips } from '@/components/BackendServices';
-import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText } from '@/components/Storage';
+import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText, updateTipOrder } from '@/components/Storage';
 import DootooTipSidebar from "@/components/DootooTipSidebar";
 import DootooTipEmptyUX from "@/components/DootooTipEmptyUX";
 import DootooList from "@/components/DootooList";
@@ -66,6 +66,10 @@ export default function ItemTips() {
 
   const saveTextUpdate = async (tip) => {
     updateTipText(tip);
+  }
+
+  const saveTipOrder = async (uuidArray) => {
+    updateTipOrder(uuidArray);
   }
 
   useEffect(() => {
@@ -627,12 +631,13 @@ export default function ItemTips() {
             renderLeftActions={renderLeftActions}
             saveAllThings={saveAllTips}
             saveTextUpdateFunc={saveTextUpdate}
+            saveThingsOrderFunc={saveTipOrder}
             loadAllThings={(page) => loadTips(selectedItem.uuid, page)}
             transcribeAudioToThings={transcribeAudioToTips}
             ListThingSidebar={DootooTipSidebar}
             EmptyThingUX={() => <DootooTipEmptyUX styles={styles} selectedItem={selectedItem} tipArray={tips} />}
             isThingPressable={() => { return selectedItem.is_done; }}
-            isThingDraggable={() => { return selectedItem.is_done; }}
+            isThingDraggable={selectedItem.is_done}
             hideRecordButton={!selectedItem.is_done}
             shouldInitialLoad={selectedItem.tip_count && (Number(selectedItem.tip_count) > 0)} />
         </View>

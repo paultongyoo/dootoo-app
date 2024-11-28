@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { router } from 'expo-router';
-import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText } from '@/components/Storage';
+import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList from "@/components/DootooList";
@@ -54,6 +54,10 @@ export default function Index() {
     updateItemText(item, () => { 
       ListItemEventEmitter.emit("items_saved");
     });
+  }
+
+  const saveItemOrder = async (uuidArray) => {
+    updateItemOrder(uuidArray);
   }
 
   const handleMakeParent = (item) => {
@@ -469,12 +473,13 @@ export default function Index() {
       handleDoneClick={handleDoneClick}
       saveAllThings={saveAllItems}
       saveTextUpdateFunc={saveTextUpdate}
+      saveThingsOrderFunc={saveItemOrder}
       loadAllThings={loadItems}
       transcribeAudioToThings={transcribeAudioToTasks}
       ListThingSidebar={DootooItemSidebar}
       EmptyThingUX={DootooItemEmptyUX}
       isThingPressable={() => { return true }}
-      isThingDraggable={() => { return true }} />
+      isThingDraggable={true} />
   );
 
   // Update v1.1.1:  This function will likely be deprecated/removed as now item counts

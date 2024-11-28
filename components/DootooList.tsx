@@ -13,7 +13,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     renderLeftActions = (item) => { return <></> },
     renderRightActions = (item) => { return <></> },
     isDoneable = true, handleDoneClick = (index) => { return; },
-    saveAllThings, saveTextUpdateFunc, loadAllThings,
+    saveAllThings, saveTextUpdateFunc, saveThingsOrderFunc, loadAllThings,
     transcribeAudioToThings,
     isThingPressable,
     isThingDraggable,
@@ -237,15 +237,22 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
     }
 
-    function handleThingDrag(data: unknown[]) {
-        if (isThingDraggable(data)) {
+    function handleThingDrag(newData: unknown[]) {
+
+        if (isThingDraggable) {
             setLastRecordedCount(0);
-            listArraySetter(data);  // This should update UI only and not invoke any syncronous backend operations
+
+            // This should update UI only and not invoke any synchronous backend operations
+            // We use ... spread operate to guarantee we're treating previous data as immutable
+            listArraySetter([...newData]);
 
             // Asynchronously save all items to DB as rank_idxes will have changed
-            saveAllThings(data);
+            //saveAllThings(newData);
+            // TODO save new order to back end only
+            const uuidArray = newData.map((thing) => ({ uuid: thing.uuid }));
+            saveThingsOrderFunc(uuidArray);
         } else {
-            console.log("Ignoring drag operation given isThingDraggable(data) == false");
+            console.log("Ignoring drag operation given isThingDraggable == false");
         }
     }
 
