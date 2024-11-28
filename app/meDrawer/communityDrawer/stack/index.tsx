@@ -466,7 +466,7 @@ export default function Index() {
       renderRightActions={renderRightActions}
       handleDoneClick={handleDoneClick}
       saveAllThings={saveAllItems}
-      saveSingleThing={saveSingleItem}
+      saveTextUpdateFunc={saveSingleItem}
       loadAllThings={loadItems}
       transcribeAudioToThings={transcribeAudioToTasks}
       ListThingSidebar={DootooItemSidebar}
@@ -477,32 +477,32 @@ export default function Index() {
 
   // Update v1.1.1:  This function will likely be deprecated/removed as now item counts
   // refresh at the DootooItemSidebar component level
-  function refreshItemCounts(latestItems: any, updatedItems: any) {
-    var displayedListToUpdate = [...latestItems];
-    for (var i = 0; i < updatedItems.length; i++) {
-      const currUpdatedItem = updatedItems[i];
-      for (var j = 0; j < displayedListToUpdate.length; j++) {
-        if (displayedListToUpdate[j].uuid == currUpdatedItem.uuid) {
-          displayedListToUpdate[j].tip_count = currUpdatedItem.tip_count;
-          displayedListToUpdate[j].similar_count = currUpdatedItem.similar_count;
-          displayedListToUpdate[j].counts_updating = false;
+  // function refreshItemCounts(latestItems: any, updatedItems: any) {
+  //   var displayedListToUpdate = [...latestItems];
+  //   for (var i = 0; i < updatedItems.length; i++) {
+  //     const currUpdatedItem = updatedItems[i];
+  //     for (var j = 0; j < displayedListToUpdate.length; j++) {
+  //       if (displayedListToUpdate[j].uuid == currUpdatedItem.uuid) {
+  //         displayedListToUpdate[j].tip_count = currUpdatedItem.tip_count;
+  //         displayedListToUpdate[j].similar_count = currUpdatedItem.similar_count;
+  //         displayedListToUpdate[j].counts_updating = false;
 
-          // Fire a tracking event if user is displayed an item with non zero count(s)
-          if (displayedListToUpdate[j].tip_count + displayedListToUpdate[j].similar_count > 0) {
-            amplitude.track("Item Counts UI Refreshed", {
-              anonymous_id: anonymousId,
-              item_uuid: displayedListToUpdate[j].uuid,
-              item_is_done: displayedListToUpdate[j].is_done,
-              tip_count: displayedListToUpdate[j].tip_count,
-              similar_count: displayedListToUpdate[j].similar_count
-            });
-          }
+  //         // Fire a tracking event if user is displayed an item with non zero count(s)
+  //         if (displayedListToUpdate[j].tip_count + displayedListToUpdate[j].similar_count > 0) {
+  //           amplitude.track("Item Counts UI Refreshed", {
+  //             anonymous_id: anonymousId,
+  //             item_uuid: displayedListToUpdate[j].uuid,
+  //             item_is_done: displayedListToUpdate[j].is_done,
+  //             tip_count: displayedListToUpdate[j].tip_count,
+  //             similar_count: displayedListToUpdate[j].similar_count
+  //           });
+  //         }
 
-          break;
-        }
-      }
-    }
-    return displayedListToUpdate;
-  }
+  //         break;
+  //       }
+  //     }
+  //   }
+  //   return displayedListToUpdate;
+  // }
 }
 

@@ -97,33 +97,54 @@ export default function ItemTips() {
     router.back();
   }
 
-  const handleTipVote = async (index, voteValue: number) => {
+  const handleTipVote = async (tip, voteValue: number) => {
 
     amplitude.track("Tip Voted", {
       anonymous_id: anonymousId,
-      tip_uuid: tips[index].uuid,
+      tip_uuid: tip.uuid,
       vote_value: voteValue
     });
 
-    const updatedTips = [...tips];
-    if (tips[index].user_vote_value == voteValue) {
+    // v1.1.1 TODO:  Remove commented code after completing testing of new state-mutation approach
+    //const updatedTips = [...tips];
+    if (tip.user_vote_value == voteValue) {
+
+      // v1.1.1 TODO:  Remove commented code after completing testing of new state-mutation approach
+      // updatedTips[index].upvote_count += (tip.user_vote_value * -1);  // Cancel their previous vote in UI
+      // updatedTips[index].user_vote_value = 0; // Drives UI logic indicating which direction user voted, if any
 
       // Clear their vote if they tap the same direction again
-      updatedTips[index].upvote_count += (tips[index].user_vote_value * -1);  // Cancel their previous vote in UI
-      updatedTips[index].user_vote_value = 0; // Drives UI logic indicating which direction user voted, if any
+      setTips((prevTips) => 
+        prevTips.map((prevTip) =>
+          (prevTip.uuid == tip.uuid)
+              ? { ...prevTip, 
+                  upvote_count: prevTip.upvote_count + (tip.user_vote_value * -1),
+                  user_vote_value: 0
+                }
+              : prevTip));
 
       // Asynchronously send tip vote to backend 
-      tipVote(tips[index].uuid, 0);
+      tipVote(tip.uuid, 0);
     } else {
 
+      // v1.1.1 TODO:  Remove commented code after completing testing of new state-mutation approach
+      // updatedTips[index].upvote_count += (tips[index].user_vote_value == (voteValue * -1)) ? (tips[index].user_vote_value * -1) + voteValue : voteValue;
+      // updatedTips[index].user_vote_value = voteValue;
+
       // If user is voting in the opposite direction of their current vote, cancel their current vote first before adding the new vote
-      updatedTips[index].upvote_count += (tips[index].user_vote_value == (voteValue * -1)) ? (tips[index].user_vote_value * -1) + voteValue : voteValue;
-      updatedTips[index].user_vote_value = voteValue;
+      setTips((prevTips) => 
+        prevTips.map((prevTip) =>
+          (prevTip.uuid == tip.uuid)
+              ? { ...prevTip, 
+                  upvote_count: prevTip.upvote_count + ((tip.user_vote_value == (voteValue * -1)) ? (tip.user_vote_value * -1) + voteValue : voteValue),
+                  user_vote_value: voteValue
+                }
+              : prevTip));
 
       // Asynchronously send tip vote to backend 
-      tipVote(tips[index].uuid, voteValue);
+      tipVote(tip.uuid, voteValue);
     }
-    setTips(updatedTips);
+
   }
 
   const handleTipFlag = async (index: number) => {
@@ -188,19 +209,19 @@ export default function ItemTips() {
     );
   }
 
-  const handleTipProfileClick = (index) => {
+  const handleTipProfileClick = (tip) => {
 
     amplitude.track("Tip Profile Tapped", {
       anonymous_id: anonymousId,
-      username: tips[index].name
+      username: tip.name
     });
 
-    setSelectedProfile({ name: tips[index].name });
+    setSelectedProfile({ name: tip.name });
     communityDrawerNavigation.openDrawer();
 
   }
 
-  const renderRightActions = (progress: SharedValue<number>, dragX: SharedValue<number>, index: number) => {
+  const renderRightActions = (tip) => {
     return (
       <>
         {(selectedItem.is_done) ?
@@ -208,7 +229,7 @@ export default function ItemTips() {
             thingNameStr="Tip"
             styles={styles}
             listArray={tips} listArraySetter={setTips}
-            listThingIndex={index}
+            listThing={tip}
             deleteThing={(tip_uuid) => {
               deleteTip(tip_uuid);
 
@@ -219,21 +240,21 @@ export default function ItemTips() {
             }} />
           :
           <>
-            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Upvote, (tips[index].user_vote_value == 1) && styles.action_vote_selected]}>
+            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Upvote, (tip.user_vote_value == 1) && styles.action_vote_selected]}>
               <Pressable
-                onPress={() => { handleTipVote(index, 1) }}>
+                onPress={() => { handleTipVote(tip, 1) }}>
                 <Image style={styles.voteThumbIcon} source={require("@/assets/images/thumbs_up_white.png")} />
               </Pressable>
             </Reanimated.View>
-            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Downvote, (tips[index].user_vote_value == -1) && styles.action_vote_selected]}>
+            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Downvote, (tip.user_vote_value == -1) && styles.action_vote_selected]}>
               <Pressable
-                onPress={() => { handleTipVote(index, -1) }}>
+                onPress={() => { handleTipVote(tip, -1) }}>
                 <Image style={styles.voteThumbIcon} source={require("@/assets/images/thumbs_down_white.png")} />
               </Pressable>
             </Reanimated.View>
             <Reanimated.View style={[styles.itemSwipeAction, styles.action_Flag]}>
               <Pressable
-                onPress={() => { handleTipFlag(index) }}>
+                onPress={() => { handleTipFlag(tip) }}>
                 <Image style={styles.swipeActionIcon_flag} source={require("@/assets/images/flag_white.png")} />
               </Pressable>
             </Reanimated.View>
@@ -243,19 +264,19 @@ export default function ItemTips() {
     );
   };
 
-  const renderLeftActions = (progress: SharedValue<number>, dragX: SharedValue<number>, index: number) => {
+  const renderLeftActions = (tip) => {
     return (
       <>
-        {(tips[index].name) ?
+        {(tip.name) ?
           <Reanimated.View style={styles.itemSwipeArea}>
             <Pressable
-              onPress={() => handleTipProfileClick(index)}>
+              onPress={() => handleTipProfileClick(tip)}>
               <View style={[styles.tipProfileContainer]}>
                 <View style={styles.tipProfileIconContainer}>
                   <Image style={styles.tipProfileIcon} source={require("@/assets/images/profile_icon_red.png")} />
                 </View>
                 <View style={styles.tipProfileNameContainer}>
-                  <Text style={styles.tipProfileName}>{tips[index].name}</Text>
+                  <Text style={styles.tipProfileName}>{tip.name}</Text>
                 </View>
               </View>
             </Pressable>
@@ -612,7 +633,7 @@ export default function ItemTips() {
             renderRightActions={renderRightActions}
             renderLeftActions={renderLeftActions}
             saveAllThings={saveAllTips}
-            saveSingleThing={saveSingleTip}
+            saveTextUpdateFunc={saveSingleTip}
             loadAllThings={(page) => loadTips(selectedItem.uuid, page)}
             transcribeAudioToThings={transcribeAudioToTips}
             ListThingSidebar={DootooTipSidebar}

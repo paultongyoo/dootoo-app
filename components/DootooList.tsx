@@ -13,7 +13,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     renderLeftActions = (item) => { return <></> },
     renderRightActions = (item) => { return <></> },
     isDoneable = true, handleDoneClick = (index) => { return; },
-    saveAllThings, saveSingleThing, loadAllThings,
+    saveAllThings, saveTextUpdateFunc, loadAllThings,
     transcribeAudioToThings,
     isThingPressable,
     isThingDraggable,
@@ -30,9 +30,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const [refreshing, setRefreshing] = useState(false);
     const [errorMsg, setErrorMsg] = useState();
     const itemFlatList = useRef(null);              // TODO: Consider deprecate
-    const [thingIdxToEdit, setThingIdxToEdit] = useState(-1);
-    const [thingTextOnTap, setThingTextOnTap] = useState('');
-    const inputValueRef = useRef('');
+
+    // v1.1.1 Deprecate in future release
+    // const [thingIdxToEdit, setThingIdxToEdit] = useState(-1);
+    // const [thingTextOnTap, setThingTextOnTap] = useState('');
+
+    const onChangeInputValue = useRef('');
+    const [currentlyTappedThing, setCurrentlyTappedThing] = useState();
     const [page, setPage] = useState(1);
     const [isPageLoading, setPageLoading] = useState(false);
     const [hasMoreThings, setHasMoreThings] = useState(true);
@@ -186,46 +190,56 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         setPageLoading(false);
     }
 
-    const handleBlur = (index: number) => {
-        //console.log(`Inside handleBlur for index ${index}`);
-        setThingIdxToEdit(-1);
+    const handleBlur = (item) => {
+        console.log(`Inside handleBlur for item ${item.text}`);
 
-        if (index != -1 && (thingIdxToEdit == index)) {
-            const currentValue = inputValueRef.current;
-            if (currentValue != thingTextOnTap) {
-                //console.log("Text changed to: " + currentValue);
+        // v1.1.1 Deprecate in future release
+        //setThingIdxToEdit(-1);
 
-                var updatedTasks = [...listArray];
-                updatedTasks![index].text = currentValue;
+        const textOnChange = onChangeInputValue.current;
+        if (textOnChange != item.text) {
+            console.log("Text changed to: " + textOnChange);
 
-                // Asynchronously sync new item text to DB
-                saveSingleThing(updatedTasks![index]);
+            // Asynchronously sync new item text to DB
+            //// Make a deep copy of item before editting to ensure
+            //// we don't accidentally change React state and cause re-renders
+            const deepItem = JSON.parse(JSON.stringify(item));
+            deepItem.text = textOnChange;
+            saveTextUpdateFunc(deepItem);
 
-                // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
-                //updatedTasks![index].counts_updating = true;    // Set this in case new text results in new counts
-                
-                listArraySetter(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
+            // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
+            //updatedTasks![index].counts_updating = true;    // Set this in case new text results in new counts
+            
+            // Always treat React state as immutable!  
+            // React was designed to only react to state changes of new objects/values
+            // therefore use 'map' to create new object from previous
+            listArraySetter((prevArray) => prevArray.map((thing) => 
+                thing.uuid == item.uuid 
+                        ? { ...thing, text : textOnChange }
+                        : thing));
 
-                amplitude.track("Thing Text Edited", {
-                    anonymous_id: anonymousId,
-                    pathname: pathname,
-                    thing_uuid: updatedTasks![index].uuid,
-                    thing_type: thingName
-                });
+            amplitude.track("Thing Text Edited", {
+                anonymous_id: anonymousId,
+                pathname: pathname,
+                thing_uuid: item.uuid,
+                thing_type: thingName
+            });
 
-            } else {
-                //console.log(`${currentValue} not changed on blur, ignoring..`);
-            }
+            setCurrentlyTappedThing(null);  // Re-renders list and causes thing to display as pressable again
+
         } else {
-            //console.log(`Previous field ${thingIdxToEdit} exited with no change, ignoring blur`);
+            console.log(`Ignoring blur as text has not changed (${textOnChange})`);
         }
     }
 
-    const handleThingTextTap = (itemText: string, index: number) => {
-        //console.log(`handleItemTextTap called with text (${itemText}) and index (${index})`);
-        inputValueRef.current = itemText;
-        setThingTextOnTap(itemText);
-        setThingIdxToEdit(index);
+    const handleThingTextTap = (thing) => {
+        console.log(`handleItemTextTap for ${JSON.stringify(thing)}`);
+        setCurrentlyTappedThing(thing);
+        onChangeInputValue.current = thing.text;     // Baseline future handleBlur comparision with original value
+
+        // v1.1.1 Deprecate in future release
+        // setThingTextOnTap(itemText);
+        // setThingIdxToEdit(index);
     }
 
     function handleThingDrag(data: unknown[]) {
@@ -347,7 +361,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 </Pressable> : <></>
                             }
                             <View style={styles.itemNameContainer}>
-                                {(thingIdxToEdit == getIndex()) ?
+                                {(currentlyTappedThing?.uuid == item.uuid) ?
                                     <TextInput
                                         multiline={false}
                                         style={styles.itemTextInput}
@@ -355,16 +369,16 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         autoFocus={true}
                                         onChangeText={(text) => {
                                             setLastRecordedCount(0);
-                                            inputValueRef.current = text;
+                                            onChangeInputValue.current = text;
                                         }}
-                                        onBlur={() => handleBlur(getIndex())} />
+                                        onBlur={() => handleBlur(item)} />
                                     :
                                     (isThingPressable(item)) ?
                                         <Pressable
                                             style={styles.itemNamePressable}
                                             onLongPress={drag}
                                             disabled={isActive}
-                                            onPress={() => handleThingTextTap(item.text, getIndex())}>
+                                            onPress={() => handleThingTextTap(item)}>
                                             <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
                                         </Pressable>
                                         : <View style={styles.tipNamePressable}>
@@ -382,12 +396,14 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
     return (
         <TouchableWithoutFeedback onPress={() => {
-            if (thingIdxToEdit != -1) {
+            if (currentlyTappedThing != null) {
                 if (Keyboard.isVisible()) {
                     Keyboard.dismiss();
                 }
-                handleBlur(thingIdxToEdit);
-                setThingIdxToEdit(-1);
+                handleBlur(currentlyTappedThing);
+
+                // v1.1.1 Deprecate in future release
+                //setThingIdxToEdit(-1);
             }
         }} >
             <View style={styles.listContainer}>
