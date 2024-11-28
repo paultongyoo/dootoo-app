@@ -30,11 +30,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const [refreshing, setRefreshing] = useState(false);
     const [errorMsg, setErrorMsg] = useState();
     const itemFlatList = useRef(null);              // TODO: Consider deprecate
-
-    // v1.1.1 Deprecate in future release
-    // const [thingIdxToEdit, setThingIdxToEdit] = useState(-1);
-    // const [thingTextOnTap, setThingTextOnTap] = useState('');
-
     const onChangeInputValue = useRef('');
     const [currentlyTappedThing, setCurrentlyTappedThing] = useState();
     const [page, setPage] = useState(1);
@@ -203,9 +198,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
     const handleBlur = (item) => {
         console.log(`Inside handleBlur for item ${item.text}`);
-
-        // v1.1.1 Deprecate in future release
-        //setThingIdxToEdit(-1);
 
         const textOnChange = onChangeInputValue.current;
         if (textOnChange != item.text) {
@@ -403,9 +395,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     Keyboard.dismiss();
                 }
                 handleBlur(currentlyTappedThing);
-
-                // v1.1.1 Deprecate in future release
-                //setThingIdxToEdit(-1);
             }
         }} >
             <View style={styles.listContainer}>
