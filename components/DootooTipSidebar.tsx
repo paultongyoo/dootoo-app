@@ -41,8 +41,12 @@ const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
         Linking.openURL(url).catch(err => console.error('Error opening email client:', err));
     }
 
-    const handleVoteThumbTap = (index) => {
-        swipeableRefs.current[index].openRight();
+    const handleVoteThumbTap = (uuid) => {
+        if (swipeableRefs.current[uuid]) {
+            swipeableRefs.current[uuid].openRight();
+        } else {
+            console.log(`Thumb tap ignored as no swipeable found at key ${uuid} (unexpected!)`);
+        }
     }
 
     return (
@@ -51,7 +55,7 @@ const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
                 (!thing.is_flagged && thing.upvote_count && thing.upvote_count != 0) ?
                     <Pressable hitSlop={10}
                                style={styles.scoreContainer}
-                               onPress={() => handleVoteThumbTap(listThingIndex)}>
+                               onPress={() => handleVoteThumbTap(thing.uuid)}>
                         <Text style={styles.scoreText}>{formatNumber(thing.upvote_count)}</Text>
                         {(thing.upvote_count > 0) ?
                             <Image style={styles.scoreIcon} source={require("@/assets/images/thumbs_up_556B2F.png")} />

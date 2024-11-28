@@ -54,7 +54,7 @@ export default function Index() {
     saveItems([item]);
   }
 
-  const handleMakeParent = (index: number) => {
+  const handleMakeParent = (item) => {
     setLastRecordedCount(0);
     var updatedTasks = [...dootooItems];
     updatedTasks![index].is_child = false;
@@ -70,19 +70,19 @@ export default function Index() {
     });
   }
 
-  const handleMakeChild = (index: number) => {
+  const handleMakeChild = (item) => {
     setLastRecordedCount(0);
-    var updatedTasks = [...dootooItems];
-    updatedTasks![index].is_child = true;
+    var updatedTasks = dootooItems.map(item => ({ ...item }));
+    item.is_child = true;
 
     // Asyncronously update item hierarhcy in DB
-    updateItemHierarchy(updatedTasks![index].uuid, updatedTasks![index].is_child);
+    updateItemHierarchy(item.uuid, item.is_child);
 
     setDootooItems(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
 
     amplitude.track("Item Made Into Child", {
       anonymous_id: anonymousId,
-      item_uuid: updatedTasks![index].uuid
+      item_uuid: item.uuid
     });
   }
 
@@ -387,25 +387,25 @@ export default function Index() {
   });
 
 
-  const renderRightActions = (progress: SharedValue<number>, dragX: SharedValue<number>, index: number) => {
+  const renderRightActions = (item) => {
     return (
       <>
-        {(dootooItems![index].is_done) ?
+        {(item.is_done) ?
           <Reanimated.View style={[styles.itemSwipeAction, styles.action_Give]}>
             <Pressable
               onPress={() => {
                 //console.log("Give Tips button tapped on item: " + dootooItems![index].text);
                 amplitude.track("Give Tips Clicked", {
                   anonymous_id: anonymousId,
-                  item_uuid: dootooItems![index].uuid
+                  item_uuid: item.uuid
                 });
-                setSelectedItem(dootooItems![index]);
+                setSelectedItem(item);
                 router.push(TIPS_PATHNAME);
               }}>
               <Image style={styles.giveTipIcon} source={require("@/assets/images/give_icon_white.png")} />
             </Pressable>
           </Reanimated.View>
-          : (dootooItems![index].tip_count && dootooItems![index].tip_count > 0) ?
+          : (item.tip_count && item.tip_count > 0) ?
             // <Reanimated.View style={[styles.itemSwipeAction, styles.action_Give]}>
             //   <Pressable
             //     onPress={() => {
@@ -427,12 +427,12 @@ export default function Index() {
         <DootooSwipeAction_Delete
           styles={styles}
           listArray={dootooItems} listArraySetter={setDootooItems}
-          listThingIndex={index}
+          listThing={item}
           deleteThing={deleteItem} />
-        {(dootooItems![index].is_child) ?
+        {item.is_child ?
           <Reanimated.View style={[styles.itemSwipeAction]}>
             <Pressable
-              onPress={() => handleMakeParent(index)}>
+              onPress={() => handleMakeParent(item)}>
               <Image style={styles.swipeActionIcon_ident} source={require("@/assets/images/left_outdent_3E2723.png")} />
             </Pressable>
           </Reanimated.View>
@@ -442,13 +442,13 @@ export default function Index() {
     );
   };
 
-  const renderLeftActions = (progress: SharedValue<number>, dragX: SharedValue<number>, index: number) => {
+  const renderLeftActions = (item) => {
     return (
       <>
-        {(!dootooItems![index].is_child && (index != 0) && (!dootooItems[index - 1].is_done)) ?
+        {(!item.is_child /*&& (index != 0) && (!dootooItems[index - 1].is_done)*/) ?
           <Reanimated.View style={[styles.itemSwipeAction]}>
             <Pressable
-              onPress={() => handleMakeChild(index)}>
+              onPress={() => handleMakeChild(item)}>
               <Image style={styles.swipeActionIcon_ident} source={require("@/assets/images/left_indent_3E2723.png")} />
             </Pressable>
           </Reanimated.View>

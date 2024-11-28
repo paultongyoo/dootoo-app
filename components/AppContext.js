@@ -16,10 +16,10 @@ export const AppProvider = ({ children }) => {
     const [lastRecordedCount, setLastRecordedCount] = useState(0);
     const [selectedItem, setSelectedItem] = useState(null);
     const [fadeInListOnRender, setFadeInListOnRender] = useState(false);
-    const thingRowPositionXs = useRef([]);
-    const thingRowHeights = useRef([]);
+    const thingRowPositionXs = useRef({});
+    const thingRowHeights = useRef({});
     const [selectedProfile, setSelectedProfile] = useState(null);
-    const swipeableRefs = useRef([]);
+    const swipeableRefs = useRef({});
 
     const emptyListCTAOpacity = useRef(new Animated.Value(0)).current;
     const emptyListCTAFadeInAnimation = Animated.timing(emptyListCTAOpacity, {

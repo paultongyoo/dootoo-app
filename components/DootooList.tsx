@@ -1,5 +1,5 @@
 import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, Easing, TouchableWithoutFeedback } from 'react-native';
-import { useState, useRef, useContext, useEffect, useMemo } from 'react';
+import { useState, useRef, useContext, useEffect, useMemo, memo } from 'react';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { AppContext } from './AppContext';
@@ -10,8 +10,8 @@ import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, selectedItem = null, styles,
-    renderLeftActions = (progress, dragX, index) => { return <></> },
-    renderRightActions = (progress, dragX, index) => { return <></> },
+    renderLeftActions = (item) => { return <></> },
+    renderRightActions = (item) => { return <></> },
     isDoneable = true, handleDoneClick = (index) => { return; },
     saveAllThings, saveSingleThing, loadAllThings,
     transcribeAudioToThings,
@@ -241,22 +241,22 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }
 
     // Function to close all Swipeables except the one being opened
-    const closeOtherSwipeables = (index) => {
-        //console.log("closeOtherSwipeables: " + JSON.stringify(swipeableRefs));
-        swipeableRefs.current.forEach((ref, i) => {
-            if (ref && i !== index) {
-                ref.close();
+    const closeOtherSwipeables = (current_item_uuid) => {
+        //console.log(`closeOtherSwipeables (${current_item_uuid}): ${JSON.stringify(swipeableRefs)}`);
+        for (const uuid in swipeableRefs.current) {
+            if ((uuid != current_item_uuid) && swipeableRefs.current.hasOwnProperty(uuid)) {
+                swipeableRefs.current[uuid].close();
             }
-        });
+        }
     };
 
     const renderThing = ({ item, getIndex, drag, isActive }) => {
         const rowPositionX = useRef(new Animated.Value(0)).current;
-        thingRowPositionXs.current[getIndex()] = rowPositionX;
+        thingRowPositionXs.current[item.uuid] = rowPositionX;
         const [rowHeightKnown, setRowHeightKnown] = useState(false);
         const fullRowHeight = useRef(-1);                                    // Placeholder set in onLayout handler
         const rowHeight = useRef(new Animated.Value(1)).current;   // Set once onLayout event fires for Animated.View
-        thingRowHeights.current[getIndex()] = rowHeight;
+        thingRowHeights.current[item.uuid] = rowHeight;
 
         // useEffect(() => {
 
@@ -307,9 +307,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 <Swipeable
                     key={Math.random()}
                     ref={(ref) => {
-                        swipeableRefs.current[getIndex()] = ref;
+                        if (ref) {
+                            swipeableRefs.current[item.uuid] = ref;
+                        } else {
+                            delete swipeableRefs.current[item.uuid];
+                        } 
                     }}
-                    onSwipeableOpen={() => closeOtherSwipeables(getIndex())}
+                    onSwipeableOpen={() => closeOtherSwipeables(item.uuid)}
                     childrenContainerStyle={styles.swipeableContainer}
                     overshootLeft={false}
                     overshootRight={false}
@@ -321,8 +325,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             thing_type: thingName
                         });
                     }}
-                    renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(progress, dragX, getIndex()) } else { return <></> } }}
-                    renderRightActions={(progress, dragX) => { if (renderRightActions) { return renderRightActions(progress, dragX, getIndex()) } else { return <></> } }}>
+                    renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(item) } else { return <></> } }}
+                    renderRightActions={(progress, dragX) => { if (renderRightActions) { return renderRightActions(item) } else { return <></> } }}>
                     <ScaleDecorator>
                         <View style={[styles.itemContainer, (getIndex() == 0) && styles.itemContainer_firstItem]}>
                             {(item.is_child) ?
@@ -376,8 +380,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         );
     }
 
-    const memoizedArray = useMemo(() => listArray, [listArray]);
-
     return (
         <TouchableWithoutFeedback onPress={() => {
             if (thingIdxToEdit != -1) {
@@ -399,7 +401,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         {listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0 ?
                             <DraggableFlatList
                                 ref={itemFlatList}
-                                data={memoizedArray.filter(item => !item.is_deleted)}
+                                data={listArray.filter(item => !item.is_deleted)}
                                 onDragEnd={({ data, from, to }) => {
                                     amplitude.track("List Item Dragged", {
                                         anonymous_id: anonymousId,

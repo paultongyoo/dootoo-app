@@ -5,7 +5,7 @@ import { useContext } from 'react';
 import * as amplitude from '@amplitude/analytics-react-native';
 
 const DootooSwipeAction_Delete = ({
-    styles, listArray, listArraySetter, listThingIndex,
+    styles, listArray, listArraySetter, listThing,
     deleteThing, thingNameStr = "Item" }) => {
     const { anonymousId, setLastRecordedCount, thingRowPositionXs, thingRowHeights } = useContext(AppContext);
 
@@ -15,7 +15,7 @@ const DootooSwipeAction_Delete = ({
         var updatedThings = [...listArray];
 
         // If the thing is a parent and has one or more children, ask user if they want to remove all children too
-        if (!listArray[index].is_child && ((index + 1) <= (listArray.length - 1)) && listArray[index + 1].is_child) {
+        if (!listThing.is_child && ((index + 1) <= (listArray.length - 1)) && listArray[index + 1].is_child) {
 
             // Count how many subtasks this item has
             var numSubtasks = 0;
