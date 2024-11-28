@@ -400,12 +400,16 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             <DraggableFlatList
                                 ref={itemFlatList}
                                 data={memoizedArray.filter(item => !item.is_deleted)}
-                                onDragEnd={({ data }) => {
+                                onDragEnd={({ data, from, to }) => {
                                     amplitude.track("List Item Dragged", {
                                         anonymous_id: anonymousId,
-                                        pathname: pathname
+                                        pathname: pathname,
+                                        from: from,
+                                        to: to
                                     });
-                                    handleThingDrag(data);
+                                    if (from != to) {
+                                        handleThingDrag(data);
+                                    }
                                 }}
                                 keyExtractor={(item, index) => item.uuid}
                                 ListHeaderComponent={<View style={{ height: 0 }} />}
