@@ -190,6 +190,17 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         setPageLoading(false);
     }
 
+    const handleThingTextTap = (thing) => {
+        console.log(`handleItemTextTap for ${JSON.stringify(thing)}`);
+
+        // Update currently tapped thing to cause
+        // list to re-render and display text field for currently tapped thing
+        setCurrentlyTappedThing(thing);
+
+        // Remember/baseline future handleBlur comparision with original value
+        onChangeInputValue.current = thing.text;     
+    }
+
     const handleBlur = (item) => {
         console.log(`Inside handleBlur for item ${item.text}`);
 
@@ -225,21 +236,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 thing_type: thingName
             });
 
-            setCurrentlyTappedThing(null);  // Re-renders list and causes thing to display as pressable again
+            // Clear currently tapped thing re-renders list and causes thing to display as pressable again
+            setCurrentlyTappedThing(null);  
 
         } else {
             console.log(`Ignoring blur as text has not changed (${textOnChange})`);
         }
-    }
-
-    const handleThingTextTap = (thing) => {
-        console.log(`handleItemTextTap for ${JSON.stringify(thing)}`);
-        setCurrentlyTappedThing(thing);
-        onChangeInputValue.current = thing.text;     // Baseline future handleBlur comparision with original value
-
-        // v1.1.1 Deprecate in future release
-        // setThingTextOnTap(itemText);
-        // setThingIdxToEdit(index);
     }
 
     function handleThingDrag(data: unknown[]) {
