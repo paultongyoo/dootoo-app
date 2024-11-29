@@ -289,8 +289,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         // }, [item]);
 
         useEffect(() => {
-            // console.log("listArray length " + listArray.length);
-            // console.log("thingRowHeights: " + JSON.stringify(thingRowHeights));
+            console.log("renderThing useEffect([listArray]) for thing: " + item.text);
+            //console.log("thingRowHeights: " + JSON.stringify(thingRowHeights));
             if (item.shouldAnimateIntoView) {
                 //console.log("Inside shouldAnimateIntoView for index " + getIndex());
                 Animated.timing(rowHeight, {
@@ -344,14 +344,14 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 : <></>
                             }
                             {(isDoneable) ?
-                                <Pressable style={[styles.itemCircleOpen, item.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(getIndex())}></Pressable>
+                                <Pressable style={[styles.itemCircleOpen, item.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(item)}></Pressable>
                                 : <></>
                             }
                             {(thingName == 'tip') ?
                                 <Pressable style={styles.tipListIconContainer}
                                            onPress={() => {
                                                 console.log("Tapping bulb");
-                                                swipeableRefs.current[getIndex()].openLeft()
+                                                swipeableRefs.current[item.uuid].openLeft()
                                             }}>
                                     <Image style={styles.tipListIcon} source={require("@/assets/images/light_bulb_blackyellow.png")} />
                                 </Pressable> : <></>

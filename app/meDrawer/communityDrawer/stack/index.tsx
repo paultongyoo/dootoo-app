@@ -90,11 +90,11 @@ export default function Index() {
     });
   }
 
-  const handleDoneClick = (index: number) => {
+  const handleDoneClick = (item) => {
     try {
       //console.log("Done clicked for item index: " + index);
       //var updatedTasks = [...dootooItems];
-      var updatedTasks = dootooItems.map(item => ({ ...item }));
+      var updatedTasks = dootooItems.map((obj) => ({ ...obj }));
 
       // Before making changes, remember index of first done item in the list, if any
       var firstDoneItemIdx = -1;
@@ -107,12 +107,12 @@ export default function Index() {
       }
       //console.log("firstDoneItemIdx before changing list: " + firstDoneItemIdx);
 
-      updatedTasks![index].is_done = !updatedTasks![index].is_done;
+      item.is_done = !item.is_done;
 
       amplitude.track("Item Done Clicked", {
         anonymous_id: anonymousId.current,
-        item_uuid: updatedTasks![index].uuid,
-        is_done: updatedTasks![index].is_done
+        item_uuid: item.uuid,
+        is_done: item.is_done
       });
 
       // Set this to instruct UI to hide item counts until async save op returns and removes the value
@@ -121,10 +121,10 @@ export default function Index() {
 
       // Set this to instruct list to animate new item into view
       // Update v1.1.1 Deactivating the following feature given removal of post save array overwritting
-      updatedTasks![index].shouldAnimateIntoView = true
+      item.shouldAnimateIntoView = true
 
       // Shrink height of item to zero before moving it to new location
-      const heightRefOfCurrentRow = thingRowHeights.current[index];
+      const heightRefOfCurrentRow = thingRowHeights.current[item.uuid];
       Animated.timing(heightRefOfCurrentRow, {
         toValue: 0,
         duration: 300,
@@ -132,39 +132,38 @@ export default function Index() {
         useNativeDriver: false
       }).start(() => {
 
-        const item_uuid = updatedTasks![index].uuid;
-
-        if (updatedTasks![index].is_done == true) {
+        const index = updatedTasks.findIndex(obj => obj.uuid == item.uuid);
+        updatedTasks[index] = item;
+        
+        if (item.is_done == true) {
 
           //console.log(`Backing index of item ${updatedTasks![index].text}: ${index}`);
-          updatedTasks![index].index_backup = index;
+
+          // v1.1.1 Replacing index_backup with top of the list for now to avoid race conditions
+          //item.index_backup = index;
 
           // Move item to the bottom of the list if it's the only done item, otherwise make it the new first done item
+          
           const [item] = updatedTasks.splice(index, 1);   // remove the item from its current location
-          const [height] = thingRowHeights.current.splice(index, 1);       // remove the item from the thingrowheights tracker to keep lists in sync
 
           if (firstDoneItemIdx == -1) {
             updatedTasks = updatedTasks.concat(item);         // Place at end of list
-            thingRowHeights.current.concat(height);
           } else {
             //console.log("Attempting to insert at top of first item list - firstDoneItemIdx: " + firstDoneItemIdx);
             updatedTasks.splice(firstDoneItemIdx - 1, 0, item)    // Insert it at firstDoneItem location
-            thingRowHeights.current.splice(firstDoneItemIdx - 1, 0, height);
           }
 
         } else {
-          const backupVal = updatedTasks![index].index_backup;
+
+          const backupVal = index;
           const [item] = updatedTasks.splice(index, 1);   // remove the item
-          const [height] = thingRowHeights.current.splice(index, 1);
 
           if (backupVal != null && (backupVal > firstDoneItemIdx)) {
             //console.log("Placing item at firstDoneItemIdx: " + firstDoneItemIdx);
             updatedTasks.splice(firstDoneItemIdx, 0, item)  // insert it in new location
-            thingRowHeights.current.splice(firstDoneItemIdx, 0, height);
           } else {
             //console.log("Placing item at backup index: " + backupVal);
             updatedTasks.splice(backupVal, 0, item)  // insert it in new location
-            thingRowHeights.current.splice(backupVal, 0, height);
           }
         }
 
@@ -174,7 +173,6 @@ export default function Index() {
         });
 
         setDootooItems([...updatedTasks]);  // This should update UI only and not invoke any synchronous backend operations
-
       });
 
     } catch (error) {
