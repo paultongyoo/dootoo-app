@@ -181,7 +181,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }
 
     const handleThingTextTap = (thing) => {
-        console.log(`handleItemTextTap for ${JSON.stringify(thing)}`);
+        //console.log(`handleItemTextTap for ${JSON.stringify(thing)}`);
 
         // Update currently tapped thing to cause
         // list to re-render and display text field for currently tapped thing
@@ -193,11 +193,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }
 
     const handleBlur = (item) => {
-        console.log(`Inside handleBlur for item ${item.text}`);
+        //console.log(`Inside handleBlur for item ${item.text}`);
 
         const textOnChange = onChangeInputValue.current;
         if (textOnChange != item.text) {
-            console.log("Text changed to: " + textOnChange);
+            //console.log("Text changed to: " + textOnChange);
 
             // Asynchronously sync new item text to DB
             //// Make a deep copy of item before editting to ensure
@@ -331,7 +331,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         amplitude.track(`Swipe ${direction.toUpperCase()} Actions Opened`, {
                             anonymous_id: anonymousId.current,
                             pathname: pathname,
-                            thing_uuid: listArray[getIndex()].uuid,
+                            thing_uuid: item.uuid,
                             thing_type: thingName
                         });
                     }}
@@ -380,7 +380,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                             <Text style={[styles.taskTitle]}>{item.text}</Text>
                                         </View>
                                 }
-                                <ListThingSidebar thing={item} styles={styles} listArray={listArray} listThingIndex={getIndex()} />
+                                <ListThingSidebar thing={item} styles={styles} />
                             </View>
                         </View>
                     </ScaleDecorator>
