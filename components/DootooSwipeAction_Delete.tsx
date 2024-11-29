@@ -9,25 +9,18 @@ const DootooSwipeAction_Delete = ({
     deleteThing, thingNameStr = "Item" }) => {
     const { anonymousId, thingRowPositionXs, thingRowHeights } = useContext(AppContext);
 
-    const handleThingDelete = (index: number) => {
+    const handleThingDelete = (thing: any) => {
         //console.log("Entering handle delete item...");
-        var updatedThings = [...listArray];
+        const listArrayCopy = listArray.map((obj) => ({ ...obj }));
 
         // If the thing is a parent and has one or more children, ask user if they want to remove all children too
-        if (!listThing.is_child && ((index + 1) <= (listArray.length - 1)) && listArray[index + 1].is_child) {
+        const thingSubtasks = listArrayCopy.filter((obj) => obj.parent_item_uuid == thing.uuid);
 
-            // Count how many subtasks this item has
-            var numSubtasks = 0;
-            for (var idx = index + 1; idx < listArray.length; idx++) {
-                if (listArray[idx].is_child == true) {
-                    numSubtasks += 1;
-                } else {
-                    break;
-                }
-            }
+        if (!listThing.parent_item_uuid && (thingSubtasks.length > 0)) {
+
             Alert.alert(
-                `${thingNameStr} Has ${numSubtasks} Sub${thingNameStr.toLowerCase()}${numSubtasks > 1 ? 's' : ''}`,
-                `Deleting this ${thingNameStr.toLowerCase()} will delete its sub${thingNameStr.toLowerCase()}${numSubtasks > 1 ? 's' : ''} too.  Continue?`,
+                `${thingNameStr} Has ${thingSubtasks.length} Sub${thingNameStr.toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''}`,
+                `Deleting this ${thingNameStr.toLowerCase()} will delete its sub${thingNameStr.toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''} too.  Continue?`,
                 [
                     {
                         text: 'Yes',
@@ -39,20 +32,21 @@ const DootooSwipeAction_Delete = ({
                             // 3) Remove each item from UI array
                             var slideAnimationArray = [];
                             var heightAnimationArray = [];
-                            for (var i = index; i <= index + numSubtasks; i++) {
+                            const index = listArrayCopy.findIndex(obj => obj.uuid == thing.uuid);
+                            for (var i = index; i <= index + thingSubtasks.length; i++) {
 
                                 // Call asyncronous delete to mark item as deleted in backend to sync database
-                                deleteThing(updatedThings[i].uuid);
+                                deleteThing(listArrayCopy[i].uuid);
 
                                 amplitude.track(`${thingNameStr} Deleted`, {
                                     anonymous_id: anonymousId.current,
-                                    thing_uuid: updatedThings[i].uuid,
+                                    thing_uuid: listArrayCopy[i].uuid,
                                     thing_type: thingNameStr
                                 });
 
                                 // Add the animation to slide the item off the screen
                                 slideAnimationArray.push(
-                                    Animated.timing(thingRowPositionXs.current[i], {
+                                    Animated.timing(thingRowPositionXs.current[listArrayCopy[i].uuid], {
                                         toValue: -600,
                                         duration: 300,
                                         easing: Easing.in(Easing.quad),
@@ -60,9 +54,9 @@ const DootooSwipeAction_Delete = ({
                                     })
                                 );
 
-                                if (i < (updatedThings.length - 1)) {
+                                if (i < (listArrayCopy.length - 1)) {
                                     heightAnimationArray.push(
-                                        Animated.timing(thingRowHeights.current[i], {
+                                        Animated.timing(thingRowHeights.current[listArrayCopy[i].uuid], {
                                             toValue: 0,
                                             duration: 300,
                                             easing: Easing.in(Easing.quad),
@@ -74,15 +68,18 @@ const DootooSwipeAction_Delete = ({
                             Animated.parallel(slideAnimationArray).start(() => {
                                 Animated.parallel(heightAnimationArray).start(() => {
 
-                                    updatedThings.splice(index, 1 + numSubtasks);  // Remove item and its subtasks from array
-                                    thingRowPositionXs.current.splice(index, 1 + numSubtasks);
-                                    thingRowHeights.current.splice(index, 1 + numSubtasks);
-
-                                    // console.log("thingRowPositionXs: " + JSON.stringify(thingRowPositionXs));
-                                    // console.log("thingRowHeights: " + JSON.stringify(thingRowHeights));
-                                    // console.log("updatedThings: " + JSON.stringify(updatedThings));
-                                    listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
+                                    listArrayCopy.splice(index, 1 + thingSubtasks.length);  // Remove item and its subtasks from array
                                     
+                                    delete thingRowPositionXs.current[thing.uuid];
+                                    delete thingRowHeights.current[thing.uuid];                        
+                                    for (const subtask in thingSubtasks) {
+                                        delete thingRowPositionXs.current[subtask.uuid];
+                                        delete thingRowHeights.current[subtask.uuid]
+                                    }
+
+                                    //listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations   
+                                    const subtaskUUIDSet = new Set(thingSubtasks.map(obj => obj.uuid));   
+                                    listArraySetter((prevThings) => prevThings.filter((obj) => (obj.uuid != thing.uuid) && !subtaskUUIDSet.has(obj.uuid)));                            
                                 })
                             });
                         }
@@ -97,8 +94,8 @@ const DootooSwipeAction_Delete = ({
         } else {
 
             //console.log("thingRowPositionXs contents: " + JSON.stringify(thingRowPositionXs.current));
-            const currentRowPositionX = thingRowPositionXs.current[index];
-            const currentRowHeight = thingRowHeights.current[index]
+            const currentRowPositionX = thingRowPositionXs.current[thing.uuid];
+            const currentRowHeight = thingRowHeights.current[thing.uuid]
 
             //console.log(`Stats of row before deleting - positionX ${JSON.stringify(currentRowPositionX)}, rowHeight ${JSON.stringify(currentRowHeight)}`);
             var animationArray = [
@@ -111,7 +108,8 @@ const DootooSwipeAction_Delete = ({
             ];
 
             // Only animate reduction of the height of the item if there are items underneath it
-            if (index < (updatedThings.length - 1)) {
+            const index = listArrayCopy.findIndex(obj => obj.uuid == thing.uuid);
+            if (index < (listArrayCopy.length - 1)) {
                 animationArray.push(
                     Animated.timing(currentRowHeight, {
                         toValue: 0,
@@ -126,21 +124,22 @@ const DootooSwipeAction_Delete = ({
 
                 amplitude.track(`${thingNameStr} Deleted`, {
                     anonymous_id: anonymousId.current,
-                    thing_uuid: updatedThings[index].uuid,
+                    thing_uuid: thing.uuid,
                     thing_type: thingNameStr
                 });
 
                 // Call asyncronous delete to mark item as deleted in backend to sync database
-                deleteThing(updatedThings[index].uuid);
+                deleteThing(thing.uuid);
 
                 // Remove item from displayed and thingRowPositionXs lists
-                updatedThings.splice(index, 1);
-                thingRowPositionXs.current.splice(index, 1);
-                thingRowHeights.current.splice(index, 1);
+                listArrayCopy.splice(index, 1);
+                delete thingRowPositionXs.current[thing.uuid];
+                delete thingRowHeights.current[thing.uuid];
 
                 //console.log(`updatedThings post delete (${updatedThings.length}): ${JSON.stringify(updatedThings)}`);
 
-                listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
+                //listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
+                listArraySetter((prevThings) => prevThings.filter((obj) => (obj.uuid != thing.uuid)));                            
             });
         }
 
@@ -150,7 +149,7 @@ const DootooSwipeAction_Delete = ({
     return (
         <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
             <Pressable
-                onPress={() => handleThingDelete(listThingIndex)}>
+                onPress={() => handleThingDelete(listThing)}>
                 <Image style={styles.swipeActionIcon_trash} source={require("@/assets/images/trash_icon_white.png")} />
             </Pressable>
         </Reanimated.View>

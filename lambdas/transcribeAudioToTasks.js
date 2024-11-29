@@ -1,9 +1,5 @@
-import axios from 'axios';
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
 import OpenAI from "openai";
 import { toFile } from "openai/uploads";
-import { v4 as uuidv4 } from 'uuid';
 
 const openai = new OpenAI();
 
@@ -60,7 +56,11 @@ export const handler = async (event) => {
                 "Do NOT guess additional items beyond what the user stays in their input.  Return your analysis in the following JSON format:
                 {
                   "tasks": [
-                    {"text": "<task name>", "is_child": <false if main task, true otherwise>}
+                    {
+                      "uuid": "<RFC-compliant UUID>",
+                      "text": "<task name>", 
+                      "is_child": <false if main task, true otherwise>},
+                      "parent_item_uuid": <UUID of parent task if this is a subtask>
                   ]
                 }`
         },
@@ -70,47 +70,6 @@ export const handler = async (event) => {
 
     var object_from_chat = JSON.parse(completion.choices[0].message.content);
     var item_array = object_from_chat.tasks;
-
-    // Retrieve user id to filter out similar tasks from same user
-    console.log("Attempting user ID lookup for anonymous_id: " + event.headers.anonymous_id);
-    const user = await prisma.user.findUnique({
-      where: { anonymous_id: event.headers.anonymous_id }
-    });
-    console.log(user);
-    if (user) {
-      for (var i = 0; i < item_array.length; i++) {
-        const item = item_array[i];
-
-        item.uuid = uuidv4();
-
-        // Obtain embedding for item text
-        console.log(`Begin retrieval and storing of embedding for recorded item ...`);
-        const embedding_response = await axios.post(
-          //"http://ip-172-31-31-53.us-east-2.compute.internal:8000/embed",    // PROD EC2 Instance
-          "http://ip-172-31-28-150.us-east-2.compute.internal:8000/embed",    // DEV EC2 Instance
-          { text: item.text }
-        );
-        const embedding = embedding_response.data.embedding;
-        console.log("Embedding: " + embedding);
-        const embeddingArray = embedding.join(',');
-
-        // Execute query to count how many similar items
-        const num_close_embeddings = await prisma.$queryRawUnsafe(
-          `SELECT COUNT(DISTINCT user_id) FROM "Item" WHERE 0.7 >= embedding <-> '[` +
-          embeddingArray + `]'::vector AND user_id <> ` + user.id + `;`);
-
-        console.log("num close embeddings return: " + num_close_embeddings[0].count);
-        // append count to item object
-        item_array[i].similar_count = Number(num_close_embeddings[0].count + ''); // Hack workaround to convert BigInt 
-        console.log("Updated Item: " + item_array[i]);
-      }
-    } else {
-      console.log("Could not find user, unexpected!!");
-      return {
-        statusCode: 500,
-        body: 'Could not find user in DB'
-      };
-    }
 
     console.log("Final Output: ", item_array);
 
