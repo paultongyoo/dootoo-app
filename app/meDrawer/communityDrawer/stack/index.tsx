@@ -57,7 +57,9 @@ export default function Index() {
   }
 
   const saveItemOrder = async (uuidArray) => {
-    updateItemOrder(uuidArray);
+    updateItemOrder(uuidArray, () => { 
+      //ListItemEventEmitter.emit("items_saved");
+    });     
   }
 
   const handleMakeParent = (item) => {

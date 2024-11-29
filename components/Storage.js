@@ -86,7 +86,7 @@ export const saveItems = async (item_list_obj, callback) => {
   });
 }
 
-export const updateItemOrder = async (uuid_array) => {
+export const updateItemOrder = async (uuid_array, callback) => {
   try {
     //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
@@ -102,6 +102,9 @@ export const updateItemOrder = async (uuid_array) => {
         uuid_array: JSON.stringify(uuid_array)
       }
     );
+    if (callback) {
+      callback();
+    }
     //console.log("updateItemOrder Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateItemOrder API:', error);
@@ -206,7 +209,7 @@ export const saveTips = async (item_obj, tip_list_obj, callback) => {
   });
 }
 
-export const updateTipOrder = async (selectedItem, uuid_array) => {
+export const updateTipOrder = async (selectedItem, uuid_array, callback) => {
   try {
     //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
@@ -223,6 +226,9 @@ export const updateTipOrder = async (selectedItem, uuid_array) => {
         uuid_array: JSON.stringify(uuid_array)
       }
     );
+    if (callback) {
+      callback();
+    }
     //console.log("updateTipsOrder Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateTipsOrder API:', error);
