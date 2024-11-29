@@ -68,7 +68,9 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 //console.log('Requesting permission..');
                 amplitude.track("Recording Permission Prompt Started");
                 const result = await requestPermission();
-                amplitude.track("Recording Permission Prompt Completed", {result: result});
+                amplitude.track("Recording Permission Prompt Completed", {
+                    result: (result) ? result.status : '(null)'
+                });
             }
             await Audio.setAudioModeAsync({
                 allowsRecordingIOS: true,
