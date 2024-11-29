@@ -2,10 +2,9 @@ import {
   Image, Text, View, StyleSheet, Pressable, Alert,
   Platform
 } from "react-native";
-import { useState, useContext, useCallback, useEffect } from 'react';
-import { router, useFocusEffect, useNavigation, usePathname, useRouter } from 'expo-router';
+import { useState, useContext, useEffect } from 'react';
+import { useNavigation, usePathname, useRouter } from 'expo-router';
 import Reanimated, {
-  SharedValue,
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
