@@ -173,7 +173,6 @@ export default function Index() {
         const uuid_array = updatedTasks.map(obj => ({ uuid: obj.uuid }));
         updateItemOrder(uuid_array); 
 
-
         // This should update UI only and not invoke any synchronous backend operations
         // Reorder items to match updated list above
         const reviseItems = (updatedTasks: any, uuid_array: any, newItem: any) => {
