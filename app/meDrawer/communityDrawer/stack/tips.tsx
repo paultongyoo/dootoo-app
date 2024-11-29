@@ -139,11 +139,11 @@ export default function ItemTips() {
 
   }
 
-  const handleTipFlag = async (index: number) => {
+  const handleTipFlag = async (tip) => {
 
     amplitude.track("Tip Flag Started", {
       anonymous_id: anonymousId.current,
-      tip_uuid: tips[index].uuid
+      tip_uuid: tip.uuid
     });
 
     Alert.alert(
@@ -156,7 +156,7 @@ export default function ItemTips() {
             //console.log('Tip Flag Cancel Pressed');
             amplitude.track("Tip Flag Cancelled", {
               anonymous_id: anonymousId.current,
-              tip_uuid: tips[index].uuid
+              tip_uuid: tip.uuid
             });
           },
           style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
@@ -165,7 +165,7 @@ export default function ItemTips() {
           text: 'Yes',
           onPress: () => {
             //console.log('Tip Flag OK Pressed');
-            handleFlagTip(index);
+            handleFlagTip(tip);
           },
         },
       ],
@@ -173,19 +173,20 @@ export default function ItemTips() {
     );
   }
 
-  const handleFlagTip = async (index) => {
+  const handleFlagTip = async (tip) => {
 
     amplitude.track("Tip Flag Completed", {
       anonymous_id: anonymousId.current,
-      tip_uuid: tips[index].uuid
+      tip_uuid: tip.uuid
     });
 
     // Asynchronously send tip flag to backend
-    flagTip(tips[index].uuid);
+    flagTip(tip.uuid);
 
-    const updatedTips = [...tips];
-    updatedTips[index].is_flagged = true;
-    setTips(updatedTips);
+    setTips((prevTips) => prevTips.map((obj) =>
+         (obj.uuid == tip.uuid)
+              ? { ...obj, is_flagged: true}
+              : obj));
 
     Alert.alert(
       'Abuse Reported', // Title of the alert
@@ -610,12 +611,12 @@ export default function ItemTips() {
               <View style={styles.itemNamePressable}>
                 <Text style={[styles.taskTitle, selectedItem.is_done && styles.taskTitle_isDone]}>{selectedItem.text}</Text>
               </View>
-              <DootooItemSidebar item={selectedItem} styles={styles} />
+              <DootooItemSidebar thing={selectedItem} styles={styles} />
             </View>
           </View>
           <DootooList
             thingName="tip"
-            loadingAnimMsg={(selectedItem.is_done) ? "Loading your tips to the community" : "Loading tips from the community"}
+            loadingAnimMsg={(selectedItem.current.is_done) ? "Loading your tips to the community" : "Loading tips from the community"}
             listArray={tips}
             listArraySetter={setTips}
             styles={styles}
