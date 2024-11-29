@@ -616,7 +616,7 @@ export default function ItemTips() {
           </View>
           <DootooList
             thingName="tip"
-            loadingAnimMsg={(selectedItem.current.is_done) ? "Loading your tips to the community" : "Loading tips from the community"}
+            loadingAnimMsg={(selectedItem.is_done) ? "Loading your tips to the community" : "Loading tips from the community"}
             listArray={tips}
             listArraySetter={setTips}
             styles={styles}
