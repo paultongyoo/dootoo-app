@@ -27,6 +27,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [errorMsg, setErrorMsg] = useState();
+    const [isRefreshing, setRefreshing] = useState(false);
 
     // References:  Changing these should intentionally NOT cause this list to re-render
     //const itemFlatList = useRef(null);              // TODO: Consider deprecate
@@ -34,7 +35,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const isPageLoading = useRef(false);
     const hasMoreThings = useRef(true);
     const initialLoad = useRef(true);
-    const isRefreshing = useRef(false);
 
     // State Variables:  Changing these should intentionally cause this list to re-render
     const [currentlyTappedThing, setCurrentlyTappedThing] = useState();
@@ -121,7 +121,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const loadNextPage = () => {
         //console.log("loadNextPage called");
         if (hasMoreThings.current) {
-            if (!isRefreshing.current && !isPageLoading) {
+            if (!isRefreshing && !isPageLoading) {
                 //console.log(`List end reached, incrementing current page var (currently ${page}).`);
                 isPageLoading.current = true;
                 setPage((prevPage) => prevPage + 1);
@@ -151,10 +151,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
         hasMoreThings.current = hasMore;
 
-        isRefreshing.current = false;
+        
         initialLoad.current = true;
         isPageLoading.current = false;
         initialLoadFadeInAnimation.reset();
+        setRefreshing(false);
 
         // If we're loading the first page, assume we want to reset the displays list to only the first page
         // (e.g. on a pull-down-to-refresh action).  If page > 1, assume we want to append the page to what's currently
@@ -177,7 +178,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         } else {
             //console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
             listArraySetter((prevItems) => prevItems.concat(things));
-        }
+        }    
     }
 
     const handleThingTextTap = (thing) => {
@@ -426,10 +427,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                     <RefreshControl
                                         tintColor="#3E3723"
                                         onRefresh={() => {
-                                            isRefreshing.current = true;
+                                            setRefreshing(true);
                                             resetListWithFirstPageLoad(true);
                                         }}
-                                        refreshing={isRefreshing.current == true} />
+                                        refreshing={isRefreshing} />
                                 }
                                 renderItem={renderThing}
                                 onEndReached={({ distanceFromEnd }) => {
