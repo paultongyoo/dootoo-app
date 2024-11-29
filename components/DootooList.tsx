@@ -288,7 +288,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         // }, [item]);
 
         useEffect(() => {
-            console.log("renderThing useEffect([listArray]) for thing: " + item.text);
+            //console.log("renderThing useEffect([listArray]) for thing: " + item.text);
             //console.log("thingRowHeights: " + JSON.stringify(thingRowHeights));
             if (item.shouldAnimateIntoView) {
                 //console.log("Inside shouldAnimateIntoView for index " + getIndex());
