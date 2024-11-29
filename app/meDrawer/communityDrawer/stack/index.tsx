@@ -63,7 +63,7 @@ export default function Index() {
   const handleMakeParent = (item) => {
 
     // Asyncronously update item hierarhcy in DB
-    updateItemHierarchy(item.uuid, item.is_child);
+    updateItemHierarchy(item.uuid, false);
 
     setDootooItems((prevItems) => prevItems.map((obj) =>
         (obj.uuid == item.uuid) 
@@ -79,7 +79,7 @@ export default function Index() {
   const handleMakeChild = (item) => {
 
     // Asyncronously update item hierarhcy in DB
-    updateItemHierarchy(item.uuid, item.is_child);
+    updateItemHierarchy(item.uuid, true);
 
     setDootooItems((prevItems) => prevItems.map((obj) =>
       (obj.uuid == item.uuid) 
