@@ -275,7 +275,7 @@ const CommunityDrawer = ({ navigation }) => {
           </View>
           <View style={styles.statsContainer}>
             <Pressable style={styles.statContainer}
-              onPress={() => showComingSoonAlert(anonymousId.current, "'Done'")}>
+              onPress={() => showComingSoonAlert(anonymousId.current, "'Done'", pathname)}>
               <View style={styles.statIconContainer}>
                 <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
               </View>
@@ -283,7 +283,7 @@ const CommunityDrawer = ({ navigation }) => {
               <Text style={styles.statName}>Done</Text>
             </Pressable>
             <Pressable style={styles.statContainer}
-              onPress={() => showComingSoonAlert(anonymousId.current, "'Tips'")}>
+              onPress={() => showComingSoonAlert(anonymousId.current, "'Tips'", pathname)}>
               <View style={styles.statIconContainer}>
                 <Image style={styles.statIcon_Tips} source={require('@/assets/images/light_bulb_blackyellow.png')} />
               </View>
