@@ -222,14 +222,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 pathname: pathname,
                 thing_uuid: item.uuid,
                 thing_type: thingName
-            });
-
-            // Clear currently tapped thing re-renders list and causes thing to display as pressable again
-            setCurrentlyTappedThing(null);  
-
+            }); 
         } else {
             console.log(`Ignoring blur as text has not changed (${textOnChange})`);
         }
+
+        // Clear currently tapped thing re-renders list and causes thing to display as pressable again
+        setCurrentlyTappedThing(null); 
     }
 
     function handleThingDrag(newData: unknown[]) {
