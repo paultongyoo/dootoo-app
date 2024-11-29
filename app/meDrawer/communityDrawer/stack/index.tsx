@@ -61,28 +61,30 @@ export default function Index() {
   }
 
   const handleMakeParent = (item) => {
-    var updatedTasks = [...dootooItems];
-    updatedTasks![index].is_child = false;
-
-    // Asyncronously update item hierarhcy in DB
-    updateItemHierarchy(updatedTasks![index].uuid, updatedTasks![index].is_child);
-
-    setDootooItems(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
-
-    amplitude.track("Item Made Into Parent", {
-      anonymous_id: anonymousId.current,
-      item_uuid: updatedTasks![index].uuid
-    });
-  }
-
-  const handleMakeChild = (item) => {
-    var updatedTasks = dootooItems.map(item => ({ ...item }));
-    item.is_child = true;
 
     // Asyncronously update item hierarhcy in DB
     updateItemHierarchy(item.uuid, item.is_child);
 
-    setDootooItems(updatedTasks); // This should update UI only and not invoke any syncronous backend operations
+    setDootooItems((prevItems) => prevItems.map((obj) =>
+        (obj.uuid == item.uuid) 
+              ? { ...obj, is_child: false }
+              : obj)); // This should update UI only and not invoke any syncronous backend operations
+
+    amplitude.track("Item Made Into Parent", {
+      anonymous_id: anonymousId.current,
+      item_uuid: item.uuid
+    });
+  }
+
+  const handleMakeChild = (item) => {
+
+    // Asyncronously update item hierarhcy in DB
+    updateItemHierarchy(item.uuid, item.is_child);
+
+    setDootooItems((prevItems) => prevItems.map((obj) =>
+      (obj.uuid == item.uuid) 
+            ? { ...obj, is_child: true }
+            : obj)); // This should update UI only and not invoke any syncronous backend operations
 
     amplitude.track("Item Made Into Child", {
       anonymous_id: anonymousId.current,
@@ -134,7 +136,7 @@ export default function Index() {
 
         const index = updatedTasks.findIndex(obj => obj.uuid == item.uuid);
         updatedTasks[index] = item;
-        
+
         if (item.is_done == true) {
 
           //console.log(`Backing index of item ${updatedTasks![index].text}: ${index}`);
