@@ -8,7 +8,7 @@ export const formatNumber = (num) => {
     return (num / 1_000_000_000_000).toFixed(1).replace(/\.0$/, '') + 'T';
 }
 
-export const showComingSoonAlert = (featureName) => {
+export const showComingSoonAlert = (anonymousId, featureName) => {
     Alert.alert(
       `${featureName} Feature Coming Soon`, // Title of the alert
       "Look for this in a future release.  We've noted you're looking for it.  Thanks!", // Message of the alert

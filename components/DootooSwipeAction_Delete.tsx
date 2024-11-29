@@ -7,11 +7,10 @@ import * as amplitude from '@amplitude/analytics-react-native';
 const DootooSwipeAction_Delete = ({
     styles, listArray, listArraySetter, listThing,
     deleteThing, thingNameStr = "Item" }) => {
-    const { anonymousId, setLastRecordedCount, thingRowPositionXs, thingRowHeights } = useContext(AppContext);
+    const { anonymousId, thingRowPositionXs, thingRowHeights } = useContext(AppContext);
 
     const handleThingDelete = (index: number) => {
         //console.log("Entering handle delete item...");
-        setLastRecordedCount(0);
         var updatedThings = [...listArray];
 
         // If the thing is a parent and has one or more children, ask user if they want to remove all children too
@@ -46,7 +45,7 @@ const DootooSwipeAction_Delete = ({
                                 deleteThing(updatedThings[i].uuid);
 
                                 amplitude.track(`${thingNameStr} Deleted`, {
-                                    anonymous_id: anonymousId,
+                                    anonymous_id: anonymousId.current,
                                     thing_uuid: updatedThings[i].uuid,
                                     thing_type: thingNameStr
                                 });
@@ -126,7 +125,7 @@ const DootooSwipeAction_Delete = ({
                 //console.log(`Deleting sole item at index ${index}: ${updatedThings[index].text}`);
 
                 amplitude.track(`${thingNameStr} Deleted`, {
-                    anonymous_id: anonymousId,
+                    anonymous_id: anonymousId.current,
                     thing_uuid: updatedThings[index].uuid,
                     thing_type: thingNameStr
                 });

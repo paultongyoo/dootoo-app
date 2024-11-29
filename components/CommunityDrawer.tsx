@@ -13,8 +13,7 @@ import RNPickerSelect from 'react-native-picker-select';
 const CommunityDrawer = ({ navigation }) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { anonymousId, selectedProfile, setSelectedProfile, selectedItem, setSelectedItem,
-  } = useContext(AppContext);
+  const { anonymousId, selectedProfile } = useContext(AppContext);
   const animatedOpacity = useSharedValue(0);
   const animatedOpacityStyle = useAnimatedStyle(() => {
     return { opacity: animatedOpacity.value }
@@ -35,17 +34,21 @@ const CommunityDrawer = ({ navigation }) => {
       duration: 300
     });
 
-    if (selectedProfile && !selectedProfile.doneCount) {
+    if (selectedProfile.current && !selectedProfile.current.doneCount) {
       loadSelectedProfile();
     }
   }, [selectedProfile]);
 
   const loadSelectedProfile = async () => {
-    const loadedProfile = await loadUsername(selectedProfile.name);
+    const loadedProfile = await loadUsername(selectedProfile.current.name);
     animatedOpacity.value = withTiming(0, {
-      duration: 300
-    }, (isFinished) => { if (isFinished) runOnJS(setSelectedProfile)(loadedProfile) });
-    ;
+        duration: 300
+      }, (isFinished) => { 
+        if (isFinished) {
+          selectedProfile.current = loadedProfile;
+        } 
+      }
+    );
   }
 
   const handleBlockProfileTap = () => {
@@ -231,7 +234,7 @@ const CommunityDrawer = ({ navigation }) => {
     setBlockDialogVisible(false);
     setIsBlockingProcessing(true);
     const reasonString = (selectedBlockReason == "other") ? `${selectedBlockReason}: ${blockReasonOtherText}` : selectedBlockReason
-    const wasBlockSuccessful = await blockUser(selectedProfile.name, reasonString)
+    const wasBlockSuccessful = await blockUser(selectedProfile.current.name, reasonString)
     setIsBlockingProcessing(false);
     if (wasBlockSuccessful) {
       setBlockSuccessDialogVisible(true)
@@ -240,7 +243,7 @@ const CommunityDrawer = ({ navigation }) => {
     }
   }
 
-  if (!selectedProfile || !selectedProfile.doneCount) {
+  if (!selectedProfile.current || !selectedProfile.current.doneCount) {
     return (
       <View style={styles.profileDrawerContainer}>
         <Animated.View style={[styles.loadingAnimContainer, animatedOpacityStyle]}>
@@ -258,7 +261,7 @@ const CommunityDrawer = ({ navigation }) => {
             <Pressable style={styles.profileBlockIconContainer}
               onPress={() => {
                 amplitude.track("Block Profile Button Tapped", {
-                  anonymous_id: anonymousId,
+                  anonymous_id: anonymousId.current,
                   usrename: pathname
                 });
                 handleBlockProfileTap();
@@ -267,24 +270,24 @@ const CommunityDrawer = ({ navigation }) => {
             </Pressable>
             <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_red.png')} />
             <View style={styles.profileDrawerProfileNameContainer}>
-              <Text style={styles.profileDrawerProfileNameText}>{selectedProfile.name}</Text>
+              <Text style={styles.profileDrawerProfileNameText}>{selectedProfile.current.name}</Text>
             </View>
           </View>
           <View style={styles.statsContainer}>
             <Pressable style={styles.statContainer}
-              onPress={() => showComingSoonAlert("'All Done'")}>
+              onPress={() => showComingSoonAlert(anonymousId.current, "'Done'")}>
               <View style={styles.statIconContainer}>
                 <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
               </View>
-              <Text style={styles.statNumber}>{formatNumber(selectedProfile.doneCount) || '0'}</Text>
+              <Text style={styles.statNumber}>{formatNumber(selectedProfile.current.doneCount) || '0'}</Text>
               <Text style={styles.statName}>Done</Text>
             </Pressable>
             <Pressable style={styles.statContainer}
-              onPress={() => showComingSoonAlert("'All Tips'")}>
+              onPress={() => showComingSoonAlert(anonymousId.current, "'Tips'")}>
               <View style={styles.statIconContainer}>
                 <Image style={styles.statIcon_Tips} source={require('@/assets/images/light_bulb_blackyellow.png')} />
               </View>
-              <Text style={styles.statNumber}>{formatNumber(selectedProfile.tipCount) || '0'}</Text>
+              <Text style={styles.statNumber}>{formatNumber(selectedProfile.current.tipCount) || '0'}</Text>
               <Text style={styles.statName}>Tips</Text>
             </Pressable>
           </View>
@@ -322,13 +325,13 @@ const CommunityDrawer = ({ navigation }) => {
             <ActivityIndicator size={"large"} />
           </Dialog.Container>
           <Dialog.Container contentStyle={styles.dialogBoxContainer} visible={blockSuccessDialogVisible} onBackdropPress={handleBlockCancel}>
-              <Dialog.Title>User Reported & Blocked</Dialog.Title>
-              <Dialog.Description>You will no longer see each other's tips.</Dialog.Description>
-              <Dialog.Button label="Dismiss" onPress={() => {
-                  setBlockSuccessDialogVisible(false);
-                  navigation.closeDrawer();
-                  router.replace(TIPS_PATHNAME);
-                }} />
+            <Dialog.Title>User Reported & Blocked</Dialog.Title>
+            <Dialog.Description>You will no longer see each other's tips.</Dialog.Description>
+            <Dialog.Button label="Dismiss" onPress={() => {
+              setBlockSuccessDialogVisible(false);
+              navigation.closeDrawer();
+              router.replace(TIPS_PATHNAME);
+            }} />
           </Dialog.Container>
           {/* {(blockSuccessDialogVisible) ? <><Dialog.Title>User Reported & Blocked</Dialog.Title>
               <Dialog.Description>You will no longer see each other's tips.</Dialog.Description>

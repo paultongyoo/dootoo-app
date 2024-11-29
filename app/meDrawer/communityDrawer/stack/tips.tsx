@@ -22,8 +22,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 
 export default function ItemTips() {
   const router = useRouter();
-  const { anonymousId, setLastRecordedCount, updateUserCountContext,
-    selectedItem, setSelectedItem, setSelectedProfile } = useContext(AppContext);
+  const { anonymousId, selectedItem, setSelectedItem, selectedProfile } = useContext(AppContext);
   const [tips, setTips] = useState([]);
   const pathname = usePathname();
   const communityDrawerNavigation = useNavigation();
@@ -47,9 +46,7 @@ export default function ItemTips() {
     if (latestTips && latestTips.length > 0) {
 
       // Immediately update displayed tip count within selected item header
-      const updatedSelectedItem = selectedItem;
-      updatedSelectedItem.tip_count = latestTips.length;
-      setSelectedItem(updatedSelectedItem);
+      setSelectedItem((prevItem) => ({ ...prevItem, tip_count: latestTips.length }));
 
       //console.log(`Passing ${latestTips.length} tips to saveTips method...`);
 
@@ -86,10 +83,9 @@ export default function ItemTips() {
 
   const handleDoneClick = async () => {
     amplitude.track("Selected Item Done Clicked", {
-      anonymous_id: anonymousId
+      anonymous_id: anonymousId.current
     });
 
-    setLastRecordedCount(0);
     // For now just navigate user back to full list if they press this
     router.back();
   }
@@ -97,7 +93,7 @@ export default function ItemTips() {
   const handleTipVote = async (tip, voteValue: number) => {
 
     amplitude.track("Tip Voted", {
-      anonymous_id: anonymousId,
+      anonymous_id: anonymousId.current,
       tip_uuid: tip.uuid,
       vote_value: voteValue
     });
@@ -147,7 +143,7 @@ export default function ItemTips() {
   const handleTipFlag = async (index: number) => {
 
     amplitude.track("Tip Flag Started", {
-      anonymous_id: anonymousId,
+      anonymous_id: anonymousId.current,
       tip_uuid: tips[index].uuid
     });
 
@@ -160,7 +156,7 @@ export default function ItemTips() {
           onPress: () => {
             //console.log('Tip Flag Cancel Pressed');
             amplitude.track("Tip Flag Cancelled", {
-              anonymous_id: anonymousId,
+              anonymous_id: anonymousId.current,
               tip_uuid: tips[index].uuid
             });
           },
@@ -181,7 +177,7 @@ export default function ItemTips() {
   const handleFlagTip = async (index) => {
 
     amplitude.track("Tip Flag Completed", {
-      anonymous_id: anonymousId,
+      anonymous_id: anonymousId.current,
       tip_uuid: tips[index].uuid
     });
 
@@ -209,11 +205,11 @@ export default function ItemTips() {
   const handleTipProfileClick = (tip) => {
 
     amplitude.track("Tip Profile Tapped", {
-      anonymous_id: anonymousId,
+      anonymous_id: anonymousId.current,
       username: tip.name
     });
 
-    setSelectedProfile({ name: tip.name });
+    selectedProfile.current = { name: tip.name };
     communityDrawerNavigation.openDrawer();
 
   }
@@ -231,9 +227,7 @@ export default function ItemTips() {
               deleteTip(tip_uuid);
 
               // Update tip count in displayed header
-              const updatedSelectedItem = selectedItem;
-              updatedSelectedItem.tip_count -= 1;   // Will roll the dice this never becomes a negative number ;-)
-              setSelectedItem(updatedSelectedItem);
+              setSelectedItem((prevItem) => ({ ...prevItem, tip_count: prevItem.tipCount - 1}));
             }} />
           :
           <>
@@ -617,7 +611,7 @@ export default function ItemTips() {
               <View style={styles.itemNamePressable}>
                 <Text style={[styles.taskTitle, selectedItem.is_done && styles.taskTitle_isDone]}>{selectedItem.text}</Text>
               </View>
-              <DootooItemSidebar thing={selectedItem} styles={styles} />
+              <DootooItemSidebar item={selectedItem} styles={styles} />
             </View>
           </View>
           <DootooList

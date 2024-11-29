@@ -247,7 +247,7 @@ export const loadItemCounts = async (item_uuid) => {
   try {
     const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserStr) {
-      //console.log("Received null local anon Id, aborting loadItems!");
+      console.log("Received null local anon Id, aborting loadItems!");
       return [];
     }
     const localUser = JSON.parse(localUserStr);
@@ -259,7 +259,7 @@ export const loadItemCounts = async (item_uuid) => {
       }
     );
     const counts_obj = response.data.body;
-    // console.log(`counts_obj: ${counts_obj}`);
+    //console.log(`counts_obj: ${JSON.stringify(counts_obj)}`);
     return counts_obj;
   } catch (error) {
     console.error('Error calling loadItemCounts API:', error);
@@ -481,7 +481,7 @@ export const resetAllData = async () => {
 // ******** BEGIN Non-EXPORTED METHODS *********
 
 const saveUserLocally = async(user_obj) => {
-  //console.log("Saving new user data to local storage...");
+  console.log("Saving new user data to local storage...");
 
   try {
     //console.log("Saving user to local storage...");
@@ -489,11 +489,11 @@ const saveUserLocally = async(user_obj) => {
     await AsyncStorage.setItem(USER_OBJ_KEY, user_obj_str);
     await AsyncStorage.setItem(DONE_COUNT_KEY, `${user_obj.doneCount || '0'}`);
     await AsyncStorage.setItem(TIP_COUNT_KEY, `${user_obj.tipCount  || '0'}`);
-    //console.log(`Saved user to local storage.`)
+    console.log(`Saved user to local storage.`)
   } catch (e) {
-    //console.log("Error saving user to local storage.", e);
+    console.log("Error saving user to local storage.", e);
   }
-  //console.log("Saved user data to local storage successfully.");
+  console.log("Saved user data to local storage successfully.");
 }
 
 const loadLocalUser = async() => {

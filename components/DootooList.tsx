@@ -21,20 +21,25 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     shouldInitialLoad = true }) => {
 
     const pathname = usePathname();
-    const { anonymousId, lastRecordedCount, setLastRecordedCount, initializeLocalUser,
-        fadeInListOnRender, setFadeInListOnRender, listOpacity, listFadeInAnimation, listFadeOutAnimation,
+    const { anonymousId, lastRecordedCount, initializeLocalUser,
+        fadeInListOnRender, listOpacity, listFadeInAnimation, listFadeOutAnimation,
         thingRowPositionXs, thingRowHeights, swipeableRefs
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
-    const [initialLoad, setInitialLoad] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
     const [errorMsg, setErrorMsg] = useState();
-    const itemFlatList = useRef(null);              // TODO: Consider deprecate
+
+    // References:  Changing these should intentionally NOT cause this list to re-render
+    //const itemFlatList = useRef(null);              // TODO: Consider deprecate
     const onChangeInputValue = useRef('');
+    const isPageLoading = useRef(false);
+    const hasMoreThings = useRef(true);
+    const initialLoad = useRef(true);
+    const isRefreshing = useRef(false);
+
+    // State Variables:  Changing these should intentionally cause this list to re-render
     const [currentlyTappedThing, setCurrentlyTappedThing] = useState();
     const [page, setPage] = useState(1);
-    const [isPageLoading, setPageLoading] = useState(false);
-    const [hasMoreThings, setHasMoreThings] = useState(true);
+    
     const initialLoadFadeInOpacity = useRef(new Animated.Value(0)).current;
     const initialLoadFadeInAnimation = Animated.timing(initialLoadFadeInOpacity, {
         toValue: 1,
@@ -49,7 +54,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             //console.log("initializeLocalUser callback method");
             if (shouldInitialLoad) {
                 if (!isNew) {
-                    setInitialLoad(false);
+                    initialLoad.current = false;
                     initialLoadFadeInAnimation.start();
 
                     resetListWithFirstPageLoad();
@@ -65,33 +70,32 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
     useEffect(() => {
         //console.log(`useEffect[listArray] called`);
-        //console.log(`useEffect[listArray] called: listArray parse: ${JSON.stringify(listArray)}`);
+        //console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
 
-        if (initialLoad) {
-            if (lastRecordedCount > 0) {
+        if (initialLoad.current) {
+
+            if (fadeInListOnRender.current) {
+                listFadeInAnimation.start(() => {
+                    fadeInListOnRender.current = false;
+                });
+            }
+
+            if (lastRecordedCount.current > 0) {
                 // If we're inside here, we were called after recording new things
 
                 // Display Toast
                 Toast.show({
                     type: 'undoableToast',
-                    text1: `Added ${lastRecordedCount} ${thingName}${(lastRecordedCount > 1) ? 's' : ''}.`,
+                    text1: `Added ${lastRecordedCount.current} ${thingName}${(lastRecordedCount.current > 1) ? 's' : ''}.`,
                     position: 'bottom',
                     bottomOffset: 220,
                     props: {
-                        onUndoPress: () => {
-
-                            // Remove the things just added to the list
-                            //console.log(`Undoing recording op; removing first ${lastRecordedCount} things(s).`);
-                            var updatedItems = [...listArray];
-                            //console.log("listArray length: " + listArray.length);
-                            updatedItems.splice(0, lastRecordedCount);
-                            //console.log("List to update now has " + updatedItems.length + " in it.");
-                            setLastRecordedCount(0);
-                            listArraySetter(updatedItems); // This should update UI only and not invoke any syncronous backend operations
+                        onUndoPress: () => {             
+                            listArraySetter((prevItems) => prevItems.slice(lastRecordedCount.current)); // This should update UI only and not invoke any syncronous backend operations
                         }
                     }
                 });
-                setLastRecordedCount(0);
+                lastRecordedCount.current = 0;
             } else {
 
                 // This call has to be in this "main UI thread" in order to work
@@ -116,10 +120,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
     const loadNextPage = () => {
         //console.log("loadNextPage called");
-        if (hasMoreThings) {
-            if (!refreshing && !isPageLoading) {
+        if (hasMoreThings.current) {
+            if (!isRefreshing.current && !isPageLoading) {
                 //console.log(`List end reached, incrementing current page var (currently ${page}).`);
-                setPageLoading(true);
+                isPageLoading.current = true;
                 setPage((prevPage) => prevPage + 1);
             } else {
                 //console.log(`Ignoring pull down action as page ${page} currently loading or full list is refreshing.`);
@@ -145,7 +149,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         const hasMore = loadResponse.hasMore;
 
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
-        setHasMoreThings(hasMore);
+        hasMoreThings.current = hasMore;
+
+        isRefreshing.current = false;
+        initialLoad.current = true;
+        isPageLoading.current = false;
+        initialLoadFadeInAnimation.reset();
 
         // If we're loading the first page, assume we want to reset the displays list to only the first page
         // (e.g. on a pull-down-to-refresh action).  If page > 1, assume we want to append the page to what's currently
@@ -155,34 +164,20 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
             if (isPullDown) {
                 //console.log("Loading page 1 as part of pulldown refresh, attempting to fade out current list before fading in new list");
-                setFadeInListOnRender(true);
+                fadeInListOnRender.current = true;
                 listFadeOutAnimation.start(() => {
-                    listArraySetter(things);
-
-                    listFadeInAnimation.start(() => {
-                        setFadeInListOnRender(false);
-                        //listFadeInAnimation.reset();
-                    });
+                    listArraySetter([...things]);
                 });
             } else {
-                setFadeInListOnRender(true);
+                fadeInListOnRender.current = true;
 
                 //console.log("Loading page 1 outside of pulldown refresh, simply fading in list");
-                listArraySetter(things);
-
-                listFadeInAnimation.start(() => {
-                    setFadeInListOnRender(false);
-                    //listFadeInAnimation.reset();
-                });
+                listArraySetter([...things]);
             }
         } else {
             //console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
-            listArraySetter(listArray.concat(things));
+            listArraySetter((prevItems) => prevItems.concat(things));
         }
-        setRefreshing(false);
-        setInitialLoad(true);
-        initialLoadFadeInAnimation.reset();
-        setPageLoading(false);
     }
 
     const handleThingTextTap = (thing) => {
@@ -223,7 +218,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         : thing));
 
             amplitude.track("Thing Text Edited", {
-                anonymous_id: anonymousId,
+                anonymous_id: anonymousId.current,
                 pathname: pathname,
                 thing_uuid: item.uuid,
                 thing_type: thingName
@@ -240,7 +235,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     function handleThingDrag(newData: unknown[]) {
 
         if (isThingDraggable) {
-            setLastRecordedCount(0);
 
             // This should update UI only and not invoke any synchronous backend operations
             // We use ... spread operate to guarantee we're treating previous data as immutable
@@ -269,7 +263,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const renderThing = ({ item, getIndex, drag, isActive }) => {
         const rowPositionX = useRef(new Animated.Value(0)).current;
         thingRowPositionXs.current[item.uuid] = rowPositionX;
-        const [rowHeightKnown, setRowHeightKnown] = useState(false);
+        const rowHeightKnown = useRef(false);
         const fullRowHeight = useRef(-1);                                    // Placeholder set in onLayout handler
         const rowHeight = useRef(new Animated.Value(1)).current;   // Set once onLayout event fires for Animated.View
         thingRowHeights.current[item.uuid] = rowHeight;
@@ -279,14 +273,14 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         //     TODO:  Move these events somewhere else as render is firing more times than just once
         //     if (thingName == 'tip') {
         //         amplitude.track("Tip Viewed", {
-        //             anonymousId: anonymousId,
+        //             anonymousId: anonymousId.current,
         //             pathname: pathname,
         //             tip_uuid: item.uuid,
         //             tip_score: item.upvote_count
         //         });
         //     } else if (item.text && item.text == "(flagged)") {
         //         amplitude.track("Flagged Thing Rendered", {
-        //             anonymousId: anonymousId,
+        //             anonymousId: anonymousId.current,
         //             pathname: pathname,
         //             thing_uuid: item.uuid,
         //             thing_type: thingName
@@ -311,13 +305,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         return (
             <Animated.View style={[
                 { transform: [{ translateX: rowPositionX }] },
-                rowHeightKnown && { height: rowHeight }]}
+                rowHeightKnown.current && { height: rowHeight }]}
                 onLayout={(event) => {
-                    if (!rowHeightKnown) {
+                    if (!rowHeightKnown.current) {
                         //console.log("Setting currRowHeight and enabling height override.")
                         fullRowHeight.current = event.nativeEvent.layout.height;
                         rowHeight.setValue(fullRowHeight.current);
-                        setRowHeightKnown(true);
+                        rowHeightKnown.current = true;
                     }
                 }}>
                 <Swipeable
@@ -335,7 +329,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     overshootRight={false}
                     onSwipeableWillOpen={(direction) => {
                         amplitude.track(`Swipe ${direction.toUpperCase()} Actions Opened`, {
-                            anonymous_id: anonymousId,
+                            anonymous_id: anonymousId.current,
                             pathname: pathname,
                             thing_uuid: listArray[getIndex()].uuid,
                             thing_type: thingName
@@ -370,7 +364,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         defaultValue={item.text}
                                         autoFocus={true}
                                         onChangeText={(text) => {
-                                            setLastRecordedCount(0);
                                             onChangeInputValue.current = text;
                                         }}
                                         onBlur={() => handleBlur(item)} />
@@ -406,20 +399,20 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             }
         }} >
             <View style={styles.listContainer}>
-                {(initialLoad == false) ?
+                {(initialLoad.current == false) ?
                     <Animated.View style={[styles.initialLoadAnimContainer, { opacity: initialLoadFadeInOpacity }]}>
                         <Text style={styles.initialLoadMsg}>{loadingAnimMsg}</Text>
                         <ActivityIndicator size={"large"} color="#3E3723" />
                     </Animated.View>
                     :
-                    <Animated.View style={[styles.taskContainer, fadeInListOnRender && { opacity: listOpacity }]}>
+                    <Animated.View style={[styles.taskContainer, fadeInListOnRender.current && { opacity: listOpacity }]}>
                         {listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0 ?
                             <DraggableFlatList
-                                ref={itemFlatList}
+                                //ref={itemFlatList}  TODO: Deprecate
                                 data={listArray.filter(item => !item.is_deleted)}
                                 onDragEnd={({ data, from, to }) => {
                                     amplitude.track("List Item Dragged", {
-                                        anonymous_id: anonymousId,
+                                        anonymous_id: anonymousId.current,
                                         pathname: pathname,
                                         from: from,
                                         to: to
@@ -434,11 +427,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                     <RefreshControl
                                         tintColor="#3E3723"
                                         onRefresh={() => {
-                                            setLastRecordedCount(0);
-                                            setRefreshing(true);
+                                            isRefreshing.current = true;
                                             resetListWithFirstPageLoad(true);
                                         }}
-                                        refreshing={refreshing} />
+                                        refreshing={isRefreshing.current == true} />
                                 }
                                 renderItem={renderThing}
                                 onEndReached={({ distanceFromEnd }) => {
@@ -450,10 +442,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 onEndReachedThreshold={0.1}
                                 ListFooterComponent={
                                     <View style={{ paddingTop: 20 }}>
-                                        {isPageLoading && <ActivityIndicator size={"small"} color="#3E3723" />}
+                                        {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />}
                                         <View style={{ height: 40 }} />
                                     </View>}
-                            /> : (initialLoad == true) ? <EmptyThingUX styles={styles} /> : <></>
+                            /> : (initialLoad.current == true) ? <EmptyThingUX styles={styles} /> : <></>
                         }
                         {(errorMsg) ?
                             <View style={styles.errorTextContainer}>

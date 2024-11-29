@@ -7,20 +7,22 @@ export const AppContext = createContext();
 
 // Create a provider component
 export const AppProvider = ({ children }) => {
+
+    // State Variables:  Changing these SHOULD intentionally cause components to re-render
     const [dootooItems, setDootooItems] = useState([]);
-    const [userId, setUserId] = useState(-1);
-    const [username, setUsername] = useState('');
-    const [anonymousId, setAnonymousId] = useState('');
-    const [doneCount, setDoneCount] = useState(0);
-    const [tipCount, setTipCount] = useState(0);
-    const [lastRecordedCount, setLastRecordedCount] = useState(0);
     const [selectedItem, setSelectedItem] = useState(null);
-    const [fadeInListOnRender, setFadeInListOnRender] = useState(false);
+    
+    // Reference variables:  Changing these should intentionally NOT cause components to re-render
+    const swipeableRefs = useRef({});
+    const fadeInListOnRender = useRef(false);
     const thingRowPositionXs = useRef({});
     const thingRowHeights = useRef({});
-    const [selectedProfile, setSelectedProfile] = useState(null);
-    const swipeableRefs = useRef({});
+    const lastRecordedCount = useRef(0);
+    const username = useRef();
+    const anonymousId = useRef();
+    const selectedProfile = useRef();
 
+    // Animation related
     const emptyListCTAOpacity = useRef(new Animated.Value(0)).current;
     const emptyListCTAFadeInAnimation = Animated.timing(emptyListCTAOpacity, {
         toValue: 1,
@@ -52,9 +54,8 @@ export const AppProvider = ({ children }) => {
     const initializeLocalUser = async(callback) => {
       //console.log("initializeLocalUser");
       const userData = await initalizeUser();
-      setUserId(userData.id);
-      setUsername(userData.name);
-      setAnonymousId(userData.anonymous_id);
+      username.current = userData.name;
+      anonymousId.current = userData.anonymous_id;
 
       if (callback) {
         callback(userData.isNew);
@@ -64,23 +65,19 @@ export const AppProvider = ({ children }) => {
     const resetUserContext = async () => {
       await resetAllData();
       await initializeLocalUser(); 
-      setLastRecordedCount(0);
       setDootooItems([]);
     };
 
     return (
         <AppContext.Provider value={{ 
             dootooItems, setDootooItems,
-            userId, setUserId,
-            username, setUsername,
-            anonymousId, setAnonymousId,
-            lastRecordedCount, setLastRecordedCount,
-            doneCount, setDoneCount,
-            tipCount, setTipCount,
+            username,
+            anonymousId, 
+            lastRecordedCount,
             resetUserContext,
             initializeLocalUser,
             selectedItem, setSelectedItem,
-            fadeInListOnRender, setFadeInListOnRender,
+            fadeInListOnRender,
             listOpacity,
             listFadeInAnimation,
             listFadeOutAnimation,
@@ -89,7 +86,7 @@ export const AppProvider = ({ children }) => {
             emptyListCTAFadeOutAnimation,
             thingRowPositionXs,
             thingRowHeights,
-            selectedProfile, setSelectedProfile,
+            selectedProfile,
             swipeableRefs
              }}>
           {children}

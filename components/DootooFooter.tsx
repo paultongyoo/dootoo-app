@@ -12,8 +12,8 @@ import { ListItemEventEmitter } from "./ListItemEventEmitter.js";
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
-    const { anonymousId, setFadeInListOnRender, listFadeInAnimation,
-        setLastRecordedCount, emptyListCTAOpacity, emptyListCTAFadeOutAnimation } = useContext(AppContext);
+    const { anonymousId, listFadeInAnimation, fadeInListOnRender,
+        lastRecordedCount, emptyListCTAOpacity, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
     const [recording, setRecording] = useState();
     const [permissionResponse, requestPermission] = Audio.usePermissions();
@@ -60,7 +60,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         recordingTimeStart.current = performance.now();
         //console.log("Logging start time: " + new Date(recordingTimeStart.current).toLocaleString());
         amplitude.track("Recording Started", {
-            anonymous_id: anonymousId,
+            anonymous_id: anonymousId.current,
             pathname: pathname
         });
         try {
@@ -106,7 +106,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             } else {
                 //console.error('Failed to start recording', err);
                 amplitude.track("Recording Error Occurred", { 
-                    anonymous_id: anonymousId,
+                    anonymous_id: anonymousId.current,
                     pathname: pathname,
                     error: err
                  });
@@ -121,7 +121,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         // console.log("Recalling start time: " + new Date(recordingTimeStart.current).toLocaleString());
         // console.log("Recording Duration: " + (recordingDurationEnd - recordingTimeStart.current)/1000);
         amplitude.track("Recording Stopped", {
-            anonymous_id: anonymousId,
+            anonymous_id: anonymousId.current,
             pathname: pathname,
             durationSeconds: (recordingDurationEnd - recordingTimeStart.current)/1000
         });
@@ -149,21 +149,21 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         setIsRecordingProcessing(false);
         //console.log("Recording cancelled...");
         amplitude.track("Recording Processing Cancelled", {
-            anonymous_id: anonymousId,
+            anonymous_id: anonymousId.current,
             pathname: pathname
         });
     }
 
     const processRecording = async () => {
         amplitude.track("Recording Processing Started", {
-            anonymous_id: anonymousId,
+            anonymous_id: anonymousId.current,
             pathname: pathname
         });
         setIsRecordingProcessing(true);
         const fileUri = await stopRecording();
         const response = await callBackendTranscribeService(fileUri);
         amplitude.track("Recording Processing Completed", {
-            anonymous_id: anonymousId,
+            anonymous_id: anonymousId.current,
             flagged: (response == "flagged"),
             thing_count: (response && response.length >= 0) ? response.length : -1,
             pathname: pathname
@@ -172,11 +172,11 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         if (response == "flagged") {
             //console.log(`Audio flagged, displaying alert prompt`);
             amplitude.track("Recording Flagged", {
-                anonymous_id: anonymousId,
+                anonymous_id: anonymousId.current,
                 pathname: pathname  
             });
             amplitude.track("Recording Flagged Prompt Displayed", {
-                anonymous_id: anonymousId,
+                anonymous_id: anonymousId.current,
                 pathname: pathname  
             });
             Alert.alert(
@@ -188,7 +188,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                         onPress: () => {
                             //console.log('Audio Content Advisory Acknowledgement button Pressed');
                             amplitude.track("Recording Flagged Prompt Dismissed", {
-                                anonymous_id: anonymousId,
+                                anonymous_id: anonymousId.current,
                                 pathname: pathname  
                             });
                         },
@@ -200,7 +200,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             //console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
             
             if (listArray && response && response.length > 0) {
-                setLastRecordedCount(response.length);  // Set for future toast undo potential
+                lastRecordedCount.current = response.length;  // Set for future toast undo potential
 
                 // Set UI flag to inform user that counts may change after async backend save complete
                 // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
@@ -208,7 +208,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 //     response[i].counts_updating = true; 
                 // }
 
-                var updatedItems = response.concat(listArray);
+                
                 if (listArray.length == 0) {
 
                     // Assume the empty list CTA is visible, so fade it out first
@@ -221,30 +221,31 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                     emptyListCTAFadeOutAnimation.start(() => {
 
                         //If list is initially empty, fade in the new list
-                        listArraySetterFunc(updatedItems);    
+                        listArraySetterFunc((prevThings) => response.concat(prevThings));    
             
-                        setFadeInListOnRender(true);
-                        listFadeInAnimation.start(() => {
-                            setFadeInListOnRender(false);
-                            listFadeInAnimation.reset();
-                        });
+                        // fadeInListOnRender.current = true;
+                        // listFadeInAnimation.start(() => {
+                        //     fadeInListOnRender.current = false;
+                        //     listFadeInAnimation.reset();
+                        // });
 
                         emptyListCTAFadeOutAnimation.reset();
                     });
                 } else {
 
                     // TODO:  When appending, move current list down and to insert new items
-                    listArraySetterFunc(updatedItems);
+                    listArraySetterFunc((prevThings) => response.concat(prevThings)); 
                 }
 
                 // Make sure this function is asynchronous!!!
+                var updatedItems = response.concat(listArray);
                 saveAllThingsFunc(updatedItems, () => { 
                     ListItemEventEmitter.emit("items_saved");
                 });
             } else {
                 //console.log("Did not call setter with updated list, attempting to show toast.");
                 amplitude.track("Empty Recording Toast Displayed", {
-                    anonymous_id: anonymousId,
+                    anonymous_id: anonymousId.current,
                     pathname: pathname  
                 });
                 Toast.show({
@@ -261,7 +262,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     }
 
     const callBackendTranscribeService = async (fileUri: string) => {
-        return await transcribeFunction(fileUri, anonymousId);
+        return await transcribeFunction(fileUri, anonymousId.current);
     }
 
     const cancelRecording = async () => {

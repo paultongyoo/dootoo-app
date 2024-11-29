@@ -10,9 +10,7 @@ import { ListItemEventEmitter } from "./ListItemEventEmitter";
 
 const ProfileDrawer = ({ navigation }) => {
   const pathname = usePathname();
-  const { username, anonymousId,
-    resetUserContext, dootooItems
-  } = useContext(AppContext);
+  const { username, anonymousId, resetUserContext, dootooItems } = useContext(AppContext);
 
   const [doneCount, setDoneCount] = useState(0);
   const [tipCount, setTipCount] = useState(0);
@@ -22,7 +20,7 @@ const ProfileDrawer = ({ navigation }) => {
     let ignore = false;
 
     const fetchUsernameCounts = async () => {
-      const usernameCounts = await loadUsername(username);
+      const usernameCounts = await loadUsername(username.current);
       if (!ignore) {
         //console.log("Updating latest profile counts: " + JSON.stringify(usernameCounts));
         setDoneCount(usernameCounts.doneCount);
@@ -45,7 +43,7 @@ const ProfileDrawer = ({ navigation }) => {
 
   const showConfirmationPrompt = () => {
     amplitude.track("User Data Deletion Started", {
-      anonymous_id: anonymousId,
+      anonymous_id: anonymousId.current,
       pathname: pathname
     });
     Alert.alert(
@@ -56,7 +54,7 @@ const ProfileDrawer = ({ navigation }) => {
           text: 'Cancel',
           onPress: () => {
             amplitude.track("User Data Deletion Cancelled", {
-              anonymous_id: anonymousId,
+              anonymous_id: anonymousId.current,
               pathname: pathname
             });
           },
@@ -67,7 +65,7 @@ const ProfileDrawer = ({ navigation }) => {
           onPress: () => {
             //console.log('Data Deletion OK Pressed');
             amplitude.track("User Data Deletion Completed", {
-              anonymous_id: anonymousId,
+              anonymous_id: anonymousId.current,
               pathname: pathname
             });
             resetUserContext();
@@ -80,12 +78,12 @@ const ProfileDrawer = ({ navigation }) => {
 
   const sendEmail = () => {
     amplitude.track("Email Feedback Link Clicked", {
-      anonymous_id: anonymousId,
+      anonymous_id: anonymousId.current,
       pathname: pathname
     });
 
     const email = 'contact@thoughtswork.co'; // Replace with the desired email address
-    const subject = `Feedback from ${username}`; // Optional: add a subject
+    const subject = `Feedback from ${username.current}`; // Optional: add a subject
     const body = '';
 
     // Construct the mailto URL
@@ -95,7 +93,7 @@ const ProfileDrawer = ({ navigation }) => {
     Linking.openURL(url).catch(err => console.error('Error opening email client:', err));
 
     amplitude.track("Email Feedback Link Opened", {
-      anonymous_id: anonymousId,
+      anonymous_id: anonymousId.current,
       pathname: pathname
     });
   };
@@ -211,7 +209,7 @@ const ProfileDrawer = ({ navigation }) => {
       <Pressable style={styles.profileDrawerCloseContainer}
         onPress={() => {
           amplitude.track("Profile Drawer Closed", {
-            anonymous_id: anonymousId,
+            anonymous_id: anonymousId.current,
             pathname: pathname
           });
           navigation.closeDrawer();
@@ -221,16 +219,16 @@ const ProfileDrawer = ({ navigation }) => {
       <View style={styles.profileDrawerProfileIconContainer}>
         <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_green.png')} />
         <View style={styles.profileDrawerProfileNameContainer}>
-          {(!username || username.length == 0) ?
+          {(!username.current || username.current.length == 0) ?
             <ActivityIndicator size={"large"} color="#3E3723" />
             :
-            <Text style={styles.profileDrawerProfileNameText}>{username}</Text>
+            <Text style={styles.profileDrawerProfileNameText}>{username.current}</Text>
           }
         </View>
       </View>
       <View style={styles.statsContainer}>
         <Pressable style={styles.statContainer}
-          onPress={() => showComingSoonAlert("'All Done'")}>
+          onPress={() => showComingSoonAlert(anonymousId.current, "'Done'")}>
           <View style={styles.statIconContainer}>
             <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
           </View>
@@ -238,7 +236,7 @@ const ProfileDrawer = ({ navigation }) => {
           <Text style={styles.statName}>Done</Text>
         </Pressable>
         <Pressable style={styles.statContainer}
-          onPress={() => showComingSoonAlert("'All Tips'")}>
+          onPress={() => showComingSoonAlert(anonymousId.current, "'Tips'")}>
           <View style={styles.statIconContainer}>
             <Image style={styles.statIcon_Tips} source={require('@/assets/images/light_bulb_blackyellow.png')} />
           </View>
