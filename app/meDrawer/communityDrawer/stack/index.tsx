@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { router } from 'expo-router';
-import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder } from '@/components/Storage';
+import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList from "@/components/DootooList";
@@ -169,12 +169,27 @@ export default function Index() {
           }
         }
 
-        // Asyncronously save all items to DB as rank_idxes will have changed5
-        saveAllItems(updatedTasks, () => { 
-          ListItemEventEmitter.emit("items_saved");
-        });
+        // Asyncronously save new item order
+        const uuid_array = updatedTasks.map(obj => ({ uuid: obj.uuid }));
+        updateItemOrder(uuid_array); 
 
-        setDootooItems([...updatedTasks]);  // This should update UI only and not invoke any synchronous backend operations
+
+        // This should update UI only and not invoke any synchronous backend operations
+        // Reorder items to match updated list above
+        const reviseItems = (updatedTasks: any, uuid_array: any, newItem: any) => {
+          const stateMap = new Map(updatedTasks.map(obj => [obj.uuid, 
+            (obj.uuid == newItem.uuid) 
+                ? { ...obj, is_done: newItem.is_done }
+                : obj]));
+          const reorderedArray = uuid_array.map((ordered_obj_uuid) => stateMap.get(ordered_obj_uuid.uuid));
+          return reorderedArray;
+        }
+        setDootooItems((prevItems) => reviseItems(prevItems, uuid_array, item));
+
+        // Asyncronously save updated item done state
+        updateItemDoneState(item, () => { 
+          ListItemEventEmitter.emit("items_saved");
+        });     
       });
 
     } catch (error) {
@@ -478,6 +493,9 @@ export default function Index() {
       isThingPressable={() => { return true }}
       isThingDraggable={true} />
   );
+
+
+
 
   // Update v1.1.1:  This function will likely be deprecated/removed as now item counts
   // refresh at the DootooItemSidebar component level

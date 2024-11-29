@@ -30,6 +30,9 @@ const UPDATEITEMORDER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-
 
 const UPDATEITEMTEXT_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemText_Dev'
                                      : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemText';
+                                     
+const UPDATEITEMDONESTATE_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemDoneState_Dev'
+                                     : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemDoneState';
 
 const LOADTIPS_URL =  (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadTips_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadTips';
@@ -129,6 +132,33 @@ export const updateItemText = async (item, callback) => {
     //console.log("updateItemText Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateItemText API:', error);
+  }
+}
+
+export const updateItemDoneState = async (item, callback) => {
+  try {
+    //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(UPDATEITEMDONESTATE_URL,
+      {
+        anonymous_id : localAnonId,
+        item_uuid: item.uuid,
+        is_done: item.is_done
+      }
+    );
+
+    if (callback) {
+      callback();
+    }
+    //console.log("updateDoneState Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling updateDoneState API:', error);
   }
 }
 
