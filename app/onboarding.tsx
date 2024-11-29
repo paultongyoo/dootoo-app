@@ -360,7 +360,7 @@ const Step3 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Drop off kid at school</Text>
                         </View>
-                        <DootooItemSidebar item={{ tip_count: 127, similar_count: 251 }} styles={styles} />
+                        <DootooItemSidebar thing={{ tip_count: 127, similar_count: 251 }} styles={styles} />
                     </View>
                 </View>
                 <View style={styles.itemContainer}>
@@ -369,7 +369,7 @@ const Step3 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Go for a run</Text>
                         </View>
-                        <DootooItemSidebar item={{ tip_count: 3300, similar_count: 6200 }} styles={styles} />
+                        <DootooItemSidebar thing={{ tip_count: 3300, similar_count: 6200 }} styles={styles} />
                     </View>
                 </View>
                 <View style={styles.itemContainer}>
@@ -378,7 +378,7 @@ const Step3 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Resume job search</Text>
                         </View>
-                        <DootooItemSidebar item={{ tip_count: 23, similar_count: 503 }} styles={styles} />
+                        <DootooItemSidebar thing={{ tip_count: 23, similar_count: 503 }} styles={styles} />
                     </View>
                 </View>
                 <View style={styles.itemContainer}>
@@ -388,7 +388,7 @@ const Step3 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Update resume</Text>
                         </View>
-                        <DootooItemSidebar item={{ tip_count: 201, similar_count: 1500 }} styles={styles} />
+                        <DootooItemSidebar thing={{ tip_count: 201, similar_count: 1500 }} styles={styles} />
                     </View>
                 </View>
                 <Text style={styles.countDisclaimer}>*actual numbers vary</Text>
@@ -558,7 +558,7 @@ const Step4 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Go for a run</Text>
                         </View>
-                        <DootooItemSidebar item={{ tip_count: 3100, similar_count: 6200 }} styles={styles} />
+                        <DootooItemSidebar thing={{ tip_count: 3100, similar_count: 6200 }} styles={styles} />
                     </View>
                 </View>
                 <View style={styles.tipsContainer}>
