@@ -26,13 +26,16 @@ export const handler = async (event) => {
             select: { uuid: true }
         });
 
-        // Validate lengths of lists match
-        if (saved_uuids.length != posted_uuids.length) {
-            return {
-                statusCode: 403,
-                body: `UUID Array Length (${posted_uuids.length}) does not match what's saved in DB (${saved_uuids.length})`
-            }
-        }
+        // // Validate lengths of lists match
+        // TODO: Refactor or remove -- Commented this out as this won't work given paging (list lengths won't match)
+        // if (saved_uuids.length != posted_uuids.length) {
+        //     const message = `UUID Array Length (${posted_uuids.length}) does not match what's saved in DB (${saved_uuids.length})`;
+        //     console.log(message)
+        //     return {
+        //         statusCode: 403,
+        //         body: message
+        //     }
+        // }
 
         // Validate each posted UUID can be found in DB list
         const savedUUIDSet = new Set(saved_uuids.map(obj => obj.uuid));
@@ -48,7 +51,7 @@ export const handler = async (event) => {
         }
 
         const newRanks = posted_uuids.map((obj, index) => ({ uuid: obj.uuid, rank_idx: index }));
-        //console.log("newRanks: " + JSON.stringify(newRanks));
+        console.log("newRanks: " + JSON.stringify(newRanks));
 
         const query = `
             UPDATE "Item"
@@ -59,9 +62,9 @@ export const handler = async (event) => {
             WHERE "uuid" IN (${newRanks.map(({ uuid }) => `'${uuid}'`).join(',')});
             `;
 
-        //console.log("Query: " + query);
+        console.log("Query: " + query);
         const result = await prisma.$executeRawUnsafe(query);
-        //console.log("Result: " + JSON.stringify(result));
+        console.log("Result: " + JSON.stringify(result));
 
         const response = {
             statusCode: 200,
