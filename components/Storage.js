@@ -540,9 +540,7 @@ export const resetAllData = async () => {
   }
 };
 
-// ******** BEGIN Non-EXPORTED METHODS *********
-
-const saveUserLocally = async(user_obj) => {
+export const saveUserLocally = async(user_obj) => {
   //console.log("Saving user data to local storage...");
 
   try {
@@ -556,6 +554,8 @@ const saveUserLocally = async(user_obj) => {
     console.log("Error saving user to local storage.", e);
   }
 }
+
+// ******** BEGIN Non-EXPORTED METHODS *********
 
 const loadLocalUser = async() => {
   //console.log("loadLocalUser");

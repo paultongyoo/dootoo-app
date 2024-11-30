@@ -4,7 +4,7 @@ import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Lin
 import { AppContext } from "./AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, showComingSoonAlert } from './Helpers';
-import { generateUsername, loadUsername, updateUsername } from "./Storage";
+import { generateUsername, loadUsername, saveUserLocally, updateUsername } from "./Storage";
 import { ListItemEventEmitter } from "./ListItemEventEmitter";
 
 
@@ -214,6 +214,10 @@ const ProfileDrawer = ({ navigation }) => {
   });
 
   const handleRefreshName = () => {
+    amplitude.track("Generate Username Started", {
+      anonymous_id: anonymousId.current,
+      pathname: pathname
+    });
     Alert.alert(
       "Generate New Username?", 
       "This can't be undone.", 
@@ -245,14 +249,22 @@ const ProfileDrawer = ({ navigation }) => {
 
   const generateNewUsername = async() => {
     setLoadingNewUsername(true);
-    while (true) {
-      const newUsername = generateUsername();
-      const statusCode = await updateUsername(newUsername);
-      if (statusCode == 200) {
-        username.current = newUsername;
-        setLoadingNewUsername(false);
-        break;
+    const newUsername = generateUsername();
+    const statusCode = await updateUsername(newUsername);
+    if (statusCode == 200) {
+      username.current = newUsername;
+
+      const updatedUserObj = {
+        name: newUsername,
+        anonymous_id: anonymousId.current,
+        tipCount: tipCount,
+        doneCount: doneCount
       };
+      await saveUserLocally(updatedUserObj);
+
+      setLoadingNewUsername(false);
+    } else {
+      await generateNewUsername();
     }
   }
 
