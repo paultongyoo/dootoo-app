@@ -700,6 +700,9 @@ const Step5 = () => {
         },
         profileNameText: {
             fontSize: 20
+        },
+        profileNameContainer: {
+            paddingTop: 15
         }
     });
 
@@ -707,7 +710,7 @@ const Step5 = () => {
         <Animated.View style={[styles.container, {opacity: stepFadeIn }]}>
             <View style={styles.profileDrawerProfileIconContainer}>
                 <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_green.png')} />
-                <View>
+                <View style={styles.profileNameContainer}>
                     <Animated.Text style={[styles.profileNameText, { opacity: usernameFadeInOut }]}>{currentUsername}</Animated.Text>
                 </View>
             </View>
