@@ -462,7 +462,7 @@ export const loadUsername = async(name) => {
 
 export const updateUsername = async(new_name) => {
   try {
-    console.log("updateUsername: " + new_name);
+    //console.log("updateUsername: " + new_name);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserSr) {
       //console.log("Received null local anon Id, aborting tipVote!");
