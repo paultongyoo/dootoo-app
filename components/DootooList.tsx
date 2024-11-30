@@ -39,7 +39,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     // State Variables:  Changing these should intentionally cause this list to re-render
     const [currentlyTappedThing, setCurrentlyTappedThing] = useState();
     const [page, setPage] = useState(1);
-    
+
     const initialLoadFadeInOpacity = useRef(new Animated.Value(0)).current;
     const initialLoadFadeInAnimation = Animated.timing(initialLoadFadeInOpacity, {
         toValue: 1,
@@ -90,7 +90,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     position: 'bottom',
                     bottomOffset: 220,
                     props: {
-                        onUndoPress: () => {             
+                        onUndoPress: () => {
                             listArraySetter((prevItems) => prevItems.slice(lastRecordedCount.current)); // This should update UI only and not invoke any syncronous backend operations
                         }
                     }
@@ -151,7 +151,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
         hasMoreThings.current = hasMore;
 
-        
         initialLoad.current = true;
         isPageLoading.current = false;
         initialLoadFadeInAnimation.reset();
@@ -178,7 +177,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         } else {
             //console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
             listArraySetter((prevItems) => prevItems.concat(things));
-        }    
+        }
     }
 
     function handleThingDrag(newData: unknown[]) {
@@ -263,57 +262,57 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             // to grow or shrink with the text field.  We'll re-enable the
             // override and reset the fixed height setting in handleBlur
             setAllowHeightOverride(false);
-    
+
             // Update currently tapped thing to cause
             // list to re-render and display text field for currently tapped thing
             setCurrentlyTappedThing(thing);
-    
+
             // Remember/baseline future handleBlur comparision with original value
             // We use a ref instead of state var to not invoke state change / re-render
-            onChangeInputValue.current = thing.text;     
+            onChangeInputValue.current = thing.text;
         }
 
         const handleBlur = (item) => {
             //console.log(`Inside handleBlur for item ${item.text}`);
-    
+
             const textOnChange = onChangeInputValue.current;
             if (textOnChange != item.text) {
                 //console.log("Text changed to: " + textOnChange);
-    
+
                 // Asynchronously sync new item text to DB
                 //// Make a deep copy of item before editting to ensure
                 //// we don't accidentally change React state and cause re-renders
                 const deepItem = JSON.parse(JSON.stringify(item));
                 deepItem.text = textOnChange;
                 saveTextUpdateFunc(deepItem);
-    
+
                 // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
                 //updatedTasks![index].counts_updating = true;    // Set this in case new text results in new counts
-                
+
                 // Always treat React state as immutable!  
                 // React was designed to only react to state changes of new objects/values
                 // therefore use 'map' to create new object from previous
-                listArraySetter((prevArray) => prevArray.map((thing) => 
-                    thing.uuid == item.uuid 
-                            ? { ...thing, text : textOnChange }
-                            : thing));
-    
+                listArraySetter((prevArray) => prevArray.map((thing) =>
+                    thing.uuid == item.uuid
+                        ? { ...thing, text: textOnChange }
+                        : thing));
+
                 amplitude.track("Thing Text Edited", {
                     anonymous_id: anonymousId.current,
                     pathname: pathname,
                     thing_uuid: item.uuid,
                     thing_type: thingName
-                }); 
+                });
             } else {
-                console.log(`Ignoring blur as text has not changed (${textOnChange})`);
+                //console.log(`Ignoring blur as text has not changed (${textOnChange})`);
             }
 
             // Renable the height override + reset known row height
             setAllowHeightOverride(true);
             setRowHeightKnown(false);
-    
+
             // Clear currently tapped thing re-renders list and causes thing to display as pressable again
-            setCurrentlyTappedThing(null); 
+            setCurrentlyTappedThing(null);
         }
 
         return (
@@ -335,7 +334,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             swipeableRefs.current[item.uuid] = ref;
                         } else {
                             delete swipeableRefs.current[item.uuid];
-                        } 
+                        }
                     }}
                     onSwipeableOpen={() => closeOtherSwipeables(item.uuid)}
                     childrenContainerStyle={styles.swipeableContainer}
@@ -363,16 +362,17 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             }
                             {(thingName == 'tip') ?
                                 <Pressable style={styles.tipListIconContainer}
-                                           onPress={() => {
-                                                console.log("Tapping bulb");
-                                                swipeableRefs.current[item.uuid].openLeft()
-                                            }}>
+                                    onPress={() => {
+                                        console.log("Tapping bulb");
+                                        swipeableRefs.current[item.uuid].openLeft()
+                                    }}>
                                     <Image style={styles.tipListIcon} source={require("@/assets/images/light_bulb_blackyellow.png")} />
                                 </Pressable> : <></>
                             }
                             <View style={styles.itemNameContainer}>
                                 {(currentlyTappedThing?.uuid == item.uuid) ?
                                     <TextInput
+                                        blurOnSubmit={true}
                                         multiline={true}
                                         style={styles.itemTextInput}
                                         defaultValue={item.text}
