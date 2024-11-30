@@ -12,9 +12,9 @@ const ProfileDrawer = ({ navigation }) => {
   const pathname = usePathname();
   const { username, anonymousId, resetUserContext, dootooItems } = useContext(AppContext);
  
-  const [key, setKey] = useState(0);  // Used to invoke re-render if user generates new user name
   const [doneCount, setDoneCount] = useState(0);
   const [tipCount, setTipCount] = useState(0);
+  const [loadingNewUsername, setLoadingNewUsername] = useState(false);
 
   useEffect(() => {
     //console.log("Inside Profile Drawer useEffect");
@@ -215,7 +215,7 @@ const ProfileDrawer = ({ navigation }) => {
 
   const handleRefreshName = () => {
     Alert.alert(
-      "Generate Username?", 
+      "Generate New Username?", 
       "This can't be undone.", 
       [
         {
@@ -244,12 +244,13 @@ const ProfileDrawer = ({ navigation }) => {
   }
 
   const generateNewUsername = async() => {
+    setLoadingNewUsername(true);
     while (true) {
       const newUsername = generateUsername();
       const statusCode = await updateUsername(newUsername);
       if (statusCode == 200) {
         username.current = newUsername;
-        setKey(prevKey => prevKey + 1);
+        setLoadingNewUsername(false);
         break;
       };
     }
@@ -277,8 +278,12 @@ const ProfileDrawer = ({ navigation }) => {
           }
         </View>
         <Pressable style={styles.refreshNameContainer}
+                   disabled={loadingNewUsername}
                    onPress={handleRefreshName}>
-          <Image style={styles.refreshNameIcon} source={require('@/assets/images/refresh_556B2F.png')}/>
+          { (loadingNewUsername)
+              ? <ActivityIndicator size={"small"} color="#3E3723" />
+              : <Image style={styles.refreshNameIcon} source={require('@/assets/images/refresh_556B2F.png')}/>
+          }
         </Pressable>
       </View>
       <View style={styles.statsContainer}>
