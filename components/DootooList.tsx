@@ -238,9 +238,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         //     } 
         // }, [item]);
 
-        useEffect(() => {
-            console.log("Row rendering: " + item.text);
-        })
+        // useEffect(() => {
+        //     console.log("Row rendering: " + item.text);
+        // })
 
         useEffect(() => {
             //console.log("renderThing useEffect([listArray]) for thing: " + item.text);
@@ -322,7 +322,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 allowHeightOverride && rowHeightKnown && { height: rowHeight }]}
                 onLayout={(event) => {
                     if (!rowHeightKnown && allowHeightOverride) {
-                        console.log(`Resetting row height for row ${getIndex()} ${Date.now()}`);
+                        //console.log(`Resetting row height for row ${getIndex()} ${Date.now()}`);
                         fullRowHeight.current = event.nativeEvent.layout.height;
                         rowHeight.setValue(fullRowHeight.current);
                         setRowHeightKnown(true);
