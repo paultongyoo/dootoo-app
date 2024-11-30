@@ -4,14 +4,15 @@ import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Lin
 import { AppContext } from "./AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, showComingSoonAlert } from './Helpers';
-import { loadUsername } from "./Storage";
+import { generateUsername, loadUsername, updateUsername } from "./Storage";
 import { ListItemEventEmitter } from "./ListItemEventEmitter";
 
 
 const ProfileDrawer = ({ navigation }) => {
   const pathname = usePathname();
   const { username, anonymousId, resetUserContext, dootooItems } = useContext(AppContext);
-
+ 
+  const [key, setKey] = useState(0);  // Used to invoke re-render if user generates new user name
   const [doneCount, setDoneCount] = useState(0);
   const [tipCount, setTipCount] = useState(0);
 
@@ -201,8 +202,58 @@ const ProfileDrawer = ({ navigation }) => {
       fontWeight: 'normal',
       fontSize: 18,
       paddingTop: 5
+    },
+    refreshNameContainer: {
+      paddingTop: 10
+    },
+    refreshNameIcon: {
+      width: 20,
+      height: 21,
+      opacity: 0.6
     }
   });
+
+  const handleRefreshName = () => {
+    Alert.alert(
+      "Generate Username?", 
+      "This can't be undone.", 
+      [
+        {
+          text: 'Cancel',
+          onPress: () => {
+            amplitude.track("Generate Username Cancelled", {
+              anonymous_id: anonymousId.current,
+              pathname: pathname
+            });
+          },
+          style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
+        },
+        {
+          text: 'OK',
+          onPress: () => {
+            amplitude.track("Generate Username Confirmed", {
+              anonymous_id: anonymousId.current,
+              pathname: pathname
+            });
+            generateNewUsername();           
+          },
+        },
+      ],
+      { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+    );
+  }
+
+  const generateNewUsername = async() => {
+    while (true) {
+      const newUsername = generateUsername();
+      const statusCode = await updateUsername(newUsername);
+      if (statusCode == 200) {
+        username.current = newUsername;
+        setKey(prevKey => prevKey + 1);
+        break;
+      };
+    }
+  }
 
   return (
     <View style={styles.profileDrawerContainer}>
@@ -225,6 +276,10 @@ const ProfileDrawer = ({ navigation }) => {
             <Text style={styles.profileDrawerProfileNameText}>{username.current}</Text>
           }
         </View>
+        <Pressable style={styles.refreshNameContainer}
+                   onPress={handleRefreshName}>
+          <Image style={styles.refreshNameIcon} source={require('@/assets/images/refresh_556B2F.png')}/>
+        </Pressable>
       </View>
       <View style={styles.statsContainer}>
         <Pressable style={styles.statContainer}
@@ -245,10 +300,10 @@ const ProfileDrawer = ({ navigation }) => {
         </Pressable>
       </View>
       <View style={styles.privacyContainer}>
-        {/* <View style={styles.anonIdDisplayContainer}>
+        <View style={styles.anonIdDisplayContainer}>
             <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
-            <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId}</Text>
-          </View> */}
+            <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId.current}</Text>
+          </View>
         <View style={styles.deleteDataLinkContainer}>
           <Pressable onPress={showConfirmationPrompt}>
             <Text style={styles.deleteDataLinkText}>Delete My Data</Text>

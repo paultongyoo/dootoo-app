@@ -66,6 +66,9 @@ const LOADUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazo
 
 const BLOCKUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/blockUser_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/blockUser';
+                             
+const UPDATEUSERNAME_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateUsername_Dev'
+                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateUsername';
 
 
 export const saveItems = async (item_list_obj, callback) => {
@@ -454,6 +457,29 @@ export const loadUsername = async(name) => {
     return response.data.body
   } catch (error) {
     console.error('Error calling loadUsername API:', error);
+  }
+}
+
+export const updateUsername = async(new_name) => {
+  try {
+    console.log("updateUsername: " + new_name);
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return ;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(UPDATEUSERNAME_URL,
+      {
+        anonymous_id: localAnonId,
+        name: new_name
+      }
+    );
+    console.log("updateUsername Response Obj: " + JSON.stringify(response.data.body));
+    return response.data.statusCode
+  } catch (error) {
+    console.error('Error calling updateUsername API:', error);
   }
 }
 
