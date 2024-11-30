@@ -159,7 +159,7 @@ export default function Index() {
 
         } else {
 
-          const backupVal = index;
+          const backupVal = updatedTasks[index].index_backup;
           const [item] = updatedTasks.splice(index, 1);   // remove the item
 
           if (backupVal != null && (backupVal > firstDoneItemIdx)) {
@@ -180,7 +180,9 @@ export default function Index() {
         const reviseItems = (updatedTasks: any, uuid_array: any, newItem: any) => {
           const stateMap = new Map(updatedTasks.map(obj => [obj.uuid, 
             (obj.uuid == newItem.uuid) 
-                ? { ...obj, is_done: newItem.is_done }
+                ? { ...obj, 
+                    is_done: newItem.is_done,
+                    index_backup: index }
                 : obj]));
           const reorderedArray = uuid_array.map((ordered_obj_uuid) => stateMap.get(ordered_obj_uuid.uuid));
           return reorderedArray;
