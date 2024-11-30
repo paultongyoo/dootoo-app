@@ -476,7 +476,7 @@ export const updateUsername = async(new_name) => {
         name: new_name
       }
     );
-    console.log("updateUsername Response Obj: " + JSON.stringify(response.data.body));
+    //console.log("updateUsername Response Obj: " + JSON.stringify(response.data.body));
     return response.data.statusCode
   } catch (error) {
     console.error('Error calling updateUsername API:', error);
