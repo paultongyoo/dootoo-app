@@ -181,57 +181,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }    
     }
 
-    const handleThingTextTap = (thing) => {
-        //console.log(`handleItemTextTap for ${JSON.stringify(thing)}`);
-
-        // Update currently tapped thing to cause
-        // list to re-render and display text field for currently tapped thing
-        setCurrentlyTappedThing(thing);
-
-        // Remember/baseline future handleBlur comparision with original value
-        // We use a ref instead of state var to not invoke state change / re-render
-        onChangeInputValue.current = thing.text;     
-    }
-
-    const handleBlur = (item) => {
-        //console.log(`Inside handleBlur for item ${item.text}`);
-
-        const textOnChange = onChangeInputValue.current;
-        if (textOnChange != item.text) {
-            //console.log("Text changed to: " + textOnChange);
-
-            // Asynchronously sync new item text to DB
-            //// Make a deep copy of item before editting to ensure
-            //// we don't accidentally change React state and cause re-renders
-            const deepItem = JSON.parse(JSON.stringify(item));
-            deepItem.text = textOnChange;
-            saveTextUpdateFunc(deepItem);
-
-            // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
-            //updatedTasks![index].counts_updating = true;    // Set this in case new text results in new counts
-            
-            // Always treat React state as immutable!  
-            // React was designed to only react to state changes of new objects/values
-            // therefore use 'map' to create new object from previous
-            listArraySetter((prevArray) => prevArray.map((thing) => 
-                thing.uuid == item.uuid 
-                        ? { ...thing, text : textOnChange }
-                        : thing));
-
-            amplitude.track("Thing Text Edited", {
-                anonymous_id: anonymousId.current,
-                pathname: pathname,
-                thing_uuid: item.uuid,
-                thing_type: thingName
-            }); 
-        } else {
-            console.log(`Ignoring blur as text has not changed (${textOnChange})`);
-        }
-
-        // Clear currently tapped thing re-renders list and causes thing to display as pressable again
-        setCurrentlyTappedThing(null); 
-    }
-
     function handleThingDrag(newData: unknown[]) {
 
         if (isThingDraggable) {
@@ -263,7 +212,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const renderThing = ({ item, getIndex, drag, isActive }) => {
         const rowPositionX = useRef(new Animated.Value(0)).current;
         thingRowPositionXs.current[item.uuid] = rowPositionX;
-        const rowHeightKnown = useRef(false);
+        const [allowHeightOverride, setAllowHeightOverride] = useState(true);
+        const [rowHeightKnown, setRowHeightKnown] = useState(false);
         const fullRowHeight = useRef(-1);                                    // Placeholder set in onLayout handler
         const rowHeight = useRef(new Animated.Value(1)).current;   // Set once onLayout event fires for Animated.View
         thingRowHeights.current[item.uuid] = rowHeight;
@@ -289,6 +239,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         // }, [item]);
 
         useEffect(() => {
+            console.log("Row rendering: " + item.text);
+        })
+
+        useEffect(() => {
             //console.log("renderThing useEffect([listArray]) for thing: " + item.text);
             //console.log("thingRowHeights: " + JSON.stringify(thingRowHeights));
             if (item.shouldAnimateIntoView) {
@@ -302,16 +256,76 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             }
         }, [listArray]);
 
+        const handleThingTextTap = (thing) => {
+            //console.log(`handleItemTextTap for ${JSON.stringify(thing)}`);
+
+            // Disable the fixed height override to allow the item height
+            // to grow or shrink with the text field.  We'll re-enable the
+            // override and reset the fixed height setting in handleBlur
+            setAllowHeightOverride(false);
+    
+            // Update currently tapped thing to cause
+            // list to re-render and display text field for currently tapped thing
+            setCurrentlyTappedThing(thing);
+    
+            // Remember/baseline future handleBlur comparision with original value
+            // We use a ref instead of state var to not invoke state change / re-render
+            onChangeInputValue.current = thing.text;     
+        }
+
+        const handleBlur = (item) => {
+            //console.log(`Inside handleBlur for item ${item.text}`);
+    
+            const textOnChange = onChangeInputValue.current;
+            if (textOnChange != item.text) {
+                //console.log("Text changed to: " + textOnChange);
+    
+                // Asynchronously sync new item text to DB
+                //// Make a deep copy of item before editting to ensure
+                //// we don't accidentally change React state and cause re-renders
+                const deepItem = JSON.parse(JSON.stringify(item));
+                deepItem.text = textOnChange;
+                saveTextUpdateFunc(deepItem);
+    
+                // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
+                //updatedTasks![index].counts_updating = true;    // Set this in case new text results in new counts
+                
+                // Always treat React state as immutable!  
+                // React was designed to only react to state changes of new objects/values
+                // therefore use 'map' to create new object from previous
+                listArraySetter((prevArray) => prevArray.map((thing) => 
+                    thing.uuid == item.uuid 
+                            ? { ...thing, text : textOnChange }
+                            : thing));
+    
+                amplitude.track("Thing Text Edited", {
+                    anonymous_id: anonymousId.current,
+                    pathname: pathname,
+                    thing_uuid: item.uuid,
+                    thing_type: thingName
+                }); 
+            } else {
+                console.log(`Ignoring blur as text has not changed (${textOnChange})`);
+            }
+
+            // Renable the height override + reset known row height
+            setAllowHeightOverride(true);
+            setRowHeightKnown(false);
+    
+            // Clear currently tapped thing re-renders list and causes thing to display as pressable again
+            setCurrentlyTappedThing(null); 
+        }
+
         return (
             <Animated.View style={[
                 { transform: [{ translateX: rowPositionX }] },
-                rowHeightKnown.current && { height: rowHeight }]}
+                allowHeightOverride && rowHeightKnown && { height: rowHeight }]}
                 onLayout={(event) => {
-                    if (!rowHeightKnown.current) {
-                        //console.log("Setting currRowHeight and enabling height override.")
+                    if (!rowHeightKnown && allowHeightOverride) {
+                        console.log(`Resetting row height for row ${getIndex()} ${Date.now()}`);
                         fullRowHeight.current = event.nativeEvent.layout.height;
                         rowHeight.setValue(fullRowHeight.current);
-                        rowHeightKnown.current = true;
+                        setRowHeightKnown(true);
                     }
                 }}>
                 <Swipeable
@@ -359,7 +373,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             <View style={styles.itemNameContainer}>
                                 {(currentlyTappedThing?.uuid == item.uuid) ?
                                     <TextInput
-                                        multiline={false}
+                                        multiline={true}
                                         style={styles.itemTextInput}
                                         defaultValue={item.text}
                                         autoFocus={true}
@@ -395,7 +409,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 if (Keyboard.isVisible()) {
                     Keyboard.dismiss();
                 }
-                handleBlur(currentlyTappedThing);
+                //handleBlur(currentlyTappedThing);
             }
         }} >
             <View style={styles.listContainer}>

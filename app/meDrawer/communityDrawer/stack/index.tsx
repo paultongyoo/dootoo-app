@@ -289,13 +289,13 @@ export default function Index() {
     itemNamePressable: {
       flex: 1,
       width: '100%',
-      paddingRight: 10
+      paddingRight: 5
     },
     itemTextInput: {
       fontSize: 16,
       paddingTop: 5,
       paddingBottom: 5,
-      paddingRight: 25,
+      paddingRight: 10,
       flex: 1
     },
     itemSwipeAction: {
