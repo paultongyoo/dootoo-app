@@ -100,13 +100,19 @@ const ProfileDrawer = ({ navigation }) => {
               anonymous_id: anonymousId.current,
               pathname: pathname
             });
-            resetUserContext();
+            resetUserData();
           },
         },
       ],
       { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
     );
   };
+
+  const resetUserData = async() => {
+    setLoadingNewUsername(true);
+    await resetUserContext();
+    setLoadingNewUsername(false);
+  }
 
   const sendEmail = () => {
     amplitude.track("Email Feedback Link Clicked", {
