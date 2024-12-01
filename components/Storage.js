@@ -571,7 +571,6 @@ const loadLocalUser = async() => {
       return null;
     }
     //console.log("Retrieved user from local storage: " + JSON.stringify(loadedUser));
-    return loadedUser;
   } catch (error) {
     console.error('Error loading user from local storage:', error);
   }

@@ -24,30 +24,30 @@ const ProfileDrawer = ({ navigation }) => {
   const [usernameSpammingFailedDialogVisible, setUsernameSpammingFailedDialogVisible] = useState(false);
   const [usernameUnexpectedDialogVisible, setUsernameUnexpectedDialogVisible] = useState(false);
 
-  useEffect(() => {
-    //console.log("Inside Profile Drawer useEffect");
-    let ignore = false;
+  // useEffect(() => {
+  //   //console.log("Inside Profile Drawer useEffect");
+  //   let ignore = false;
 
-    const fetchUsernameCounts = async () => {
-      const usernameCounts = await loadUsername(username.current);
-      if (!ignore) {
-        //console.log("Updating latest profile counts: " + JSON.stringify(usernameCounts));
-        setDoneCount(usernameCounts.doneCount);
-        setTipCount(usernameCounts.tipCount);
-      }
-    }
+  //   const fetchUsernameCounts = async () => {
+  //     const usernameCounts = await loadUsername(username.current);
+  //     if (!ignore) {
+  //       //console.log("Updating latest profile counts: " + JSON.stringify(usernameCounts));
+  //       setDoneCount(usernameCounts.doneCount);
+  //       setTipCount(usernameCounts.tipCount);
+  //     }
+  //   }
 
-    const eventHandler_afterSave = ListItemEventEmitter.addListener('items_saved', () => {
-      //console.log("Calling fetch counts for: " + thing.text);
-      fetchUsernameCounts();
-    });
+  //   const eventHandler_afterSave = ListItemEventEmitter.addListener('items_saved', () => {
+  //     //console.log("Calling fetch counts for: " + thing.text);
+  //     fetchUsernameCounts();
+  //   });
 
-    return () => {
-      // Race Condition Mgmt: Only allow last render of this compononent to update state
-      ignore = true;
-      eventHandler_afterSave.remove();
-    }
-  }, [dootooItems])
+  //   return () => {
+  //     // Race Condition Mgmt: Only allow last render of this compononent to update state
+  //     ignore = true;
+  //     eventHandler_afterSave.remove();
+  //   }
+  // }, [dootooItems])
 
 
   const showConfirmationPrompt = () => {
