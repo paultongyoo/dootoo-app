@@ -1,20 +1,28 @@
 import { usePathname } from "expo-router";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Linking, Platform } from "react-native";
 import { AppContext } from "./AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, showComingSoonAlert } from './Helpers';
 import { generateUsername, loadUsername, saveUserLocally, updateUsername } from "./Storage";
 import { ListItemEventEmitter } from "./ListItemEventEmitter";
+import Dialog from "react-native-dialog";
 
 
 const ProfileDrawer = ({ navigation }) => {
   const pathname = usePathname();
   const { username, anonymousId, resetUserContext, dootooItems } = useContext(AppContext);
- 
+
   const [doneCount, setDoneCount] = useState(0);
   const [tipCount, setTipCount] = useState(0);
   const [loadingNewUsername, setLoadingNewUsername] = useState(false);
+  const [usernameDialogVisible, setUsernameDialogVisible] = useState(false);
+  const [usernameInvalid, setUsernameInvalid] = useState(false);
+  const usernameTextInput = useRef(username.current);
+  const [dupeUsernameDialogVisible, setDupeUsernameDialogVisible] = useState(false);
+  const [usernameModerationFailedDialogVisible, setUsernameModerationFailedDialogVisible] = useState(false);
+  const [usernameSpammingFailedDialogVisible, setUsernameSpammingFailedDialogVisible] = useState(false);
+  const [usernameUnexpectedDialogVisible, setUsernameUnexpectedDialogVisible] = useState(false);
 
   useEffect(() => {
     //console.log("Inside Profile Drawer useEffect");
@@ -207,65 +215,73 @@ const ProfileDrawer = ({ navigation }) => {
       paddingTop: 10
     },
     refreshNameIcon: {
-      width: 20,
+      width: 21,
       height: 21,
       opacity: 0.6
+    },
+    usernameDialogTextInput_Invalid: {
+      color: 'red'
     }
   });
 
-  const handleRefreshName = () => {
-    amplitude.track("Generate Username Started", {
+  const handleEditUsername = () => {
+    amplitude.track("Edit Username Started", {
       anonymous_id: anonymousId.current,
       pathname: pathname
     });
-    Alert.alert(
-      "Generate New Username?", 
-      "This can't be undone.", 
-      [
-        {
-          text: 'Cancel',
-          onPress: () => {
-            amplitude.track("Generate Username Cancelled", {
-              anonymous_id: anonymousId.current,
-              pathname: pathname
-            });
-          },
-          style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
-        },
-        {
-          text: 'OK',
-          onPress: () => {
-            amplitude.track("Generate Username Confirmed", {
-              anonymous_id: anonymousId.current,
-              pathname: pathname
-            });
-            generateNewUsername();           
-          },
-        },
-      ],
-      { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
-    );
+    setUsernameDialogVisible(true);
   }
 
-  const generateNewUsername = async() => {
+  function handleUsernameEditTextInputChange(text: string) {
+    usernameTextInput.current = text;
+
+    const regex = /^[a-zA-Z0-9]+$/;
+
+    if (usernameInvalid && (regex.test(text) && text.length >= 5)) {
+      setUsernameInvalid(false);
+      return;
+    }
+
+    if (!usernameInvalid && (!regex.test(text) || text.length < 5)) {
+      setUsernameInvalid(true);
+      return;
+    }
+  }
+
+  function handleUsernameDialogCancel(): void {
+    setUsernameDialogVisible(false);
+    usernameTextInput.current = username.current;
+  }
+
+  const handleUsernameDialogSubmit = async () => {
+    setUsernameDialogVisible(false);
     setLoadingNewUsername(true);
-    const newUsername = generateUsername();
-    const statusCode = await updateUsername(newUsername);
+    const statusCode = await updateUsername(usernameTextInput.current);
     if (statusCode == 200) {
-      username.current = newUsername;
+      username.current = usernameTextInput.current;
 
       const updatedUserObj = {
-        name: newUsername,
+        name: usernameTextInput.current,
         anonymous_id: anonymousId.current,
         tipCount: tipCount,
         doneCount: doneCount
       };
       await saveUserLocally(updatedUserObj);
-
       setLoadingNewUsername(false);
+    } else if (statusCode == 409) {
+      setLoadingNewUsername(false);
+      setDupeUsernameDialogVisible(true);
+    } else if (statusCode == 422) {
+      setLoadingNewUsername(false);
+      setUsernameModerationFailedDialogVisible(true);
+    } else if (statusCode == 423) {
+      setLoadingNewUsername(false);
+      setUsernameSpammingFailedDialogVisible(true);
     } else {
-      await generateNewUsername();
+      setLoadingNewUsername(false);
+      setUsernameUnexpectedDialogVisible(true);
     }
+    usernameTextInput.current = username.current;
   }
 
   return (
@@ -290,11 +306,11 @@ const ProfileDrawer = ({ navigation }) => {
           }
         </View>
         <Pressable style={styles.refreshNameContainer}
-                   disabled={loadingNewUsername}
-                   onPress={handleRefreshName}>
-          { (loadingNewUsername)
-              ? <ActivityIndicator size={"small"} color="#3E3723" />
-              : <Image style={styles.refreshNameIcon} source={require('@/assets/images/refresh_556B2F.png')}/>
+          disabled={loadingNewUsername}
+          onPress={handleEditUsername}>
+          {(loadingNewUsername)
+            ? <ActivityIndicator size={"small"} color="#3E3723" />
+            : <Image style={styles.refreshNameIcon} source={require('@/assets/images/edit_icon_556B2F.png')} />
           }
         </Pressable>
       </View>
@@ -317,10 +333,10 @@ const ProfileDrawer = ({ navigation }) => {
         </Pressable>
       </View>
       <View style={styles.privacyContainer}>
-        <View style={styles.anonIdDisplayContainer}>
-            <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
-            <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId.current}</Text>
-          </View>
+        {/* <View style={styles.anonIdDisplayContainer}>
+          <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
+          <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId.current}</Text>
+        </View> */}
         <View style={styles.deleteDataLinkContainer}>
           <Pressable onPress={showConfirmationPrompt}>
             <Text style={styles.deleteDataLinkText}>Delete My Data</Text>
@@ -332,6 +348,42 @@ const ProfileDrawer = ({ navigation }) => {
           </Pressable>
         </View>
       </View>
+      <Dialog.Container visible={usernameDialogVisible} onBackdropPress={handleUsernameDialogCancel}>
+        <Dialog.Title>Change Username</Dialog.Title>
+        <Dialog.Input
+          multiline={false}
+          style={usernameInvalid && styles.usernameDialogTextInput_Invalid}
+          onSubmitEditing={handleUsernameDialogSubmit}
+          defaultValue={usernameTextInput.current}
+          onChangeText={(text) => {
+            handleUsernameEditTextInputChange(text);
+          }} />
+        <Dialog.Description>
+          Must be at least 5 characters long, use only letters and numbers (no spaces or special characters) and follow community guidelines: no profanity, impersonation, spamming, or harmful content.
+        </Dialog.Description>
+        <Dialog.Button label="Cancel" onPress={handleUsernameDialogCancel} />
+        <Dialog.Button label="Submit" onPress={handleUsernameDialogSubmit} disabled={usernameInvalid} />
+      </Dialog.Container>
+      <Dialog.Container visible={dupeUsernameDialogVisible} onBackdropPress={() => setDupeUsernameDialogVisible(false)}>
+        <Dialog.Title>Username Already Taken</Dialog.Title>
+        <Dialog.Description>Please choose another username.</Dialog.Description>
+        <Dialog.Button label="OK" onPress={() => setDupeUsernameDialogVisible(false)} />
+      </Dialog.Container>
+      <Dialog.Container visible={usernameModerationFailedDialogVisible} onBackdropPress={() => setUsernameModerationFailedDialogVisible(false)}>
+        <Dialog.Title>Username Violates Community Guidelines</Dialog.Title>
+        <Dialog.Description>Please choose a username that refrains from containing profanity or harmful content.</Dialog.Description>
+        <Dialog.Button label="OK" onPress={() => setUsernameModerationFailedDialogVisible(false)} />
+      </Dialog.Container>
+      <Dialog.Container visible={usernameSpammingFailedDialogVisible} onBackdropPress={() => setUsernameSpammingFailedDialogVisible(false)}>
+        <Dialog.Title>Username Violates Community Guidelines</Dialog.Title>
+        <Dialog.Description>Please choose a username that refrains from spamming or appearing to promote any products or services.</Dialog.Description>
+        <Dialog.Button label="OK" onPress={() => setUsernameSpammingFailedDialogVisible(false)} />
+      </Dialog.Container>
+      <Dialog.Container visible={usernameUnexpectedDialogVisible} onBackdropPress={() => setUsernameUnexpectedDialogVisible(false)}>
+        <Dialog.Title>Unable To Change Username</Dialog.Title>
+        <Dialog.Description>An unexpected error occurred while trying to save your new username.  Please try again later.</Dialog.Description>
+        <Dialog.Button label="OK" onPress={() => setUsernameUnexpectedDialogVisible(false)} />
+      </Dialog.Container>
     </View>
   );
 }
