@@ -8,6 +8,7 @@ import Toast from 'react-native-toast-message';
 import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
+import { ProfileCountEventEmitter } from './EventEmitters';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = (item) => { return <></> },
@@ -82,6 +83,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
             if (lastRecordedCount.current > 0) {
                 // If we're inside here, we were called after recording new things
+
+                if (thingName == 'tip') {
+                    ProfileCountEventEmitter.emit('incr_tips', { count: lastRecordedCount.current });
+                }
 
                 // Display Toast
                 Toast.show({

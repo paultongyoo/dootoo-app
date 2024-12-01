@@ -17,6 +17,7 @@ import DootooList from "@/components/DootooList";
 import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import * as amplitude from '@amplitude/analytics-react-native';
+import { ProfileCountEventEmitter } from "@/components/EventEmitters";
 
 
 export default function ItemTips() {
@@ -228,6 +229,8 @@ export default function ItemTips() {
 
               // Update tip count in displayed header
               setSelectedItem((prevItem) => ({ ...prevItem, tip_count: prevItem.tipCount - 1}));
+
+              ProfileCountEventEmitter.emit('decr_tips');
             }} />
           :
           <>

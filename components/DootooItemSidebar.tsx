@@ -5,7 +5,7 @@ import { useContext, useEffect, useState } from 'react';
 import { AppContext } from './AppContext';
 import { usePathname, useRouter } from 'expo-router';
 import { loadItemCounts } from './Storage';
-import { ListItemEventEmitter } from "@/components/ListItemEventEmitter";
+import { ListItemEventEmitter } from "@/components/EventEmitters";
 
 const DootooItemSidebar = ({ thing, styles }) => {
     const router = useRouter();

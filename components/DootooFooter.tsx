@@ -8,7 +8,7 @@ import Reanimated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-
 import Toast from "react-native-toast-message";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router'; 
-import { ListItemEventEmitter } from "./ListItemEventEmitter.js";
+import { ListItemEventEmitter } from "./EventEmitters";
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();

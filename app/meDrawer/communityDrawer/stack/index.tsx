@@ -6,7 +6,7 @@ import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
-import { ListItemEventEmitter }  from "@/components/ListItemEventEmitter";
+import { ListItemEventEmitter, ProfileCountEventEmitter }  from "@/components/EventEmitters";
 import * as amplitude from '@amplitude/analytics-react-native';
 
 
@@ -188,6 +188,12 @@ export default function Index() {
           return reorderedArray;
         }
         setDootooItems((prevItems) => reviseItems(prevItems, uuid_array, item));
+
+        if (item.is_done) {
+          ProfileCountEventEmitter.emit("incr_done");
+        } else {
+          ProfileCountEventEmitter.emit("decr_done");
+        }
 
         // Asyncronously save updated item done state
         updateItemDoneState(item, () => { 
