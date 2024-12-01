@@ -4,8 +4,8 @@ import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Lin
 import { AppContext } from "./AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, showComingSoonAlert } from './Helpers';
-import { generateUsername, loadUsername, saveUserLocally, updateUsername } from "./Storage";
-import { ListItemEventEmitter, ProfileCountEventEmitter } from "./EventEmitters";
+import { loadUsername, saveUserLocally, updateUsername } from "./Storage";
+import { ProfileCountEventEmitter } from "./EventEmitters";
 import Dialog from "react-native-dialog";
 
 
