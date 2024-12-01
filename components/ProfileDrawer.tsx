@@ -39,6 +39,8 @@ const ProfileDrawer = ({ navigation }) => {
     //console.log("Inside Profile Drawer useEffect");
     let ignore = false;
 
+    usernameTextInput.current = username;
+
     const fetchUsernameCounts = async () => {
       const usernameCounts = await loadUsername(username);
       if (!ignore) {
