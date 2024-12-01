@@ -16,10 +16,16 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         lastRecordedCount, emptyListCTAOpacity, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
     const [recording, setRecording] = useState();
+    const [isRecording, setIsRecording] = useState(false);
+    const [lastSoundLevel, setLastSoundLevel] = useState(0);
+    const silenceTimer = useRef(0);
+    const [threshold, setThreshold] = useState(0);
     const [permissionResponse, requestPermission] = Audio.usePermissions();
     const meteringLevel = useSharedValue(1); // shared value for animated scale
     const recordButtonOpacity = useSharedValue(1);
-    const recordingTimeStart = useRef(null);        // Var used for calculating time
+    const recordingTimeStart = useRef(0);        // Var used for calculating time
+
+    const SILENCE_DURATION = 2000; // 2 seconds
 
     const bannerAdId = __DEV__ ?
         TestIds.ADAPTIVE_BANNER :
@@ -85,6 +91,13 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             //console.log('Starting recording..');
             const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
             setRecording(recording);
+            setIsRecording(true);
+
+            // Determine threshold dynamically
+            await determineThreshold(recording);
+
+            // Start monitoring sound levels
+            monitorSoundLevel(recording);
 
             // Poll metering level and update the animated scale
             const interval = setInterval(async () => {
@@ -127,19 +140,86 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             pathname: pathname,
             durationSeconds: (recordingDurationEnd - recordingTimeStart.current)/1000
         });
-        //console.log('Stopping recording..');
-        setRecording(undefined);
+        //console.log('Stopping recording..');    
         await recording.stopAndUnloadAsync();
+        const uri = recording.getURI();
         await Audio.setAudioModeAsync(
             {
                 allowsRecordingIOS: false,
             }
         );
+        setRecording(undefined);
+        setIsRecording(false);
         meteringLevel.value = withTiming(1); // reset scale when stopped
-        const uri = recording.getURI();
+       
         //console.log('Recording stopped and stored at', uri);
         return uri;
     }
+
+    const determineThreshold = async (recordingObject) => {
+        console.log('Determining threshold..');
+        const levels = [];
+        const DURATION = 1000; // 1 second
+        const INTERVAL = 100; // Poll every 100ms
+    
+        const startTime = Date.now();
+        while (Date.now() - startTime < DURATION) {
+          try {
+            const status = await recordingObject.getStatusAsync();
+            if (status.isRecording) {
+              const soundLevel = status.metering || 0;
+              levels.push(soundLevel);
+              console.log('Initial Sound Level:', soundLevel);
+            }
+          } catch (error) {
+            console.error('Error while determining threshold:', error);
+          }
+    
+          await new Promise((resolve) => setTimeout(resolve, INTERVAL));
+        }
+    
+        const avgLevel = levels.reduce((sum, level) => sum + level, 0) / levels.length;
+        const dynamicThreshold = avgLevel + 0.05; // Slightly above the average
+        console.log('Dynamic Threshold Set To:', dynamicThreshold);
+        setThreshold(dynamicThreshold);
+      };
+    
+      const monitorSoundLevel = async (recordingObject) => {
+        if (threshold === null) {
+          console.log('Threshold not set. Cannot monitor sound levels.');
+          return;
+        }
+    
+        clearTimeout(silenceTimer.current);
+    
+        while (isRecording) {
+          try {
+            const status = await recordingObject.getStatusAsync();
+            if (status.isRecording) {
+              const soundLevel = status.metering || 0;
+              console.log('Sound Level:', soundLevel);
+    
+              if (soundLevel < threshold) {
+                if (!silenceTimer.current) {
+                  silenceTimer.current = setTimeout(() => {
+                    console.log('Silence detected, stopping recording..');
+                    stopRecording();
+                  }, SILENCE_DURATION);
+                }
+              } else {
+                clearTimeout(silenceTimer.current);
+                silenceTimer.current = null;
+              }
+    
+              setLastSoundLevel(soundLevel);
+            }
+          } catch (error) {
+            console.error('Error monitoring sound level:', error);
+          }
+    
+          await new Promise((resolve) => setTimeout(resolve, 100)); // Poll every 100ms
+        }
+      };
 
     // if button was pressed while recording was already processed,
     // the current processing may be taking too long; treat the user action as
