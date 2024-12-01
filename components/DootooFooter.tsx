@@ -93,11 +93,11 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             setRecording(recording);
             setIsRecording(true);
 
-            // Determine threshold dynamically
-            await determineThreshold(recording);
+            // // Determine threshold dynamically
+            // await determineThreshold(recording);
 
-            // Start monitoring sound levels
-            monitorSoundLevel(recording);
+            // // Start monitoring sound levels
+            // monitorSoundLevel(recording);
 
             // Poll metering level and update the animated scale
             const interval = setInterval(async () => {
