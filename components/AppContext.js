@@ -1,6 +1,7 @@
 import { Animated, Easing } from 'react-native';
 import { createContext, useState, useRef } from 'react';
 import { initalizeUser, resetAllData } from './Storage';
+import { ProfileCountEventEmitter } from './EventEmitters';
 
 // Create the context
 export const AppContext = createContext();
@@ -55,6 +56,7 @@ export const AppProvider = ({ children }) => {
       //console.log("initializeLocalUser");
       const userData = await initalizeUser();
       username.current = userData.name;
+      ProfileCountEventEmitter.emit("username_set", {name: userData.name });
       anonymousId.current = userData.anonymous_id;
 
       if (callback) {

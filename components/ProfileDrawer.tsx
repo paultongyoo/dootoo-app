@@ -11,25 +11,36 @@ import Dialog from "react-native-dialog";
 
 const ProfileDrawer = ({ navigation }) => {
   const pathname = usePathname();
-  const { username, anonymousId, resetUserContext, dootooItems } = useContext(AppContext);
+  const { anonymousId, resetUserContext } = useContext(AppContext);
 
+  const [username, setUsername] = useState('');
   const [doneCount, setDoneCount] = useState(0);
   const [tipCount, setTipCount] = useState(0);
   const [loadingNewUsername, setLoadingNewUsername] = useState(false);
   const [usernameDialogVisible, setUsernameDialogVisible] = useState(false);
   const [usernameInvalid, setUsernameInvalid] = useState(false);
-  const usernameTextInput = useRef(username.current);
+  const usernameTextInput = useRef(username);
   const [dupeUsernameDialogVisible, setDupeUsernameDialogVisible] = useState(false);
   const [usernameModerationFailedDialogVisible, setUsernameModerationFailedDialogVisible] = useState(false);
   const [usernameSpammingFailedDialogVisible, setUsernameSpammingFailedDialogVisible] = useState(false);
   const [usernameUnexpectedDialogVisible, setUsernameUnexpectedDialogVisible] = useState(false);
 
   useEffect(() => {
+        const listener_set_username = ProfileCountEventEmitter.addListener('username_set', (data) => {
+          setUsername(data.name)
+        });
+
+        return () => {
+          listener_set_username.remove();
+        }
+  }, []);
+  
+  useEffect(() => {
     //console.log("Inside Profile Drawer useEffect");
     let ignore = false;
 
     const fetchUsernameCounts = async () => {
-      const usernameCounts = await loadUsername(username.current);
+      const usernameCounts = await loadUsername(username);
       if (!ignore) {
         //console.log("Updating latest profile counts: " + JSON.stringify(usernameCounts));
         setDoneCount(usernameCounts.doneCount);
@@ -39,7 +50,6 @@ const ProfileDrawer = ({ navigation }) => {
     // Initialize counts
     fetchUsernameCounts();
 
-    // Define event listeners to increment component state vars when user 
     const listener_incr_done = ProfileCountEventEmitter.addListener('incr_done', () => {
       setDoneCount((prev) => prev + 1);
     });
@@ -61,8 +71,7 @@ const ProfileDrawer = ({ navigation }) => {
       listener_incr_tips.remove();
       listener_decr_tips.remove();
     }
-  }, [])
-
+  }, [username])
 
   const showConfirmationPrompt = () => {
     amplitude.track("User Data Deletion Started", {
@@ -106,7 +115,7 @@ const ProfileDrawer = ({ navigation }) => {
     });
 
     const email = 'contact@thoughtswork.co'; // Replace with the desired email address
-    const subject = `Feedback from ${username.current}`; // Optional: add a subject
+    const subject = `Feedback from ${username}`; // Optional: add a subject
     const body = '';
 
     // Construct the mailto URL
@@ -264,7 +273,7 @@ const ProfileDrawer = ({ navigation }) => {
 
   function handleUsernameDialogCancel(): void {
     setUsernameDialogVisible(false);
-    usernameTextInput.current = username.current;
+    usernameTextInput.current = username;
   }
 
   const handleUsernameDialogSubmit = async () => {
@@ -272,7 +281,7 @@ const ProfileDrawer = ({ navigation }) => {
     setLoadingNewUsername(true);
     const statusCode = await updateUsername(usernameTextInput.current);
     if (statusCode == 200) {
-      username.current = usernameTextInput.current;
+      setUsername(usernameTextInput.current);
 
       const updatedUserObj = {
         name: usernameTextInput.current,
@@ -295,7 +304,7 @@ const ProfileDrawer = ({ navigation }) => {
       setLoadingNewUsername(false);
       setUsernameUnexpectedDialogVisible(true);
     }
-    usernameTextInput.current = username.current;
+    usernameTextInput.current = username;
   }
 
   return (
@@ -313,10 +322,10 @@ const ProfileDrawer = ({ navigation }) => {
       <View style={styles.profileDrawerProfileIconContainer}>
         <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_green.png')} />
         <View style={styles.profileDrawerProfileNameContainer}>
-          {(!username.current || username.current.length == 0) ?
+          {(!username || username.length == 0) ?
             <ActivityIndicator size={"large"} color="#3E3723" />
             :
-            <Text style={styles.profileDrawerProfileNameText}>{username.current}</Text>
+            <Text style={styles.profileDrawerProfileNameText}>{username}</Text>
           }
         </View>
         <Pressable style={styles.refreshNameContainer}
