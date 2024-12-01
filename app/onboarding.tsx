@@ -184,7 +184,8 @@ const Step2 = () => {
         },
         centerCopy: {
             fontSize: 40,
-            color: '#3E2723'
+            color: '#3E2723',
+            marginBottom: 50
         },
         green: {
             color: '#556B2F'
@@ -214,6 +215,7 @@ const Step2 = () => {
 
     return (
         <Animated.View style={[styles.container, { opacity: fadeIn }]}>
+            <Text style={styles.centerCopy}>start by <Text style={styles.green}>naturally speaking</Text> what you have to do.</Text>
             <View style={styles.micAndVoice}>
                 <View style={styles.micContainer}>
                     <Image style={styles.micImage} source={require('@/assets/images/microphone_white.png')} />
@@ -224,8 +226,7 @@ const Step2 = () => {
                         gotta <Text style={styles.green}>resume my job search</Text>....which
                         starts with <Text style={styles.green}>updating my resume</Text>..”</Text>
                 </View>
-            </View>
-            <Text style={styles.centerCopy}>start by <Text style={styles.green}>naturally speaking</Text> what you have to do.</Text>
+            </View>         
         </Animated.View>
     );
 }
@@ -255,7 +256,8 @@ const Step3 = () => {
         },
         centerCopy: {
             fontSize: 40,
-            color: '#3E2723'
+            color: '#3E2723',
+            marginBottom: 30
         },
         red: {
             color: '#A23E48'
@@ -353,6 +355,9 @@ const Step3 = () => {
 
     return (
         <Animated.View style={{opacity: fadeIn}}>
+            <View style={styles.onboardingCopyContainer}>
+                <Text style={styles.centerCopy}>see which things were <Text style={styles.green}>done by the community</Text>.</Text>
+            </View>
             <View style={styles.itemsContainer}>
                 <View style={styles.itemContainer}>
                     <View style={styles.itemCircleOpen}></View>
@@ -393,9 +398,6 @@ const Step3 = () => {
                 </View>
                 <Text style={styles.countDisclaimer}>*actual numbers vary</Text>
             </View>
-            <View style={styles.onboardingCopyContainer}>
-                <Text style={styles.centerCopy}>see which things were <Text style={styles.green}>done by the community</Text>.</Text>
-            </View>
         </Animated.View>
     );
 }
@@ -421,7 +423,8 @@ const Step4 = () => {
         },
         onboardingCopyContainer: {
             paddingLeft: 40,
-            paddingRight: 40
+            paddingRight: 40,
+            marginBottom: 30
         },
         centerCopy: {
             fontSize: 40,
@@ -551,6 +554,10 @@ const Step4 = () => {
 
     return (
         <Animated.View style={{opacity: fadeIn}}>
+            <View style={styles.onboardingCopyContainer}>
+                <Text style={styles.centerCopy}>get tips to <Text style={styles.green}>get things done</Text>.</Text>
+                <Text style={styles.centerCopy}>share tips to{'\n'}<Text style={styles.green}>give back</Text>.</Text>
+            </View>
             <View style={styles.itemAndTipsContainer}>
                 <View style={styles.itemContainer}>
                     <View style={styles.itemCircleOpen}></View>
@@ -605,10 +612,6 @@ const Step4 = () => {
                         </View>
                     </View>
                 </View>
-            </View>
-            <View style={styles.onboardingCopyContainer}>
-                <Text style={styles.centerCopy}>get tips to <Text style={styles.green}>get things done</Text>.</Text>
-                <Text style={styles.centerCopy}>share tips to{'\n'}<Text style={styles.green}>give back</Text>.</Text>
             </View>
         </Animated.View>
     );
@@ -683,7 +686,8 @@ const Step5 = () => {
             textDecorationLine: 'underline'
         },
         supplementalCopyContainer: {
-            paddingTop: 40
+            paddingTop: 40,
+            marginBottom: 60
         },
         supplementalCopy: {
             fontSize: 16,
@@ -708,15 +712,15 @@ const Step5 = () => {
 
     return (
         <Animated.View style={[styles.container, {opacity: stepFadeIn }]}>
+            <Text style={styles.centerCopy}>your personal information{'\n'}<Text style={styles.green}>stays with you</Text>.</Text>
+            <View style={styles.supplementalCopyContainer}>
+                <Text style={styles.supplementalCopy}>By continuing, you agree to{'\n'}dootoo's <Text style={[styles.green, styles.underline]} onPress={handleTermsClick}>Terms</Text> and understand{'\n'}how we protect your <Text style={[styles.green, styles.underline]} onPress={handlePrivacyPolicyClick}>Privacy</Text>.</Text>
+            </View>
             <View style={styles.profileDrawerProfileIconContainer}>
                 <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_green.png')} />
                 <View style={styles.profileNameContainer}>
                     <Animated.Text style={[styles.profileNameText, { opacity: usernameFadeInOut }]}>{currentUsername}</Animated.Text>
                 </View>
-            </View>
-            <Text style={styles.centerCopy}>your personal information{'\n'}<Text style={styles.green}>stays with you</Text>.</Text>
-            <View style={styles.supplementalCopyContainer}>
-                <Text style={styles.supplementalCopy}>By continuing, you agree to{'\n'}dootoo's <Text style={[styles.green, styles.underline]} onPress={handleTermsClick}>Terms</Text> and understand{'\n'}how we protect your <Text style={[styles.green, styles.underline]} onPress={handlePrivacyPolicyClick}>Privacy</Text>.</Text>
             </View>
         </Animated.View>
     );
