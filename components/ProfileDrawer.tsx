@@ -19,7 +19,7 @@ const ProfileDrawer = ({ navigation }) => {
   const [loadingNewUsername, setLoadingNewUsername] = useState(false);
   const [usernameDialogVisible, setUsernameDialogVisible] = useState(false);
   const [usernameInvalid, setUsernameInvalid] = useState(false);
-  const usernameTextInput = useRef(username);
+  const usernameTextInputValue = useRef(username);
   const [dupeUsernameDialogVisible, setDupeUsernameDialogVisible] = useState(false);
   const [usernameModerationFailedDialogVisible, setUsernameModerationFailedDialogVisible] = useState(false);
   const [usernameSpammingFailedDialogVisible, setUsernameSpammingFailedDialogVisible] = useState(false);
@@ -38,8 +38,6 @@ const ProfileDrawer = ({ navigation }) => {
   useEffect(() => {
     //console.log("Inside Profile Drawer useEffect");
     let ignore = false;
-
-    usernameTextInput.current = username;
 
     const fetchUsernameCounts = async () => {
       const usernameCounts = await loadUsername(username);
@@ -260,11 +258,12 @@ const ProfileDrawer = ({ navigation }) => {
       anonymous_id: anonymousId.current,
       pathname: pathname
     });
+    usernameTextInputValue.current = username;
     setUsernameDialogVisible(true);
   }
 
   function handleUsernameEditTextInputChange(text: string) {
-    usernameTextInput.current = text;
+    usernameTextInputValue.current = text;
 
     const regex = /^[a-zA-Z0-9]+$/;
 
@@ -281,18 +280,18 @@ const ProfileDrawer = ({ navigation }) => {
 
   function handleUsernameDialogCancel(): void {
     setUsernameDialogVisible(false);
-    usernameTextInput.current = username;
+    usernameTextInputValue.current = username;
   }
 
   const handleUsernameDialogSubmit = async () => {
     setUsernameDialogVisible(false);
     setLoadingNewUsername(true);
-    const statusCode = await updateUsername(usernameTextInput.current);
+    const statusCode = await updateUsername(usernameTextInputValue.current);
     if (statusCode == 200) {
-      setUsername(usernameTextInput.current);
+      setUsername(usernameTextInputValue.current);
 
       const updatedUserObj = {
-        name: usernameTextInput.current,
+        name: usernameTextInputValue.current,
         anonymous_id: anonymousId.current,
         tipCount: tipCount,
         doneCount: doneCount
@@ -312,7 +311,7 @@ const ProfileDrawer = ({ navigation }) => {
       setLoadingNewUsername(false);
       setUsernameUnexpectedDialogVisible(true);
     }
-    usernameTextInput.current = username;
+    usernameTextInputValue.current = username;
   }
 
   return (
@@ -384,8 +383,9 @@ const ProfileDrawer = ({ navigation }) => {
         <Dialog.Input
           multiline={false}
           style={usernameInvalid && styles.usernameDialogTextInput_Invalid}
+          autoFocus={true}
           onSubmitEditing={handleUsernameDialogSubmit}
-          defaultValue={usernameTextInput.current}
+          defaultValue={usernameTextInputValue.current}
           onChangeText={(text) => {
             handleUsernameEditTextInputChange(text);
           }} />
