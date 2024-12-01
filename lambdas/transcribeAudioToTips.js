@@ -55,7 +55,7 @@ export const handler = async (event) => {
           "role": "system",
           "content": "The user is listing one or more things they've done.  " +
             "Transform the thing(s) they've done into the following JSON format: { tips: [<array of objects of the format { text: '<user's input (do NOT add words or embellish)>' }]." +
-            "Do NOT guess at what additional things the user has done beyond what they've stated in their input."
+            "Do NOT guess at what additional things the user has done beyond what they've stated in their input.  Respond only in English."
         },
         { "role": "user", "content": "Here's the user's input: " + transcribedText }
       ], response_format: { "type": "json_object" }

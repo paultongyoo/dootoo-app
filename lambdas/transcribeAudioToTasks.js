@@ -53,7 +53,7 @@ export const handler = async (event) => {
           "role": "system",
           "content": `
                 The user is speaking a list of items. Your role is to identify the main tasks and sub-tasks described in their input, ordering each sub-task immediately after its corresponding main task. Only consider a task as a sub-task if it is described as part of another task.
-                "Do NOT guess additional items beyond what the user stays in their input.  Return your analysis in the following JSON format:
+                "Do NOT guess additional items beyond what the user stays in their input.  Respond only in English.  Return your analysis in the following JSON format:
                 {
                   "tasks": [
                     {
