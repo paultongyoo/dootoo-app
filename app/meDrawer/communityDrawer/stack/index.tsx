@@ -6,7 +6,7 @@ import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
-import { ListItemEventEmitter, ProfileCountEventEmitter }  from "@/components/EventEmitters";
+import { ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import * as amplitude from '@amplitude/analytics-react-native';
 
 
@@ -25,7 +25,7 @@ import Reanimated, {
 
 export default function Index() {
   const { anonymousId, setSelectedItem, dootooItems, setDootooItems,
-          thingRowHeights } = useContext(AppContext);
+    thingRowHeights } = useContext(AppContext);
   const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
 
   configureReanimatedLogger({
@@ -51,15 +51,15 @@ export default function Index() {
   };
 
   const saveTextUpdate = async (item) => {
-    updateItemText(item, () => { 
+    updateItemText(item, () => {
       ListItemEventEmitter.emit("items_saved");
     });
   }
 
   const saveItemOrder = async (uuidArray) => {
-    updateItemOrder(uuidArray, () => { 
+    updateItemOrder(uuidArray, () => {
       //ListItemEventEmitter.emit("items_saved");
-    });     
+    });
   }
 
   const handleMakeParent = (item) => {
@@ -67,33 +67,34 @@ export default function Index() {
     // Asyncronously update item hierarhcy in DB
     updateItemHierarchy(item.uuid, null);
 
-    setDootooItems((prevItems) => { 
-      
-        var newListToReturn = prevItems.map((obj) =>
-        (obj.uuid == item.uuid) 
-              ? { ...obj, 
-                parent_item_uuid: null 
-              }
-              : obj);
+    setDootooItems((prevItems) => {
 
-        // If item was above one or more children when
-        // it became a parent, move it below the family
-        const itemIdx = newListToReturn.findIndex((thing) => thing.uuid == item.uuid);
-        var newItemIdx = itemIdx;
-        while (newListToReturn[newItemIdx + 1] &&
-               newListToReturn[newItemIdx + 1].parent_item_uuid) {
-          newItemIdx += 1;
-        }
-        if (itemIdx != newItemIdx) {
-          const [movedItem] = newListToReturn.splice(itemIdx, 1);
-          newListToReturn.splice(newItemIdx, 0, movedItem);
+      var newListToReturn = prevItems.map((obj) =>
+        (obj.uuid == item.uuid)
+          ? {
+            ...obj,
+            parent_item_uuid: null
+          }
+          : obj);
 
-          const uuidArray = newListToReturn.map((thing) => ({ uuid: thing.uuid }));
-          saveItemOrder(uuidArray);
-        }
+      // If item was above one or more children when
+      // it became a parent, move it below the family
+      const itemIdx = newListToReturn.findIndex((thing) => thing.uuid == item.uuid);
+      var newItemIdx = itemIdx;
+      while (newListToReturn[newItemIdx + 1] &&
+        newListToReturn[newItemIdx + 1].parent_item_uuid) {
+        newItemIdx += 1;
+      }
+      if (itemIdx != newItemIdx) {
+        const [movedItem] = newListToReturn.splice(itemIdx, 1);
+        newListToReturn.splice(newItemIdx, 0, movedItem);
 
-        return newListToReturn;
-  }); // This should update UI only and not invoke any syncronous backend operations
+        const uuidArray = newListToReturn.map((thing) => ({ uuid: thing.uuid }));
+        saveItemOrder(uuidArray);
+      }
+
+      return newListToReturn;
+    }); // This should update UI only and not invoke any syncronous backend operations
 
     amplitude.track("Item Made Into Parent", {
       anonymous_id: anonymousId.current,
@@ -117,11 +118,12 @@ export default function Index() {
     updateItemHierarchy(item.uuid, nearestParentUUID);
 
     setDootooItems((prevItems) => prevItems.map((obj) =>
-      (obj.uuid == item.uuid) 
-            ? { ...obj, 
-              parent_item_uuid: nearestParentUUID 
-            }
-            : obj)); // This should update UI only and not invoke any syncronous backend operations
+      (obj.uuid == item.uuid)
+        ? {
+          ...obj,
+          parent_item_uuid: nearestParentUUID
+        }
+        : obj)); // This should update UI only and not invoke any syncronous backend operations
 
     amplitude.track("Item Made Into Child", {
       anonymous_id: anonymousId.current,
@@ -183,7 +185,7 @@ export default function Index() {
           //item.index_backup = index;
 
           // Move item to the bottom of the list if it's the only done item, otherwise make it the new first done item
-          
+
           const [item] = updatedTasks.splice(index, 1);   // remove the item from its current location
 
           if (firstDoneItemIdx == -1) {
@@ -209,17 +211,19 @@ export default function Index() {
 
         // Asyncronously save new item order
         const uuid_array = updatedTasks.map(obj => ({ uuid: obj.uuid }));
-        updateItemOrder(uuid_array); 
+        updateItemOrder(uuid_array);
 
         // This should update UI only and not invoke any synchronous backend operations
         // Reorder items to match updated list above
         const reviseItems = (updatedTasks: any, uuid_array: any, newItem: any) => {
-          const stateMap = new Map(updatedTasks.map(obj => [obj.uuid, 
-            (obj.uuid == newItem.uuid) 
-                ? { ...obj, 
-                    is_done: newItem.is_done,
-                    index_backup: index }
-                : obj]));
+          const stateMap = new Map(updatedTasks.map(obj => [obj.uuid,
+          (obj.uuid == newItem.uuid)
+            ? {
+              ...obj,
+              is_done: newItem.is_done,
+              index_backup: index
+            }
+            : obj]));
           const reorderedArray = uuid_array.map((ordered_obj_uuid) => stateMap.get(ordered_obj_uuid.uuid));
           return reorderedArray;
         }
@@ -232,9 +236,9 @@ export default function Index() {
         }
 
         // Asyncronously save updated item done state
-        updateItemDoneState(item, () => { 
+        updateItemDoneState(item, () => {
           ListItemEventEmitter.emit("items_saved");
-        });     
+        });
       });
 
     } catch (error) {
