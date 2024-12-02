@@ -512,7 +512,7 @@ export default function Index() {
   const renderLeftActions = (item, index) => {
     return (
       <>
-        {(!item.parent_item_uuid && (index != 0) && (!dootooItems[index - 1].is_done)) ?
+        {(!item.parent_item_uuid && (index != 0)) ?
           <Reanimated.View style={[styles.itemSwipeAction]}>
             <Pressable
               onPress={() => handleMakeChild(item, index)}>
