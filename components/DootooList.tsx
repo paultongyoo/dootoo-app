@@ -9,6 +9,7 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { ProfileCountEventEmitter } from './EventEmitters';
+import { updateItemHierarchy } from './Storage';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = (item, index) => { return <></> },
@@ -189,6 +190,17 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
         if (isThingDraggable) {
 
+            // If this is a child but was dragged immediately above a parent,
+            // assume user wnats to make the thing a parent / detach it from its siblings
+            if (draggedThing.parent_item_uuid &&
+                newData[toIndex + 1] &&
+                !newData[toIndex + 1].parent_item_uuid) {
+                    newData[toIndex].parent_item_uuid = null;
+                    
+                    // Async update
+                    updateItemHierarchy(newData[toIndex].uuid, null);
+            }
+
             // If thing is a parent but was dragged immediately above a child,
             // assume user wants to make the thing a sibling.
             // If the thing has children, make the thing's children siblings too
@@ -200,11 +212,16 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
                     // Grow any kids the thing has into siblings
                     newData.filter((child) => child.parent_item_uuid == draggedThing.uuid)
-                           .forEach((child) => child.parent_item_uuid = newParentUUID);
+                           .forEach((child) => {
+                        child.parent_item_uuid = newParentUUID;
+                        
+                        // Async update
+                        updateItemHierarchy(child.uuid, newParentUUID);
+                    });
 
                     // Make Thing a sibling
                     newData[toIndex].parent_item_uuid = newParentUUID;
-
+                    updateItemHierarchy(newData[toIndex].uuid, newParentUUID);
             }
 
             // Keep children with their parents

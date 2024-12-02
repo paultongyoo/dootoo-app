@@ -67,12 +67,33 @@ export default function Index() {
     // Asyncronously update item hierarhcy in DB
     updateItemHierarchy(item.uuid, null);
 
-    setDootooItems((prevItems) => prevItems.map((obj) =>
+    setDootooItems((prevItems) => { 
+      
+        var newListToReturn = prevItems.map((obj) =>
         (obj.uuid == item.uuid) 
               ? { ...obj, 
                 parent_item_uuid: null 
               }
-              : obj)); // This should update UI only and not invoke any syncronous backend operations
+              : obj);
+
+        // If item was above one or more children when
+        // it became a parent, move it below the family
+        const itemIdx = newListToReturn.findIndex((thing) => thing.uuid == item.uuid);
+        var newItemIdx = itemIdx;
+        while (newListToReturn[newItemIdx + 1] &&
+               newListToReturn[newItemIdx + 1].parent_item_uuid) {
+          newItemIdx += 1;
+        }
+        if (itemIdx != newItemIdx) {
+          const [movedItem] = newListToReturn.splice(itemIdx, 1);
+          newListToReturn.splice(newItemIdx, 0, movedItem);
+
+          const uuidArray = newListToReturn.map((thing) => ({ uuid: thing.uuid }));
+          saveItemOrder(uuidArray);
+        }
+
+        return newListToReturn;
+  }); // This should update UI only and not invoke any syncronous backend operations
 
     amplitude.track("Item Made Into Parent", {
       anonymous_id: anonymousId.current,
