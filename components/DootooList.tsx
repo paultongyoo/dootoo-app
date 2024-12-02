@@ -189,23 +189,41 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
         if (isThingDraggable) {
             const parentChildOrderedData = [];
+            const childrenToAnimate = [];
             newData.forEach((thing) => {
                 if (!thing.parent_item_uuid) {
                     parentChildOrderedData.push(thing);
                     const children = newData.filter((child) => child.parent_item_uuid == thing.uuid);
-                    parentChildOrderedData.push(...children);
+                    if (children.length > 0) {
+                        children.forEach((child) => child.shouldAnimateIntoView = true);
+                        parentChildOrderedData.push(...children);
+                        childrenToAnimate.push(...children);
+                    }
                 }
             });
 
-            // This should update UI only and not invoke any synchronous backend operations
-            // We use ... spread operate to guarantee we're treating previous data as immutable
-            listArraySetter([...parentChildOrderedData]);
+            const heightAnimationArray = []
+            childrenToAnimate.forEach((child) => {
+                heightAnimationArray.push(
+                    Animated.timing(thingRowHeights.current[child.uuid], {
+                        toValue: 0,
+                        duration: 300,
+                        easing: Easing.in(Easing.quad),
+                        useNativeDriver: false
+                    })
+                );
+            });
+            Animated.parallel(heightAnimationArray).start(() => {
 
-            // Asynchronously save all items to DB as rank_idxes will have changed
-            //saveAllThings(newData);
-            // TODO save new order to back end only
-            const uuidArray = parentChildOrderedData.map((thing) => ({ uuid: thing.uuid }));
-            saveThingOrderFunc(uuidArray);
+                // This should update UI only and not invoke any synchronous backend operations
+                // We use ... spread operate to guarantee we're treating previous data as immutable
+                listArraySetter([...parentChildOrderedData]);
+
+                // Asynchronously save all items to DB as rank_idxes will have changed
+                //saveAllThings(newData);
+                const uuidArray = parentChildOrderedData.map((thing) => ({ uuid: thing.uuid }));
+                saveThingOrderFunc(uuidArray);
+            });
         } else {
             console.log("Ignoring drag operation given isThingDraggable == false");
         }
