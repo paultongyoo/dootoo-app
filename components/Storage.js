@@ -80,7 +80,10 @@ export const saveItems = async (item_list_obj, callback) => {
   // Asyncronously save to backend to enable community features and refresh user counts.
   // Ensure all UI data uses only locally stored data and is not reliant on real-time backend state.
   saveItemsToBackend(item_list_obj, (updatedUser) => {
-    saveUserLocally(updatedUser);
+
+    // Deprecated in v1.1.1
+    //saveUserLocally(updatedUser);
+
     if (callback) {
 
       // Used to allow UI to update its user UI based on latest user counts
@@ -400,9 +403,8 @@ export const deleteItem = async(item_uuid) => {
   }
 }
 
-export const updateItemHierarchy = async(item_uuid, is_child) => {
+export const updateItemHierarchy = async(item_uuid, parent_item_uuid) => {
   try {
-    //console.log("Entering updateItemHierarchy, uuid: " + item_uuid + " is_child: " + is_child);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserSr) {
       //console.log("Received null local anon Id, aborting tipVote!");
@@ -414,10 +416,10 @@ export const updateItemHierarchy = async(item_uuid, is_child) => {
       {
         anonymous_id : localAnonId,
         item_uuid: item_uuid,
-        is_child: is_child
+        parent_item_uuid: parent_item_uuid
       }
     );
-    //console.log("updateItemHierarchy Response Obj: " + JSON.stringify(response.data.body));
+    console.log("updateItemHierarchy Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateItemHierarchy API:', error);
   }
@@ -650,7 +652,8 @@ const saveItemsToBackend = async(item_list_obj, callback) => {
       {
         anonymous_id: localAnonId,
         items_str: JSON.stringify(item_list_obj),
-        skipLoad: true
+        skipLoad: true,
+        skipUserLoad: true
       }
     );
     const response_obj = JSON.parse(response.data.body);

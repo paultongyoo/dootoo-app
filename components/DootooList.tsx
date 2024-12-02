@@ -11,8 +11,8 @@ import { usePathname } from 'expo-router';
 import { ProfileCountEventEmitter } from './EventEmitters';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
-    renderLeftActions = (item) => { return <></> },
-    renderRightActions = (item) => { return <></> },
+    renderLeftActions = (item, index) => { return <></> },
+    renderRightActions = (item, index) => { return <></> },
     isDoneable = true, handleDoneClick = (index) => { return; },
     saveAllThings, saveTextUpdateFunc, saveThingOrderFunc, loadAllThings,
     transcribeAudioToThings,
@@ -188,15 +188,23 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     function handleThingDrag(newData: unknown[]) {
 
         if (isThingDraggable) {
+            const parentChildOrderedData = [];
+            newData.forEach((thing) => {
+                if (!thing.parent_item_uuid) {
+                    parentChildOrderedData.push(thing);
+                    const children = newData.filter((child) => child.parent_item_uuid == thing.uuid);
+                    parentChildOrderedData.push(...children);
+                }
+            });
 
             // This should update UI only and not invoke any synchronous backend operations
             // We use ... spread operate to guarantee we're treating previous data as immutable
-            listArraySetter([...newData]);
+            listArraySetter([...parentChildOrderedData]);
 
             // Asynchronously save all items to DB as rank_idxes will have changed
             //saveAllThings(newData);
             // TODO save new order to back end only
-            const uuidArray = newData.map((thing) => ({ uuid: thing.uuid }));
+            const uuidArray = parentChildOrderedData.map((thing) => ({ uuid: thing.uuid }));
             saveThingOrderFunc(uuidArray);
         } else {
             console.log("Ignoring drag operation given isThingDraggable == false");
@@ -353,11 +361,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             thing_type: thingName
                         });
                     }}
-                    renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(item) } else { return <></> } }}
-                    renderRightActions={(progress, dragX) => { if (renderRightActions) { return renderRightActions(item) } else { return <></> } }}>
+                    renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(item, getIndex()) } else { return <></> } }}
+                    renderRightActions={(progress, dragX) => { if (renderRightActions) { return renderRightActions(item, getIndex()) } else { return <></> } }}>
                     <ScaleDecorator>
                         <View style={[styles.itemContainer, (getIndex() == 0) && styles.itemContainer_firstItem]}>
-                            {(item.is_child) ?
+                            {(item.parent_item_uuid) ?
                                 <View style={styles.childItemSpacer}></View>
                                 : <></>
                             }

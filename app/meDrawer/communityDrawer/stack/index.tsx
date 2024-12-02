@@ -65,11 +65,13 @@ export default function Index() {
   const handleMakeParent = (item) => {
 
     // Asyncronously update item hierarhcy in DB
-    updateItemHierarchy(item.uuid, false);
+    updateItemHierarchy(item.uuid, null);
 
     setDootooItems((prevItems) => prevItems.map((obj) =>
         (obj.uuid == item.uuid) 
-              ? { ...obj, is_child: false }
+              ? { ...obj, 
+                parent_item_uuid: null 
+              }
               : obj)); // This should update UI only and not invoke any syncronous backend operations
 
     amplitude.track("Item Made Into Parent", {
@@ -78,19 +80,32 @@ export default function Index() {
     });
   }
 
-  const handleMakeChild = (item) => {
+  const handleMakeChild = (item, index) => {
+
+    let nearestParentUUID = '';
+    for (var i = index - 1; i >= 0; i--) {
+      const currItem = dootooItems[i];
+      if (!currItem.parent_item_uuid) {
+        console.log("Nearest Parent: " + currItem.text);
+        nearestParentUUID = currItem.uuid;
+        break;
+      }
+    }
 
     // Asyncronously update item hierarhcy in DB
-    updateItemHierarchy(item.uuid, true);
+    updateItemHierarchy(item.uuid, nearestParentUUID);
 
     setDootooItems((prevItems) => prevItems.map((obj) =>
       (obj.uuid == item.uuid) 
-            ? { ...obj, is_child: true }
+            ? { ...obj, 
+              parent_item_uuid: nearestParentUUID 
+            }
             : obj)); // This should update UI only and not invoke any syncronous backend operations
 
     amplitude.track("Item Made Into Child", {
       anonymous_id: anonymousId.current,
-      item_uuid: item.uuid
+      item_uuid: item.uuid,
+      parent_item_uuid: nearestParentUUID
     });
   }
 
@@ -414,7 +429,7 @@ export default function Index() {
   });
 
 
-  const renderRightActions = (item) => {
+  const renderRightActions = (item, index) => {
     return (
       <>
         {(item.is_done) ?
@@ -456,7 +471,7 @@ export default function Index() {
           listArray={dootooItems} listArraySetter={setDootooItems}
           listThing={item}
           deleteThing={deleteItem} />
-        {item.is_child ?
+        {item.parent_item_uuid ?
           <Reanimated.View style={[styles.itemSwipeAction]}>
             <Pressable
               onPress={() => handleMakeParent(item)}>
@@ -469,13 +484,13 @@ export default function Index() {
     );
   };
 
-  const renderLeftActions = (item) => {
+  const renderLeftActions = (item, index) => {
     return (
       <>
-        {(!item.is_child /*&& (index != 0) && (!dootooItems[index - 1].is_done)*/) ?
+        {(!item.parent_item_uuid && (index != 0) && (!dootooItems[index - 1].is_done)) ?
           <Reanimated.View style={[styles.itemSwipeAction]}>
             <Pressable
-              onPress={() => handleMakeChild(item)}>
+              onPress={() => handleMakeChild(item, index)}>
               <Image style={styles.swipeActionIcon_ident} source={require("@/assets/images/left_indent_3E2723.png")} />
             </Pressable>
           </Reanimated.View>

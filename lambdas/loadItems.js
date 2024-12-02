@@ -51,6 +51,18 @@ export const handler = async (event) => {
         user: { id: user.id },
         is_deleted: false
       },
+      select: {
+        id: true,
+        is_child: true,
+        is_done: true,
+        uuid: true,
+        text: true,
+        parent: {
+          select: {
+            uuid: true
+          }
+        }
+      },
       orderBy: {
         rank_idx: 'asc'
       }
@@ -65,11 +77,17 @@ export const handler = async (event) => {
     }
   }
   console.log(`Returned ${((retrievedItems && retrievedItems.length) || 0)} items.`);
-  
 
 
   for (var i = 0; i < retrievedItems.length; i++) {
     const item = retrievedItems[i];
+
+    //console.log("Loaded item: " + JSON.stringify(item));
+
+    // If item has a parent, cite its parent UUID in property recognized by UI
+    if (item.parent) {
+      retrievedItems[i].parent_item_uuid = item.parent.uuid;
+    }
 
     try {
 

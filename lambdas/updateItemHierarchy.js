@@ -26,10 +26,31 @@ export const handler = async (event) => {
             };
         }
 
-        const updatedItem = await prisma.item.update({
-            where: { id: item.id },
-            data: { is_child: event.is_child }
-        });
+        var updatedItem = null;
+        if (event.parent_item_uuid) {
+            const parent_item = await prisma.item.findUnique({
+                where: {
+                    user: { id: user.id },
+                    uuid: event.parent_item_uuid
+                }
+            });
+            if (parent_item == null) {
+                return {
+                    statusCode: 403,
+                    body: JSON.stringify({ error: 'Can\'t find parent item owned by user!' })
+                };
+            }
+            updatedItem = await prisma.item.update({
+                where: { id: item.id },
+                data: { parent_item_id: parent_item.id }
+            });
+        } else {
+            updatedItem = await prisma.item.update({
+                where: { id: item.id },
+                data: { parent_item_id: null }
+            });
+        }
+
         console.log("Updated Item: " + JSON.stringify(updatedItem));
 
         const response = {

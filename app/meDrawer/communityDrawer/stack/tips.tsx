@@ -215,7 +215,7 @@ export default function ItemTips() {
 
   }
 
-  const renderRightActions = (tip) => {
+  const renderRightActions = (tip, index) => {
     return (
       <>
         {(selectedItem.is_done) ?
@@ -258,7 +258,7 @@ export default function ItemTips() {
     );
   };
 
-  const renderLeftActions = (tip) => {
+  const renderLeftActions = (tip, index) => {
     return (
       <>
         {(tip.name) ?
