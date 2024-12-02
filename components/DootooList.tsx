@@ -185,9 +185,20 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
     }
 
-    function handleThingDrag(newData: unknown[]) {
+    function handleThingDrag(newData: unknown[], toIndex, draggedThing) {
 
         if (isThingDraggable) {
+
+            // If thing is a parent but was dragged immediately above a child,
+            // assume user wants to make the thing a sibling
+            if (newData[toIndex + 1] &&
+                newData[toIndex + 1].parent_item_uuid &&
+                !draggedThing.parent_item_uuid) {
+                    newData[toIndex].parent_item_uuid = newData[toIndex + 1].parent_item_uuid;
+            }
+
+            // Keep children with their parents
+            // TODO: Make this more efficient (loops through entire list regardless of what was dragged)
             const parentChildOrderedData = [];
             newData.forEach((thing) => {
                 if (!thing.parent_item_uuid) {
@@ -445,7 +456,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         to: to
                                     });
                                     if (from != to) {
-                                        handleThingDrag(data);
+                                        handleThingDrag(data, to, data[to]);
                                     }
                                 }}
                                 keyExtractor={(item, index) => item.uuid}
