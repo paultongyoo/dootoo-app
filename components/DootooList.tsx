@@ -190,11 +190,21 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         if (isThingDraggable) {
 
             // If thing is a parent but was dragged immediately above a child,
-            // assume user wants to make the thing a sibling
+            // assume user wants to make the thing a sibling.
+            // If the thing has children, make the thing's children siblings too
             if (newData[toIndex + 1] &&
                 newData[toIndex + 1].parent_item_uuid &&
                 !draggedThing.parent_item_uuid) {
-                    newData[toIndex].parent_item_uuid = newData[toIndex + 1].parent_item_uuid;
+
+                    const newParentUUID = newData[toIndex + 1].parent_item_uuid;
+
+                    // Grow any kids the thing has into siblings
+                    newData.filter((child) => child.parent_item_uuid == draggedThing.uuid)
+                           .forEach((child) => child.parent_item_uuid = newParentUUID);
+
+                    // Make Thing a sibling
+                    newData[toIndex].parent_item_uuid = newParentUUID;
+
             }
 
             // Keep children with their parents
