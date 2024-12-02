@@ -185,7 +185,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
     }
 
-    function handleThingDrag(newData: unknown[], draggedThing) {
+    function handleThingDrag(newData: unknown[]) {
 
         if (isThingDraggable) {
             const parentChildOrderedData = [];
@@ -195,13 +195,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     parentChildOrderedData.push(thing);
                     const children = newData.filter((child) => child.parent_item_uuid == thing.uuid);
                     if (children.length > 0) {
+                        children.forEach((child) => child.shouldAnimateIntoView = true);
                         parentChildOrderedData.push(...children);
-                        children.forEach((child) => {
-                            if (child.parent_item_uuid == draggedThing.uuid) {
-                                child.shouldAnimateIntoView = true
-                                childrenToAnimate.push(child);
-                            }                          
-                        });                                        
+                        childrenToAnimate.push(...children);
                     }
                 }
             });
@@ -467,7 +463,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         to: to
                                     });
                                     if (from != to) {
-                                        handleThingDrag(data, data[to]);
+                                        handleThingDrag(data);
                                     }
                                 }}
                                 keyExtractor={(item, index) => item.uuid}
