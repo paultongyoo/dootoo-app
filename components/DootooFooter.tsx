@@ -137,7 +137,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     }
 
     const determineAudioInputThreshold = async (recordingObject) => {
-        console.log('Determining threshold..');
+        //console.log('Determining threshold..');
         const levels = [];
         const DURATION = 1000; // 1 second
         const INTERVAL = 100; // Poll every 100ms
@@ -317,7 +317,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             }
         }
         setIsRecordingProcessing(false);
-        console.log("Finished parsing file, deleting...");
+        //console.log("Finished parsing file, deleting...");
         deleteFile(fileUri);
     }
 
@@ -483,14 +483,15 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 <View style={styles.footerButton_Underlay}></View>
                 <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || isRecordingProcessing) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
                     <Pressable
-                        disabled={recording != null}
-                        onPress={startRecording}
+                        onPress={(isRecordingProcessing) ? cancelRecordingProcessing : ((recording) ? processRecording : startRecording) }      
                         onPressIn={recordButton_handlePressIn}
                         onPressOut={recordButton_handlePressOut}>
                         {(isRecordingProcessing) ?
                             <View style={styles.loadingAnim}>
                                 <ActivityIndicator size={"large"} color="white" />
                             </View>
+                            : (recording) ?
+                            <View style={styles.footerButtonIcon_Stop}></View> 
                             : <Image style={styles.footerButtonImage_Record} source={require("@/assets/images/microphone_white.png")} />}
                     </Pressable>
                 </Reanimated.View>
