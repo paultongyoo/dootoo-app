@@ -20,9 +20,12 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const meteringLevel = useSharedValue(1); // shared value for animated scale
     const recordButtonOpacity = useSharedValue(1);
     const recordingTimeStart = useRef(null);        // Var used for calculating time
+
+    // Auto stop threshold feature
     const audioTreshold = useRef(0);
     const silenceTimer = useRef(null);
     const SILENCE_DURATION = 1000;  // 1 seconds
+    const hasBreachedThreshold = useRef(false);
 
     const bannerAdId = __DEV__ ?
         TestIds.ADAPTIVE_BANNER :
@@ -100,12 +103,23 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                     meteringLevel.value = withTiming(1 + Math.max(0, 1 + (status.metering / metering_divisor)), { duration: 100 });
                     //console.log(`Platform: ${Platform.OS} - status.metering: ${status.metering} - Metering Level: ${meteringLevel.value} - Metering modifier: ${1 + (status.metering / metering_divisor)}`);
 
+                    // Sound Level Threshold Auto Stop Feature
                     const soundLevel = status.metering || 0;
-                    if (soundLevel < audioTreshold.current) {
+                    //console.log(`Sound Level ${soundLevel} - Threshold ${audioTreshold.current} - HasBreached ${hasBreachedThreshold.current}`)
+
+                    // Only auto-stop after the user started talking
+                    if (soundLevel > (audioTreshold.current + 10)) {
+                        hasBreachedThreshold.current = true;
+                    }
+
+                    // If sound level drops below audio threshold and they had started talking...
+                    if ((soundLevel < audioTreshold.current) && hasBreachedThreshold.current) {
                         if (!silenceTimer.current) {
                             silenceTimer.current = setTimeout(() => {
                                 //console.log('Silence detected, processing recording..');
                                 processRecording(recording);
+                                clearTimeout(silenceTimer.current);
+                                silenceTimer.current = null;
                             }, SILENCE_DURATION);
                         }
                     } else {
@@ -142,6 +156,9 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         const DURATION = 1000; // 1 second
         const INTERVAL = 100; // Poll every 100ms
 
+        audioTreshold.current = 999999;
+        hasBreachedThreshold.current = false;
+        silenceTimer.current = null
         let intervalCounter = 0;
         const interval = setInterval(async () => {
             intervalCounter += 1;
@@ -167,10 +184,9 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     }
 
     const stopRecording = async (localRecordingObject): Promise<string> => {
+        //console.log(`stopRecording - localRecordingObject: ${localRecordingObject}`);
+
         const recordingDurationEnd = performance.now();
-        // console.log("Logging end time: " + new Date(recordingDurationEnd).toLocaleString());
-        // console.log("Recalling start time: " + new Date(recordingTimeStart.current).toLocaleString());
-        // console.log("Recording Duration: " + (recordingDurationEnd - recordingTimeStart.current)/1000);
         amplitude.track("Recording Stopped", {
             anonymous_id: anonymousId.current,
             pathname: pathname,
@@ -178,13 +194,15 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         });
         //console.log('Stopping recording..');
         let uri;
-        if (localRecordingObject != undefined) {
-            await localRecordingObject.stopAndUnloadAsync();
-            uri = localRecordingObject.getURI();
-        } else {
+        if (recording) {
             await recording.stopAndUnloadAsync();
             uri = recording.getURI();
-        }
+        } else if (localRecordingObject) {
+            if (localRecordingObject.stopAndUnloadAsync != undefined) {
+                await localRecordingObject.stopAndUnloadAsync();
+            }
+            uri = localRecordingObject.getURI();
+        }  
         setRecording(undefined);
         await Audio.setAudioModeAsync(
             {
@@ -203,7 +221,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const cancelRecordingProcessing = async () => {
         //console.log("Cancelling recording...");
         if (recording) {
-            const fileUri = await stopRecording();
+            const fileUri = await stopRecording(recording);
             deleteFile(fileUri);
         }
         setIsRecordingProcessing(false);
@@ -215,6 +233,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     }
 
     const processRecording = async (localRecordingObject) => {
+        //console.log(`processingRecording - localRecordingObject: ${localRecordingObject}`);
         amplitude.track("Recording Processing Started", {
             anonymous_id: anonymousId.current,
             pathname: pathname
