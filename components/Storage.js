@@ -419,7 +419,7 @@ export const updateItemHierarchy = async(item_uuid, parent_item_uuid) => {
         parent_item_uuid: parent_item_uuid
       }
     );
-    console.log("updateItemHierarchy Response Obj: " + JSON.stringify(response.data.body));
+    //console.log("updateItemHierarchy Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateItemHierarchy API:', error);
   }
