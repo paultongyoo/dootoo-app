@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
@@ -14,7 +14,8 @@ import {
   Image, StyleSheet, Pressable,
   Animated,
   Easing,
-  Platform
+  Platform,
+  Alert
 } from "react-native";
 import { AppContext } from '@/components/AppContext';
 import Reanimated, {
@@ -24,8 +25,9 @@ import Reanimated, {
 } from 'react-native-reanimated';
 
 export default function Index() {
+  const pathname = usePathname();
   const { anonymousId, setSelectedItem, dootooItems, setDootooItems,
-    thingRowHeights } = useContext(AppContext);
+    thingRowHeights, thingRowPositionXs } = useContext(AppContext);
   const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
 
   configureReanimatedLogger({
@@ -133,21 +135,135 @@ export default function Index() {
   }
 
   const handleDoneClick = (item) => {
+
+    /*
+    Rules as of v1.1.1 in priority order:
+
+      1) Scenarios attempting to set item TO Done :
+        1.1) If user sets an item that has no children to Done, item is moved to top of
+           Done Adults With No Kids (DAWNK) list or end of the list if no DAWNKs exist.
+        1.2) If user attempts to set a parent item to done that has open children,
+              DISPLAY PROMPT to user that:
+              1.2.1) Informs them their item has open subitems
+              1.2.2) Asks them if they want to Complete or Delete their open items
+                 --- Choosing this option will affect the open items as chosen and set the parent to done
+              1.2.3) Gives them Cancel button
+                 --- Choosing this option will simply dismiss the prompt; no change made to item or list
+        1.3) If user sets a child to Done, item is moved to top of Kids list if kids exist, otherwise left
+           underneath parent.  The child is NOT separated from its parent.
+
+      2) Scenarios setting item TO Open:
+        2.1) If item is an DAWNK, move it to the top of the DAWNK list if it exists, or end of the list if no DAWNKs
+        2.2) If item is a child of a Done parent, move it to the top of the AWNK list (or end of list if no DAWNKS) and make it a parent
+        2.3) If item is a child of an Open parent, move it to the top of the Done Kids list (or end of maily list of no DKs)
+    */
     try {
+
+      // 1) If attempting to set item TO done
+      if (!item.is_done) {
+
+        const children = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
+        if (children.length > 0) {
+          Alert.alert(
+            `Item Has ${children.length} Open Subitems`,
+            `You're setting an item to done that has open subitems.  What do you want to do with the subitems?`, // Message of the alert
+            [
+              {
+                text: 'Cancel',
+                onPress: () => {
+                  amplitude.track("Doneify With Kids Prompt Cancelled", {
+                    anonymous_id: anonymousId.current,
+                    pathname: pathname
+                  });
+                },
+                style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
+              },
+              {
+                text: 'Delete Them',
+                onPress: () => {
+                  amplitude.track("Doneify With Kids Prompt: Delete Chosen", {
+                    anonymous_id: anonymousId.current,
+                    pathname: pathname
+                  });
+
+                  // Delete item's kids
+                  var slideAnimationArray = [];
+                  var heightAnimationArray = [];
+                  children.forEach((child) => {
+
+                    // Call asyncronous delete to mark item as deleted in backend to sync database
+                    deleteItem(child.uuid);
+
+                    amplitude.track(`Item Deleted`, {
+                      anonymous_id: anonymousId.current,
+                      thing_uuid: child.uuid,
+                      thing_type: 'Item'
+                    });
+
+                    // Add the animatios to slide/collapse the item off the screen
+                    slideAnimationArray.push(
+                      Animated.timing(thingRowPositionXs.current[child.uuid], {
+                        toValue: -600,
+                        duration: 300,
+                        easing: Easing.in(Easing.quad),
+                        useNativeDriver: false
+                      })
+                    );
+                    heightAnimationArray.push(
+                      Animated.timing(thingRowHeights.current[child.uuid], {
+                        toValue: 0,
+                        duration: 300,
+                        easing: Easing.in(Easing.quad),
+                        useNativeDriver: false
+                      })
+                    );
+                  });
+                  Animated.parallel(slideAnimationArray).start(() => {
+                    Animated.parallel(heightAnimationArray).start(() => {
+
+                      children.forEach((child) => {
+                        delete thingRowPositionXs.current[child.uuid];
+                        delete thingRowHeights.current[child.uuid]
+                      });
+
+                      // Asyncronously updated DB with item set done state
+                      item.is_done = true;
+                      updateItemDoneState(item);
+
+                      // Update latest list by filtering out the deleted children PLUS setting the item to done
+                      const subtaskUUIDSet = new Set(children.map(obj => obj.uuid));
+                      setDootooItems((prevItems) => prevItems.filter((obj) => !subtaskUUIDSet.has(obj.uuid))
+                                                             .map((obj) => 
+                                                                (obj.uuid == item.uuid)
+                                                                    ? { ...obj, is_done: true }
+                                                                    : obj));
+                    })
+                  });
+                },
+              },
+              {
+                text: 'Complete Them',
+                onPress: () => {
+                  amplitude.track("Doneify With Kids Prompt: Complete Chosen", {
+                    anonymous_id: anonymousId.current,
+                    pathname: pathname
+                  });
+                },
+              },
+            ],
+            { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+          );
+        }
+      }
+
+      return;
+
+
+
       //console.log("Done clicked for item index: " + index);
       //var updatedTasks = [...dootooItems];
       var updatedTasks = dootooItems.map((obj) => ({ ...obj }));
 
-      // Before making changes, remember index of first done item in the list, if any
-      var firstDoneItemIdx = -1;
-      for (var i = 0; i < updatedTasks.length; i++) {
-        var currItem = updatedTasks[i];
-        if (currItem.is_done) {
-          firstDoneItemIdx = i;
-          break;
-        }
-      }
-      //console.log("firstDoneItemIdx before changing list: " + firstDoneItemIdx);
 
       item.is_done = !item.is_done;
 
@@ -177,36 +293,21 @@ export default function Index() {
         const index = updatedTasks.findIndex(obj => obj.uuid == item.uuid);
         updatedTasks[index] = item;
 
-        if (item.is_done == true) {
+        if (item.is_done) {
 
-          //console.log(`Backing index of item ${updatedTasks![index].text}: ${index}`);
 
-          // v1.1.1 Replacing index_backup with top of the list for now to avoid race conditions
-          //item.index_backup = index;
-
-          // Move item to the bottom of the list if it's the only done item, otherwise make it the new first done item
 
           const [item] = updatedTasks.splice(index, 1);   // remove the item from its current location
 
           if (firstDoneItemIdx == -1) {
             updatedTasks = updatedTasks.concat(item);         // Place at end of list
           } else {
-            //console.log("Attempting to insert at top of first item list - firstDoneItemIdx: " + firstDoneItemIdx);
-            updatedTasks.splice(firstDoneItemIdx - 1, 0, item)    // Insert it at firstDoneItem location
+            updatedTasks.splice(firstDoneItemIdx - 1, 0, item)
           }
 
         } else {
 
-          const backupVal = updatedTasks[index].index_backup;
           const [item] = updatedTasks.splice(index, 1);   // remove the item
-
-          if (backupVal != null && (backupVal > firstDoneItemIdx)) {
-            //console.log("Placing item at firstDoneItemIdx: " + firstDoneItemIdx);
-            updatedTasks.splice(firstDoneItemIdx, 0, item)  // insert it in new location
-          } else {
-            //console.log("Placing item at backup index: " + backupVal);
-            updatedTasks.splice(backupVal, 0, item)  // insert it in new location
-          }
         }
 
         // Asyncronously save new item order
