@@ -267,7 +267,7 @@ const ProfileDrawer = ({ navigation }) => {
 
     const regex = /^[a-zA-Z0-9]+$/;
 
-    if (regex.test(text) && text.length >= 5 && test.length <= 20) {
+    if (regex.test(text) && text.length >= 5 && text.length <= 20) {
       setUsernameInvalid(false);
       return;
     }
