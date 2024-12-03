@@ -23,6 +23,7 @@ import Reanimated, {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
+import { moveItemToTopOfDAWNKS } from "@/components/Helpers";
 
 export default function Index() {
   const pathname = usePathname();
@@ -162,189 +163,302 @@ export default function Index() {
       // 1) If attempting to set item TO done
       if (!item.is_done) {
 
-        const children = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
-        if (children.length > 0) {
-          Alert.alert(
-            `Item Has ${children.length} Open Subitems`,
-            `You're setting an item to done that has open subitems.  What do you want to do with the subitems?`, // Message of the alert
-            [
-              {
-                text: 'Cancel',
-                onPress: () => {
-                  amplitude.track("Doneify With Kids Prompt Cancelled", {
-                    anonymous_id: anonymousId.current,
-                    pathname: pathname
-                  });
-                },
-                style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
-              },
-              {
-                text: 'Delete Them',
-                onPress: () => {
-                  amplitude.track("Doneify With Kids Prompt: Delete Chosen", {
-                    anonymous_id: anonymousId.current,
-                    pathname: pathname
-                  });
+        // 1.3 If item being doned is a child...
+        if (item.parent_item_uuid) {
+          setDootooItems((prevItems) => {
 
-                  // Delete item's kids
-                  var slideAnimationArray = [];
-                  var heightAnimationArray = [];
-                  children.forEach((child) => {
+            // Create beginnings of new state, setting item to done
+            const donedList = prevItems.map((obj) => (obj.uuid == item.uuid) ? { ...obj, is_done: true } : obj);
 
-                    // Call asyncronous delete to mark item as deleted in backend to sync database
-                    deleteItem(child.uuid);
+            // Check whether child has done siblings...
+            const doneSiblings = donedList.filter((child) => ((child.parent_item_uuid == item.parent_item_uuid) && child.is_done && (child.uuid != item.uuid)));
+            if (doneSiblings.length > 0) {
 
-                    amplitude.track(`Item Deleted`, {
+              // Relocate item to first done sibling location
+              const itemIdx = donedList.findIndex((obj) => obj.uuid == item.uuid);
+              const [movedItem] = donedList.splice(itemIdx, 1);
+              const firstDoneSibilingIdx = donedList.findIndex((obj) => obj.uuid == doneSiblings[0].uuid);
+              donedList.splice(firstDoneSibilingIdx, 0, movedItem);
+
+            } else {
+
+              const siblings = donedList.filter((child) => ((child.parent_item_uuid == item.parent_item_uuid) && (child.uuid != item.uuid)));
+              if (siblings.length > 0) {
+
+                // Relocate item to after last sibling
+                const itemIdx = donedList.findIndex((obj) => obj.uuid == item.uuid);
+                const [movedItem] = donedList.splice(itemIdx, 1);
+                const lastSibilingIdx = donedList.findIndex((obj) => obj.uuid == siblings[siblings.length - 1].uuid);
+                donedList.splice(lastSibilingIdx + 1, 0, movedItem);
+              } else {
+                // Leave child where it is, no further ops needed
+              }
+            }
+
+            // Save new order to DB
+            const uuidArray = donedList.map((thing) => ({ uuid: thing.uuid }));
+            saveItemOrder(uuidArray);
+
+            // Return updated list to state setter
+            return donedList;
+          });
+
+          // Update done state in DB
+          item.is_done = true;
+          updateItemDoneState(item);
+
+          // Incr Profile Done Count
+          ProfileCountEventEmitter.emit("incr_done");
+
+        } else {
+
+          // Item is a parent...
+          const openChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
+          if (openChildren.length > 0) {
+            Alert.alert(
+              `Item Has ${openChildren.length} Open Subitems`,  // 1.2.1
+              `You're setting an item to done that has open subitems.  What do you want to do with the subitems?`, // 1.2.2
+              [
+                {
+                  text: 'Cancel', // 1.2.3
+                  onPress: () => {
+                    amplitude.track("Doneify With Kids Prompt Cancelled", {
                       anonymous_id: anonymousId.current,
-                      thing_uuid: child.uuid,
-                      thing_type: 'Item'
+                      pathname: pathname
+                    });
+                  },
+                  style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
+                },
+                {
+                  text: 'Delete Them',
+                  onPress: () => {
+                    amplitude.track("Doneify With Kids Prompt: Delete Chosen", {
+                      anonymous_id: anonymousId.current,
+                      pathname: pathname
                     });
 
-                    // Add the animatios to slide/collapse the item off the screen
-                    slideAnimationArray.push(
-                      Animated.timing(thingRowPositionXs.current[child.uuid], {
-                        toValue: -600,
-                        duration: 300,
-                        easing: Easing.in(Easing.quad),
-                        useNativeDriver: false
-                      })
-                    );
-                    heightAnimationArray.push(
-                      Animated.timing(thingRowHeights.current[child.uuid], {
-                        toValue: 0,
-                        duration: 300,
-                        easing: Easing.in(Easing.quad),
-                        useNativeDriver: false
-                      })
-                    );
-                  });
-                  Animated.parallel(slideAnimationArray).start(() => {
-                    Animated.parallel(heightAnimationArray).start(() => {
+                    // Delete item's kids
+                    var slideAnimationArray = [];
+                    var heightAnimationArray = [];
+                    openChildren.forEach((child) => {
 
-                      children.forEach((child) => {
-                        delete thingRowPositionXs.current[child.uuid];
-                        delete thingRowHeights.current[child.uuid]
+                      // Call asyncronous delete to mark item as deleted in backend to sync database
+                      deleteItem(child.uuid);
+
+                      amplitude.track(`Item Deleted`, {
+                        anonymous_id: anonymousId.current,
+                        thing_uuid: child.uuid,
+                        thing_type: 'Item'
                       });
 
-                      // Asyncronously updated DB with item set done state
-                      item.is_done = true;
-                      updateItemDoneState(item);
+                      // Add the animatios to slide/collapse the item off the screen
+                      slideAnimationArray.push(
+                        Animated.timing(thingRowPositionXs.current[child.uuid], {
+                          toValue: -600,
+                          duration: 300,
+                          easing: Easing.in(Easing.quad),
+                          useNativeDriver: false
+                        })
+                      );
+                      heightAnimationArray.push(
+                        Animated.timing(thingRowHeights.current[child.uuid], {
+                          toValue: 0,
+                          duration: 300,
+                          easing: Easing.in(Easing.quad),
+                          useNativeDriver: false
+                        })
+                      );
+                    });
+                    Animated.parallel(slideAnimationArray).start(() => {
+                      Animated.parallel(heightAnimationArray).start(() => {
 
-                      // Update latest list by filtering out the deleted children PLUS setting the item to done
-                      const subtaskUUIDSet = new Set(children.map(obj => obj.uuid));
-                      setDootooItems((prevItems) => prevItems.filter((obj) => !subtaskUUIDSet.has(obj.uuid))
-                                                             .map((obj) => 
-                                                                (obj.uuid == item.uuid)
-                                                                    ? { ...obj, is_done: true }
-                                                                    : obj));
-                    })
-                  });
+                        openChildren.forEach((child) => {
+                          delete thingRowPositionXs.current[child.uuid];
+                          delete thingRowHeights.current[child.uuid]
+                        });
+
+                        // Asyncronously updated DB with item set done state
+                        item.is_done = true;
+                        updateItemDoneState(item);
+                        ProfileCountEventEmitter.emit("incr_done");
+
+                        // Update latest list by filtering out the deleted children PLUS setting the item to done
+                        const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
+                        setDootooItems((prevItems) => {
+
+                          // First filter out deleted items and set clicked item to done
+                          var filteredAndDonedList = prevItems.filter((obj) => !subtaskUUIDSet.has(obj.uuid))
+                            .map((obj) =>
+                              (obj.uuid == item.uuid)
+                                ? { ...obj, is_done: true }
+                                : obj);
+
+                          // Move done item to top of DAWNKs
+                          const dawnkedList = moveItemToTopOfDAWNKS(filteredAndDonedList, item.uuid);
+
+                          // Update order in backend
+                          const uuidArray = dawnkedList.map((thing) => ({ uuid: thing.uuid }));
+                          saveItemOrder(uuidArray);
+
+                          // Return updated list to state setter
+                          return dawnkedList;
+                        });
+                      })
+                    });
+                  },
                 },
-              },
-              {
-                text: 'Complete Them',
-                onPress: () => {
-                  amplitude.track("Doneify With Kids Prompt: Complete Chosen", {
-                    anonymous_id: anonymousId.current,
-                    pathname: pathname
-                  });
+                {
+                  text: 'Complete Them',
+                  onPress: () => {
+                    amplitude.track("Doneify With Kids Prompt: Complete Chosen", {
+                      anonymous_id: anonymousId.current,
+                      pathname: pathname
+                    });
+                  },
                 },
-              },
-            ],
-            { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
-          );
+              ],
+              { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+            );
+          } else {
+
+            const doneChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && child.is_done);
+            if (doneChildren.length > 0) {
+
+              // Item is a DAWNK with done kids; set it to done and move it and its kids to Top of DAWNKs
+
+
+            } else {
+
+              // Update item done state and position in UI; save new order in backend
+              setDootooItems((prevItems) => {
+                item.is_done = true;
+                updateItemDoneState(item);
+                ProfileCountEventEmitter.emit("incr_done");
+
+                const donedList = prevItems.map((obj) => (obj.uuid == item.uuid) ? { ...obj, is_done: true } : obj);
+                const dawnkedList = moveItemToTopOfDAWNKS(donedList, item.uuid);
+
+                const uuidArray = dawnkedList.map((thing) => ({ uuid: thing.uuid }));
+                saveItemOrder(uuidArray);
+
+                return dawnkedList;
+              });
+            }
+          }
         }
+      } else {
+
+        // Set item TO Open
+        // TODO: Move item to top of DAWNKs or KID list
+        item.is_done = false;
+        updateItemDoneState(item);
+        ProfileCountEventEmitter.emit("decr_done");
+        setDootooItems((prevItems) => {
+          const donedList = prevItems.map((obj) =>
+            (obj.uuid == item.uuid)
+              ? { ...obj, is_done: false }
+              : obj)
+          const dawnkedList = moveItemToTopOfDAWNKS(donedList, item.uuid);
+
+          const uuidArray = dawnkedList.map((thing) => ({ uuid: thing.uuid }));
+          saveItemOrder(uuidArray);
+
+          return dawnkedList;
+        });
       }
 
-      return;
-
-
-
-      //console.log("Done clicked for item index: " + index);
-      //var updatedTasks = [...dootooItems];
-      var updatedTasks = dootooItems.map((obj) => ({ ...obj }));
-
-
-      item.is_done = !item.is_done;
-
-      amplitude.track("Item Done Clicked", {
-        anonymous_id: anonymousId.current,
-        item_uuid: item.uuid,
-        is_done: item.is_done
-      });
-
-      // Set this to instruct UI to hide item counts until async save op returns and removes the value
-      // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
-      //updatedTasks![index].update_counts = true;
-
-      // Set this to instruct list to animate new item into view
-      // Update v1.1.1 Deactivating the following feature given removal of post save array overwritting
-      item.shouldAnimateIntoView = true
-
-      // Shrink height of item to zero before moving it to new location
-      const heightRefOfCurrentRow = thingRowHeights.current[item.uuid];
-      Animated.timing(heightRefOfCurrentRow, {
-        toValue: 0,
-        duration: 300,
-        easing: Easing.in(Easing.quad),
-        useNativeDriver: false
-      }).start(() => {
-
-        const index = updatedTasks.findIndex(obj => obj.uuid == item.uuid);
-        updatedTasks[index] = item;
-
-        if (item.is_done) {
-
-
-
-          const [item] = updatedTasks.splice(index, 1);   // remove the item from its current location
-
-          if (firstDoneItemIdx == -1) {
-            updatedTasks = updatedTasks.concat(item);         // Place at end of list
-          } else {
-            updatedTasks.splice(firstDoneItemIdx - 1, 0, item)
-          }
-
-        } else {
-
-          const [item] = updatedTasks.splice(index, 1);   // remove the item
-        }
-
-        // Asyncronously save new item order
-        const uuid_array = updatedTasks.map(obj => ({ uuid: obj.uuid }));
-        updateItemOrder(uuid_array);
-
-        // This should update UI only and not invoke any synchronous backend operations
-        // Reorder items to match updated list above
-        const reviseItems = (updatedTasks: any, uuid_array: any, newItem: any) => {
-          const stateMap = new Map(updatedTasks.map(obj => [obj.uuid,
-          (obj.uuid == newItem.uuid)
-            ? {
-              ...obj,
-              is_done: newItem.is_done,
-              index_backup: index
-            }
-            : obj]));
-          const reorderedArray = uuid_array.map((ordered_obj_uuid) => stateMap.get(ordered_obj_uuid.uuid));
-          return reorderedArray;
-        }
-        setDootooItems((prevItems) => reviseItems(prevItems, uuid_array, item));
-
-        if (item.is_done) {
-          ProfileCountEventEmitter.emit("incr_done");
-        } else {
-          ProfileCountEventEmitter.emit("decr_done");
-        }
-
-        // Asyncronously save updated item done state
-        updateItemDoneState(item, () => {
-          ListItemEventEmitter.emit("items_saved");
-        });
-      });
-
     } catch (error) {
-      console.log("Error occurred during done logic!", error);
+      console.error("Unexpected error occurred handling done click", error);
     }
+
+    return;
+
+
+
+
+
+
+    //console.log("Done clicked for item index: " + index);
+    //var updatedTasks = [...dootooItems];
+    var updatedTasks = dootooItems.map((obj) => ({ ...obj }));
+
+
+    item.is_done = !item.is_done;
+
+    amplitude.track("Item Done Clicked", {
+      anonymous_id: anonymousId.current,
+      item_uuid: item.uuid,
+      is_done: item.is_done
+    });
+
+    // Set this to instruct UI to hide item counts until async save op returns and removes the value
+    // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
+    //updatedTasks![index].update_counts = true;
+
+    // Set this to instruct list to animate new item into view
+    // Update v1.1.1 Deactivating the following feature given removal of post save array overwritting
+    item.shouldAnimateIntoView = true
+
+    // Shrink height of item to zero before moving it to new location
+    const heightRefOfCurrentRow = thingRowHeights.current[item.uuid];
+    Animated.timing(heightRefOfCurrentRow, {
+      toValue: 0,
+      duration: 300,
+      easing: Easing.in(Easing.quad),
+      useNativeDriver: false
+    }).start(() => {
+
+      const index = updatedTasks.findIndex(obj => obj.uuid == item.uuid);
+      updatedTasks[index] = item;
+
+      if (item.is_done) {
+
+
+
+        const [item] = updatedTasks.splice(index, 1);   // remove the item from its current location
+
+        if (firstDoneItemIdx == -1) {
+          updatedTasks = updatedTasks.concat(item);         // Place at end of list
+        } else {
+          updatedTasks.splice(firstDoneItemIdx - 1, 0, item)
+        }
+
+      } else {
+
+        const [item] = updatedTasks.splice(index, 1);   // remove the item
+      }
+
+      // Asyncronously save new item order
+      const uuid_array = updatedTasks.map(obj => ({ uuid: obj.uuid }));
+      updateItemOrder(uuid_array);
+
+      // This should update UI only and not invoke any synchronous backend operations
+      // Reorder items to match updated list above
+      const reviseItems = (updatedTasks: any, uuid_array: any, newItem: any) => {
+        const stateMap = new Map(updatedTasks.map(obj => [obj.uuid,
+        (obj.uuid == newItem.uuid)
+          ? {
+            ...obj,
+            is_done: newItem.is_done,
+            index_backup: index
+          }
+          : obj]));
+        const reorderedArray = uuid_array.map((ordered_obj_uuid) => stateMap.get(ordered_obj_uuid.uuid));
+        return reorderedArray;
+      }
+      setDootooItems((prevItems) => reviseItems(prevItems, uuid_array, item));
+
+      if (item.is_done) {
+        ProfileCountEventEmitter.emit("incr_done");
+      } else {
+        ProfileCountEventEmitter.emit("decr_done");
+      }
+
+      // Asyncronously save updated item done state
+      updateItemDoneState(item, () => {
+        ListItemEventEmitter.emit("items_saved");
+      });
+    });
   }
 
   const styles = StyleSheet.create({
