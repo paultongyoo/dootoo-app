@@ -267,12 +267,12 @@ const ProfileDrawer = ({ navigation }) => {
 
     const regex = /^[a-zA-Z0-9]+$/;
 
-    if (regex.test(text) && text.length >= 5) {
+    if (regex.test(text) && text.length >= 5 && test.length <= 20) {
       setUsernameInvalid(false);
       return;
     }
 
-    if (!regex.test(text) || text.length < 5) {
+    if (!regex.test(text) || text.length < 5 || text.length > 20) {
       setUsernameInvalid(true);
       return;
     }
@@ -424,7 +424,7 @@ const ProfileDrawer = ({ navigation }) => {
             handleUsernameEditTextInputChange(text);
           }} />
         <Dialog.Description>
-          Must be at least 5 characters long, use only letters and numbers (no spaces or special characters) and follow community guidelines: no profanity, impersonation, spamming, or harmful content.
+          Must be between 5 to 20 characters long, use only letters and numbers (no spaces or special characters) and follow community guidelines: no profanity, impersonation, spamming, or harmful content.
         </Dialog.Description>
         <Dialog.Button label="Cancel" onPress={handleUsernameDialogCancel} />
         <Dialog.Button label="Submit" onPress={handleUsernameDialogSubmit} disabled={usernameInvalid} />
