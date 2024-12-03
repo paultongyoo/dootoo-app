@@ -197,12 +197,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
         if (isThingDraggable) {
 
-            // If this is a child but was dragged immediately above a parent,
+            // If this is a child but was dragged immediately above a parent and is NOT being 
+            // dragged to the bottom of its family list,
             // assume user wnats to make the thing a parent / detach it from its siblings
             if (draggedThing.parent_item_uuid &&
+                newData[toIndex - 1].parent_item_uuid != draggedThing.parent_item_uuid &&
                 newData[toIndex + 1] &&
                 !newData[toIndex + 1].parent_item_uuid) {
-                    newData[toIndex].parent_item_uuid = null;
 
                     amplitude.track(`Child Dragged Outside Of Family`, {
                         anonymous_id: anonymousId.current,
@@ -210,7 +211,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         uuid: draggedThing.uuid
                     });
                     
-                    // Async update
+                    newData[toIndex].parent_item_uuid = null;
                     updateItemHierarchy(newData[toIndex].uuid, null);
             }
 
