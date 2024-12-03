@@ -188,6 +188,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
     function handleThingDrag(newData: unknown[], toIndex, draggedThing) {
 
+        amplitude.track("List Item Dragged", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            uuid: draggedThing.uuid,
+            item_type: (draggedThing.parent_item_uuid) ? 'child' : 'adult'
+        });
+
         if (isThingDraggable) {
 
             // If this is a child but was dragged immediately above a parent,
@@ -196,6 +203,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 newData[toIndex + 1] &&
                 !newData[toIndex + 1].parent_item_uuid) {
                     newData[toIndex].parent_item_uuid = null;
+
+                    amplitude.track(`Child Dragged Outside Of Family`, {
+                        anonymous_id: anonymousId.current,
+                        pathname: pathname,
+                        uuid: draggedThing.uuid
+                    });
                     
                     // Async update
                     updateItemHierarchy(newData[toIndex].uuid, null);
@@ -211,8 +224,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     const newParentUUID = newData[toIndex + 1].parent_item_uuid;
 
                     // Grow any kids the thing has into siblings
+                    var kidCount = 0;
                     newData.filter((child) => child.parent_item_uuid == draggedThing.uuid)
                            .forEach((child) => {
+                        kidCount += 1;
                         child.parent_item_uuid = newParentUUID;
                         
                         // Async update
@@ -222,6 +237,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     // Make Thing a sibling
                     newData[toIndex].parent_item_uuid = newParentUUID;
                     updateItemHierarchy(newData[toIndex].uuid, newParentUUID);
+
+                    amplitude.track(`Adult Dragged Into Family`, {
+                        anonymous_id: anonymousId.current,
+                        pathname: pathname,
+                        uuid: draggedThing.uuid,
+                        kid_count: kidCount
+                    });
             }
 
             // Keep children with their parents
@@ -476,12 +498,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 //ref={itemFlatList}  TODO: Deprecate
                                 data={listArray.filter(item => !item.is_deleted)}
                                 onDragEnd={({ data, from, to }) => {
-                                    amplitude.track("List Item Dragged", {
-                                        anonymous_id: anonymousId.current,
-                                        pathname: pathname,
-                                        from: from,
-                                        to: to
-                                    });
                                     if (from != to) {
                                         handleThingDrag(data, to, data[to]);
                                     }

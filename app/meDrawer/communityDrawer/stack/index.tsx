@@ -66,6 +66,11 @@ export default function Index() {
 
   const handleMakeParent = (item) => {
 
+    amplitude.track("Item Made Into Parent", {
+      anonymous_id: anonymousId.current,
+      item_uuid: item.uuid
+    });
+
     // Asyncronously update item hierarhcy in DB
     updateItemHierarchy(item.uuid, null);
 
@@ -98,13 +103,15 @@ export default function Index() {
       return newListToReturn;
     }); // This should update UI only and not invoke any syncronous backend operations
 
-    amplitude.track("Item Made Into Parent", {
-      anonymous_id: anonymousId.current,
-      item_uuid: item.uuid
-    });
   }
 
   const handleMakeChild = (item, index) => {
+
+    amplitude.track("Item Made Into Child", {
+      anonymous_id: anonymousId.current,
+      item_uuid: item.uuid,
+      parent_item_uuid: nearestParentUUID
+    });
 
     let nearestParentUUID = '';
     for (var i = index - 1; i >= 0; i--) {
@@ -126,12 +133,6 @@ export default function Index() {
           parent_item_uuid: nearestParentUUID
         }
         : obj)); // This should update UI only and not invoke any syncronous backend operations
-
-    amplitude.track("Item Made Into Child", {
-      anonymous_id: anonymousId.current,
-      item_uuid: item.uuid,
-      parent_item_uuid: nearestParentUUID
-    });
   }
 
   const handleDoneClick = (item) => {
@@ -159,11 +160,21 @@ export default function Index() {
     */
     try {
 
+      amplitude.track("Item Done Clicked", {
+        anonymous_id: anonymousId.current,
+        pathname: pathname,
+        uuid: item.uuid,
+        done_state_at_click: item.is_done,
+        parent_item_uuid: item.parent_item_uuid,
+        item_type: (item.parent_item_uuid) ? 'child' : 'adult'
+      });
+
       // 1) If attempting to set item TO done
       if (!item.is_done) {
 
         // 1.3 If item being doned is a child...
         if (item.parent_item_uuid) {
+
           setDootooItems((prevItems) => {
 
             // Create beginnings of new state, setting item to done
@@ -222,6 +233,12 @@ export default function Index() {
 
             // item has open children, prompt user how to handle them
             if (openChildren.length > 0) {
+              amplitude.track("Doneify With Kids Prompt Displayed", {
+                anonymous_id: anonymousId.current,
+                pathname: pathname,
+                num_open_kids: openChildren.length
+              });
+
               Alert.alert(
                 `Item Has ${openChildren.length} Open Subitems`,  // 1.2.1
                 `You're setting an item to done that has open subitems.  What do you want to do with the subitems?`, // 1.2.2
@@ -231,7 +248,8 @@ export default function Index() {
                     onPress: () => {
                       amplitude.track("Doneify With Kids Prompt Cancelled", {
                         anonymous_id: anonymousId.current,
-                        pathname: pathname
+                        pathname: pathname,
+                        num_open_kids: openChildren.length
                       });
                     },
                     style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
@@ -382,7 +400,6 @@ export default function Index() {
       } else {
 
         // Set item TO Open
-        // TODO: Move item (and its family, if exists) to top of DAWNKs or KID list if it's a child
         item.is_done = false;
         updateItemDoneState(item, () => {
           ProfileCountEventEmitter.emit("decr_done");

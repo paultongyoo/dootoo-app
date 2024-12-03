@@ -298,18 +298,52 @@ const ProfileDrawer = ({ navigation }) => {
       };
       await saveUserLocally(updatedUserObj);
       setLoadingNewUsername(false);
+
+      amplitude.track("Edit Username Completed", {
+        anonymous_id: anonymousId.current,
+        pathname: pathname,
+        username: usernameTextInputValue.current
+      });
     } else if (statusCode == 409) {
       setLoadingNewUsername(false);
       setDupeUsernameDialogVisible(true);
+
+      amplitude.track("Edit Username Submission Invalid", {
+        anonymous_id: anonymousId.current,
+        pathname: pathname,
+        error_type: 'dupe',
+        username: usernameTextInputValue.current
+      });
     } else if (statusCode == 422) {
       setLoadingNewUsername(false);
       setUsernameModerationFailedDialogVisible(true);
+
+      amplitude.track("Edit Username Submission Invalid", {
+        anonymous_id: anonymousId.current,
+        pathname: pathname,
+        error_type: 'moderation_failed',
+        username: usernameTextInputValue.current
+      });
     } else if (statusCode == 423) {
       setLoadingNewUsername(false);
       setUsernameSpammingFailedDialogVisible(true);
+
+      amplitude.track("Edit Username Submission Invalid", {
+        anonymous_id: anonymousId.current,
+        pathname: pathname,
+        error_type: 'spam',
+        username: usernameTextInputValue.current
+      });
     } else {
       setLoadingNewUsername(false);
       setUsernameUnexpectedDialogVisible(true);
+
+      amplitude.track("Edit Username Submission Invalid", {
+        anonymous_id: anonymousId.current,
+        pathname: pathname,
+        error_type: 'unexpected',
+        username: usernameTextInputValue.current
+      });
     }
     usernameTextInputValue.current = username;
   }
