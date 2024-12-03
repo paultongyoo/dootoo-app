@@ -68,7 +68,8 @@ const DootooSwipeAction_Delete = ({
                             Animated.parallel(slideAnimationArray).start(() => {
                                 Animated.parallel(heightAnimationArray).start(() => {
 
-                                    listArrayCopy.splice(index, 1 + thingSubtasks.length);  // Remove item and its subtasks from array
+                                    // v1.1.1 Deprecate
+                                    //listArrayCopy.splice(index, 1 + thingSubtasks.length);  // Remove item and its subtasks from array
                                     
                                     delete thingRowPositionXs.current[thing.uuid];
                                     delete thingRowHeights.current[thing.uuid];                        
@@ -77,7 +78,9 @@ const DootooSwipeAction_Delete = ({
                                         delete thingRowHeights.current[subtask.uuid]
                                     }
 
+                                    // v1.1.1 Deprecate
                                     //listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations   
+                                    
                                     const subtaskUUIDSet = new Set(thingSubtasks.map(obj => obj.uuid));   
                                     listArraySetter((prevThings) => prevThings.filter((obj) => (obj.uuid != thing.uuid) && !subtaskUUIDSet.has(obj.uuid)));                            
                                 })
