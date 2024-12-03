@@ -215,6 +215,24 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     updateItemHierarchy(newData[toIndex].uuid, null);
             }
 
+            // If this is a child and is dragged immediately above a child from another family
+            // assume the user wants to move the child to the new family
+            if (draggedThing.parent_item_uuid &&
+                newData[toIndex + 1] &&
+                newData[toIndex + 1].parent_item_uuid &&
+                newData[toIndex + 1].parent_item_uuid != draggedThing.parent_item_uuid) {
+
+                    amplitude.track(`Child Dragged to New Family`, {
+                        anonymous_id: anonymousId.current,
+                        pathname: pathname,
+                        uuid: draggedThing.uuid
+                    });
+                    
+                    newData[toIndex].parent_item_uuid = newData[toIndex + 1].parent_item_uuid;
+                    updateItemHierarchy(newData[toIndex].uuid, newData[toIndex + 1].parent_item_uuid);
+                }
+            
+
             // If thing is a parent but was dragged immediately above a child,
             // assume user wants to make the thing a sibling.
             // If the thing has children, make the thing's children siblings too
