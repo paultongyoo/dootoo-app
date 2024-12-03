@@ -214,6 +214,8 @@ export default function Index() {
 
           // Item is a parent...
           const openChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
+
+          // and item has open children
           if (openChildren.length > 0) {
             Alert.alert(
               `Item Has ${openChildren.length} Open Subitems`,  // 1.2.1
@@ -316,7 +318,7 @@ export default function Index() {
                       num_children: openChildren.length
                     });
 
-                    // Set each child as done in backend and incr Profile counter
+                    // Set each OPEN child as done in backend and incr Profile counter
                     openChildren.forEach((child) => {
                       child.is_done = true;
                       updateItemDoneState(child);
@@ -328,25 +330,26 @@ export default function Index() {
                     updateItemDoneState(item);
                     ProfileCountEventEmitter.emit("incr_done");
 
-                    // Set item and its children to done, move them to top of Done Parents List
-                    const childrenUUIDSet = new Set(openChildren.map(obj => obj.uuid)); 
+                    // Set item and ALL of its children (previously open as well as pre-existing closed) to done, move them to top of Done Parents List 
                     setDootooItems((prevItems) => {
 
+                      const allChildrenUUIDSet = new Set(prevItems.filter(obj => obj.parent_item_uuid == item.uuid));
+
                       const donedList = prevItems.map((obj) => 
-                                          ((obj.uuid == item.uuid) || childrenUUIDSet.has(obj.uuid))
+                                          ((obj.uuid == item.uuid) || allChildrenUUIDSet.has(obj.uuid))
                                               ? { ...obj, is_done: true }
                                               : obj);
 
                       const doneParentsList = donedList.filter((obj) => !obj.parent_item_uuid && obj.is_done && obj.uuid != item.uuid);
                       if (doneParentsList.length > 0) {
                         const itemIdx = donedList.findIndex(obj => obj.uuid == item.uuid);
-                        const removed = donedList.splice(itemIdx, 1 + openChildren.length);
+                        const removed = donedList.splice(itemIdx, 1 + allChildrenUUIDSet.length);
                         const firstParentIdx = donedList.findIndex((obj) => obj.uuid == doneParentsList[0].uuid);
                         donedList.splice(firstParentIdx, 0, ...removed);
                       } else {
                         // Move item and its children to bottom of list
                         const itemIdx = donedList.findIndex(obj => obj.uuid == item.uuid);
-                        const removed = donedList.splice(itemIdx, 1 + openChildren.length);
+                        const removed = donedList.splice(itemIdx, 1 + allChildrenUUIDSet.length);
                         donedList.push(...removed);
                       }
                       return donedList;
