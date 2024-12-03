@@ -37,6 +37,7 @@ const CommunityDrawer = ({ navigation }) => {
     if (selectedProfile.current && !selectedProfile.current.doneCount) {
       loadSelectedProfile();
     }
+
   }, [selectedProfile]);
 
   const loadSelectedProfile = async () => {
@@ -46,6 +47,14 @@ const CommunityDrawer = ({ navigation }) => {
       }, (isFinished) => { 
         if (isFinished) {
           selectedProfile.current = loadedProfile;
+
+          amplitude.track("Community Profile Viewed", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            name: selectedProfile.current.name,
+            doneCount: selectedProfile.current.doneCount,
+            tipCount: selectedProfile.current.tipCount
+          });
         } 
       }
     );
@@ -222,6 +231,14 @@ const CommunityDrawer = ({ navigation }) => {
 
   function handleBlockCancel(): void {
     setBlockDialogVisible(false);
+
+    amplitude.track("Block Profile Cancelled", {
+      anonymous_id: anonymousId.current,
+      pathname: pathname,
+      name: selectedProfile.current.name,
+      doneCount: selectedProfile.current.doneCount,
+      tipCount: selectedProfile.current.tipCount
+    });
   }
 
   function handleBlockSubmit(): void {
@@ -238,6 +255,14 @@ const CommunityDrawer = ({ navigation }) => {
     setIsBlockingProcessing(false);
     if (wasBlockSuccessful) {
       setBlockSuccessDialogVisible(true)
+
+      amplitude.track("Block Profile Blocked", {
+        anonymous_id: anonymousId.current,
+        pathname: pathname,
+        name: selectedProfile.current.name,
+        doneCount: selectedProfile.current.doneCount,
+        tipCount: selectedProfile.current.tipCount
+      });
     } else {
       Alert.alert("Unexpected error occurred", "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
     }
