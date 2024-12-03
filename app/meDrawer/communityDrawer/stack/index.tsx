@@ -388,40 +388,77 @@ export default function Index() {
           ProfileCountEventEmitter.emit("decr_done");
         });
 
-        // if item is a child, convert it to an open adult and move it to the top of the DAs
+        // if item is a child
         if (item.parent_item_uuid) {
 
+          console.log("Child being opened: " + item.text);
+   
           const [parent] = dootooItems.filter(obj => obj.uuid == item.parent_item_uuid);
+          console.log(`Opened Child's Parent: ${parent.text}`);
+
+          // If Item's parent is done, convert item to adult and move it above the parent
           if (parent.is_done) {
             updateItemHierarchy(item.uuid, null);
+
+            setDootooItems((prevItems) => {
+
+              const openedItems = prevItems.map(obj => 
+                (obj.uuid == item.uuid) 
+                  ? { ...obj, 
+                    parent_item_uuid: (parent.is_done) ? null : parent.uuid,
+                    is_done: false } 
+                  : obj);
+  
+              const doneAdults = openedItems.filter((obj) => obj.is_done && !obj.parent_item_uuid && (obj.uuid != item.uuid));
+  
+              // If DA(s) exist, move item to top of DA list
+              const itemIdx = openedItems.findIndex(obj => obj.uuid == item.uuid);
+              const [movedItem] = openedItems.splice(itemIdx, 1);
+              if (doneAdults.length > 0) {          
+                const firstDoneAdultIdx = openedItems.findIndex(obj => obj.uuid == doneAdults[0].uuid);           
+                openedItems.splice(firstDoneAdultIdx, 0, movedItem);
+              } else {
+                openedItems.push(movedItem);
+              }
+  
+              const uuidArray = openedItems.map((thing) => ({ uuid: thing.uuid }));
+              saveItemOrder(uuidArray);
+  
+              return openedItems;
+            });
+          } else {
+            // if Item's parent is open, move item to top of parent's done kids or bottom of fam if none
+
+            setDootooItems((prevItems) => {
+
+              const openedItems = prevItems.map(obj => 
+                (obj.uuid == item.uuid) 
+                  ? { ...obj, 
+                    is_done: false } 
+                  : obj);
+  
+              const doneSiblings = openedItems.filter((obj) => 
+                obj.is_done && (obj.parent_item_uuid == item.parent_item_uuid) && (obj.uuid != item.uuid));
+              console.log("doneSiblings.length: " + doneSiblings.length);
+
+              // If DoneSib(s) exist, move item to top of DoneSib list
+              if (doneSiblings.length > 0) {       
+                const itemIdx = openedItems.findIndex(obj => obj.uuid == item.uuid);
+                const [movedItem] = openedItems.splice(itemIdx, 1);  
+                const firstDoneSiblingIdx = openedItems.findIndex(obj => obj.uuid == doneSiblings[0].uuid);           
+                openedItems.splice(firstDoneSiblingIdx, 0, movedItem);
+              } else {
+                // Leave it where it is, should already be at bottom of list
+              }
+  
+              const uuidArray = openedItems.map((thing) => ({ uuid: thing.uuid }));
+              saveItemOrder(uuidArray);
+  
+              return openedItems;
+            });
           }
 
-          setDootooItems((prevItems) => {
 
-            const openedItems = prevItems.map(obj => 
-              (obj.uuid == item.uuid) 
-                ? { ...obj, 
-                  parent_item_uuid: (parent.is_done) ? null : parent.uuid,
-                  is_done: false } 
-                : obj);
-
-            const doneAdults = openedItems.filter((obj) => obj.is_done && !obj.parent_item_uuid && (obj.uuid != item.uuid));
-
-            // If DA(s) exist, move item to top of DA list
-            const itemIdx = openedItems.findIndex(obj => obj.uuid == item.uuid);
-            const [movedItem] = openedItems.splice(itemIdx, 1);
-            if (doneAdults.length > 0) {          
-              const firstDoneAdultIdx = openedItems.findIndex(obj => obj.uuid == doneAdults[0].uuid);           
-              openedItems.splice(firstDoneAdultIdx, 0, movedItem);
-            } else {
-              openedItems.push(movedItem);
-            }
-
-            const uuidArray = openedItems.map((thing) => ({ uuid: thing.uuid }));
-            saveItemOrder(uuidArray);
-
-            return openedItems;
-          });
         } else {
 
           // Item is a parent -- move it and any of its children to the top of DA list
