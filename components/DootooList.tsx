@@ -127,7 +127,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const loadNextPage = () => {
         //console.log("loadNextPage called");
         if (hasMoreThings.current) {
-            if (!isRefreshing && !isPageLoading) {
+            if (!isRefreshing && !isPageLoading.current) {
                 //console.log(`List end reached, incrementing current page var (currently ${page}).`);
                 isPageLoading.current = true;
                 setPage((prevPage) => prevPage + 1);
