@@ -251,7 +251,7 @@ export default function Index() {
                         thing_type: 'Item'
                       });
 
-                      // Add the animatios to slide/collapse the item off the screen
+                      // Add the animations to slide/collapse the item off the screen
                       slideAnimationArray.push(
                         Animated.timing(thingRowPositionXs.current[child.uuid], {
                           toValue: -600,
@@ -305,14 +305,51 @@ export default function Index() {
                         });
                       })
                     });
-                  },
+                  }
                 },
                 {
                   text: 'Complete Them',
                   onPress: () => {
                     amplitude.track("Doneify With Kids Prompt: Complete Chosen", {
                       anonymous_id: anonymousId.current,
-                      pathname: pathname
+                      pathname: pathname,
+                      num_children: openChildren.length
+                    });
+
+                    // Set each child as done in backend and incr Profile counter
+                    openChildren.forEach((child) => {
+                      child.is_done = true;
+                      updateItemDoneState(child);
+                      ProfileCountEventEmitter.emit("incr_done");
+                    });
+
+                    // Set item as done in backend and incr Profile counter
+                    item.is_done = true;
+                    updateItemDoneState(item);
+                    ProfileCountEventEmitter.emit("incr_done");
+
+                    // Set item and its children to done, move them to top of Done Parents List
+                    const childrenUUIDSet = new Set(openChildren.map(obj => obj.uuid)); 
+                    setDootooItems((prevItems) => {
+
+                      const donedList = prevItems.map((obj) => 
+                                          ((obj.uuid == item.uuid) || childrenUUIDSet.has(obj.uuid))
+                                              ? { ...obj, is_done: true }
+                                              : obj);
+
+                      const doneParentsList = donedList.filter((obj) => !obj.parent_item_uuid && obj.is_done && obj.uuid != item.uuid);
+                      if (doneParentsList.length > 0) {
+                        const itemIdx = donedList.findIndex(obj => obj.uuid == item.uuid);
+                        const removed = donedList.splice(itemIdx, 1 + openChildren.length);
+                        const firstParentIdx = donedList.findIndex((obj) => obj.uuid == doneParentsList[0].uuid);
+                        donedList.splice(firstParentIdx, 0, ...removed);
+                      } else {
+                        // Move item and its children to bottom of list
+                        const itemIdx = donedList.findIndex(obj => obj.uuid == item.uuid);
+                        const removed = donedList.splice(itemIdx, 1 + openChildren.length);
+                        donedList.push(...removed);
+                      }
+                      return donedList;
                     });
                   },
                 },
