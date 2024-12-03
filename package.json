@@ -39,6 +39,7 @@
     "react-native": "0.74.5",
     "react-native-dialog": "^9.3.0",
     "react-native-draggable-flatlist": "^4.0.1",
+    "react-native-exception-handler": "^2.10.10",
     "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "^2.20.0",
     "react-native-google-mobile-ads": "^14.2.5",
