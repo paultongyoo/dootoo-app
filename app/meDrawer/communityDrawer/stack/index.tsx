@@ -205,10 +205,9 @@ export default function Index() {
 
           // Update done state in DB
           item.is_done = true;
-          updateItemDoneState(item);
-
-          // Incr Profile Done Count
-          ProfileCountEventEmitter.emit("incr_done");
+          updateItemDoneState(item, () => {
+            ProfileCountEventEmitter.emit("incr_done");
+          });
 
         } else {
 
@@ -282,8 +281,9 @@ export default function Index() {
 
                           // Asyncronously updated DB with item set done state
                           item.is_done = true;
-                          updateItemDoneState(item);
-                          ProfileCountEventEmitter.emit("incr_done");
+                          updateItemDoneState(item, () => {
+                            ProfileCountEventEmitter.emit("incr_done");
+                          });
 
                           // Update latest list by filtering out the deleted children PLUS setting the item to done
                           const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
@@ -328,11 +328,12 @@ export default function Index() {
 
                       // Set item as done in backend and incr Profile counter
                       item.is_done = true;
-                      updateItemDoneState(item);
-                      ProfileCountEventEmitter.emit("incr_done");
+                      updateItemDoneState(item, () => {
+                        ProfileCountEventEmitter.emit("incr_done");
+                      });
 
                       // Set item and ALL of its children (previously open as well as pre-existing closed) to done, move them to top of Done Parents List 
-                      moveItemFamilyToTopOfDoneAdults(setDootooItems, item, saveItemOrder);
+                      doneItemAndMoveFamilyToTopOfDoneAdults(setDootooItems, item, saveItemOrder);
                     },
                   },
                 ],
@@ -347,10 +348,11 @@ export default function Index() {
                 // Item is a DAWNK with only done kids; set it to done and move it and its kids to Top of DAWNKs
                 // Set item as done in backend and incr Profile counter
                 item.is_done = true;
-                updateItemDoneState(item);
-                ProfileCountEventEmitter.emit("incr_done");
+                updateItemDoneState(item, () => {
+                  ProfileCountEventEmitter.emit("incr_done");
+                });
 
-                moveItemFamilyToTopOfDoneAdults(setDootooItems, item, saveItemOrder);
+                doneItemAndMoveFamilyToTopOfDoneAdults(setDootooItems, item, saveItemOrder);
 
               } else {
                 console.log("Assuming reaching this log is unexpected given preceding logic tree.")
@@ -360,8 +362,9 @@ export default function Index() {
 
             // Item doesn't have any kids, simply set it to done and move it to top of doneAdults
             item.is_done = true;
-            updateItemDoneState(item);
-            ProfileCountEventEmitter.emit("incr_done");
+            updateItemDoneState(item, () => {
+              ProfileCountEventEmitter.emit("incr_done");
+            });
 
             // Update item done state and position in UI; save new order in backend
             setDootooItems((prevItems) => {
@@ -381,26 +384,68 @@ export default function Index() {
         // Set item TO Open
         // TODO: Move item (and its family, if exists) to top of DAWNKs or KID list if it's a child
         item.is_done = false;
-        updateItemDoneState(item);
-        ProfileCountEventEmitter.emit("decr_done");
-
-
-
-
-        setDootooItems((prevItems) => {
-          const donedList = prevItems.map((obj) =>
-            (obj.uuid == item.uuid)
-              ? { ...obj, is_done: false }
-              : obj)
-          const dawnkedList = moveItemToTopOfDoneAdults(donedList, item.uuid);
-
-          const uuidArray = dawnkedList.map((thing) => ({ uuid: thing.uuid }));
-          saveItemOrder(uuidArray);
-
-          return dawnkedList;
+        updateItemDoneState(item, () => {
+          ProfileCountEventEmitter.emit("decr_done");
         });
-      }
 
+        // if item is a child, convert it to an open adult and move it to the top of the DAs
+        if (item.parent_item_uuid) {
+
+          const [parent] = dootooItems.filter(obj => obj.uuid == item.parent_item_uuid);
+          if (parent.is_done) {
+            updateItemHierarchy(item.uuid, null);
+          }
+
+          setDootooItems((prevItems) => {
+
+            const openedItems = prevItems.map(obj => 
+              (obj.uuid == item.uuid) 
+                ? { ...obj, 
+                  parent_item_uuid: (parent.is_done) ? null : parent.uuid,
+                  is_done: false } 
+                : obj);
+
+            const doneAdults = openedItems.filter((obj) => obj.is_done && !obj.parent_item_uuid && (obj.uuid != item.uuid));
+
+            // If DA(s) exist, move item to top of DA list
+            const itemIdx = openedItems.findIndex(obj => obj.uuid == item.uuid);
+            const [movedItem] = openedItems.splice(itemIdx, 1);
+            if (doneAdults.length > 0) {          
+              const firstDoneAdultIdx = openedItems.findIndex(obj => obj.uuid == doneAdults[0].uuid);           
+              openedItems.splice(firstDoneAdultIdx, 0, movedItem);
+            } else {
+              openedItems.push(movedItem);
+            }
+
+            const uuidArray = openedItems.map((thing) => ({ uuid: thing.uuid }));
+            saveItemOrder(uuidArray);
+
+            return openedItems;
+          });
+        } else {
+
+          // Item is a parent -- move it and any of its children to the top of DA list
+          setDootooItems((prevItems) => {
+
+            const openedList = prevItems.map(obj => (obj.uuid == item.uuid) ? { ...obj, is_done: false} : obj);
+            const children = openedList.filter(obj => obj.parent_item_uuid == item.uuid);
+            const doneAdults = openedList.filter(obj => !obj.parent_item_uuid && obj.is_done);
+            const itemIdx = openedList.findIndex(obj => obj.uuid == item.uuid);
+            const removed = openedList.splice(itemIdx, 1 + children.length);
+            if (doneAdults.length > 0) {
+              const firstDoneAdultsIdx = openedList.findIndex(obj => obj.uuid == doneAdults[0].uuid);
+              openedList.splice(firstDoneAdultsIdx, 0, ...removed);
+            } else {
+              openedList.push(...removed);
+            }
+
+            const uuidArray = openedList.map((thing) => ({ uuid: thing.uuid }));
+            saveItemOrder(uuidArray);
+            
+            return openedList;
+          });
+        }
+      }
     } catch (error) {
       console.error("Unexpected error occurred handling done click", error);
     }
@@ -751,7 +796,7 @@ function moveItemToTopOfDoneAdults(itemList, item_uuid) {
 }
 
 function
-  moveItemFamilyToTopOfDoneAdults(setDootooItems: any, item: any, saveItemOrder: (uuidArray: any) => Promise<void>) {
+  doneItemAndMoveFamilyToTopOfDoneAdults(setDootooItems: any, item: any, saveItemOrder: (uuidArray: any) => Promise<void>) {
   setDootooItems((prevItems) => {
 
     const allChildrenUUIDSet = new Set(prevItems.filter(obj => obj.parent_item_uuid == item.uuid));
