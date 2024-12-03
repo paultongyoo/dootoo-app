@@ -141,7 +141,7 @@ export default function Index() {
 
       1) Scenarios attempting to set item TO Done :
         1.1) If user sets an item that has no children to Done, item is moved to top of
-           Done Adults With No Kids (DAWNK) list or end of the list if no DAWNKs exist.
+           Done Adults list or end of the list if no DAs exist.
         1.2) If user attempts to set a parent item to done that has open children,
               DISPLAY PROMPT to user that:
               1.2.1) Informs them their item has open subitems
@@ -153,8 +153,8 @@ export default function Index() {
            underneath parent.  The child is NOT separated from its parent.
 
       2) Scenarios setting item TO Open:
-        2.1) If item is an DAWNK, move it to the top of the DAWNK list if it exists, or end of the list if no DAWNKs
-        2.2) If item is a child of a Done parent, move it to the top of the AWNK list (or end of list if no DAWNKS) and make it a parent
+        2.1) If item is an DA, move it to the top of the DA list if it exists, or end of the list if no DAs
+        2.2) If item is a child of a DA, move it to the top of the DA list (or end of list if no DAs) and make it a parent
         2.3) If item is a child of an Open parent, move it to the top of the Done Kids list (or end of maily list of no DKs)
     */
     try {
