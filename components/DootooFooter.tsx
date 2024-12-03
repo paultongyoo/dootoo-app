@@ -15,6 +15,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const { anonymousId, listFadeInAnimation, fadeInListOnRender,
         lastRecordedCount, emptyListCTAOpacity, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
+    const recorderProcessLocked = useRef(false);
     const [recording, setRecording] = useState();
     const [permissionResponse, requestPermission] = Audio.usePermissions();
     const meteringLevel = useSharedValue(1); // shared value for animated scale
@@ -117,7 +118,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                         if (!silenceTimer.current) {
                             silenceTimer.current = setTimeout(() => {
                                 //console.log('Silence detected, processing recording..');
-                                processRecording(recording);
+                                processRecording(recording, true);
                                 clearTimeout(silenceTimer.current);
                                 silenceTimer.current = null;
                             }, SILENCE_DURATION);
@@ -183,21 +184,22 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         }, 100);
     }
 
-    const stopRecording = async (localRecordingObject): Promise<string> => {
-        //console.log(`stopRecording - localRecordingObject: ${localRecordingObject}`);
-
+    const stopRecording = async (localRecordingObject = null, isAutoStop = false): Promise<string> => {
         const recordingDurationEnd = performance.now();
         amplitude.track("Recording Stopped", {
             anonymous_id: anonymousId.current,
             pathname: pathname,
-            durationSeconds: (recordingDurationEnd - recordingTimeStart.current) / 1000
+            durationSeconds: (recordingDurationEnd - recordingTimeStart.current) / 1000,
+            stop_type: (isAutoStop) ? 'auto' : 'manual'
         });
         //console.log('Stopping recording..');
         let uri;
         if (recording) {
+            //console.log("Audio manually stopped");
             await recording.stopAndUnloadAsync();
             uri = recording.getURI();
         } else if (localRecordingObject) {
+            //console.log("Audio automatically stopped");
             if (localRecordingObject.stopAndUnloadAsync != undefined) {
                 await localRecordingObject.stopAndUnloadAsync();
             }
@@ -221,7 +223,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const cancelRecordingProcessing = async () => {
         //console.log("Cancelling recording...");
         if (recording) {
-            const fileUri = await stopRecording(recording);
+            const fileUri = await stopRecording();
             deleteFile(fileUri);
         }
         setIsRecordingProcessing(false);
@@ -232,14 +234,24 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         });
     }
 
-    const processRecording = async (localRecordingObject) => {
+    const processRecording = async (localRecordingObject = null, isAutoStop = false) => {
         //console.log(`processingRecording - localRecordingObject: ${localRecordingObject}`);
+        //console.log(`recorderProcessLocked.current: ${recorderProcessLocked.current}`)
+
+        if (recorderProcessLocked.current) {
+            console.log("Recorder already processing, exiting...");
+            return;
+        }
+
+        recorderProcessLocked.current = true;
+
         amplitude.track("Recording Processing Started", {
             anonymous_id: anonymousId.current,
-            pathname: pathname
+            pathname: pathname,
+            stop_type: (isAutoStop) ? 'auto' : 'manual'
         });
         setIsRecordingProcessing(true);
-        const fileUri = await stopRecording(localRecordingObject);
+        const fileUri = await stopRecording(localRecordingObject, isAutoStop);
         const response = await callBackendTranscribeService(fileUri);
         amplitude.track("Recording Processing Completed", {
             anonymous_id: anonymousId.current,
@@ -336,6 +348,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             }
         }
         setIsRecordingProcessing(false);
+        recorderProcessLocked.current = false;      // Reset process lock for future
         //console.log("Finished parsing file, deleting...");
         deleteFile(fileUri);
     }
