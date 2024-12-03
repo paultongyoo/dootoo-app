@@ -23,7 +23,6 @@ import Reanimated, {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
-import { moveItemToTopOfDAWNKS } from "@/components/Helpers";
 
 export default function Index() {
   const pathname = usePathname();
@@ -182,10 +181,11 @@ export default function Index() {
 
             } else {
 
+              // Child has no done siblings, now check if it has any siblings
               const siblings = donedList.filter((child) => ((child.parent_item_uuid == item.parent_item_uuid) && (child.uuid != item.uuid)));
-              if (siblings.length > 0) {
 
-                // Relocate item to after last sibling
+              // if it has siblings, relocate item to after last sibling
+              if (siblings.length > 0) {
                 const itemIdx = donedList.findIndex((obj) => obj.uuid == item.uuid);
                 const [movedItem] = donedList.splice(itemIdx, 1);
                 const lastSibilingIdx = donedList.findIndex((obj) => obj.uuid == siblings[siblings.length - 1].uuid);
@@ -212,178 +212,168 @@ export default function Index() {
 
         } else {
 
-          // Item is a parent...
-          const openChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
+          // Item is either an adult or parent, check if it has kids...
+          const children = dootooItems.filter((obj) => obj.parent_item_uuid == item.uuid);
 
-          // and item has open children
-          if (openChildren.length > 0) {
-            Alert.alert(
-              `Item Has ${openChildren.length} Open Subitems`,  // 1.2.1
-              `You're setting an item to done that has open subitems.  What do you want to do with the subitems?`, // 1.2.2
-              [
-                {
-                  text: 'Cancel', // 1.2.3
-                  onPress: () => {
-                    amplitude.track("Doneify With Kids Prompt Cancelled", {
-                      anonymous_id: anonymousId.current,
-                      pathname: pathname
-                    });
-                  },
-                  style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
-                },
-                {
-                  text: 'Delete Them',
-                  onPress: () => {
-                    amplitude.track("Doneify With Kids Prompt: Delete Chosen", {
-                      anonymous_id: anonymousId.current,
-                      pathname: pathname
-                    });
+          // Item has kids....
+          if (children.length > 0) {
 
-                    // Delete item's kids
-                    var slideAnimationArray = [];
-                    var heightAnimationArray = [];
-                    openChildren.forEach((child) => {
+            // Check if item has open kids
+            const openChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
 
-                      // Call asyncronous delete to mark item as deleted in backend to sync database
-                      deleteItem(child.uuid);
-
-                      amplitude.track(`Item Deleted`, {
+            // item has open children, prompt user how to handle them
+            if (openChildren.length > 0) {
+              Alert.alert(
+                `Item Has ${openChildren.length} Open Subitems`,  // 1.2.1
+                `You're setting an item to done that has open subitems.  What do you want to do with the subitems?`, // 1.2.2
+                [
+                  {
+                    text: 'Cancel', // 1.2.3
+                    onPress: () => {
+                      amplitude.track("Doneify With Kids Prompt Cancelled", {
                         anonymous_id: anonymousId.current,
-                        thing_uuid: child.uuid,
-                        thing_type: 'Item'
+                        pathname: pathname
+                      });
+                    },
+                    style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
+                  },
+                  {
+                    text: 'Delete Them',
+                    onPress: () => {
+                      amplitude.track("Doneify With Kids Prompt: Delete Chosen", {
+                        anonymous_id: anonymousId.current,
+                        pathname: pathname,
+                        num_open_children: openChildren.length
                       });
 
-                      // Add the animations to slide/collapse the item off the screen
-                      slideAnimationArray.push(
-                        Animated.timing(thingRowPositionXs.current[child.uuid], {
-                          toValue: -600,
-                          duration: 300,
-                          easing: Easing.in(Easing.quad),
-                          useNativeDriver: false
+                      // Delete item's kids
+                      var slideAnimationArray = [];
+                      var heightAnimationArray = [];
+                      openChildren.forEach((child) => {
+
+                        // Call asyncronous delete to mark item as deleted in backend to sync database
+                        deleteItem(child.uuid);
+
+                        // Add the animations to slide/collapse the item off the screen
+                        slideAnimationArray.push(
+                          Animated.timing(thingRowPositionXs.current[child.uuid], {
+                            toValue: -600,
+                            duration: 300,
+                            easing: Easing.in(Easing.quad),
+                            useNativeDriver: false
+                          })
+                        );
+                        heightAnimationArray.push(
+                          Animated.timing(thingRowHeights.current[child.uuid], {
+                            toValue: 0,
+                            duration: 300,
+                            easing: Easing.in(Easing.quad),
+                            useNativeDriver: false
+                          })
+                        );
+                      });
+                      Animated.parallel(slideAnimationArray).start(() => {
+                        Animated.parallel(heightAnimationArray).start(() => {
+
+                          openChildren.forEach((child) => {
+                            delete thingRowPositionXs.current[child.uuid];
+                            delete thingRowHeights.current[child.uuid]
+                          });
+
+                          // Asyncronously updated DB with item set done state
+                          item.is_done = true;
+                          updateItemDoneState(item);
+                          ProfileCountEventEmitter.emit("incr_done");
+
+                          // Update latest list by filtering out the deleted children PLUS setting the item to done
+                          const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
+                          setDootooItems((prevItems) => {
+
+                            // First filter out deleted items and set clicked item to done
+                            var filteredAndDonedList = prevItems.filter((obj) => !subtaskUUIDSet.has(obj.uuid))
+                              .map((obj) =>
+                                (obj.uuid == item.uuid)
+                                  ? { ...obj, is_done: true }
+                                  : obj);
+
+                            // Move done item to top of DAWNKs
+                            const dawnkedList = moveItemToTopOfDoneAdults(filteredAndDonedList, item.uuid);
+
+                            // Update order in backend
+                            const uuidArray = dawnkedList.map((thing) => ({ uuid: thing.uuid }));
+                            saveItemOrder(uuidArray);
+
+                            // Return updated list to state setter
+                            return dawnkedList;
+                          });
                         })
-                      );
-                      heightAnimationArray.push(
-                        Animated.timing(thingRowHeights.current[child.uuid], {
-                          toValue: 0,
-                          duration: 300,
-                          easing: Easing.in(Easing.quad),
-                          useNativeDriver: false
-                        })
-                      );
-                    });
-                    Animated.parallel(slideAnimationArray).start(() => {
-                      Animated.parallel(heightAnimationArray).start(() => {
-
-                        openChildren.forEach((child) => {
-                          delete thingRowPositionXs.current[child.uuid];
-                          delete thingRowHeights.current[child.uuid]
-                        });
-
-                        // Asyncronously updated DB with item set done state
-                        item.is_done = true;
-                        updateItemDoneState(item);
-                        ProfileCountEventEmitter.emit("incr_done");
-
-                        // Update latest list by filtering out the deleted children PLUS setting the item to done
-                        const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
-                        setDootooItems((prevItems) => {
-
-                          // First filter out deleted items and set clicked item to done
-                          var filteredAndDonedList = prevItems.filter((obj) => !subtaskUUIDSet.has(obj.uuid))
-                            .map((obj) =>
-                              (obj.uuid == item.uuid)
-                                ? { ...obj, is_done: true }
-                                : obj);
-
-                          // Move done item to top of DAWNKs
-                          const dawnkedList = moveItemToTopOfDAWNKS(filteredAndDonedList, item.uuid);
-
-                          // Update order in backend
-                          const uuidArray = dawnkedList.map((thing) => ({ uuid: thing.uuid }));
-                          saveItemOrder(uuidArray);
-
-                          // Return updated list to state setter
-                          return dawnkedList;
-                        });
-                      })
-                    });
-                  }
-                },
-                {
-                  text: 'Complete Them',
-                  onPress: () => {
-                    amplitude.track("Doneify With Kids Prompt: Complete Chosen", {
-                      anonymous_id: anonymousId.current,
-                      pathname: pathname,
-                      num_children: openChildren.length
-                    });
-
-                    // Set each OPEN child as done in backend and incr Profile counter
-                    openChildren.forEach((child) => {
-                      child.is_done = true;
-                      updateItemDoneState(child);
-                      ProfileCountEventEmitter.emit("incr_done");
-                    });
-
-                    // Set item as done in backend and incr Profile counter
-                    item.is_done = true;
-                    updateItemDoneState(item);
-                    ProfileCountEventEmitter.emit("incr_done");
-
-                    // Set item and ALL of its children (previously open as well as pre-existing closed) to done, move them to top of Done Parents List 
-                    setDootooItems((prevItems) => {
-
-                      const allChildrenUUIDSet = new Set(prevItems.filter(obj => obj.parent_item_uuid == item.uuid));
-
-                      const donedList = prevItems.map((obj) => 
-                                          ((obj.uuid == item.uuid) || allChildrenUUIDSet.has(obj.uuid))
-                                              ? { ...obj, is_done: true }
-                                              : obj);
-
-                      const doneParentsList = donedList.filter((obj) => !obj.parent_item_uuid && obj.is_done && obj.uuid != item.uuid);
-                      if (doneParentsList.length > 0) {
-                        const itemIdx = donedList.findIndex(obj => obj.uuid == item.uuid);
-                        const removed = donedList.splice(itemIdx, 1 + allChildrenUUIDSet.length);
-                        const firstParentIdx = donedList.findIndex((obj) => obj.uuid == doneParentsList[0].uuid);
-                        donedList.splice(firstParentIdx, 0, ...removed);
-                      } else {
-                        // Move item and its children to bottom of list
-                        const itemIdx = donedList.findIndex(obj => obj.uuid == item.uuid);
-                        const removed = donedList.splice(itemIdx, 1 + allChildrenUUIDSet.length);
-                        donedList.push(...removed);
-                      }
-                      return donedList;
-                    });
+                      });
+                    }
                   },
-                },
-              ],
-              { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
-            );
-          } else {
+                  {
+                    text: 'Complete Them',
+                    onPress: () => {
+                      amplitude.track("Doneify With Kids Prompt: Complete Chosen", {
+                        anonymous_id: anonymousId.current,
+                        pathname: pathname,
+                        num_open_children: openChildren.length
+                      });
 
-            const doneChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && child.is_done);
-            if (doneChildren.length > 0) {
+                      // Set each OPEN child as done in backend and incr Profile counter
+                      openChildren.forEach((child) => {
+                        child.is_done = true;
+                        updateItemDoneState(child);
+                        ProfileCountEventEmitter.emit("incr_done");
+                      });
 
-              // Item is a DAWNK with done kids; set it to done and move it and its kids to Top of DAWNKs
+                      // Set item as done in backend and incr Profile counter
+                      item.is_done = true;
+                      updateItemDoneState(item);
+                      ProfileCountEventEmitter.emit("incr_done");
 
-
+                      // Set item and ALL of its children (previously open as well as pre-existing closed) to done, move them to top of Done Parents List 
+                      moveItemFamilyToTopOfDoneAdults(setDootooItems, item, saveItemOrder);
+                    },
+                  },
+                ],
+                { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+              );
             } else {
 
-              // Update item done state and position in UI; save new order in backend
-              setDootooItems((prevItems) => {
+              // All the item's kids must be done
+              const doneChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && child.is_done);
+              if (doneChildren.length > 0) {
+
+                // Item is a DAWNK with only done kids; set it to done and move it and its kids to Top of DAWNKs
+                // Set item as done in backend and incr Profile counter
                 item.is_done = true;
                 updateItemDoneState(item);
                 ProfileCountEventEmitter.emit("incr_done");
 
-                const donedList = prevItems.map((obj) => (obj.uuid == item.uuid) ? { ...obj, is_done: true } : obj);
-                const dawnkedList = moveItemToTopOfDAWNKS(donedList, item.uuid);
+                moveItemFamilyToTopOfDoneAdults(setDootooItems, item, saveItemOrder);
 
-                const uuidArray = dawnkedList.map((thing) => ({ uuid: thing.uuid }));
-                saveItemOrder(uuidArray);
-
-                return dawnkedList;
-              });
+              } else {
+                console.log("Assuming reaching this log is unexpected given preceding logic tree.")
+              }
             }
+          } else {
+
+            // Item doesn't have any kids, simply set it to done and move it to top of doneAdults
+            item.is_done = true;
+            updateItemDoneState(item);
+            ProfileCountEventEmitter.emit("incr_done");
+
+            // Update item done state and position in UI; save new order in backend
+            setDootooItems((prevItems) => {
+
+              const donedList = prevItems.map((obj) => (obj.uuid == item.uuid) ? { ...obj, is_done: true } : obj);
+              const doneAdults = moveItemToTopOfDoneAdults(donedList, item.uuid);
+
+              const uuidArray = doneAdults.map((thing) => ({ uuid: thing.uuid }));
+              saveItemOrder(uuidArray);
+
+              return doneAdults;
+            });
           }
         }
       } else {
@@ -398,7 +388,7 @@ export default function Index() {
             (obj.uuid == item.uuid)
               ? { ...obj, is_done: false }
               : obj)
-          const dawnkedList = moveItemToTopOfDAWNKS(donedList, item.uuid);
+          const dawnkedList = moveItemToTopOfDoneAdults(donedList, item.uuid);
 
           const uuidArray = dawnkedList.map((thing) => ({ uuid: thing.uuid }));
           saveItemOrder(uuidArray);
@@ -830,5 +820,48 @@ export default function Index() {
   //   }
   //   return displayedListToUpdate;
   // }
+}
+
+function moveItemToTopOfDoneAdults(itemList, item_uuid) {
+  const itemIdx = itemList.findIndex((obj) => obj.uuid == item_uuid);
+  const [movedItem] = itemList.splice(itemIdx, 1);
+  const doneAdults = itemList.filter((obj) => obj.is_done && !obj.parent_item_uuid);
+  if (doneAdults.length == 0) {
+    return itemList.concat(movedItem);
+  } else {
+    const firstDoneAdultIdx = itemList.findIndex((obj) => obj.uuid == doneAdults[0].uuid);
+    itemList.splice(firstDoneAdultIdx, 0, movedItem);
+    return itemList;
+  }
+}
+
+function
+  moveItemFamilyToTopOfDoneAdults(setDootooItems: any, item: any, saveItemOrder: (uuidArray: any) => Promise<void>) {
+  setDootooItems((prevItems) => {
+
+    const allChildrenUUIDSet = new Set(prevItems.filter(obj => obj.parent_item_uuid == item.uuid));
+
+    const donedList = prevItems.map((obj) => ((obj.uuid == item.uuid) || allChildrenUUIDSet.has(obj.uuid))
+      ? { ...obj, is_done: true }
+      : obj);
+
+    const doneParentsList = donedList.filter((obj) => !obj.parent_item_uuid && obj.is_done && obj.uuid != item.uuid);
+    if (doneParentsList.length > 0) {
+      const itemIdx = donedList.findIndex(obj => obj.uuid == item.uuid);
+      const removed = donedList.splice(itemIdx, 1 + allChildrenUUIDSet.size);
+      const firstParentIdx = donedList.findIndex((obj) => obj.uuid == doneParentsList[0].uuid);
+      donedList.splice(firstParentIdx, 0, ...removed);
+    } else {
+      // Move item and its children to bottom of list
+      const itemIdx = donedList.findIndex(obj => obj.uuid == item.uuid);
+      const removed = donedList.splice(itemIdx, 1 + allChildrenUUIDSet.size);
+      donedList.push(...removed);
+    }
+
+    const uuidArray = donedList.map((thing) => ({ uuid: thing.uuid }));
+    saveItemOrder(uuidArray);
+
+    return donedList;
+  });
 }
 

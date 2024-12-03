@@ -32,15 +32,3 @@ export const showComingSoonAlert = (anonymousId, featureName, pathname) => {
     );
   };
 
-  export const moveItemToTopOfDAWNKS = (itemList, item_uuid) => {
-    const itemIdx = itemList.findIndex((obj) => obj.uuid == item_uuid);
-    const [movedItem] = itemList.splice(itemIdx, 1);
-    const dawnks = itemList.filter((obj) => obj.is_done && !obj.parent_item_uuid);
-    if (dawnks.length == 0) {
-      return itemList.concat(movedItem);
-    } else {
-      const firstDAWNKIdx = itemList.findIndex((obj) => obj.uuid == dawnks[0].uuid);
-      itemList.splice(firstDAWNKIdx, 0, movedItem);
-      return itemList;
-    }   
-  }
