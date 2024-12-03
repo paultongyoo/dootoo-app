@@ -541,7 +541,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 }}
                                 onEndReachedThreshold={0.1}
                                 ListFooterComponent={
-                                    <View style={{ paddingTop: 20 }}>
+                                    <View style={{ paddingTop: 10 }}>
                                         {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />}
                                         <View style={{ height: 40 }} />
                                     </View>}
