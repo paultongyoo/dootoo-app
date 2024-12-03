@@ -543,7 +543,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 ListFooterComponent={
                                     <View style={{ paddingTop: 10 }}>
                                         {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />}
-                                        <View style={{ height: 40 }} />
+                                        <View style={{ height: 50 }} />
                                     </View>}
                             /> : (initialLoad.current == true) ? <EmptyThingUX styles={styles} /> : <></>
                         }
