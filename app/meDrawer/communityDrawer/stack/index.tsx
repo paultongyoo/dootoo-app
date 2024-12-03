@@ -390,11 +390,8 @@ export default function Index() {
 
         // if item is a child
         if (item.parent_item_uuid) {
-
-          console.log("Child being opened: " + item.text);
    
           const [parent] = dootooItems.filter(obj => obj.uuid == item.parent_item_uuid);
-          console.log(`Opened Child's Parent: ${parent.text}`);
 
           // If Item's parent is done, convert item to adult and move it above the parent
           if (parent.is_done) {
@@ -405,7 +402,7 @@ export default function Index() {
               const openedItems = prevItems.map(obj => 
                 (obj.uuid == item.uuid) 
                   ? { ...obj, 
-                    parent_item_uuid: (parent.is_done) ? null : parent.uuid,
+                    parent_item_uuid: null,
                     is_done: false } 
                   : obj);
   
