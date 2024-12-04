@@ -89,16 +89,17 @@ export const handler = async (event) => {
       retrievedItems[i].parent_item_uuid = item.parent.uuid;
     }
 
-    if (!event.skipCounts) {
-      try {
+    try {
 
-        // Decrypt item text
-        const decryptParams = {
-          CiphertextBlob: Buffer.from(item.text, 'base64')
-        };
-        const decryptedData = await kms.decrypt(decryptParams).promise();
-        const decryptedString = decryptedData.Plaintext.toString('utf-8');
-        item.text = decryptedString;   // Replace with plaintext string for display in app
+      // Decrypt item text
+      const decryptParams = {
+        CiphertextBlob: Buffer.from(item.text, 'base64')
+      };
+      const decryptedData = await kms.decrypt(decryptParams).promise();
+      const decryptedString = decryptedData.Plaintext.toString('utf-8');
+      item.text = decryptedString;   // Replace with plaintext string for display in app
+
+      if (!event.skipCounts) {
 
         // Obtain embedding for item text
         //console.log(`Begin count of similar items to item ${item.id}...`);
@@ -144,16 +145,16 @@ export const handler = async (event) => {
           //console.log("Setting tip count of similar items: " + num_tips_of_close_embeddings[0].count);
           retrievedItems[i].tip_count = Number(num_tips_of_close_embeddings[0].count + ''); // Hack workaround to convert BigInt 
         }
-
-        //console.log("Updated Item: " + JSON.stringify(retrievedItems[i]));
-
-      } catch (error) {
-        console.error('Error encrypting or decrypting:', error);
-        return {
-          statusCode: 500,
-          body: JSON.stringify({ error: 'Encryption/Decryption failed' })
-        };
       }
+
+      //console.log("Updated Item: " + JSON.stringify(retrievedItems[i]));
+
+    } catch (error) {
+      console.error('Error encrypting or decrypting:', error);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: 'Encryption/Decryption failed' })
+      };
     }
   }
 
