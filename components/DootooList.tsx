@@ -117,14 +117,21 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }, [listArray]);
 
     const pollThingCounts = async () => {
-        console.log("Polling for Thing latest counts: " + new Date(Date.now()).toLocaleString());
-        if (listArray.length > 0) {  
-            if (thingName == "item") {
-                const itemUUIDs = listArray.map(thing => thing.uuid);
-                itemCountsMap.current = await loadItemsCounts(itemUUIDs);
-                const mappedUUIDs = [...itemCountsMap.current.keys()];
-                ListItemEventEmitter.emit(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, mappedUUIDs)
+        let ignore = false;
+        if (!ignore) {
+            ignore = true;
+            console.log("Polling for Thing latest counts: " + new Date(Date.now()).toLocaleString());
+            if (listArray.length > 0) {  
+                if (thingName == "item") {
+                    const itemUUIDs = listArray.map(thing => thing.uuid);
+                    itemCountsMap.current = await loadItemsCounts(itemUUIDs);
+                    const mappedUUIDs = [...itemCountsMap.current.keys()];
+                    ListItemEventEmitter.emit(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, mappedUUIDs)
+                }
             }
+            ignore = false;
+        } else {
+            console.log("Poll already in progress, ignoring duplicate call");
         }
     }
 
