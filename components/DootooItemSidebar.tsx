@@ -65,9 +65,9 @@ const DootooItemSidebar = ({ thing, styles }) => {
                 setTipCount(itemCounts.tip_count);
                 setSimilarCount(itemCounts.similar_count);
                 setLoading(false);
-                opacitySV.value = withTiming(1, {
-                    duration: 300
-                });
+                // opacitySV.value = withTiming(1, {
+                //     duration: 300
+                // });
             } else {
                 //console.log("Discarding fetch attempt to avoid race condition " + Date.now());
             }
