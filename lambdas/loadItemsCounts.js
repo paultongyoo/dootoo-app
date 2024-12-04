@@ -45,6 +45,8 @@ export const handler = async (event) => {
     // Convert the UUID array to a PostgreSQL-compatible format for the IN clause
     const itemIdList = `(${itemData.map((obj) => `'${obj.id}'`).join(", ")})`;
 
+    const now = new Date();
+
     const query = `
   WITH similar_counts AS (
       SELECT
@@ -58,6 +60,8 @@ export const handler = async (event) => {
           a.embedding <-> b.embedding < 0.7 -- Cosine distance threshold
       WHERE
           a.id IN ${itemIdList}
+      AND b."createdAt" >= '${now.toISOString()}'::timestamp - interval '24 hours' -- Items created within 24 hours
+      AND b."createdAt" <= '${now.toISOString()}'::timestamp -- Up to the current time
       GROUP BY
           a.id
   ),
