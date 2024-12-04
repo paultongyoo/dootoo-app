@@ -123,7 +123,7 @@ const DootooItemSidebar = ({ thing, styles }) => {
     } else {
         return (
             <Animated.View style={[/*opacityAnimatedStyle,*/ { flexDirection: 'row' }]}>
-                {(tipCount) ?
+                {(tipCount || thing.is_done) ?
                     <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
                         disabled={pathname == TIPS_PATHNAME}
                         style={styles.tipCountContainer}
@@ -132,7 +132,7 @@ const DootooItemSidebar = ({ thing, styles }) => {
                         <Image style={styles.tipCountImageIcon} source={require("@/assets/images/light_bulb_556B2F.png")} />
                         {/* <View style={styles.tipCountIcon}></View> */}
                     </Pressable> : <></>}
-                {((similarCount) && ((thing.is_done) || ((!thing.is_done) && (similarCount > 0)))) ?
+                {(similarCount) ?
                     <Pressable hitSlop={{ top: 10, bottom: 10, right: 10 }}
                         style={styles.similarCountContainer}
                         onPress={() => handleSimilarCountTap()}>

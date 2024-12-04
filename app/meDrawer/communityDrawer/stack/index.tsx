@@ -720,40 +720,6 @@ export default function Index() {
   const renderRightActions = (item, index) => {
     return (
       <>
-        {(item.is_done) ?
-          <Reanimated.View style={[styles.itemSwipeAction, styles.action_Give]}>
-            <Pressable
-              onPress={() => {
-                //console.log("Give Tips button tapped on item: " + dootooItems![index].text);
-                amplitude.track("Give Tips Clicked", {
-                  anonymous_id: anonymousId.current,
-                  item_uuid: item.uuid
-                });
-                setSelectedItem(item);
-                router.push(TIPS_PATHNAME);
-              }}>
-              <Image style={styles.giveTipIcon} source={require("@/assets/images/give_icon_white.png")} />
-            </Pressable>
-          </Reanimated.View>
-          : (item.tip_count && item.tip_count > 0) ?
-            // <Reanimated.View style={[styles.itemSwipeAction, styles.action_Give]}>
-            //   <Pressable
-            //     onPress={() => {
-            //       amplitude.track("Receive Tips Clicked", {
-            //         anonymous_id: anonymousId.current,
-            //         item_uuid: dootooItems![index].uuid
-            //       });
-            //       //console.log("Similar Tips button tapped on item: " + dootooItems![index].text);
-            //       setSelectedItem(dootooItems![index]);
-            //       router.push(TIPS_PATHNAME);
-            //     }}>
-            //     {/* <View style={styles.simliarTipsIcon}></View> */}
-            //     <Image style={styles.receiveTipIcon} source={require("@/assets/images/receive_tip_white.png")} />
-            //   </Pressable>
-            // </Reanimated.View>
-            <></>
-            : <></>
-        }
         <DootooSwipeAction_Delete
           styles={styles}
           listArray={dootooItems} listArraySetter={setDootooItems}
