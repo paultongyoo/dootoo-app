@@ -22,6 +22,9 @@ const LOADITEMS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amaz
 const LOADITEMCOUNTS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItemCounts_Dev'
                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadItemCounts';
 
+const LOADITEMSCOUNTS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItemsCounts_Dev'
+                               : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadItemsCounts';                            
+
 const SAVEITEMS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveItems';
 
@@ -282,6 +285,30 @@ export const loadItems = async (page, callback) => {
     return { hasMore: hasMore, things: item_array };
   } catch (error) {
     console.error('Error calling loadItems API:', error);
+  }
+};
+
+export const loadItemsCounts = async (item_uuids) => {
+  try {
+    const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserStr) {
+      console.log("Received null local anon Id, aborting loadItems!");
+      return [];
+    }
+    const localUser = JSON.parse(localUserStr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(LOADITEMSCOUNTS_URL,
+      {
+        anonymous_id : localAnonId,
+        item_uuids: item_uuids
+      }
+    );
+    const itemData = response.data.body;
+    const itemDataMap = new Map(Object.entries(JSON.parse(itemData)));
+    //console.log("Item Data Map Size: " + itemDataMap.size);
+    return itemDataMap;
+  } catch (error) {
+    console.error('Error calling loadItemsCounts API:', error);
   }
 };
 

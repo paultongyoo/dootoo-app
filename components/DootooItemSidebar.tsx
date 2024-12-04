@@ -5,24 +5,26 @@ import { useContext, useEffect, useState } from 'react';
 import { AppContext } from './AppContext';
 import { usePathname, useRouter } from 'expo-router';
 import { loadItemCounts } from './Storage';
-import { LIST_ITEM_EVENT__DONE_STATE_CHANGED, ListItemEventEmitter } from "@/components/EventEmitters";
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { LIST_ITEM_EVENT__DONE_STATE_CHANGED, LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter } from "@/components/EventEmitters";
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 const DootooItemSidebar = ({ thing, styles }) => {
     const router = useRouter();
     const pathname = usePathname();
-    const { setSelectedItem } = useContext(AppContext);
+    const { setSelectedItem, itemCountsMap } = useContext(AppContext);
     const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
-    const [tipCount, setTipCount] = useState();
-    const [similarCount, setSimilarCount] = useState();
+    const [tipCount, setTipCount] = 
+        useState((itemCountsMap.current.get(thing.uuid) ? itemCountsMap.current.get(thing.uuid).tip_count : 99));
+    const [similarCount, setSimilarCount] = 
+        useState((itemCountsMap.current.get(thing.uuid) ? itemCountsMap.current.get(thing.uuid).similar_count : 99));
 
     // Update v1.1.1:  Experimenting with not displaying loading anim on item level now that race condition is solved
     const [loading, setLoading] = useState(false);
 
-    const opacitySV = useSharedValue(0);
-    const opacityAnimatedStyle = useAnimatedStyle(() => {
-        return { opacity: opacitySV.value }
-    })
+    // const opacitySV = useSharedValue(1);
+    // const opacityAnimatedStyle = useAnimatedStyle(() => {
+    //     return { opacity: opacitySV.value }
+    // })
 
     useEffect(() => {
         //console.log("Inside useEffect([]) " + thing.text + " " + Date.now());
@@ -36,6 +38,25 @@ const DootooItemSidebar = ({ thing, styles }) => {
         //      object, which I believe is appropriate
         //    - Leaving loading animation code in place in case we learn
         //      we need it later
+
+        // const eventHandler_doneStateChanged = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__DONE_STATE_CHANGED, (data) => {
+        //     if (data.uuid == thing.uuid) {
+        //         //console.log("Setting loading to true for thing: " + thing.text + " " + Date.now());
+        //         setLoading(true);
+        //         fetchCounts();
+        //     }
+        // });
+
+        const eventHandler_countsPolled = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, (uuidArray) => {
+            if (uuidArray.includes(thing.uuid)) {
+                const updatedCounts = itemCountsMap.current.get(thing.uuid);
+                setTipCount(updatedCounts.tip_count);
+                setSimilarCount(updatedCounts.similar_count); 
+                // opacitySV.value = withTiming(1, {
+                //     duration: 300
+                // });
+            }
+        });
 
         const fetchCounts = async () => {
             const itemCounts = await loadItemCounts(thing.uuid);
@@ -51,30 +72,27 @@ const DootooItemSidebar = ({ thing, styles }) => {
                 //console.log("Discarding fetch attempt to avoid race condition " + Date.now());
             }
         }
-
+        const eventHandler_afterSave = ListItemEventEmitter.addListener('items_saved', () => {
+            console.log("Calling fetch counts on 'items_saved' event: " + thing.text);
+            fetchCounts();
+        });
         const eventHandler_doneStateChanged = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__DONE_STATE_CHANGED, (data) => {
             if (data.uuid == thing.uuid) {
-                //console.log("Setting loading to true for thing: " + thing.text + " " + Date.now());
+                console.log("Calling fetch counts on 'done_state_changed' event: " + thing.text);
                 setLoading(true);
                 fetchCounts();
             }
         });
-        const eventHandler_afterSave = ListItemEventEmitter.addListener('items_saved', () => {
-            //console.log("Calling fetch counts for: " + thing.text);
-            fetchCounts();
-        });
-
-        //setLoading(true); // Commented out loading anim here as it's too distracting
-        fetchCounts();
 
         return () => {
             //console.log("Cleaning up DootooItemSidebar useEffect " + Date.now());
             ignore = true;
+            eventHandler_countsPolled.remove();
             eventHandler_doneStateChanged.remove();
             eventHandler_afterSave.remove();
-            opacitySV.value = withTiming(0, {
-                duration: 300
-            });
+            // opacitySV.value = withTiming(0, {
+            //     duration: 300
+            // });
         }
     }, []);
 
@@ -104,7 +122,7 @@ const DootooItemSidebar = ({ thing, styles }) => {
         );
     } else {
         return (
-            <Animated.View style={[opacityAnimatedStyle, { flexDirection: 'row' }]}>
+            <Animated.View style={[/*opacityAnimatedStyle,*/ { flexDirection: 'row' }]}>
                 {(tipCount) ?
                     <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
                         disabled={pathname == TIPS_PATHNAME}

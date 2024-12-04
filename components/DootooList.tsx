@@ -1,4 +1,4 @@
-import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, Easing, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, Easing, TouchableWithoutFeedback, AppState } from 'react-native';
 import { useState, useRef, useContext, useEffect, useMemo, memo } from 'react';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -8,8 +8,9 @@ import Toast from 'react-native-toast-message';
 import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
-import { ProfileCountEventEmitter } from './EventEmitters';
-import { updateItemHierarchy } from './Storage';
+import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
+import { loadItemsCounts, updateItemHierarchy } from './Storage';
+import usePolling from './Polling';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = (item, index) => { return <></> },
@@ -25,7 +26,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, initializeLocalUser,
         fadeInListOnRender, listOpacity, listFadeInAnimation, listFadeOutAnimation,
-        thingRowPositionXs, thingRowHeights, swipeableRefs
+        thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [errorMsg, setErrorMsg] = useState();
@@ -108,10 +109,40 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 Toast.hide();
             }
 
+            // Immediately look for new counts on any list update
+            restartPolling();
         } else {
             //console.log("UseEffect called before initial load completed, skipping..");
         }
     }, [listArray]);
+
+    const pollThingCounts = async () => {
+        console.log("Polling for Thing latest counts: " + new Date(Date.now()).toLocaleString());
+        if (listArray.length > 0) {  
+            if (thingName == "item") {
+                const itemUUIDs = listArray.map(thing => thing.uuid);
+                itemCountsMap.current = await loadItemsCounts(itemUUIDs);
+                const mappedUUIDs = [...itemCountsMap.current.keys()];
+                ListItemEventEmitter.emit(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, mappedUUIDs)
+            }
+        }
+    }
+
+    const { startPolling, stopPolling, restartPolling } = usePolling(pollThingCounts, false);
+    useEffect(() => {
+        const handleAppStateChange = (nextAppState) => {
+            console.log("App State Changed: " + nextAppState);
+            if (nextAppState === "active") {
+                startPolling();
+            } else {
+                stopPolling();
+            }
+        };
+
+        const subscription = AppState.addEventListener("change", handleAppStateChange);
+
+        return () => subscription.remove();
+    }, [startPolling, stopPolling]);
 
     const resetListWithFirstPageLoad = async (isPullDown = false) => {
         if (page == 1) {
@@ -205,14 +236,14 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 newData[toIndex + 1] &&
                 !newData[toIndex + 1].parent_item_uuid) {
 
-                    amplitude.track(`Child Dragged Outside Of Family`, {
-                        anonymous_id: anonymousId.current,
-                        pathname: pathname,
-                        uuid: draggedThing.uuid
-                    });
-                    
-                    newData[toIndex].parent_item_uuid = null;
-                    updateItemHierarchy(newData[toIndex].uuid, null);
+                amplitude.track(`Child Dragged Outside Of Family`, {
+                    anonymous_id: anonymousId.current,
+                    pathname: pathname,
+                    uuid: draggedThing.uuid
+                });
+
+                newData[toIndex].parent_item_uuid = null;
+                updateItemHierarchy(newData[toIndex].uuid, null);
             }
 
             // If this is a child and is dragged immediately above a child from another family
@@ -222,16 +253,16 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 newData[toIndex + 1].parent_item_uuid &&
                 newData[toIndex + 1].parent_item_uuid != draggedThing.parent_item_uuid) {
 
-                    amplitude.track(`Child Dragged to New Family`, {
-                        anonymous_id: anonymousId.current,
-                        pathname: pathname,
-                        uuid: draggedThing.uuid
-                    });
-                    
-                    newData[toIndex].parent_item_uuid = newData[toIndex + 1].parent_item_uuid;
-                    updateItemHierarchy(newData[toIndex].uuid, newData[toIndex + 1].parent_item_uuid);
-                }
-            
+                amplitude.track(`Child Dragged to New Family`, {
+                    anonymous_id: anonymousId.current,
+                    pathname: pathname,
+                    uuid: draggedThing.uuid
+                });
+
+                newData[toIndex].parent_item_uuid = newData[toIndex + 1].parent_item_uuid;
+                updateItemHierarchy(newData[toIndex].uuid, newData[toIndex + 1].parent_item_uuid);
+            }
+
 
             // If thing is a parent but was dragged immediately above a child,
             // assume user wants to make the thing a sibling.
@@ -240,29 +271,29 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 newData[toIndex + 1].parent_item_uuid &&
                 !draggedThing.parent_item_uuid) {
 
-                    const newParentUUID = newData[toIndex + 1].parent_item_uuid;
+                const newParentUUID = newData[toIndex + 1].parent_item_uuid;
 
-                    // Grow any kids the thing has into siblings
-                    var kidCount = 0;
-                    newData.filter((child) => child.parent_item_uuid == draggedThing.uuid)
-                           .forEach((child) => {
+                // Grow any kids the thing has into siblings
+                var kidCount = 0;
+                newData.filter((child) => child.parent_item_uuid == draggedThing.uuid)
+                    .forEach((child) => {
                         kidCount += 1;
                         child.parent_item_uuid = newParentUUID;
-                        
+
                         // Async update
                         updateItemHierarchy(child.uuid, newParentUUID);
                     });
 
-                    // Make Thing a sibling
-                    newData[toIndex].parent_item_uuid = newParentUUID;
-                    updateItemHierarchy(newData[toIndex].uuid, newParentUUID);
+                // Make Thing a sibling
+                newData[toIndex].parent_item_uuid = newParentUUID;
+                updateItemHierarchy(newData[toIndex].uuid, newParentUUID);
 
-                    amplitude.track(`Adult Dragged Into Family`, {
-                        anonymous_id: anonymousId.current,
-                        pathname: pathname,
-                        uuid: draggedThing.uuid,
-                        kid_count: kidCount
-                    });
+                amplitude.track(`Adult Dragged Into Family`, {
+                    anonymous_id: anonymousId.current,
+                    pathname: pathname,
+                    uuid: draggedThing.uuid,
+                    kid_count: kidCount
+                });
             }
 
             // Keep children with their parents
