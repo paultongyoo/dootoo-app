@@ -6,7 +6,7 @@ import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
-import { ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
+import { LIST_ITEM_EVENT__DONE_STATE_CHANGED, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import * as amplitude from '@amplitude/analytics-react-native';
 
 
@@ -218,6 +218,7 @@ export default function Index() {
           item.is_done = true;
           updateItemDoneState(item, () => {
             ProfileCountEventEmitter.emit("incr_done");
+            ListItemEventEmitter.emit(LIST_ITEM_EVENT__DONE_STATE_CHANGED, {uuid: item.uuid});
           });
 
         } else {
@@ -301,6 +302,7 @@ export default function Index() {
                           item.is_done = true;
                           updateItemDoneState(item, () => {
                             ProfileCountEventEmitter.emit("incr_done");
+                            ListItemEventEmitter.emit(LIST_ITEM_EVENT__DONE_STATE_CHANGED, {uuid: item.uuid});
                           });
 
                           // Update latest list by filtering out the deleted children PLUS setting the item to done
@@ -342,12 +344,14 @@ export default function Index() {
                         child.is_done = true;
                         updateItemDoneState(child);
                         ProfileCountEventEmitter.emit("incr_done");
+                        ListItemEventEmitter.emit(LIST_ITEM_EVENT__DONE_STATE_CHANGED, {uuid: child.uuid});
                       });
 
                       // Set item as done in backend and incr Profile counter
                       item.is_done = true;
                       updateItemDoneState(item, () => {
                         ProfileCountEventEmitter.emit("incr_done");
+                        ListItemEventEmitter.emit(LIST_ITEM_EVENT__DONE_STATE_CHANGED, {uuid: item.uuid});
                       });
 
                       // Set item and ALL of its children (previously open as well as pre-existing closed) to done, move them to top of Done Parents List 
@@ -368,6 +372,7 @@ export default function Index() {
                 item.is_done = true;
                 updateItemDoneState(item, () => {
                   ProfileCountEventEmitter.emit("incr_done");
+                  ListItemEventEmitter.emit(LIST_ITEM_EVENT__DONE_STATE_CHANGED, {uuid: item.uuid});
                 });
 
                 doneItemAndMoveFamilyToTopOfDoneAdults(setDootooItems, item, saveItemOrder);
@@ -382,6 +387,7 @@ export default function Index() {
             item.is_done = true;
             updateItemDoneState(item, () => {
               ProfileCountEventEmitter.emit("incr_done");
+              ListItemEventEmitter.emit(LIST_ITEM_EVENT__DONE_STATE_CHANGED, {uuid: item.uuid});
             });
 
             // Update item done state and position in UI; save new order in backend
@@ -403,6 +409,7 @@ export default function Index() {
         item.is_done = false;
         updateItemDoneState(item, () => {
           ProfileCountEventEmitter.emit("decr_done");
+          ListItemEventEmitter.emit(LIST_ITEM_EVENT__DONE_STATE_CHANGED, {uuid: item.uuid});
         });
 
         // if item is a child

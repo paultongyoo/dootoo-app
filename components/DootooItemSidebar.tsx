@@ -5,25 +5,30 @@ import { useContext, useEffect, useState } from 'react';
 import { AppContext } from './AppContext';
 import { usePathname, useRouter } from 'expo-router';
 import { loadItemCounts } from './Storage';
-import { ListItemEventEmitter } from "@/components/EventEmitters";
+import { LIST_ITEM_EVENT__DONE_STATE_CHANGED, ListItemEventEmitter } from "@/components/EventEmitters";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 const DootooItemSidebar = ({ thing, styles }) => {
     const router = useRouter();
     const pathname = usePathname();
     const { setSelectedItem } = useContext(AppContext);
     const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
-    const [tipCount, setTipCount] = useState(thing.tip_count);
-    const [similarCount, setSimilarCount] = useState(thing.similar_count);
+    const [tipCount, setTipCount] = useState();
+    const [similarCount, setSimilarCount] = useState();
 
     // Update v1.1.1:  Experimenting with not displaying loading anim on item level now that race condition is solved
     const [loading, setLoading] = useState(false);
+
+    const opacitySV = useSharedValue(0);
+    const opacityAnimatedStyle = useAnimatedStyle(() => {
+        return { opacity: opacitySV.value }
+    })
 
     useEffect(() => {
         //console.log("Inside useEffect([]) " + thing.text + " " + Date.now());
         let ignore = false;
 
-        // PT 11.27.24 Latest approach for Rel v1.1.1:  
-        //    - Removed 
+        // PT  Latest approach for Rel v1.1.1:  
         //    - Not displaying loading animation now that counts
         //      should be able to safely update without causing
         //      race condition that causes list to jump around
@@ -39,27 +44,37 @@ const DootooItemSidebar = ({ thing, styles }) => {
                 setTipCount(itemCounts.tip_count);
                 setSimilarCount(itemCounts.similar_count);
                 setLoading(false);
+                opacitySV.value = withTiming(1, {
+                    duration: 300
+                });
             } else {
                 //console.log("Discarding fetch attempt to avoid race condition " + Date.now());
             }
         }
 
-        // const eventHandler_doneStateChanged = ListItemEventEmitter.addListener('item_doneStateChanged', (data) => {
-        //     if (data.uuid == thing.uuid) {
-        //         console.log("Setting loading to true for thing: " + thing.text + " " + Date.now());
-        //         setLoading(true);
-        //     }
-        // });
+        const eventHandler_doneStateChanged = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__DONE_STATE_CHANGED, (data) => {
+            if (data.uuid == thing.uuid) {
+                //console.log("Setting loading to true for thing: " + thing.text + " " + Date.now());
+                setLoading(true);
+                fetchCounts();
+            }
+        });
         const eventHandler_afterSave = ListItemEventEmitter.addListener('items_saved', () => {
             //console.log("Calling fetch counts for: " + thing.text);
             fetchCounts();
         });
 
+        //setLoading(true); // Commented out loading anim here as it's too distracting
+        fetchCounts();
+
         return () => {
             //console.log("Cleaning up DootooItemSidebar useEffect " + Date.now());
             ignore = true;
-            //eventHandler_doneStateChanged.remove();
+            eventHandler_doneStateChanged.remove();
             eventHandler_afterSave.remove();
+            opacitySV.value = withTiming(0, {
+                duration: 300
+            });
         }
     }, []);
 
@@ -89,7 +104,7 @@ const DootooItemSidebar = ({ thing, styles }) => {
         );
     } else {
         return (
-            <>
+            <Animated.View style={[opacityAnimatedStyle, { flexDirection: 'row' }]}>
                 {(tipCount) ?
                     <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
                         disabled={pathname == TIPS_PATHNAME}
@@ -106,7 +121,7 @@ const DootooItemSidebar = ({ thing, styles }) => {
                         <Text style={styles.similarCountText}>{formatNumber(similarCount)}</Text>
                         <Image style={styles.similarCountIcon} source={require("@/assets/images/person_icon_556B2F.png")} />
                     </Pressable> : <></>}
-            </>
+            </Animated.View>
         );
     }
 };

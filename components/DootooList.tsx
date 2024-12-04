@@ -169,7 +169,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             //console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
 
             if (isPullDown) {
-                //console.log("Loading page 1 as part of pulldown refresh, attempting to fade out current list before fading in new list");
+                console.log("Loading page 1 as part of pulldown refresh, attempting to fade out current list before fading in new list");
                 fadeInListOnRender.current = true;
                 listFadeOutAnimation.start(() => {
                     listArraySetter([...things]);
@@ -177,11 +177,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             } else {
                 fadeInListOnRender.current = true;
 
-                //console.log("Loading page 1 outside of pulldown refresh, simply fading in list");
+                console.log("Loading page 1 outside of pulldown refresh, simply fading in list");
                 listArraySetter([...things]);
             }
         } else {
-            //console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
+            console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
             listArraySetter((prevItems) => prevItems.concat(things));
         }
     }
