@@ -22,7 +22,7 @@ import { ProfileCountEventEmitter } from "@/components/EventEmitters";
 
 export default function ItemTips() {
   const router = useRouter();
-  const { anonymousId, selectedItem, setSelectedItem, selectedProfile } = useContext(AppContext);
+  const { anonymousId, selectedItem, setSelectedItem, setSelectedProfile } = useContext(AppContext);
   const [tips, setTips] = useState([]);
   const pathname = usePathname();
   const communityDrawerNavigation = useNavigation();
@@ -210,7 +210,7 @@ export default function ItemTips() {
       username: tip.name
     });
 
-    selectedProfile.current = { name: tip.name };
+    setSelectedProfile({ name: tip.name });
     communityDrawerNavigation.openDrawer();
 
   }

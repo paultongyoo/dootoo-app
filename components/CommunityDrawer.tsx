@@ -13,7 +13,7 @@ import RNPickerSelect from 'react-native-picker-select';
 const CommunityDrawer = ({ navigation }) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { anonymousId, selectedProfile } = useContext(AppContext);
+  const { anonymousId, selectedProfile, setSelectedProfile } = useContext(AppContext);
   const animatedOpacity = useSharedValue(0);
   const animatedOpacityStyle = useAnimatedStyle(() => {
     return { opacity: animatedOpacity.value }
@@ -34,27 +34,25 @@ const CommunityDrawer = ({ navigation }) => {
       duration: 300
     });
 
-    if (selectedProfile.current && !selectedProfile.current.doneCount) {
+    if (selectedProfile && !selectedProfile.doneCount) {
       loadSelectedProfile();
+
+      amplitude.track("Community Profile Viewed", {
+        anonymous_id: anonymousId.current,
+        pathname: pathname,
+        name: selectedProfile.name
+      });
     }
 
   }, [selectedProfile]);
 
   const loadSelectedProfile = async () => {
-    const loadedProfile = await loadUsername(selectedProfile.current.name);
+    const loadedProfile = await loadUsername(selectedProfile.name);
     animatedOpacity.value = withTiming(0, {
         duration: 300
       }, (isFinished) => { 
         if (isFinished) {
-          selectedProfile.current = loadedProfile;
-
-          amplitude.track("Community Profile Viewed", {
-            anonymous_id: anonymousId.current,
-            pathname: pathname,
-            name: selectedProfile.current.name,
-            doneCount: selectedProfile.current.doneCount,
-            tipCount: selectedProfile.current.tipCount
-          });
+          runOnJS(setSelectedProfile)(loadedProfile);
         } 
       }
     );
@@ -235,9 +233,9 @@ const CommunityDrawer = ({ navigation }) => {
     amplitude.track("Block Profile Cancelled", {
       anonymous_id: anonymousId.current,
       pathname: pathname,
-      name: selectedProfile.current.name,
-      doneCount: selectedProfile.current.doneCount,
-      tipCount: selectedProfile.current.tipCount
+      name: selectedProfile.name,
+      doneCount: selectedProfile.doneCount,
+      tipCount: selectedProfile.tipCount
     });
   }
 
@@ -251,7 +249,7 @@ const CommunityDrawer = ({ navigation }) => {
     setBlockDialogVisible(false);
     setIsBlockingProcessing(true);
     const reasonString = (selectedBlockReason == "other") ? `${selectedBlockReason}: ${blockReasonOtherText}` : selectedBlockReason
-    const wasBlockSuccessful = await blockUser(selectedProfile.current.name, reasonString)
+    const wasBlockSuccessful = await blockUser(selectedProfile.name, reasonString)
     setIsBlockingProcessing(false);
     if (wasBlockSuccessful) {
       setBlockSuccessDialogVisible(true)
@@ -259,16 +257,16 @@ const CommunityDrawer = ({ navigation }) => {
       amplitude.track("Block Profile Blocked", {
         anonymous_id: anonymousId.current,
         pathname: pathname,
-        name: selectedProfile.current.name,
-        doneCount: selectedProfile.current.doneCount,
-        tipCount: selectedProfile.current.tipCount
+        name: selectedProfile.name,
+        doneCount: selectedProfile.doneCount,
+        tipCount: selectedProfile.tipCount
       });
     } else {
       Alert.alert("Unexpected error occurred", "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
     }
   }
 
-  if (!selectedProfile.current || !selectedProfile.current.doneCount) {
+  if (!selectedProfile || !selectedProfile.doneCount) {
     return (
       <View style={styles.profileDrawerContainer}>
         <Animated.View style={[styles.loadingAnimContainer, animatedOpacityStyle]}>
@@ -295,7 +293,7 @@ const CommunityDrawer = ({ navigation }) => {
             </Pressable>
             <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_red.png')} />
             <View style={styles.profileDrawerProfileNameContainer}>
-              <Text style={styles.profileDrawerProfileNameText}>{selectedProfile.current.name}</Text>
+              <Text style={styles.profileDrawerProfileNameText}>{selectedProfile.name}</Text>
             </View>
           </View>
           <View style={styles.statsContainer}>
@@ -304,7 +302,7 @@ const CommunityDrawer = ({ navigation }) => {
               <View style={styles.statIconContainer}>
                 <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
               </View>
-              <Text style={styles.statNumber}>{formatNumber(selectedProfile.current.doneCount) || '0'}</Text>
+              <Text style={styles.statNumber}>{formatNumber(selectedProfile.doneCount) || '0'}</Text>
               <Text style={styles.statName}>Done</Text>
             </Pressable>
             <Pressable style={styles.statContainer}
@@ -312,7 +310,7 @@ const CommunityDrawer = ({ navigation }) => {
               <View style={styles.statIconContainer}>
                 <Image style={styles.statIcon_Tips} source={require('@/assets/images/light_bulb_blackyellow.png')} />
               </View>
-              <Text style={styles.statNumber}>{formatNumber(selectedProfile.current.tipCount) || '0'}</Text>
+              <Text style={styles.statNumber}>{formatNumber(selectedProfile.tipCount) || '0'}</Text>
               <Text style={styles.statName}>Tips</Text>
             </Pressable>
           </View>

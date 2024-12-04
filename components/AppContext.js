@@ -12,6 +12,7 @@ export const AppProvider = ({ children }) => {
     // State Variables:  Changing these SHOULD intentionally cause components to re-render
     const [dootooItems, setDootooItems] = useState([]);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [selectedProfile, setSelectedProfile] = useState(null);
     
     // Reference variables:  Changing these should intentionally NOT cause components to re-render
     const swipeableRefs = useRef({});
@@ -21,7 +22,7 @@ export const AppProvider = ({ children }) => {
     const lastRecordedCount = useRef(0);
     const username = useRef();
     const anonymousId = useRef();
-    const selectedProfile = useRef();
+    
 
     // Animation related
     const emptyListCTAOpacity = useRef(new Animated.Value(0)).current;
@@ -88,7 +89,7 @@ export const AppProvider = ({ children }) => {
             emptyListCTAFadeOutAnimation,
             thingRowPositionXs,
             thingRowHeights,
-            selectedProfile,
+            selectedProfile, setSelectedProfile,
             swipeableRefs
              }}>
           {children}
