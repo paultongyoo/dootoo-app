@@ -275,7 +275,8 @@ export const loadItems = async (page, callback) => {
     const response = await axios.post(LOADITEMS_URL,
       {
         anonymous_id : localAnonId,
-        page: page
+        page: page,
+        skipCounts: true
       }
     );
     const item_array = response.data.body.items;
