@@ -129,8 +129,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 if (thingName == "item") {
                     const itemUUIDs = listArray.map(thing => thing.uuid);
                     itemCountsMap.current = await loadItemsCounts(itemUUIDs);
-                    const mappedUUIDs = [...itemCountsMap.current.keys()];
-                    ListItemEventEmitter.emit(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, mappedUUIDs)
+                    if (itemCountsMap.current) {
+                        const mappedUUIDs = [...itemCountsMap.current.keys()];
+                        ListItemEventEmitter.emit(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, mappedUUIDs);
+                    }
                 } else {
                     console.log("Ignoring poll call for tips, not supported at this time");
                 }

@@ -14,9 +14,9 @@ const DootooItemSidebar = ({ thing, styles }) => {
     const { setSelectedItem, itemCountsMap } = useContext(AppContext);
     const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
     const [tipCount, setTipCount] = 
-        useState((itemCountsMap.current.get(thing.uuid) ? itemCountsMap.current.get(thing.uuid).tip_count : null));
+        useState((itemCountsMap.current && itemCountsMap.current.get(thing.uuid)) ? itemCountsMap.current.get(thing.uuid).tip_count : null);
     const [similarCount, setSimilarCount] = 
-        useState((itemCountsMap.current.get(thing.uuid) ? itemCountsMap.current.get(thing.uuid).similar_count : null));
+        useState((itemCountsMap.current && itemCountsMap.current.get(thing.uuid)) ? itemCountsMap.current.get(thing.uuid).similar_count : null);
 
     // Update v1.1.1:  Experimenting with not displaying loading anim on item level now that race condition is solved
     const [loading, setLoading] = useState(false);
