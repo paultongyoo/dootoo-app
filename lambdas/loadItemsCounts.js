@@ -62,6 +62,7 @@ export const handler = async (event) => {
           a.id IN ${itemIdList}
       AND b."createdAt" >= '${now.toISOString()}'::timestamp - interval '24 hours' -- Items created within 24 hours
       AND b."createdAt" <= '${now.toISOString()}'::timestamp -- Up to the current time
+      AND b.user_id <> ${user.id}
       GROUP BY
           a.id
   ),
@@ -73,7 +74,9 @@ export const handler = async (event) => {
               WHEN i.id IN (SELECT (d->>'id')::int FROM jsonb_array_elements('${itemDataStr}'::jsonb) d WHERE d->>'is_done' = 'true') THEN (
                   SELECT COUNT(*)
                   FROM "Tip" t
-                  WHERE t.item_id = i.id AND t.user_id = ${user.id}
+                  WHERE t.item_id = i.id 
+                    AND t.user_id = ${user.id}
+                    AND t.is_deleted IS FALSE
               )
               -- When is_done is false, count tips for all similar items
               ELSE (
@@ -84,6 +87,9 @@ export const handler = async (event) => {
                       FROM "Item" AS b
                       WHERE i.embedding <-> b.embedding < 0.7 -- Similar items based on cosine distance
                   )
+                    AND t.is_flagged IS FALSE 
+                    AND t.is_deleted IS FALSE
+                    AND t.user_id <> ${user.id} 
               )
           END AS tip_count
       FROM
