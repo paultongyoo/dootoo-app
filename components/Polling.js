@@ -11,6 +11,7 @@ const usePolling = (pollingFn, interval = 60000) => {
       stopPolling();
     }
     isPolling.current = true;
+    pollingFn();
     timeoutRef.current = setInterval(pollingFn, interval);
     //console.log("New Interval Set: " + timeoutRef.current);
   };
