@@ -12,7 +12,7 @@ const usePolling = (pollingFn, interval = 60000) => {
     }
     isPolling.current = true;
     timeoutRef.current = setInterval(pollingFn, interval);
-    console.log("New Interval Set: " + timeoutRef.current);
+    //console.log("New Interval Set: " + timeoutRef.current);
   };
 
   const restartPolling = () => {
@@ -28,7 +28,7 @@ const usePolling = (pollingFn, interval = 60000) => {
   const stopPolling = () => {
     //console.log("stopPolling called");
     if (timeoutRef.current) {
-      console.log("Clearing interval: " + timeoutRef.current);
+      //console.log("Clearing interval: " + timeoutRef.current);
       clearInterval(timeoutRef.current);
       timeoutRef.current = null;
     }
