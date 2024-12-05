@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter } from "@/components/EventEmitters";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-const DootooItemSidebar = ({ thing, styles }) => {
+const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
     const router = useRouter();
     const pathname = usePathname();
     const { setSelectedItem, itemCountsMap } = useContext(AppContext);
@@ -76,7 +76,7 @@ const DootooItemSidebar = ({ thing, styles }) => {
             <Animated.View style={[/*opacityAnimatedStyle,*/ { flexDirection: 'row' }]}>
                 {(tipCount || thing.is_done) ?
                     <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
-                        disabled={pathname == TIPS_PATHNAME}
+                        disabled={disabled || (pathname == TIPS_PATHNAME)}
                         style={styles.tipCountContainer}
                         onPress={() => handleTipCountTap()}>
                         <Text style={styles.tipCountText}>{formatNumber(tipCount) || '0'}</Text>
@@ -85,6 +85,7 @@ const DootooItemSidebar = ({ thing, styles }) => {
                     </Pressable> : <></>}
                 {(similarCount) ?
                     <Pressable hitSlop={{ top: 10, bottom: 10, right: 10 }}
+                        disabled={disabled}
                         style={styles.similarCountContainer}
                         onPress={() => handleSimilarCountTap()}>
                         <Text style={styles.similarCountText}>{formatNumber(similarCount)}</Text>

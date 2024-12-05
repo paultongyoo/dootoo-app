@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { View, Text, Animated, Dimensions, StyleSheet, Platform, Pressable, Image, Alert, GestureResponderEvent, Linking, Easing } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
@@ -7,6 +7,7 @@ import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DootooItemSidebar from '@/components/DootooItemSidebar';
 import { generateUsername } from '@/components/Storage';
+import { AppContext } from '@/components/AppContext';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -238,10 +239,21 @@ const Step3 = () => {
         duration: 300,
         useNativeDriver: true
     });
+    const { itemCountsMap } = useContext(AppContext);
+    const [ resetKey, setResetKey ]  = useState(0);
 
     useEffect(() => {
         fadeInAnimation.start();
         amplitude.track("Onboarding Step 3 Viewed");
+
+        itemCountsMap.current = new Map();
+        itemCountsMap.current.set("1", { tip_count: 3100, similar_count: 6200 });
+        itemCountsMap.current.set("2", { tip_count: 3300, similar_count: 5300 });
+        itemCountsMap.current.set("3", { tip_count: 23, similar_count: 503 });
+        itemCountsMap.current.set("4", { tip_count: 201, similar_count: 1500 });
+    
+        setResetKey((prevVal) => prevVal + 1);
+    
     }, []);
 
     const styles = StyleSheet.create({
@@ -365,7 +377,7 @@ const Step3 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Drop off kid at school</Text>
                         </View>
-                        <DootooItemSidebar thing={{ tip_count: 127, similar_count: 251 }} styles={styles} />
+                        <DootooItemSidebar disabled={true} thing={{ uuid: "1" }} styles={styles} />
                     </View>
                 </View>
                 <View style={styles.itemContainer}>
@@ -374,7 +386,7 @@ const Step3 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Go for a run</Text>
                         </View>
-                        <DootooItemSidebar thing={{ tip_count: 3300, similar_count: 6200 }} styles={styles} />
+                        <DootooItemSidebar disabled={true} thing={{ uuid: "2" }} styles={styles} />
                     </View>
                 </View>
                 <View style={styles.itemContainer}>
@@ -383,7 +395,7 @@ const Step3 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Resume job search</Text>
                         </View>
-                        <DootooItemSidebar thing={{ tip_count: 23, similar_count: 503 }} styles={styles} />
+                        <DootooItemSidebar disabled={true} thing={{ uuid: "3" }} styles={styles} />
                     </View>
                 </View>
                 <View style={styles.itemContainer}>
@@ -393,7 +405,7 @@ const Step3 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Update resume</Text>
                         </View>
-                        <DootooItemSidebar thing={{ tip_count: 201, similar_count: 1500 }} styles={styles} />
+                        <DootooItemSidebar disabled={true} thing={{ uuid: "4" }} styles={styles} />
                     </View>
                 </View>
                 <Text style={styles.countDisclaimer}>*actual numbers vary</Text>
@@ -549,6 +561,14 @@ const Step4 = () => {
             width: 28,
             height: 28,
             opacity: 1
+        },
+        countDisclaimer: {
+            fontSize: 14,
+            fontStyle: 'italic',
+            color: '#3E272399',
+            position: 'absolute',
+            right: 20,
+            bottom: -30
         }
     });
 
@@ -565,7 +585,7 @@ const Step4 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Go for a run</Text>
                         </View>
-                        <DootooItemSidebar thing={{ tip_count: 3100, similar_count: 6200 }} styles={styles} />
+                        <DootooItemSidebar disabled={true} thing={{uuid: "1"}} styles={styles} />
                     </View>
                 </View>
                 <View style={styles.tipsContainer}>
@@ -612,6 +632,7 @@ const Step4 = () => {
                         </View>
                     </View>
                 </View>
+                <Text style={styles.countDisclaimer}>*actual numbers vary</Text>
             </View>
         </Animated.View>
     );
