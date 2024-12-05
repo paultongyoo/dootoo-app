@@ -83,13 +83,23 @@ export const handler = async (event) => {
                   SELECT COUNT(*)
                   FROM "Tip" t
                   WHERE t.item_id IN (
-                      SELECT b.id
-                      FROM "Item" AS b
-                      WHERE i.embedding <-> b.embedding < 0.7 -- Similar items based on cosine distance
-                  )
+                            SELECT b.id
+                            FROM "Item" AS b
+                            WHERE i.embedding <-> b.embedding < 0.7 -- Similar items based on cosine distance
+                        )
                     AND t.is_flagged IS FALSE 
                     AND t.is_deleted IS FALSE
                     AND t.user_id <> ${user.id} 
+                    AND t.user_id NOT IN (
+                            SELECT blocked_user_id 
+                            FROM "UserBlock" 
+                            WHERE blocking_user_id = ${user.id}
+                        )
+                    AND t.user_id NOT IN (
+                            SELECT blocking_user_id 
+                            FROM "UserBlock" 
+                            WHERE blocked_user_id = ${user.id}
+                        )   
               )
           END AS tip_count
       FROM
