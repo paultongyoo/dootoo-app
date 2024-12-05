@@ -1,4 +1,4 @@
-import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, Easing, TouchableWithoutFeedback, AppState } from 'react-native';
+import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, Easing, TouchableWithoutFeedback, AppState, Alert } from 'react-native';
 import { useState, useRef, useContext, useEffect, useMemo, memo } from 'react';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -52,7 +52,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     });
 
     useEffect(() => {
-        console.log(`DootooList.useEffect([]) ${Date.now()}`);
+        //console.log(`DootooList.useEffect([]) ${Date.now()}`);
         initializeLocalUser((isNew: boolean) => {
             //console.log("initializeLocalUser callback method");
             if (shouldInitialLoad) {
@@ -125,7 +125,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         if (!ignore) {
             ignore = true;
             console.log(`Polling for ${thingName} latest counts: ${new Date(Date.now()).toLocaleString()}`);
-            if (listArray.length > 0) {  
+            if (listArray.length > 0) {
                 if (thingName == "item") {
                     const itemUUIDs = listArray.map(thing => thing.uuid);
                     if (itemUUIDs.length > 0) {
@@ -222,7 +222,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             //console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
 
             if (isPullDown) {
-                console.log("Loading page 1 as part of pulldown refresh, attempting to fade out current list before fading in new list");
+                //console.log("Loading page 1 as part of pulldown refresh, attempting to fade out current list before fading in new list");
                 fadeInListOnRender.current = true;
                 listFadeOutAnimation.start(() => {
                     listArraySetter([...things]);
@@ -230,11 +230,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             } else {
                 fadeInListOnRender.current = true;
 
-                console.log("Loading page 1 outside of pulldown refresh, simply fading in list");
+                //console.log("Loading page 1 outside of pulldown refresh, simply fading in list");
                 listArraySetter([...things]);
             }
         } else {
-            console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
+            //console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
             listArraySetter((prevItems) => prevItems.concat(things));
         }
     }

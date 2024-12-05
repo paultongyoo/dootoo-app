@@ -7,19 +7,12 @@ const usePolling = (pollingFn, interval = 60000) => {
   const startPolling = () => {
     //console.log("startPolling called");
     if (isPolling.current) return; // Prevent duplicate polling
+    if (timeoutRef.current) {
+      stopPolling();
+    }
     isPolling.current = true;
-
-    const poll = async () => {
-      try {
-        await pollingFn();
-      } catch (error) {
-        console.error("Polling error:", error);
-      } finally {
-        timeoutRef.current = setTimeout(poll, interval);
-      }
-    };
-
-    poll(); // Start the first poll
+    timeoutRef.current = setInterval(pollingFn, interval);
+    console.log("New Interval Set: " + timeoutRef.current);
   };
 
   const restartPolling = () => {
@@ -35,7 +28,8 @@ const usePolling = (pollingFn, interval = 60000) => {
   const stopPolling = () => {
     //console.log("stopPolling called");
     if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+      console.log("Clearing interval: " + timeoutRef.current);
+      clearInterval(timeoutRef.current);
       timeoutRef.current = null;
     }
     isPolling.current = false;
