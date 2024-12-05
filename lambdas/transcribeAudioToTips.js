@@ -58,7 +58,9 @@ export const handler = async (event) => {
             "Do NOT guess at what additional things the user has done beyond what they've stated in their input.  Respond only in English."
         },
         { "role": "user", "content": "Here's the user's input: " + transcribedText }
-      ], response_format: { "type": "json_object" }
+      ], 
+      response_format: { "type": "json_object" },
+      user: event.headers['anonymous_id']
     });
 
     var object_from_chat = JSON.parse(completion.choices[0].message.content);

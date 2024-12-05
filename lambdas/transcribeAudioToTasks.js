@@ -64,8 +64,10 @@ export const handler = async (event) => {
                   ]
                 }`
         },
-        { "role": "user", "content": `User-provided input: ${transcribedText}`}
-      ], response_format: { "type": "json_object" }
+        { "role": "user", "content": `User-provided input: ${transcribedText}` }
+      ], 
+      response_format: { "type": "json_object" },
+      user: event.headers['anonymous_id']
     });
 
     var object_from_chat = JSON.parse(completion.choices[0].message.content);
