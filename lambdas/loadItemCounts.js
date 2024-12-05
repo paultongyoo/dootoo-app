@@ -63,6 +63,16 @@ export const handler = async (event) => {
          WHERE "Tip".is_deleted IS FALSE 
            AND "Tip".is_flagged IS FALSE 
            AND "Tip".user_id <> ${user.id} 
+           AND "Tip".user_id NOT IN (
+                    SELECT blocked_user_id 
+                    FROM "UserBlock" 
+                    WHERE blocking_user_id = ${user.id}
+                )
+           AND "Tip".user_id NOT IN (
+                    SELECT blocking_user_id 
+                    FROM "UserBlock" 
+                    WHERE blocked_user_id = ${user.id}
+                )   
            AND 0.7 >= embedding <-> (SELECT embedding from "Item" where "Item".id = ${item.id});`);
 
       //console.log("Setting tip count of similar items: " + num_tips_of_close_embeddings[0].count);

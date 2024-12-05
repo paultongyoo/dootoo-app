@@ -1,6 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
+import OpenAI from "openai";
+const openai = new OpenAI();
+
 export const handler = async (event) => {
     try {
         const user = await prisma.user.findUnique({
@@ -26,22 +29,40 @@ export const handler = async (event) => {
             };
         }
 
+        var textUpdate = event.text
+
+        // Confirm text passes moderation
+        textUpdate = await moderateText(textUpdate);
+
         const updatedTip = await prisma.tip.update({
             where: { id: tip.id },
-            data: { text: event.text }
+            data: { text: textUpdate }
         });
 
         const response = {
             statusCode: 200,
             body: JSON.stringify(updatedTip)
         };
-        await prisma.$disconnect();
+        
         return response;
-    } catch (error) {
-        await prisma.$disconnect();
+    } catch (error) {       
         return {
             statusCode: 500,
             body: `Error occurred: ${error}`
         }
+    } finally {
+        await prisma.$disconnect();
     }
+}
+
+async function moderateText(textUpdate) {
+    const moderation = await openai.moderations.create({
+        model: "omni-moderation-latest",
+        input: textUpdate
+    });
+    const flagged = moderation.results[0].flagged;
+    if (flagged) {
+        textUpdate = '(flagged)';
+    }
+    return textUpdate;
 }

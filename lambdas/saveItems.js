@@ -14,7 +14,10 @@ const lambda = new AWS.Lambda();
 
 export const handler = async (event) => {
   const user = await saveItems(event.anonymous_id, event.items_str);
-  const updatedUser = await refreshUpdatedCounts(user);
+  const updatedUser = null;
+  if (!event.skipUserLoad) {
+    updatedUser = await refreshUpdatedCounts(user);
+  }
   var updatedItems = [];
   if (!event.skipLoad) {
     updatedItems = await loadItems(event.anonymous_id);
@@ -41,6 +44,7 @@ const saveItems = async(anonymous_id, items_str) => {
 
         var itemSaveCount = 0;
         var items_arr = JSON.parse(items_str);
+        var parentUUIDtoIDMap = {};
         for (var i = 0; i < items_arr.length; i++) {
             var array_item = items_arr[i];
 
@@ -73,20 +77,36 @@ const saveItems = async(anonymous_id, items_str) => {
                             connect: { id: user.id }
                         },
                         text: encryptedString,
-                        is_child: array_item.is_child,
+                        is_child: array_item.is_child,  // TODO: Deprecate
                         rank_idx: i,
                         is_done: array_item.is_done,
-                        is_deleted: array_item.is_deleted 
+                        is_deleted: array_item.is_deleted,
+                        ...((array_item.parent_item_uuid) && { parent: {
+                                connect: {
+                                    id: parentUUIDtoIDMap[array_item.parent_item_uuid] 
+                                }
+                            }})
                     },
                     update: { 
                         text: encryptedString,
-                        is_child: array_item.is_child,
+                        is_child: array_item.is_child,  // TODO: Deprecate
                         rank_idx: i,
                         is_done: array_item.is_done,
-                        is_deleted: array_item.is_deleted
+                        is_deleted: array_item.is_deleted,
+                        ...((array_item.parent_item_uuid) && { parent: {
+                                connect: {
+                                    id: parentUUIDtoIDMap[array_item.parent_item_uuid] 
+                                }
+                            }})
                     }
                 });
-                //console.log(item); 
+
+                // If item is a parent item, save its UUID in lookup map
+                // to pass its ID to any potential children
+                if (!array_item.parent_item_uuid) {
+                    parentUUIDtoIDMap[item.uuid] = item.id;
+                }
+                console.log(item); 
 
                 // Retrieve embedding for task and insert into table
                 //console.log(`Begin retrieval and storing of embedding for item ${item.id}...`);

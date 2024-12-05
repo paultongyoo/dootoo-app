@@ -4,10 +4,10 @@ import { AppContext } from './AppContext';
 import { formatNumber } from './Helpers';
 
 
-const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
+const DootooTipSidebar = ({ thing, styles }) => {
     const { username, selectedItem, swipeableRefs } = useContext(AppContext);
 
-    const handleTipFlagContest = async (index: number) => {
+    const handleTipFlagContest = async () => {
         Alert.alert(
             'Tip Flagged', // Title of the alert
             'This tip was flagged as abusive and was removed from the community\'s view.  Repeated offenses will result in your account being deleted.  If you want to contest the flag, you can email your reasoning to the administrators.', // Message of the alert
@@ -16,7 +16,7 @@ const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
                     text: 'Email Admins',
                     onPress: () => {
                         //console.log('Tip Flag Contest Email Pressed')
-                        sendFlagContextEmail(index);
+                        sendFlagContextEmail();
                     }
                 },
                 {
@@ -29,10 +29,10 @@ const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
         );
     }
 
-    const sendFlagContextEmail = (index) => {
+    const sendFlagContextEmail = () => {
         const email = 'contact@thoughtswork.co'; // Replace with the desired email address
-        const subject = `Tip Flag Objection from User ${username}`; // Optional: add a subject
-        const body = `Tip text: ${listArray[listThingIndex].text} - Reason I'm contesting flagging this: `;
+        const subject = `Tip Flag Objection from User ${username.current}`; // Optional: add a subject
+        const body = `Tip text: ${thing.text} - Reason I'm contesting flagging this: `;
 
         // Construct the mailto URL
         const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -65,7 +65,7 @@ const DootooTipSidebar = ({ thing, styles, listArray, listThingIndex }) => {
                         <Pressable hitSlop={10}
                             disabled={selectedItem.user_id != thing.user_id}
                             style={styles.flaggedContainer}
-                            onPress={() => handleTipFlagContest(listThingIndex)}>
+                            onPress={() => handleTipFlagContest()}>
                             <Text style={styles.flaggedText}>Flagged</Text>
                             <Image style={styles.flaggedIcon} source={require("@/assets/images/flag_A23E48.png")} />
                         </Pressable>

@@ -2,28 +2,27 @@ import {
   Image, Text, View, StyleSheet, Pressable, Alert,
   Platform
 } from "react-native";
-import { useState, useContext, useCallback, useEffect } from 'react';
-import { router, useFocusEffect, useNavigation, usePathname, useRouter } from 'expo-router';
+import { useState, useContext, useEffect } from 'react';
+import { useNavigation, usePathname, useRouter } from 'expo-router';
 import Reanimated, {
-  SharedValue,
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
 import { AppContext } from '@/components/AppContext';
 import { transcribeAudioToTips } from '@/components/BackendServices';
-import { loadTips, saveTips, tipVote, flagTip, deleteTip } from '@/components/Storage';
+import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText, updateTipOrder } from '@/components/Storage';
 import DootooTipSidebar from "@/components/DootooTipSidebar";
 import DootooTipEmptyUX from "@/components/DootooTipEmptyUX";
 import DootooList from "@/components/DootooList";
 import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import * as amplitude from '@amplitude/analytics-react-native';
+import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 
 
 export default function ItemTips() {
   const router = useRouter();
-  const { anonymousId, setLastRecordedCount, updateUserCountContext,
-    selectedItem, setSelectedItem, setSelectedProfile } = useContext(AppContext);
+  const { anonymousId, selectedItem, setSelectedItem, setSelectedProfile } = useContext(AppContext);
   const [tips, setTips] = useState([]);
   const pathname = usePathname();
   const communityDrawerNavigation = useNavigation();
@@ -46,33 +45,19 @@ export default function ItemTips() {
     //console.log("saveAllTips started...");
     if (latestTips && latestTips.length > 0) {
 
-      // Immediately update displayed tip count within selected item header
-      const updatedSelectedItem = selectedItem;
-      updatedSelectedItem.tip_count = latestTips.length;
-      setSelectedItem(updatedSelectedItem);
-
-      //console.log(`Passing ${latestTips.length} tips to saveTips method...`);
-
       // Asynchronously sync DB with latest tips
       saveTips(selectedItem, latestTips, () => {
-
-        // Fix validation for v1.1.1 race condition
-        // updateUserCountContext();
-
-        //console.log("saveAllTips successful.");
+        ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
       });
     }
   };
 
-  const saveSingleTip = async (tip) => {
-    //console.log("saveSingleTip started...");
-    // Asynchronously sync DB with latest tips
-    saveTips(selectedItem, [tip], () => {
-      
-      // Fix validation for v1.1.1 race condition
-      //updateUserCountContext();
-      //console.log("saveSingleTip successful.");
-    });
+  const saveTextUpdate = async (tip) => {
+    updateTipText(tip);
+  }
+
+  const saveTipOrder = async (uuidArray) => {
+    updateTipOrder(selectedItem, uuidArray);
   }
 
   useEffect(() => {
@@ -89,10 +74,9 @@ export default function ItemTips() {
 
   const handleDoneClick = async () => {
     amplitude.track("Selected Item Done Clicked", {
-      anonymous_id: anonymousId
+      anonymous_id: anonymousId.current
     });
 
-    setLastRecordedCount(0);
     // For now just navigate user back to full list if they press this
     router.back();
   }
@@ -100,7 +84,7 @@ export default function ItemTips() {
   const handleTipVote = async (tip, voteValue: number) => {
 
     amplitude.track("Tip Voted", {
-      anonymous_id: anonymousId,
+      anonymous_id: anonymousId.current,
       tip_uuid: tip.uuid,
       vote_value: voteValue
     });
@@ -147,11 +131,11 @@ export default function ItemTips() {
 
   }
 
-  const handleTipFlag = async (index: number) => {
+  const handleTipFlag = async (tip) => {
 
     amplitude.track("Tip Flag Started", {
-      anonymous_id: anonymousId,
-      tip_uuid: tips[index].uuid
+      anonymous_id: anonymousId.current,
+      tip_uuid: tip.uuid
     });
 
     Alert.alert(
@@ -163,8 +147,8 @@ export default function ItemTips() {
           onPress: () => {
             //console.log('Tip Flag Cancel Pressed');
             amplitude.track("Tip Flag Cancelled", {
-              anonymous_id: anonymousId,
-              tip_uuid: tips[index].uuid
+              anonymous_id: anonymousId.current,
+              tip_uuid: tip.uuid
             });
           },
           style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
@@ -173,7 +157,7 @@ export default function ItemTips() {
           text: 'Yes',
           onPress: () => {
             //console.log('Tip Flag OK Pressed');
-            handleFlagTip(index);
+            handleFlagTip(tip);
           },
         },
       ],
@@ -181,19 +165,20 @@ export default function ItemTips() {
     );
   }
 
-  const handleFlagTip = async (index) => {
+  const handleFlagTip = async (tip) => {
 
     amplitude.track("Tip Flag Completed", {
-      anonymous_id: anonymousId,
-      tip_uuid: tips[index].uuid
+      anonymous_id: anonymousId.current,
+      tip_uuid: tip.uuid
     });
 
     // Asynchronously send tip flag to backend
-    flagTip(tips[index].uuid);
+    flagTip(tip.uuid);
 
-    const updatedTips = [...tips];
-    updatedTips[index].is_flagged = true;
-    setTips(updatedTips);
+    setTips((prevTips) => prevTips.map((obj) =>
+         (obj.uuid == tip.uuid)
+              ? { ...obj, is_flagged: true}
+              : obj));
 
     Alert.alert(
       'Abuse Reported', // Title of the alert
@@ -212,7 +197,7 @@ export default function ItemTips() {
   const handleTipProfileClick = (tip) => {
 
     amplitude.track("Tip Profile Tapped", {
-      anonymous_id: anonymousId,
+      anonymous_id: anonymousId.current,
       username: tip.name
     });
 
@@ -221,7 +206,7 @@ export default function ItemTips() {
 
   }
 
-  const renderRightActions = (tip) => {
+  const renderRightActions = (tip, index) => {
     return (
       <>
         {(selectedItem.is_done) ?
@@ -234,9 +219,9 @@ export default function ItemTips() {
               deleteTip(tip_uuid);
 
               // Update tip count in displayed header
-              const updatedSelectedItem = selectedItem;
-              updatedSelectedItem.tip_count -= 1;   // Will roll the dice this never becomes a negative number ;-)
-              setSelectedItem(updatedSelectedItem);
+              setSelectedItem((prevItem) => ({ ...prevItem, tip_count: prevItem.tipCount - 1}));
+
+              ProfileCountEventEmitter.emit('decr_tips');
             }} />
           :
           <>
@@ -264,7 +249,7 @@ export default function ItemTips() {
     );
   };
 
-  const renderLeftActions = (tip) => {
+  const renderLeftActions = (tip, index) => {
     return (
       <>
         {(tip.name) ?
@@ -633,13 +618,14 @@ export default function ItemTips() {
             renderRightActions={renderRightActions}
             renderLeftActions={renderLeftActions}
             saveAllThings={saveAllTips}
-            saveTextUpdateFunc={saveSingleTip}
+            saveTextUpdateFunc={saveTextUpdate}
+            saveThingOrderFunc={saveTipOrder}
             loadAllThings={(page) => loadTips(selectedItem.uuid, page)}
             transcribeAudioToThings={transcribeAudioToTips}
             ListThingSidebar={DootooTipSidebar}
             EmptyThingUX={() => <DootooTipEmptyUX styles={styles} selectedItem={selectedItem} tipArray={tips} />}
             isThingPressable={() => { return selectedItem.is_done; }}
-            isThingDraggable={() => { return selectedItem.is_done; }}
+            isThingDraggable={selectedItem.is_done}
             hideRecordButton={!selectedItem.is_done}
             shouldInitialLoad={selectedItem.tip_count && (Number(selectedItem.tip_count) > 0)} />
         </View>

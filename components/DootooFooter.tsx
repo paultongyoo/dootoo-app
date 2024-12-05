@@ -7,19 +7,27 @@ import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react
 import Reanimated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import Toast from "react-native-toast-message";
 import * as amplitude from '@amplitude/analytics-react-native';
-import { usePathname } from 'expo-router'; 
-import { ListItemEventEmitter } from "./ListItemEventEmitter.js";
+import { usePathname } from 'expo-router';
+import { ListItemEventEmitter } from "./EventEmitters";
+import { checkOpenAPIStatus } from "./BackendServices.js";
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
-    const { anonymousId, setFadeInListOnRender, listFadeInAnimation,
-        setLastRecordedCount, emptyListCTAOpacity, emptyListCTAFadeOutAnimation } = useContext(AppContext);
+    const { anonymousId, listFadeInAnimation, fadeInListOnRender,
+        lastRecordedCount, emptyListCTAOpacity, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
+    const recorderProcessLocked = useRef(false);
     const [recording, setRecording] = useState();
     const [permissionResponse, requestPermission] = Audio.usePermissions();
     const meteringLevel = useSharedValue(1); // shared value for animated scale
     const recordButtonOpacity = useSharedValue(1);
     const recordingTimeStart = useRef(null);        // Var used for calculating time
+
+    // Auto stop threshold feature
+    const audioTreshold = useRef(0);
+    const silenceTimer = useRef(null);
+    const SILENCE_DURATION = 1000;  // 1 seconds
+    const hasBreachedThreshold = useRef(false);
 
     const bannerAdId = __DEV__ ?
         TestIds.ADAPTIVE_BANNER :
@@ -30,6 +38,39 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
     const footerPosition = useRef(new Animated.Value(200)).current;
     const ITEMS_PATHNAME = "/meDrawer/communityDrawer/stack";
+
+    useEffect(() => {
+        if (!hideRecordButton) {
+            checkOpenAPIHealth();
+        }
+    }, []);
+
+    const checkOpenAPIHealth = async () => {
+        const status = await checkOpenAPIStatus();
+        if (status != "operational") {
+            amplitude.track("OpenAI API Impacted Prompt Displayed", {
+                anonymous_id: anonymousId.current,
+                pathname: pathname
+            });
+            Alert.alert(
+                "Voice Transcription May Be Impacted",
+                "Please be aware that our AI partner is currently experiencing issues that may impact posting new tasks and tips.  " + 
+                "This message will cease to appear once their issues are resolved.",
+                [
+                    {
+                        text: 'OK',
+                        onPress: () => {
+                            amplitude.track("OpenAI API Impacted Prompt OK'd", {
+                                anonymous_id: anonymousId.current,
+                                pathname: pathname
+                            });
+                        },
+                    },
+                ],
+                { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+            );
+        }
+    }
 
     useEffect(() => {
         initializeMobileAds();
@@ -60,7 +101,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         recordingTimeStart.current = performance.now();
         //console.log("Logging start time: " + new Date(recordingTimeStart.current).toLocaleString());
         amplitude.track("Recording Started", {
-            anonymous_id: anonymousId,
+            anonymous_id: anonymousId.current,
             pathname: pathname
         });
         try {
@@ -68,7 +109,9 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 //console.log('Requesting permission..');
                 amplitude.track("Recording Permission Prompt Started");
                 const result = await requestPermission();
-                amplitude.track("Recording Permission Prompt Completed", {result: result});
+                amplitude.track("Recording Permission Prompt Completed", {
+                    result: (result) ? result.status : '(null)'
+                });
             }
             await Audio.setAudioModeAsync({
                 allowsRecordingIOS: true,
@@ -84,13 +127,40 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
             setRecording(recording);
 
+            await determineAudioInputThreshold(recording);
+
             // Poll metering level and update the animated scale
             const interval = setInterval(async () => {
                 const status = await recording.getStatusAsync();
                 const metering_divisor = (Platform.OS == 'ios') ? 30 : 100;
                 if (status.isRecording) {
+                    //console.log("Unmodified sound level: " + status.metering);
                     meteringLevel.value = withTiming(1 + Math.max(0, 1 + (status.metering / metering_divisor)), { duration: 100 });
                     //console.log(`Platform: ${Platform.OS} - status.metering: ${status.metering} - Metering Level: ${meteringLevel.value} - Metering modifier: ${1 + (status.metering / metering_divisor)}`);
+
+                    // Sound Level Threshold Auto Stop Feature
+                    const soundLevel = status.metering || 0;
+                    //console.log(`Sound Level ${soundLevel} - Threshold ${audioTreshold.current} - HasBreached ${hasBreachedThreshold.current}`)
+
+                    // Only auto-stop after the user started talking
+                    if (soundLevel > (audioTreshold.current + 10)) {
+                        hasBreachedThreshold.current = true;
+                    }
+
+                    // If sound level drops below audio threshold and they had started talking...
+                    if ((soundLevel < audioTreshold.current) && hasBreachedThreshold.current) {
+                        if (!silenceTimer.current) {
+                            silenceTimer.current = setTimeout(() => {
+                                //console.log('Silence detected, processing recording..');
+                                processRecording(recording, true);
+                                clearTimeout(silenceTimer.current);
+                                silenceTimer.current = null;
+                            }, SILENCE_DURATION);
+                        }
+                    } else {
+                        clearTimeout(silenceTimer.current);
+                        silenceTimer.current = null;
+                    }
                 }
             }, 100);
 
@@ -105,36 +175,78 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 retryCount += 1;
             } else {
                 //console.error('Failed to start recording', err);
-                amplitude.track("Recording Error Occurred", { 
-                    anonymous_id: anonymousId,
+                amplitude.track("Recording Error Occurred", {
+                    anonymous_id: anonymousId.current,
                     pathname: pathname,
                     error: err
-                 });
+                });
                 //setErrorMsg(err);
             }
         }
     }
 
-    const stopRecording = async (): Promise<string> => {
+    const determineAudioInputThreshold = async (recordingObject) => {
+        //console.log('Determining threshold..');
+        const levels = [];
+        const DURATION = 1000; // 1 second
+        const INTERVAL = 100; // Poll every 100ms
+
+        audioTreshold.current = 999999;
+        hasBreachedThreshold.current = false;
+        silenceTimer.current = null
+        let intervalCounter = 0;
+        const interval = setInterval(async () => {
+            intervalCounter += 1;
+            try {
+                const status = await recordingObject.getStatusAsync();
+                if (status.isRecording) {
+                    const soundLevel = status.metering || 0;
+                    levels.push(soundLevel);
+                    //console.log("Initial Sound Level: ", soundLevel);
+                }
+                if (intervalCounter * INTERVAL == DURATION) {
+                    const avgLevel = levels.reduce((sum, level) => sum + level, 0) / levels.length;
+                    const dynamicThreshold = avgLevel + 0.05; // Slightly above the average
+                    //console.log('Dynamic Threshold Set To:', dynamicThreshold);
+                    audioTreshold.current = dynamicThreshold;
+                    clearInterval(interval);
+                }
+            } catch (error) {
+                console.error('Error while determining threshold', error);
+                clearInterval(interval);
+            }
+        }, 100);
+    }
+
+    const stopRecording = async (localRecordingObject = null, isAutoStop = false): Promise<string> => {
         const recordingDurationEnd = performance.now();
-        // console.log("Logging end time: " + new Date(recordingDurationEnd).toLocaleString());
-        // console.log("Recalling start time: " + new Date(recordingTimeStart.current).toLocaleString());
-        // console.log("Recording Duration: " + (recordingDurationEnd - recordingTimeStart.current)/1000);
         amplitude.track("Recording Stopped", {
-            anonymous_id: anonymousId,
+            anonymous_id: anonymousId.current,
             pathname: pathname,
-            durationSeconds: (recordingDurationEnd - recordingTimeStart.current)/1000
+            durationSeconds: (recordingDurationEnd - recordingTimeStart.current) / 1000,
+            stop_type: (isAutoStop) ? 'auto' : 'manual'
         });
         //console.log('Stopping recording..');
+        let uri;
+        if (recording) {
+            //console.log("Audio manually stopped");
+            await recording.stopAndUnloadAsync();
+            uri = recording.getURI();
+        } else if (localRecordingObject) {
+            //console.log("Audio automatically stopped");
+            if (localRecordingObject.stopAndUnloadAsync != undefined) {
+                await localRecordingObject.stopAndUnloadAsync();
+            }
+            uri = localRecordingObject.getURI();
+        }  
         setRecording(undefined);
-        await recording.stopAndUnloadAsync();
         await Audio.setAudioModeAsync(
             {
                 allowsRecordingIOS: false,
             }
         );
         meteringLevel.value = withTiming(1); // reset scale when stopped
-        const uri = recording.getURI();
+        
         //console.log('Recording stopped and stored at', uri);
         return uri;
     }
@@ -142,28 +254,41 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     // if button was pressed while recording was already processed,
     // the current processing may be taking too long; treat the user action as
     // an attempt to cancel the recording and try again
-    const cancelRecordingProcessing = async() => {
+    const cancelRecordingProcessing = async () => {
         //console.log("Cancelling recording...");
-        const fileUri = await stopRecording();
-        deleteFile(fileUri);
+        if (recording) {
+            const fileUri = await stopRecording();
+            deleteFile(fileUri);
+        }
         setIsRecordingProcessing(false);
         //console.log("Recording cancelled...");
         amplitude.track("Recording Processing Cancelled", {
-            anonymous_id: anonymousId,
+            anonymous_id: anonymousId.current,
             pathname: pathname
         });
     }
 
-    const processRecording = async () => {
+    const processRecording = async (localRecordingObject = null, isAutoStop = false) => {
+        //console.log(`processingRecording - localRecordingObject: ${localRecordingObject}`);
+        //console.log(`recorderProcessLocked.current: ${recorderProcessLocked.current}`)
+
+        if (recorderProcessLocked.current) {
+            console.log("Recorder already processing, exiting...");
+            return;
+        }
+
+        recorderProcessLocked.current = true;
+
         amplitude.track("Recording Processing Started", {
-            anonymous_id: anonymousId,
-            pathname: pathname
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            stop_type: (isAutoStop) ? 'auto' : 'manual'
         });
         setIsRecordingProcessing(true);
-        const fileUri = await stopRecording();
+        const fileUri = await stopRecording(localRecordingObject, isAutoStop);
         const response = await callBackendTranscribeService(fileUri);
         amplitude.track("Recording Processing Completed", {
-            anonymous_id: anonymousId,
+            anonymous_id: anonymousId.current,
             flagged: (response == "flagged"),
             thing_count: (response && response.length >= 0) ? response.length : -1,
             pathname: pathname
@@ -172,12 +297,12 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         if (response == "flagged") {
             //console.log(`Audio flagged, displaying alert prompt`);
             amplitude.track("Recording Flagged", {
-                anonymous_id: anonymousId,
-                pathname: pathname  
+                anonymous_id: anonymousId.current,
+                pathname: pathname
             });
             amplitude.track("Recording Flagged Prompt Displayed", {
-                anonymous_id: anonymousId,
-                pathname: pathname  
+                anonymous_id: anonymousId.current,
+                pathname: pathname
             });
             Alert.alert(
                 'Content Advisory', // Title of the alert
@@ -188,8 +313,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                         onPress: () => {
                             //console.log('Audio Content Advisory Acknowledgement button Pressed');
                             amplitude.track("Recording Flagged Prompt Dismissed", {
-                                anonymous_id: anonymousId,
-                                pathname: pathname  
+                                anonymous_id: anonymousId.current,
+                                pathname: pathname
                             });
                         },
                     },
@@ -198,9 +323,9 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         } else {
             //const response =  generateStubData(); 
             //console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
-            
+
             if (listArray && response && response.length > 0) {
-                setLastRecordedCount(response.length);  // Set for future toast undo potential
+                lastRecordedCount.current = response.length;  // Set for future toast undo potential
 
                 // Set UI flag to inform user that counts may change after async backend save complete
                 // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
@@ -208,7 +333,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 //     response[i].counts_updating = true; 
                 // }
 
-                var updatedItems = response.concat(listArray);
+
                 if (listArray.length == 0) {
 
                     // Assume the empty list CTA is visible, so fade it out first
@@ -221,31 +346,32 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                     emptyListCTAFadeOutAnimation.start(() => {
 
                         //If list is initially empty, fade in the new list
-                        listArraySetterFunc(updatedItems);    
-            
-                        setFadeInListOnRender(true);
-                        listFadeInAnimation.start(() => {
-                            setFadeInListOnRender(false);
-                            listFadeInAnimation.reset();
-                        });
+                        listArraySetterFunc((prevThings) => response.concat(prevThings));
+
+                        // fadeInListOnRender.current = true;
+                        // listFadeInAnimation.start(() => {
+                        //     fadeInListOnRender.current = false;
+                        //     listFadeInAnimation.reset();
+                        // });
 
                         emptyListCTAFadeOutAnimation.reset();
                     });
                 } else {
 
                     // TODO:  When appending, move current list down and to insert new items
-                    listArraySetterFunc(updatedItems);
+                    listArraySetterFunc((prevThings) => response.concat(prevThings));
                 }
 
                 // Make sure this function is asynchronous!!!
-                saveAllThingsFunc(updatedItems, () => { 
+                var updatedItems = response.concat(listArray);
+                saveAllThingsFunc(updatedItems, () => {
                     ListItemEventEmitter.emit("items_saved");
                 });
             } else {
                 //console.log("Did not call setter with updated list, attempting to show toast.");
                 amplitude.track("Empty Recording Toast Displayed", {
-                    anonymous_id: anonymousId,
-                    pathname: pathname  
+                    anonymous_id: anonymousId.current,
+                    pathname: pathname
                 });
                 Toast.show({
                     type: 'msgOnlyToast',
@@ -256,12 +382,13 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             }
         }
         setIsRecordingProcessing(false);
+        recorderProcessLocked.current = false;      // Reset process lock for future
         //console.log("Finished parsing file, deleting...");
         deleteFile(fileUri);
     }
 
     const callBackendTranscribeService = async (fileUri: string) => {
-        return await transcribeFunction(fileUri, anonymousId);
+        return await transcribeFunction(fileUri, anonymousId.current);
     }
 
     const cancelRecording = async () => {
@@ -290,9 +417,9 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
     const recordButtonOpacityAnimatedStyle = useAnimatedStyle(() => {
         return {
-          opacity: recordButtonOpacity.value,
+            opacity: recordButtonOpacity.value,
         };
-      });
+    });
 
     const recordButton_handlePressIn = () => {
         recordButtonOpacity.value = withTiming(0.7, { duration: 150 }); // Dim button on press
@@ -382,38 +509,38 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
     const makeTestData = () => {
         const testData = [
-          { 
-            "uuid": 1,
-            "text": "take a bath", 
-            "is_done": false, 
-            "is_deleted": false
-          },
-          { 
-            "uuid": 2,
-            "text": "make waffles", 
-            "is_done": false, 
-            "is_deleted": false
-          },
-          { 
-            "uuid": 3,
-            "text": "do some jumping jacks", 
-            "is_done": false, 
-            "is_deleted": false
-          },
-          { 
-            "uuid": 4,
-            "text": "take a ride a bike", 
-            "is_done": false, 
-            "is_deleted": false
-          }
+            {
+                "uuid": 1,
+                "text": "take a bath",
+                "is_done": false,
+                "is_deleted": false
+            },
+            {
+                "uuid": 2,
+                "text": "make waffles",
+                "is_done": false,
+                "is_deleted": false
+            },
+            {
+                "uuid": 3,
+                "text": "do some jumping jacks",
+                "is_done": false,
+                "is_deleted": false
+            },
+            {
+                "uuid": 4,
+                "text": "take a ride a bike",
+                "is_done": false,
+                "is_deleted": false
+            }
         ];
         listArraySetterFunc(testData);
-    
-      }
+
+    }
 
     if (!hideRecordButton) {
         return (
-            <Animated.View style={[styles.footerContainer, (pathname == ITEMS_PATHNAME) && { transform: [{ translateY: footerPosition}]}]}>
+            <Animated.View style={[styles.footerContainer, (pathname == ITEMS_PATHNAME) && { transform: [{ translateY: footerPosition }] }]}>
                 {/* <Pressable
                     style={[styles.footerButton, styles.cancelButton]}
                     onPress={makeTestData}>
@@ -422,20 +549,32 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 <View style={styles.footerButton_Underlay}></View>
                 <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || isRecordingProcessing) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
                     <Pressable
-                        onPress={(isRecordingProcessing) ? cancelRecordingProcessing : ((recording) ? processRecording : startRecording) }
+                        onPress={() => {
+                            if (isRecordingProcessing) {
+                                cancelRecordingProcessing();
+                            } else if (recording) {
+                                processRecording();
+                            } else {
+                                startRecording();
+                            }
+                        }}
                         onPressIn={recordButton_handlePressIn}
                         onPressOut={recordButton_handlePressOut}>
                         {(isRecordingProcessing) ?
                             <View style={styles.loadingAnim}>
                                 <ActivityIndicator size={"large"} color="white" />
-                            </View> 
+                            </View>
                             : (recording) ?
-                                <View style={styles.footerButtonIcon_Stop}></View> 
+                                <View style={styles.footerButtonIcon_Stop}></View>
                                 : <Image style={styles.footerButtonImage_Record} source={require("@/assets/images/microphone_white.png")} />}
                     </Pressable>
                 </Reanimated.View>
                 <View style={styles.bannerAdContainer}>
-                    <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
+                    <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} 
+                            onPaid={() => amplitude.track("Banner Ad Paid")}
+                            onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
+                            onAdOpened={() => amplitude.track("Banner Ad Opened")}
+                            onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
                 </View>
             </Animated.View>
         );
@@ -443,11 +582,11 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         return (
             <View style={styles.footerContainer}>
                 <View style={styles.bannerAdContainer}>
-                    <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} 
-                              onPaid={() => amplitude.track("Banner Ad Paid")} 
-                              onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
-                              onAdOpened={() => amplitude.track("Banner Ad Opened")}
-                              onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
+                    <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+                        onPaid={() => amplitude.track("Banner Ad Paid")}
+                        onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
+                        onAdOpened={() => amplitude.track("Banner Ad Opened")}
+                        onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
                 </View>
             </View>
         );

@@ -13,8 +13,7 @@ import RNPickerSelect from 'react-native-picker-select';
 const CommunityDrawer = ({ navigation }) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { anonymousId, selectedProfile, setSelectedProfile, selectedItem, setSelectedItem,
-  } = useContext(AppContext);
+  const { anonymousId, selectedProfile, setSelectedProfile } = useContext(AppContext);
   const animatedOpacity = useSharedValue(0);
   const animatedOpacityStyle = useAnimatedStyle(() => {
     return { opacity: animatedOpacity.value }
@@ -37,15 +36,26 @@ const CommunityDrawer = ({ navigation }) => {
 
     if (selectedProfile && !selectedProfile.doneCount) {
       loadSelectedProfile();
+
+      amplitude.track("Community Profile Viewed", {
+        anonymous_id: anonymousId.current,
+        pathname: pathname,
+        name: selectedProfile.name
+      });
     }
+
   }, [selectedProfile]);
 
   const loadSelectedProfile = async () => {
     const loadedProfile = await loadUsername(selectedProfile.name);
     animatedOpacity.value = withTiming(0, {
-      duration: 300
-    }, (isFinished) => { if (isFinished) runOnJS(setSelectedProfile)(loadedProfile) });
-    ;
+        duration: 300
+      }, (isFinished) => { 
+        if (isFinished) {
+          runOnJS(setSelectedProfile)(loadedProfile);
+        } 
+      }
+    );
   }
 
   const handleBlockProfileTap = () => {
@@ -219,6 +229,14 @@ const CommunityDrawer = ({ navigation }) => {
 
   function handleBlockCancel(): void {
     setBlockDialogVisible(false);
+
+    amplitude.track("Block Profile Cancelled", {
+      anonymous_id: anonymousId.current,
+      pathname: pathname,
+      name: selectedProfile.name,
+      doneCount: selectedProfile.doneCount,
+      tipCount: selectedProfile.tipCount
+    });
   }
 
   function handleBlockSubmit(): void {
@@ -235,6 +253,14 @@ const CommunityDrawer = ({ navigation }) => {
     setIsBlockingProcessing(false);
     if (wasBlockSuccessful) {
       setBlockSuccessDialogVisible(true)
+
+      amplitude.track("Block Profile Blocked", {
+        anonymous_id: anonymousId.current,
+        pathname: pathname,
+        name: selectedProfile.name,
+        doneCount: selectedProfile.doneCount,
+        tipCount: selectedProfile.tipCount
+      });
     } else {
       Alert.alert("Unexpected error occurred", "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
     }
@@ -258,7 +284,7 @@ const CommunityDrawer = ({ navigation }) => {
             <Pressable style={styles.profileBlockIconContainer}
               onPress={() => {
                 amplitude.track("Block Profile Button Tapped", {
-                  anonymous_id: anonymousId,
+                  anonymous_id: anonymousId.current,
                   usrename: pathname
                 });
                 handleBlockProfileTap();
@@ -272,7 +298,7 @@ const CommunityDrawer = ({ navigation }) => {
           </View>
           <View style={styles.statsContainer}>
             <Pressable style={styles.statContainer}
-              onPress={() => showComingSoonAlert("'All Done'")}>
+              onPress={() => showComingSoonAlert(anonymousId.current, "'Done'", pathname)}>
               <View style={styles.statIconContainer}>
                 <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
               </View>
@@ -280,7 +306,7 @@ const CommunityDrawer = ({ navigation }) => {
               <Text style={styles.statName}>Done</Text>
             </Pressable>
             <Pressable style={styles.statContainer}
-              onPress={() => showComingSoonAlert("'All Tips'")}>
+              onPress={() => showComingSoonAlert(anonymousId.current, "'Tips'", pathname)}>
               <View style={styles.statIconContainer}>
                 <Image style={styles.statIcon_Tips} source={require('@/assets/images/light_bulb_blackyellow.png')} />
               </View>
@@ -322,13 +348,13 @@ const CommunityDrawer = ({ navigation }) => {
             <ActivityIndicator size={"large"} />
           </Dialog.Container>
           <Dialog.Container contentStyle={styles.dialogBoxContainer} visible={blockSuccessDialogVisible} onBackdropPress={handleBlockCancel}>
-              <Dialog.Title>User Reported & Blocked</Dialog.Title>
-              <Dialog.Description>You will no longer see each other's tips.</Dialog.Description>
-              <Dialog.Button label="Dismiss" onPress={() => {
-                  setBlockSuccessDialogVisible(false);
-                  navigation.closeDrawer();
-                  router.replace(TIPS_PATHNAME);
-                }} />
+            <Dialog.Title>User Reported & Blocked</Dialog.Title>
+            <Dialog.Description>You will no longer see each other's tips.</Dialog.Description>
+            <Dialog.Button label="Dismiss" onPress={() => {
+              setBlockSuccessDialogVisible(false);
+              navigation.closeDrawer();
+              router.replace(TIPS_PATHNAME);
+            }} />
           </Dialog.Container>
           {/* {(blockSuccessDialogVisible) ? <><Dialog.Title>User Reported & Blocked</Dialog.Title>
               <Dialog.Description>You will no longer see each other's tips.</Dialog.Description>

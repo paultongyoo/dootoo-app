@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { View, Text, Animated, Dimensions, StyleSheet, Platform, Pressable, Image, Alert, GestureResponderEvent, Linking, Easing } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
@@ -7,6 +7,7 @@ import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DootooItemSidebar from '@/components/DootooItemSidebar';
 import { generateUsername } from '@/components/Storage';
+import { AppContext } from '@/components/AppContext';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -184,7 +185,8 @@ const Step2 = () => {
         },
         centerCopy: {
             fontSize: 40,
-            color: '#3E2723'
+            color: '#3E2723',
+            marginBottom: 50
         },
         green: {
             color: '#556B2F'
@@ -214,6 +216,7 @@ const Step2 = () => {
 
     return (
         <Animated.View style={[styles.container, { opacity: fadeIn }]}>
+            <Text style={styles.centerCopy}>start by <Text style={styles.green}>naturally speaking</Text> what you have to do.</Text>
             <View style={styles.micAndVoice}>
                 <View style={styles.micContainer}>
                     <Image style={styles.micImage} source={require('@/assets/images/microphone_white.png')} />
@@ -224,8 +227,7 @@ const Step2 = () => {
                         gotta <Text style={styles.green}>resume my job search</Text>....which
                         starts with <Text style={styles.green}>updating my resume</Text>..”</Text>
                 </View>
-            </View>
-            <Text style={styles.centerCopy}>start by <Text style={styles.green}>naturally speaking</Text> what you have to do.</Text>
+            </View>         
         </Animated.View>
     );
 }
@@ -237,10 +239,21 @@ const Step3 = () => {
         duration: 300,
         useNativeDriver: true
     });
+    const { itemCountsMap } = useContext(AppContext);
+    const [ resetKey, setResetKey ]  = useState(0);
 
     useEffect(() => {
         fadeInAnimation.start();
         amplitude.track("Onboarding Step 3 Viewed");
+
+        itemCountsMap.current = new Map();
+        itemCountsMap.current.set("1", { tip_count: 3100, similar_count: 6200 });
+        itemCountsMap.current.set("2", { tip_count: 3300, similar_count: 5300 });
+        itemCountsMap.current.set("3", { tip_count: 23, similar_count: 503 });
+        itemCountsMap.current.set("4", { tip_count: 201, similar_count: 1500 });
+    
+        setResetKey((prevVal) => prevVal + 1);
+    
     }, []);
 
     const styles = StyleSheet.create({
@@ -255,7 +268,8 @@ const Step3 = () => {
         },
         centerCopy: {
             fontSize: 40,
-            color: '#3E2723'
+            color: '#3E2723',
+            marginBottom: 30
         },
         red: {
             color: '#A23E48'
@@ -353,6 +367,9 @@ const Step3 = () => {
 
     return (
         <Animated.View style={{opacity: fadeIn}}>
+            <View style={styles.onboardingCopyContainer}>
+                <Text style={styles.centerCopy}>see which things were <Text style={styles.green}>done by the community</Text>.</Text>
+            </View>
             <View style={styles.itemsContainer}>
                 <View style={styles.itemContainer}>
                     <View style={styles.itemCircleOpen}></View>
@@ -360,7 +377,7 @@ const Step3 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Drop off kid at school</Text>
                         </View>
-                        <DootooItemSidebar thing={{ tip_count: 127, similar_count: 251 }} styles={styles} />
+                        <DootooItemSidebar disabled={true} thing={{ uuid: "1" }} styles={styles} />
                     </View>
                 </View>
                 <View style={styles.itemContainer}>
@@ -369,7 +386,7 @@ const Step3 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Go for a run</Text>
                         </View>
-                        <DootooItemSidebar thing={{ tip_count: 3300, similar_count: 6200 }} styles={styles} />
+                        <DootooItemSidebar disabled={true} thing={{ uuid: "2" }} styles={styles} />
                     </View>
                 </View>
                 <View style={styles.itemContainer}>
@@ -378,7 +395,7 @@ const Step3 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Resume job search</Text>
                         </View>
-                        <DootooItemSidebar thing={{ tip_count: 23, similar_count: 503 }} styles={styles} />
+                        <DootooItemSidebar disabled={true} thing={{ uuid: "3" }} styles={styles} />
                     </View>
                 </View>
                 <View style={styles.itemContainer}>
@@ -388,13 +405,10 @@ const Step3 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Update resume</Text>
                         </View>
-                        <DootooItemSidebar thing={{ tip_count: 201, similar_count: 1500 }} styles={styles} />
+                        <DootooItemSidebar disabled={true} thing={{ uuid: "4" }} styles={styles} />
                     </View>
                 </View>
                 <Text style={styles.countDisclaimer}>*actual numbers vary</Text>
-            </View>
-            <View style={styles.onboardingCopyContainer}>
-                <Text style={styles.centerCopy}>see which things were <Text style={styles.green}>done by the community</Text>.</Text>
             </View>
         </Animated.View>
     );
@@ -421,7 +435,8 @@ const Step4 = () => {
         },
         onboardingCopyContainer: {
             paddingLeft: 40,
-            paddingRight: 40
+            paddingRight: 40,
+            marginBottom: 30
         },
         centerCopy: {
             fontSize: 40,
@@ -546,11 +561,23 @@ const Step4 = () => {
             width: 28,
             height: 28,
             opacity: 1
+        },
+        countDisclaimer: {
+            fontSize: 14,
+            fontStyle: 'italic',
+            color: '#3E272399',
+            position: 'absolute',
+            right: 20,
+            bottom: -30
         }
     });
 
     return (
         <Animated.View style={{opacity: fadeIn}}>
+            <View style={styles.onboardingCopyContainer}>
+                <Text style={styles.centerCopy}>get tips to <Text style={styles.green}>get things done</Text>.</Text>
+                <Text style={styles.centerCopy}>share tips to{'\n'}<Text style={styles.green}>give back</Text>.</Text>
+            </View>
             <View style={styles.itemAndTipsContainer}>
                 <View style={styles.itemContainer}>
                     <View style={styles.itemCircleOpen}></View>
@@ -558,7 +585,7 @@ const Step4 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Go for a run</Text>
                         </View>
-                        <DootooItemSidebar thing={{ tip_count: 3100, similar_count: 6200 }} styles={styles} />
+                        <DootooItemSidebar disabled={true} thing={{uuid: "1"}} styles={styles} />
                     </View>
                 </View>
                 <View style={styles.tipsContainer}>
@@ -605,10 +632,7 @@ const Step4 = () => {
                         </View>
                     </View>
                 </View>
-            </View>
-            <View style={styles.onboardingCopyContainer}>
-                <Text style={styles.centerCopy}>get tips to <Text style={styles.green}>get things done</Text>.</Text>
-                <Text style={styles.centerCopy}>share tips to{'\n'}<Text style={styles.green}>give back</Text>.</Text>
+                <Text style={styles.countDisclaimer}>*actual numbers vary</Text>
             </View>
         </Animated.View>
     );
@@ -683,7 +707,8 @@ const Step5 = () => {
             textDecorationLine: 'underline'
         },
         supplementalCopyContainer: {
-            paddingTop: 40
+            paddingTop: 40,
+            marginBottom: 60
         },
         supplementalCopy: {
             fontSize: 16,
@@ -700,20 +725,23 @@ const Step5 = () => {
         },
         profileNameText: {
             fontSize: 20
+        },
+        profileNameContainer: {
+            paddingTop: 15
         }
     });
 
     return (
         <Animated.View style={[styles.container, {opacity: stepFadeIn }]}>
-            <View style={styles.profileDrawerProfileIconContainer}>
-                <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_green.png')} />
-                <View>
-                    <Animated.Text style={[styles.profileNameText, { opacity: usernameFadeInOut }]}>{currentUsername}</Animated.Text>
-                </View>
-            </View>
             <Text style={styles.centerCopy}>your personal information{'\n'}<Text style={styles.green}>stays with you</Text>.</Text>
             <View style={styles.supplementalCopyContainer}>
                 <Text style={styles.supplementalCopy}>By continuing, you agree to{'\n'}dootoo's <Text style={[styles.green, styles.underline]} onPress={handleTermsClick}>Terms</Text> and understand{'\n'}how we protect your <Text style={[styles.green, styles.underline]} onPress={handlePrivacyPolicyClick}>Privacy</Text>.</Text>
+            </View>
+            <View style={styles.profileDrawerProfileIconContainer}>
+                <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_green.png')} />
+                <View style={styles.profileNameContainer}>
+                    <Animated.Text style={[styles.profileNameText, { opacity: usernameFadeInOut }]}>{currentUsername}</Animated.Text>
+                </View>
             </View>
         </Animated.View>
     );

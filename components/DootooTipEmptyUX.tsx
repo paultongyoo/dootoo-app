@@ -16,7 +16,7 @@ const DootooTipEmptyUX = ({ styles, selectedItem, tipArray }) => {
     });
 
     const generateEmptyListCTA = async () => {
-        const emptyListCTA = await generateTipCTA(anonymousId, selectedItem.uuid)
+        const emptyListCTA = await generateTipCTA(anonymousId.current, selectedItem.uuid)
         //console.log("Setting empty tip list CTA to: " + emptyListCTA);
         setEmptyListCTA(emptyListCTA);
         setCTALoading(false);

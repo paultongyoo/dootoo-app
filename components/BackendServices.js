@@ -11,6 +11,8 @@ const BACKEND_TRANSCRIPTION_TIPS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-a
 const BACKEND_GENERATETIPCTA_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/generateTipCTA_Dev'
                                              : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/generateTipCTA';
 
+const OPENAI_STATUS_COMPONENTS_URL = 'https://status.openai.com/api/v2/components.json';
+
 export const transcribeAudioToTasks = async (fileUri, anonymous_id) => {
  //console.log("Entering transcribeAudiToTasks with anonymous Id: " + anonymous_id);
 
@@ -87,6 +89,22 @@ export const generateTipCTA = async(anonymous_id, item_uuid) => {
     return response.data.body;
   } catch (error) {
     console.error('Error calling generateTipCTA API:', error);
+  }
+}
+
+export const checkOpenAPIStatus = async() => {
+  try {
+    const response = await axios.get(OPENAI_STATUS_COMPONENTS_URL);
+    const openAIComponentsArray = response.data.components;
+    let status = '';
+    openAIComponentsArray.forEach((component) => {
+      if (component.name == "API") {
+        status = component.status;
+      }
+    })
+    return status;
+  } catch (error) {
+    console.error('Error calling checkOpenAIAPIHealth API:', error);
   }
 }
 

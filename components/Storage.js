@@ -22,17 +22,32 @@ const LOADITEMS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amaz
 const LOADITEMCOUNTS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItemCounts_Dev'
                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadItemCounts';
 
+const LOADITEMSCOUNTS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItemsCounts_Dev'
+                               : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadItemsCounts';                            
+
 const SAVEITEMS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveItems';
 
+const UPDATEITEMORDER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemOrder_Dev'
+                                       : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemOrder';
+
 const UPDATEITEMTEXT_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemText_Dev'
                                      : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemText';
+                                     
+const UPDATEITEMDONESTATE_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemDoneState_Dev'
+                                     : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemDoneState';
 
 const LOADTIPS_URL =  (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadTips_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadTips';
 
 const SAVETIPS_URL =  (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveTips_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveTips';
+
+const UPDATETIPORDER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateTipOrder_Dev'
+                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateTipOrder';
+                                
+const UPDATETIPTEXT_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateTipText_Dev'
+                                    : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateTipText';
 
 const TIPVOTE_URL =  (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/tipVote_Dev'
                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/tipVote';
@@ -54,6 +69,9 @@ const LOADUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazo
 
 const BLOCKUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/blockUser_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/blockUser';
+                             
+const UPDATEUSERNAME_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateUsername_Dev'
+                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateUsername';
 
 
 export const saveItems = async (item_list_obj, callback) => {
@@ -65,13 +83,41 @@ export const saveItems = async (item_list_obj, callback) => {
   // Asyncronously save to backend to enable community features and refresh user counts.
   // Ensure all UI data uses only locally stored data and is not reliant on real-time backend state.
   saveItemsToBackend(item_list_obj, (updatedUser) => {
-    saveUserLocally(updatedUser);
+
+    // Deprecated in v1.1.1
+    //saveUserLocally(updatedUser);
+
     if (callback) {
 
       // Used to allow UI to update its user UI based on latest user counts
       callback();
     }
   });
+}
+
+export const updateItemOrder = async (uuid_array, callback) => {
+  try {
+    //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(UPDATEITEMORDER_URL,
+      {
+        anonymous_id : localAnonId,
+        uuid_array: JSON.stringify(uuid_array)
+      }
+    );
+    if (callback) {
+      callback();
+    }
+    //console.log("updateItemOrder Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling updateItemOrder API:', error);
+  }
 }
 
 export const updateItemText = async (item, callback) => {
@@ -101,6 +147,60 @@ export const updateItemText = async (item, callback) => {
   }
 }
 
+export const updateItemDoneState = async (item, callback) => {
+  try {
+    //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(UPDATEITEMDONESTATE_URL,
+      {
+        anonymous_id : localAnonId,
+        item_uuid: item.uuid,
+        is_done: item.is_done
+      }
+    );
+
+    if (callback) {
+      callback();
+    }
+    //console.log("updateDoneState Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling updateDoneState API:', error);
+  }
+}
+
+export const updateTipText = async (tip, callback) => {
+  try {
+    //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(UPDATETIPTEXT_URL,
+      {
+        anonymous_id : localAnonId,
+        tip_uuid: tip.uuid,
+        text: tip.text
+      }
+    );
+
+    if (callback) {
+      callback();
+    }
+    //console.log("updateTipText Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling updateTipText API:', error);
+  }
+}
+
 export const saveTips = async (item_obj, tip_list_obj, callback) => {
   if (tip_list_obj === undefined) {
     //console.log("saveTips called with undefined parameter, exiting...");
@@ -116,6 +216,32 @@ export const saveTips = async (item_obj, tip_list_obj, callback) => {
     updateLocalUserCounts(updatedUser)
     callback();
   });
+}
+
+export const updateTipOrder = async (selectedItem, uuid_array, callback) => {
+  try {
+    //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(UPDATETIPORDER_URL,
+      {
+        anonymous_id : localAnonId,
+        item_uuid: selectedItem.uuid,
+        uuid_array: JSON.stringify(uuid_array)
+      }
+    );
+    if (callback) {
+      callback();
+    }
+    //console.log("updateTipsOrder Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling updateTipsOrder API:', error);
+  }
 }
 
 export const initalizeUser = async() => {
@@ -149,7 +275,8 @@ export const loadItems = async (page, callback) => {
     const response = await axios.post(LOADITEMS_URL,
       {
         anonymous_id : localAnonId,
-        page: page
+        page: page,
+        skipCounts: true
       }
     );
     const item_array = response.data.body.items;
@@ -162,11 +289,40 @@ export const loadItems = async (page, callback) => {
   }
 };
 
+export const loadItemsCounts = async (item_uuids) => {
+  try {
+    const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserStr) {
+      console.log("Received null local anon Id, aborting loadItems!");
+      return [];
+    }
+    const localUser = JSON.parse(localUserStr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(LOADITEMSCOUNTS_URL,
+      {
+        anonymous_id : localAnonId,
+        item_uuids: item_uuids
+      }
+    );
+    const statusCode = response.data.statusCode;
+    const itemData = response.data.body;
+    if (statusCode == 200) {
+      const itemDataMap = new Map(Object.entries(JSON.parse(itemData)));
+      return itemDataMap;
+    } else {
+      console.log("HTTP 403 returned: " + itemData);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error calling loadItemsCounts API:', error);
+  }
+};
+
 export const loadItemCounts = async (item_uuid) => {
   try {
     const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserStr) {
-      //console.log("Received null local anon Id, aborting loadItems!");
+      console.log("Received null local anon Id, aborting loadItems!");
       return [];
     }
     const localUser = JSON.parse(localUserStr);
@@ -178,7 +334,7 @@ export const loadItemCounts = async (item_uuid) => {
       }
     );
     const counts_obj = response.data.body;
-    // console.log(`counts_obj: ${counts_obj}`);
+    //console.log(`counts_obj: ${JSON.stringify(counts_obj)}`);
     return counts_obj;
   } catch (error) {
     console.error('Error calling loadItemCounts API:', error);
@@ -280,9 +436,8 @@ export const deleteItem = async(item_uuid) => {
   }
 }
 
-export const updateItemHierarchy = async(item_uuid, is_child) => {
+export const updateItemHierarchy = async(item_uuid, parent_item_uuid) => {
   try {
-    //console.log("Entering updateItemHierarchy, uuid: " + item_uuid + " is_child: " + is_child);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserSr) {
       //console.log("Received null local anon Id, aborting tipVote!");
@@ -294,7 +449,7 @@ export const updateItemHierarchy = async(item_uuid, is_child) => {
       {
         anonymous_id : localAnonId,
         item_uuid: item_uuid,
-        is_child: is_child
+        parent_item_uuid: parent_item_uuid
       }
     );
     //console.log("updateItemHierarchy Response Obj: " + JSON.stringify(response.data.body));
@@ -327,16 +482,39 @@ export const deleteTip = async(tip_uuid) => {
 
 export const loadUsername = async(name) => {
   try {
-    //console.log("Entering deleteTip, uuid: " + tip_uuid);
+    console.log("Entering loadUsername, uuid: " + name);
     const response = await axios.post(LOADUSER_URL,
       {
         name: name
       }
     );
-    //console.log("deleteTip Response Obj: " + JSON.stringify(response.data.body));
+    console.log("loadUsername Response Obj: " + JSON.stringify(response.data.body));
     return response.data.body
   } catch (error) {
     console.error('Error calling loadUsername API:', error);
+  }
+}
+
+export const updateUsername = async(new_name) => {
+  try {
+    //console.log("updateUsername: " + new_name);
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return ;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(UPDATEUSERNAME_URL,
+      {
+        anonymous_id: localAnonId,
+        name: new_name
+      }
+    );
+    //console.log("updateUsername Response Obj: " + JSON.stringify(response.data.body));
+    return response.data.statusCode
+  } catch (error) {
+    console.error('Error calling updateUsername API:', error);
   }
 }
 
@@ -397,10 +575,8 @@ export const resetAllData = async () => {
   }
 };
 
-// ******** BEGIN Non-EXPORTED METHODS *********
-
-const saveUserLocally = async(user_obj) => {
-  //console.log("Saving new user data to local storage...");
+export const saveUserLocally = async(user_obj) => {
+  //console.log("Saving user data to local storage...");
 
   try {
     //console.log("Saving user to local storage...");
@@ -410,10 +586,11 @@ const saveUserLocally = async(user_obj) => {
     await AsyncStorage.setItem(TIP_COUNT_KEY, `${user_obj.tipCount  || '0'}`);
     //console.log(`Saved user to local storage.`)
   } catch (e) {
-    //console.log("Error saving user to local storage.", e);
+    console.log("Error saving user to local storage.", e);
   }
-  //console.log("Saved user data to local storage successfully.");
 }
+
+// ******** BEGIN Non-EXPORTED METHODS *********
 
 const loadLocalUser = async() => {
   //console.log("loadLocalUser");
@@ -429,7 +606,6 @@ const loadLocalUser = async() => {
       return null;
     }
     //console.log("Retrieved user from local storage: " + JSON.stringify(loadedUser));
-    return loadedUser;
   } catch (error) {
     console.error('Error loading user from local storage:', error);
   }
@@ -509,7 +685,8 @@ const saveItemsToBackend = async(item_list_obj, callback) => {
       {
         anonymous_id: localAnonId,
         items_str: JSON.stringify(item_list_obj),
-        skipLoad: true
+        skipLoad: true,
+        skipUserLoad: true
       }
     );
     const response_obj = JSON.parse(response.data.body);
