@@ -262,7 +262,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             // dragged to the bottom of its family list,
             // assume user wnats to make the thing a parent / detach it from its siblings
             if (draggedThing.parent_item_uuid &&
-                newData[toIndex - 1].parent_item_uuid != draggedThing.parent_item_uuid &&
+                (!newData[toIndex - 1] || (newData[toIndex - 1].parent_item_uuid != draggedThing.parent_item_uuid)) &&
                 newData[toIndex + 1] &&
                 !newData[toIndex + 1].parent_item_uuid) {
 
