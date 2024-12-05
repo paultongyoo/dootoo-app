@@ -517,9 +517,9 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                     <Pressable
                         onPress={() => {
                             if (isRecordingProcessing) {
-                                cancelRecordingProcessing()
+                                cancelRecordingProcessing();
                             } else if (recording) {
-                                processRecording()
+                                processRecording();
                             } else {
                                 startRecording();
                             }
@@ -536,7 +536,11 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                     </Pressable>
                 </Reanimated.View>
                 <View style={styles.bannerAdContainer}>
-                    <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} />
+                    <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} 
+                            onPaid={() => amplitude.track("Banner Ad Paid")}
+                            onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
+                            onAdOpened={() => amplitude.track("Banner Ad Opened")}
+                            onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
                 </View>
             </Animated.View>
         );
