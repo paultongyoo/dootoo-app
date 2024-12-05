@@ -93,8 +93,8 @@ export const handler = async (event) => {
   )
   SELECT
       i.uuid AS item_uuid,
-      CAST(sc.similar_count AS INTEGER),
-      CAST(tc.tip_count AS INTEGER)
+      COALESCE(CAST(sc.similar_count AS INTEGER), 0) as similar_count,
+      COALESCE(CAST(tc.tip_count AS INTEGER), 0) as tip_count
   FROM
       "Item" i
   LEFT JOIN
