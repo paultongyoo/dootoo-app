@@ -15,6 +15,7 @@ const { width: screenWidth } = Dimensions.get('window');
 const OnboardingScreen = () => {
     const router = useRouter();
     const [step, setStep] = useState(1);
+    const { itemCountsMap } = useContext(AppContext);
     const translationX = useRef(new Animated.Value(0)).current;
     const onboardingOpacity = useRef(new Animated.Value(0)).current
 
@@ -25,6 +26,13 @@ const OnboardingScreen = () => {
             easing: Easing.in(Easing.quad),
             useNativeDriver: true
         }).start();
+
+        // Initialize map for downstream screens
+        itemCountsMap.current = new Map();
+        itemCountsMap.current.set("1", { tip_count: 3100, similar_count: 6200 });
+        itemCountsMap.current.set("2", { tip_count: 3300, similar_count: 5300 });
+        itemCountsMap.current.set("3", { tip_count: 23, similar_count: 503 });
+        itemCountsMap.current.set("4", { tip_count: 201, similar_count: 1500 });
     },[]);
     
     const onSwipe = ({ nativeEvent }) => {
@@ -239,21 +247,10 @@ const Step3 = () => {
         duration: 300,
         useNativeDriver: true
     });
-    const { itemCountsMap } = useContext(AppContext);
-    const [ resetKey, setResetKey ]  = useState(0);
 
     useEffect(() => {
         fadeInAnimation.start();
         amplitude.track("Onboarding Step 3 Viewed");
-
-        itemCountsMap.current = new Map();
-        itemCountsMap.current.set("1", { tip_count: 3100, similar_count: 6200 });
-        itemCountsMap.current.set("2", { tip_count: 3300, similar_count: 5300 });
-        itemCountsMap.current.set("3", { tip_count: 23, similar_count: 503 });
-        itemCountsMap.current.set("4", { tip_count: 201, similar_count: 1500 });
-    
-        setResetKey((prevVal) => prevVal + 1);
-    
     }, []);
 
     const styles = StyleSheet.create({
@@ -585,7 +582,7 @@ const Step4 = () => {
                         <View style={styles.itemNamePressable}>
                             <Text style={styles.taskTitle}>Go for a run</Text>
                         </View>
-                        <DootooItemSidebar disabled={true} thing={{uuid: "1"}} styles={styles} />
+                        <DootooItemSidebar disabled={true} thing={{uuid: "2"}} styles={styles} />
                     </View>
                 </View>
                 <View style={styles.tipsContainer}>
