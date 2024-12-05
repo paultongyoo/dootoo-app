@@ -17,7 +17,7 @@ import DootooList from "@/components/DootooList";
 import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import * as amplitude from '@amplitude/analytics-react-native';
-import { ProfileCountEventEmitter } from "@/components/EventEmitters";
+import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 
 
 export default function ItemTips() {
@@ -45,18 +45,9 @@ export default function ItemTips() {
     //console.log("saveAllTips started...");
     if (latestTips && latestTips.length > 0) {
 
-      // Immediately update displayed tip count within selected item header
-      setSelectedItem((prevItem) => ({ ...prevItem, tip_count: latestTips.length }));
-
-      //console.log(`Passing ${latestTips.length} tips to saveTips method...`);
-
       // Asynchronously sync DB with latest tips
       saveTips(selectedItem, latestTips, () => {
-
-        // Fix validation for v1.1.1 race condition
-        // updateUserCountContext();
-
-        //console.log("saveAllTips successful.");
+        ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
       });
     }
   };

@@ -8,7 +8,7 @@ import Toast from 'react-native-toast-message';
 import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
-import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
+import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
 import { loadItemsCounts, updateItemHierarchy } from './Storage';
 import usePolling from './Polling';
 
@@ -154,6 +154,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
     const { startPolling, stopPolling, restartPolling } = usePolling(pollThingCounts);
     useEffect(() => {
+
+        const forceItemCountsUpdate = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__UPDATE_COUNTS, pollThingCounts);
+
         const handleAppStateChange = (nextAppState) => {
             console.log("App State Changed: " + nextAppState);
             if (nextAppState === "active") {
@@ -165,7 +168,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
         const subscription = AppState.addEventListener("change", handleAppStateChange);
 
-        return () => subscription.remove();
+        return () => { 
+            forceItemCountsUpdate.remove();
+            subscription.remove();
+        }
     }, [startPolling, stopPolling]);
 
     const resetListWithFirstPageLoad = async (isPullDown = false) => {
