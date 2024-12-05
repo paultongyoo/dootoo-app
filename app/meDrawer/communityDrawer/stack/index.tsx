@@ -513,7 +513,7 @@ export default function Index() {
       flex: 1,
       //justifyContent: "center",
       backgroundColor: "#DCC7AA",
-      paddingTop: (Platform.OS == 'ios') ? 100 : 75
+      paddingTop: (Platform.OS == 'ios') ? 100 : 90
       //alignItems: "center"
     },
     link: {

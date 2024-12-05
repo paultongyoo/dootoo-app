@@ -277,7 +277,7 @@ export default function ItemTips() {
       flex: 1,
       justifyContent: "center",
       backgroundColor: "#DCC7AA",
-      paddingTop: (Platform.OS == 'ios') ? 100 : 75
+      paddingTop: (Platform.OS == 'ios') ? 100 : 90
     },
     initialLoadAnimContainer: {
       flex: 1,

@@ -149,7 +149,7 @@ const ProfileDrawer = ({ navigation }) => {
     profileDrawerCloseContainer: {
       position: 'absolute',
       right: 20,
-      top: (Platform.OS == 'ios') ? 62 : 40
+      top: (Platform.OS == 'ios') ? 62 : 55
     },
     profileDrawerCloseIcon: {
       opacity: 0.4,
