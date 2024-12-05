@@ -155,7 +155,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const { startPolling, stopPolling, restartPolling } = usePolling(pollThingCounts);
     useEffect(() => {
 
-        const forceItemCountsUpdate = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__UPDATE_COUNTS, pollThingCounts);
+        const forceItemCountsUpdate = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__UPDATE_COUNTS, restartPolling);
 
         const handleAppStateChange = (nextAppState) => {
             console.log("App State Changed: " + nextAppState);
