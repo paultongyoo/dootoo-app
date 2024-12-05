@@ -515,7 +515,15 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 <View style={styles.footerButton_Underlay}></View>
                 <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || isRecordingProcessing) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
                     <Pressable
-                        onPress={(isRecordingProcessing) ? cancelRecordingProcessing : ((recording) ? processRecording : startRecording) }      
+                        onPress={() => {
+                            if (isRecordingProcessing) {
+                                cancelRecordingProcessing()
+                            } else if (recording) {
+                                processRecording()
+                            } else {
+                                startRecording();
+                            }
+                        }}
                         onPressIn={recordButton_handlePressIn}
                         onPressOut={recordButton_handlePressOut}>
                         {(isRecordingProcessing) ?
@@ -523,8 +531,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                                 <ActivityIndicator size={"large"} color="white" />
                             </View>
                             : (recording) ?
-                            <View style={styles.footerButtonIcon_Stop}></View> 
-                            : <Image style={styles.footerButtonImage_Record} source={require("@/assets/images/microphone_white.png")} />}
+                                <View style={styles.footerButtonIcon_Stop}></View>
+                                : <Image style={styles.footerButtonImage_Record} source={require("@/assets/images/microphone_white.png")} />}
                     </Pressable>
                 </Reanimated.View>
                 <View style={styles.bannerAdContainer}>
