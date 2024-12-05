@@ -133,6 +133,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         if (itemCountsMap.current) {
                             const mappedUUIDs = [...itemCountsMap.current.keys()];
                             ListItemEventEmitter.emit(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, mappedUUIDs);
+                        } else {
+                            console.log("itemCountsMap.current is null - inspecting itemUUIDs: " + JSON.stringify(itemUUIDs));
                         }
                     } else {
                         console.log("itemUUIDs.length unexpectedly zero given listArray.length > 0 -- is app in bad state?");
