@@ -41,7 +41,8 @@ export const handler = async (event) => {
                         "Use the following format: 'Share your best tips with the community to help them <do the user task generalizing references to specific names>."
                 },
                 { "role": "user", "content": decryptedString }
-            ]
+            ],
+            user: user.anonymous_id
         });
         cta = completion.choices[0].message.content;
         console.log("Generated CTA: " + cta);
