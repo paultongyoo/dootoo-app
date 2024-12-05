@@ -542,7 +542,7 @@ export default function Index() {
     },
     emptyListContainer_arrow: {
       position: 'absolute',
-      bottom: -190,
+      bottom: (Platform.OS == 'ios') ? -190 : -205,
       right: 100,
       height: 200,
       width: 80,
