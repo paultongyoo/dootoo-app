@@ -24,7 +24,8 @@ export default function StackLayout() {
     amplitude.track('Unexpected Error Occurred', {
       pathname: pathname,
       error_name: error.name,
-      error_message: error.message
+      error_message: error.message,
+      error_stack: error.stack
     });
     console.log(error);
   };
