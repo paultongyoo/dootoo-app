@@ -9,6 +9,7 @@ import Toast from "react-native-toast-message";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { ListItemEventEmitter } from "./EventEmitters";
+import { checkOpenAPIStatus } from "./BackendServices.js";
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
@@ -37,6 +38,39 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
     const footerPosition = useRef(new Animated.Value(200)).current;
     const ITEMS_PATHNAME = "/meDrawer/communityDrawer/stack";
+
+    useEffect(() => {
+        if (!hideRecordButton) {
+            checkOpenAPIHealth();
+        }
+    }, []);
+
+    const checkOpenAPIHealth = async () => {
+        const status = await checkOpenAPIStatus();
+        if (status != "operational") {
+            amplitude.track("OpenAI API Impacted Prompt Displayed", {
+                anonymous_id: anonymousId.current,
+                pathname: pathname
+            });
+            Alert.alert(
+                "Voice Transcription May Be Impacted",
+                "Please be aware that our AI partner is currently experiencing issues that may impact posting new tasks and tips.  " + 
+                "This message will cease to appear once their issues are resolved.",
+                [
+                    {
+                        text: 'OK',
+                        onPress: () => {
+                            amplitude.track("OpenAI API Impacted Prompt OK'd", {
+                                anonymous_id: anonymousId.current,
+                                pathname: pathname
+                            });
+                        },
+                    },
+                ],
+                { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+            );
+        }
+    }
 
     useEffect(() => {
         initializeMobileAds();
