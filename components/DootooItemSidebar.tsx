@@ -48,7 +48,7 @@ const DootooItemSidebar = ({ thing, styles }) => {
         // });
 
         const eventHandler_countsPolled = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, (uuidArray) => {
-            if (uuidArray.includes(thing.uuid)) {
+            if (itemCountsMap.current && uuidArray.includes(thing.uuid)) {
                 const updatedCounts = itemCountsMap.current.get(thing.uuid);
                 setTipCount(updatedCounts.tip_count);
                 setSimilarCount(updatedCounts.similar_count); 
