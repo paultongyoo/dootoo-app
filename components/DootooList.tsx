@@ -52,7 +52,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     });
 
     useEffect(() => {
-        //console.log(`useEffect([]) ${Date.now()}`);
+        console.log(`DootooList.useEffect([]) ${Date.now()}`);
         initializeLocalUser((isNew: boolean) => {
             //console.log("initializeLocalUser callback method");
             if (shouldInitialLoad) {
@@ -69,6 +69,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             }
             setScreenInitialized(true);
         });
+
+        return () => {
+            console.log("DootooList.useEffect([]) component unmounted " + new Date(Date.now()).toLocaleString());
+        }
     }, []);
 
     useEffect(() => {
@@ -120,14 +124,19 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         let ignore = false;
         if (!ignore) {
             ignore = true;
-            console.log("Polling for Thing latest counts: " + new Date(Date.now()).toLocaleString());
+            console.log(`Polling for ${thingName} latest counts: ${new Date(Date.now()).toLocaleString()}`);
             if (listArray.length > 0) {  
                 if (thingName == "item") {
                     const itemUUIDs = listArray.map(thing => thing.uuid);
                     itemCountsMap.current = await loadItemsCounts(itemUUIDs);
                     const mappedUUIDs = [...itemCountsMap.current.keys()];
                     ListItemEventEmitter.emit(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, mappedUUIDs)
+                } else {
+                    console.log("Ignoring poll call for tips, not supported at this time");
                 }
+            } else {
+                console.log(`${thingName} list empty, calling stopPolling...`);
+                stopPolling();
             }
             ignore = false;
         } else {
@@ -135,7 +144,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
     }
 
-    const { startPolling, stopPolling, restartPolling } = usePolling(pollThingCounts, false);
+    const { startPolling, stopPolling, restartPolling } = usePolling(pollThingCounts);
     useEffect(() => {
         const handleAppStateChange = (nextAppState) => {
             console.log("App State Changed: " + nextAppState);

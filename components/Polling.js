@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 
-const usePolling = (pollingFn, autoStart = true, interval = 60000) => {
+const usePolling = (pollingFn, interval = 60000) => {
   const timeoutRef = useRef(null);
   const isPolling = useRef(false);
 
   const startPolling = () => {
-    console.log("startPolling called");
+    //console.log("startPolling called");
     if (isPolling.current) return; // Prevent duplicate polling
     isPolling.current = true;
 
@@ -23,7 +23,7 @@ const usePolling = (pollingFn, autoStart = true, interval = 60000) => {
   };
 
   const restartPolling = () => {
-    console.log("restartPolling called");
+    //console.log("restartPolling called");
     if (isPolling.current) {
         stopPolling();
         startPolling();
@@ -33,7 +33,7 @@ const usePolling = (pollingFn, autoStart = true, interval = 60000) => {
   }
 
   const stopPolling = () => {
-    console.log("stopPolling called");
+    //console.log("stopPolling called");
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
@@ -42,12 +42,14 @@ const usePolling = (pollingFn, autoStart = true, interval = 60000) => {
   };
 
   useEffect(() => {
-    if (autoStart) {
-        startPolling();
-    }
+    //console.log("Polling hook mounting");
+    startPolling();
 
     // Cleanup on unmount
-    return () => stopPolling();
+    return () => {
+      //console.log("Polling hook unmounting");
+      stopPolling();
+    }
   }, [pollingFn, interval]);
 
   return { startPolling, stopPolling, restartPolling };
