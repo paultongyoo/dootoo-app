@@ -34,7 +34,8 @@
       "permissions": [
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.thoughtswork.dootoo"
+      "package": "com.thoughtswork.dootoo",
+      "versionCode": 3
     },
     "web": {
       "bundler": "metro",
