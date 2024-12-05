@@ -304,10 +304,15 @@ export const loadItemsCounts = async (item_uuids) => {
         item_uuids: item_uuids
       }
     );
+    const statusCode = response.data.statusCode;
     const itemData = response.data.body;
-    const itemDataMap = new Map(Object.entries(JSON.parse(itemData)));
-    //console.log("Item Data Map Size: " + itemDataMap.size);
-    return itemDataMap;
+    if (statusCode == 200) {
+      const itemDataMap = new Map(Object.entries(JSON.parse(itemData)));
+      return itemDataMap;
+    } else {
+      console.log("HTTP 403 returned: " + itemData);
+      return null;
+    }
   } catch (error) {
     console.error('Error calling loadItemsCounts API:', error);
   }
