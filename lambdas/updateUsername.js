@@ -67,7 +67,9 @@ export const handler = async (event) => {
               `
         },
         { "role": "user", "content": `User-provided input: ${event.name}` }
-      ], response_format: { "type": "json_object" }
+      ], 
+      response_format: { "type": "json_object" },
+      user: loadedUser.anonymous_id
     });
     const object_from_chat = JSON.parse(completion.choices[0].message.content);
     if (!object_from_chat.valid) {
