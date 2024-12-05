@@ -263,8 +263,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             // assume user wnats to make the thing a parent / detach it from its siblings
             if (draggedThing.parent_item_uuid &&
                 (!newData[toIndex - 1] || (newData[toIndex - 1].parent_item_uuid != draggedThing.parent_item_uuid)) &&
-                newData[toIndex + 1] &&
-                !newData[toIndex + 1].parent_item_uuid) {
+                (newData[toIndex + 1] && !newData[toIndex + 1].parent_item_uuid)) {
 
                 amplitude.track(`Child Dragged Outside Of Family`, {
                     anonymous_id: anonymousId.current,
