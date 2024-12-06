@@ -38,6 +38,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const isPageLoading = useRef(false);
     const hasMoreThings = useRef(true);
     const initialLoad = useRef(true);
+    const isDragging = useRef(false);
 
     // State Variables:  Changing these should intentionally cause this list to re-render
     const [currentlyTappedThing, setCurrentlyTappedThing] = useState();
@@ -574,13 +575,14 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     <Animated.View style={[styles.taskContainer, fadeInListOnRender.current && { opacity: listOpacity }]}>
                         {listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0 ?
                             <DraggableFlatList
-                                //ref={itemFlatList}  TODO: Deprecate
                                 data={listArray.filter(item => !item.is_deleted)}
                                 onDragEnd={({ data, from, to }) => {
+                                    isDragging.current = false;
                                     if (from != to) {
                                         handleThingDrag(data, to, data[to]);
-                                    }
+                                    }                                 
                                 }}
+                                onDragBegin={() => { isDragging.current = true;}}
                                 keyExtractor={(item, index) => item.uuid}
                                 ListHeaderComponent={<View style={{ height: 0 }} />}
                                 refreshControl={
@@ -590,7 +592,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                             setRefreshing(true);
                                             resetListWithFirstPageLoad(true);
                                         }}
-                                        refreshing={isRefreshing} />
+                                        refreshing={isRefreshing} 
+                                        enabled={isDragging.current == false} />
                                 }
                                 renderItem={renderThing}
                                 onEndReached={({ distanceFromEnd }) => {
