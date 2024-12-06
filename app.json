@@ -35,7 +35,7 @@
         "android.permission.RECORD_AUDIO"
       ],
       "package": "com.thoughtswork.dootoo",
-      "versionCode": 6,
+      "versionCode": 8,
       "manifest": {
         "supportsScreens": {
           "small": false,

@@ -38,7 +38,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const isPageLoading = useRef(false);
     const hasMoreThings = useRef(true);
     const initialLoad = useRef(true);
-    const isDragging = useRef(false);
 
     // State Variables:  Changing these should intentionally cause this list to re-render
     const [currentlyTappedThing, setCurrentlyTappedThing] = useState();
@@ -577,12 +576,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             <DraggableFlatList
                                 data={listArray.filter(item => !item.is_deleted)}
                                 onDragEnd={({ data, from, to }) => {
-                                    isDragging.current = false;
                                     if (from != to) {
                                         handleThingDrag(data, to, data[to]);
                                     }                                 
                                 }}
-                                onDragBegin={() => { isDragging.current = true;}}
+                                nestedScrollEnabled={true}
                                 keyExtractor={(item, index) => item.uuid}
                                 ListHeaderComponent={<View style={{ height: 0 }} />}
                                 refreshControl={
@@ -592,8 +590,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                             setRefreshing(true);
                                             resetListWithFirstPageLoad(true);
                                         }}
-                                        refreshing={isRefreshing} 
-                                        enabled={isDragging.current == false} />
+                                        refreshing={isRefreshing} />
                                 }
                                 renderItem={renderThing}
                                 onEndReached={({ distanceFromEnd }) => {
