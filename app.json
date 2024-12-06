@@ -35,7 +35,16 @@
         "android.permission.RECORD_AUDIO"
       ],
       "package": "com.thoughtswork.dootoo",
-      "versionCode": 4
+      "versionCode": 6,
+      "manifest": {
+        "supportsScreens": {
+          "small": false,
+          "normal": false,
+          "large": false,
+          "xlarge": false,
+          "anyDensity": false
+        }
+      }
     },
     "web": {
       "bundler": "metro",
