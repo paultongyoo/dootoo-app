@@ -81,7 +81,7 @@ const saveItems = async(anonymous_id, items_str) => {
                         rank_idx: i,
                         is_done: array_item.is_done,
                         is_deleted: array_item.is_deleted,
-                        ...((array_item.parent_item_uuid) && { parent: {
+                        ...((array_item.parent_item_uuid) && parentUUIDtoIDMap[array_item.parent_item_uuid] && { parent: {
                                 connect: {
                                     id: parentUUIDtoIDMap[array_item.parent_item_uuid] 
                                 }
@@ -93,7 +93,7 @@ const saveItems = async(anonymous_id, items_str) => {
                         rank_idx: i,
                         is_done: array_item.is_done,
                         is_deleted: array_item.is_deleted,
-                        ...((array_item.parent_item_uuid) && { parent: {
+                        ...((array_item.parent_item_uuid) && parentUUIDtoIDMap[array_item.parent_item_uuid] && { parent: {
                                 connect: {
                                     id: parentUUIDtoIDMap[array_item.parent_item_uuid] 
                                 }
