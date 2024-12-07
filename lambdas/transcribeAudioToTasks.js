@@ -29,7 +29,7 @@ export const handler = async (event) => {
     });
 
     var transcribedText = transcription.text;
-    console.log("Transcribed Text: " + transcribedText);
+    //console.log("Transcribed Text: " + transcribedText);  // NEVER TRANSCRIBE TEXT INTO LOG FILES TO STAY TRUE TO CUSTOMERS
 
     // Run transcribed text through moderation API -- if flagged, do not split into tasks and instead report back to user
     const moderation = await openai.moderations.create({

@@ -1,4 +1,4 @@
-import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, Easing, TouchableWithoutFeedback, AppState, Alert } from 'react-native';
+import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, Easing, TouchableWithoutFeedback, AppState, StyleSheet, Platform, Alert } from 'react-native';
 import { useState, useRef, useContext, useEffect, useMemo, memo } from 'react';
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -11,6 +11,10 @@ import { usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
 import { loadItemsCounts, updateItemHierarchy } from './Storage';
 import usePolling from './Polling';
+import * as Calendar from 'expo-calendar';
+import Dialog from "react-native-dialog";
+import RNPickerSelect from 'react-native-picker-select';
+import * as Linking from 'expo-linking';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = (item, index) => { return <></> },
@@ -31,6 +35,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [errorMsg, setErrorMsg] = useState();
     const [isRefreshing, setRefreshing] = useState(false);
+    const [showCalendarSelectionDialog, setShowCalendarSelectionDialog] = useState(false);
+    const [calendarSelectionInvalid, setCalendarSelectionInvalid] = useState(false);
+
 
     // References:  Changing these should intentionally NOT cause this list to re-render
     //const itemFlatList = useRef(null);              // TODO: Consider deprecate
@@ -38,6 +45,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const isPageLoading = useRef(false);
     const hasMoreThings = useRef(true);
     const initialLoad = useRef(true);
+    const calendars = useRef<Calendar.Calendar[]>([]);
+    const calendarSelectionInputValue = useRef('no_reason');
 
     // State Variables:  Changing these should intentionally cause this list to re-render
     const [currentlyTappedThing, setCurrentlyTappedThing] = useState();
@@ -168,7 +177,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
         const subscription = AppState.addEventListener("change", handleAppStateChange);
 
-        return () => { 
+        return () => {
             forceItemCountsUpdate.remove();
             subscription.remove();
         }
@@ -360,6 +369,106 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
     };
 
+    async function openAppSettings() {
+        const canOpenSettings = await Linking.canOpenURL('app-settings:');
+        if (canOpenSettings) {
+            Linking.openURL('app-settings:');
+        } else {
+            Alert.alert(
+                'Unable to open settings',
+                'Please navigate to your device settings to re-enable calendar permissions.'
+            );
+        }
+    }
+
+    const handleTimerTap = async (thing) => {
+        console.log("handleTimerTap called");
+        const permissionsResponse = await Calendar.requestCalendarPermissionsAsync();
+        if (permissionsResponse.status === 'granted') {
+            const response = await Calendar.createEventInCalendarAsync({title: thing.text});
+
+            return;
+
+            const readCalendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+            calendars.current = readCalendars;
+            console.log("Attempting to display calendar selection dialog");
+            if (calendars.current.length > 0) {
+                amplitude.track("Calendar Selection Dialog Displayed", {
+                    anonymous_id: anonymousId.current,
+                    pathname: pathname
+                });
+                setShowCalendarSelectionDialog(true);
+            } else {
+                amplitude.track("No Calendars Found Message Displayed", {
+                    anonymous_id: anonymousId.current,
+                    pathname: pathname
+                });
+                Alert.alert(
+                    "No Calendars Found",
+                    "Please confirm you can access an existing calendar on this device via your calendar app.",
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => {
+                                amplitude.track("No Calendars Found Message Dimissed", {
+                                    anonymous_id: anonymousId.current,
+                                    pathname: pathname
+                                });
+                            }
+                        }
+                    ],
+                    { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+                );
+            }
+        } else {
+            Alert.alert(
+                "Calendar Permissions Required",
+                "Please grant dootoo permission to access your calendar via app settings.",
+                [
+                    {
+                        text: 'Cancel',
+                        onPress: () => {
+                            amplitude.track("Calendar Permissions Required Prompt Dimissed", {
+                                anonymous_id: anonymousId.current,
+                                pathname: pathname
+                            });
+                        },
+                        style: 'cancel'
+                    },
+                    {
+                        text: 'Go to Settings',
+                        onPress: () => {
+                            amplitude.track("Calendar Permissions Required Prompt: Go to Settings Pressed", {
+                                anonymous_id: anonymousId.current,
+                                pathname: pathname
+                            });
+                            openAppSettings();
+                        }
+                    },
+                ],
+                { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+            );
+        }
+    }
+
+    const handleCalendarSelectDialogCancel = () => {
+        setShowCalendarSelectionDialog(false);
+        setCalendarSelectionInvalid(false);
+        calendarSelectionInputValue.current = 'no_reason';
+    }
+
+    const handleCalendarSelectDialogSubmission = async () => {
+        console.log("Inside handleCalendarSelectDialogSubmission");
+        if (calendarSelectionInputValue.current == 'no_reason') {
+            setCalendarSelectionInvalid(true);
+        } else {
+            setCalendarSelectionInvalid(false);
+            const calendarId = calendarSelectionInputValue.current;
+            
+            console.log("Calendar Create Event Response: " + JSON.stringify(response));
+        }
+    }
+
     const renderThing = ({ item, getIndex, drag, isActive }) => {
         const rowPositionX = useRef(new Animated.Value(0)).current;
         thingRowPositionXs.current[item.uuid] = rowPositionX;
@@ -522,6 +631,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 </Pressable> : <></>
                             }
                             <View style={styles.itemNameContainer}>
+                                <Pressable style={styles.timerIconContainer}
+                                    onPress={() => handleTimerTap(item)}>
+                                    <Image style={styles.timerIcon} source={require("@/assets/images/timer_icon_556B2F.png")} />
+                                </Pressable>
                                 {(currentlyTappedThing?.uuid == item.uuid) ?
                                     <TextInput
                                         blurOnSubmit={true}
@@ -555,6 +668,40 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         );
     }
 
+    const pickerSelectStyles = StyleSheet.create({
+        inputIOS: {
+            fontSize: 14,
+            paddingVertical: 12,
+            paddingHorizontal: 10,
+            borderWidth: 1,
+            borderColor: 'gray',
+            borderRadius: 4,
+            color: 'black',
+            textAlign: 'center',
+            marginLeft: 20,
+            marginRight: 20,
+            marginBottom: 20,
+            backgroundColor: 'white'
+        },
+        inputAndroid: {
+            fontSize: 14,
+            paddingHorizontal: 10,
+            paddingVertical: 8,
+            borderWidth: 0.5,
+            borderColor: 'purple',
+            borderRadius: 8,
+            color: 'black',
+            paddingRight: 30, // to ensure the text is never behind the icon
+        }
+    });
+
+    const formStyles = StyleSheet.create({
+        formValidationMessage: {
+            color: 'red',
+            paddingLeft: (Platform.OS == 'android') ? 10 : 0
+        }
+    })
+
     return (
         <TouchableWithoutFeedback onPress={() => {
             if (currentlyTappedThing != null) {
@@ -574,13 +721,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     <Animated.View style={[styles.taskContainer, fadeInListOnRender.current && { opacity: listOpacity }]}>
                         {listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0 ?
                             <DraggableFlatList
-                                //ref={itemFlatList}  TODO: Deprecate
                                 data={listArray.filter(item => !item.is_deleted)}
                                 onDragEnd={({ data, from, to }) => {
                                     if (from != to) {
                                         handleThingDrag(data, to, data[to]);
                                     }
                                 }}
+                                nestedScrollEnabled={true}
                                 keyExtractor={(item, index) => item.uuid}
                                 ListHeaderComponent={<View style={{ height: 0 }} />}
                                 refreshControl={
@@ -617,6 +764,20 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     </Animated.View>
                 }
                 <DootooFooter hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveAllThingsFunc={saveAllThings} />
+                <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
+                    <Dialog.Title>Select Calendar</Dialog.Title>
+                    <Dialog.Description>Which calendar to put this item?</Dialog.Description>
+                    <RNPickerSelect
+                        onValueChange={(value) => { calendarSelectionInputValue.current = value; }}
+                        placeholder={{ label: 'Select a calendar', value: 'no_calendar' }}
+                        style={pickerSelectStyles}
+                        items={calendars.current.map((calendar) => ({ label: calendar.title, value: calendar.id }))} />
+                    { (calendarSelectionInvalid) 
+                            ? <Text style={formStyles.formValidationMessage}>Please select a calendar.</Text>
+                            : <></>}
+                    <Dialog.Button label="Cancel" onPress={handleCalendarSelectDialogCancel} />
+                    <Dialog.Button label="Continue" onPress={handleCalendarSelectDialogSubmission} />
+                </Dialog.Container>
             </View>
         </TouchableWithoutFeedback>
     );
