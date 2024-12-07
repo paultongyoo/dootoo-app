@@ -37,7 +37,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const [isRefreshing, setRefreshing] = useState(false);
     const [showCalendarSelectionDialog, setShowCalendarSelectionDialog] = useState(false);
     const [calendarSelectionInvalid, setCalendarSelectionInvalid] = useState(false);
-
+    const [calendarSelectionInputValue, setCalendarSelectionInputValue] = useState('no_calendar');
 
     // References:  Changing these should intentionally NOT cause this list to re-render
     //const itemFlatList = useRef(null);              // TODO: Consider deprecate
@@ -47,7 +47,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const initialLoad = useRef(true);
     const editableCalendars = useRef<Calendar.Calendar[]>([]);
     const selectedCalendar = useRef();
-    const calendarSelectionInputValue = useRef('no_reason');
     const selectedTimerThing = useRef(null);
 
     // State Variables:  Changing these should intentionally cause this list to re-render
@@ -458,17 +457,17 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const handleCalendarSelectDialogCancel = () => {
         setShowCalendarSelectionDialog(false);
         setCalendarSelectionInvalid(false);
-        calendarSelectionInputValue.current = 'no_reason';
+        setCalendarSelectionInputValue('no_calendar');
     }
 
     const handleCalendarSelectDialogSubmission = async () => {
         console.log("Inside handleCalendarSelectDialogSubmission");
-        if (calendarSelectionInputValue.current == 'no_reason') {
+        if (calendarSelectionInputValue == 'no_calendar') {
             setCalendarSelectionInvalid(true);
         } else {
             setCalendarSelectionInvalid(false);
             setShowCalendarSelectionDialog(false);
-            const selectedCalendarId = calendarSelectionInputValue.current;
+            const selectedCalendarId = calendarSelectionInputValue;
             const calIdx = editableCalendars.current.findIndex((calendar) => calendar.id == selectedCalendarId);
             selectedCalendar.current = editableCalendars.current[calIdx];
             const eventId = await createCalendarEvent();
@@ -745,7 +744,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const formStyles = StyleSheet.create({
         formValidationMessage: {
             color: 'red',
-            paddingLeft: (Platform.OS == 'android') ? 10 : 0
+            paddingBottom: 20,
+            paddingLeft: (Platform.OS == 'android') ? 10 : 0,
+            textAlign: (Platform.OS == 'ios') ? 'center' : 'left'
         }
     })
 
@@ -815,7 +816,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     <Dialog.Title>Select Calendar</Dialog.Title>
                     <Dialog.Description>Which calendar to put this item?</Dialog.Description>
                     <RNPickerSelect
-                        onValueChange={(value) => { calendarSelectionInputValue.current = value; }}
+                        value={calendarSelectionInputValue}
+                        onValueChange={(value) => { 
+                            setCalendarSelectionInputValue(value);
+                            if (value != 'no_calendar') {
+                                setCalendarSelectionInvalid(false);
+                            } 
+                        }}
                         placeholder={{ label: 'Select a calendar', value: 'no_calendar' }}
                         style={pickerSelectStyles}
                         items={editableCalendars.current.map((calendar) => ({ label: calendar.title, value: calendar.id }))} />
