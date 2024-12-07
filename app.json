@@ -32,7 +32,8 @@
         "backgroundColor": "#DCC7AA"
       },
       "permissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "READ_CALENDAR", "WRITE_CALENDAR"
       ],
       "package": "com.thoughtswork.dootoo",
       "versionCode": 8,
@@ -53,6 +54,12 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "The access will allow dootoo to create and edit calendar events for your items."
+        }
+      ],
       [
         "react-native-permissions",
         {

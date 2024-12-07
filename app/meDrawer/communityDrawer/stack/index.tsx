@@ -711,6 +711,14 @@ export default function Index() {
     },
     itemCountsRefreshingAnimContainer: {
       justifyContent: 'center'
+    },
+    timerIconContainer: {
+      justifyContent: 'center',
+      paddingRight: 10
+    },
+    timerIcon: {
+      height: 16,
+      width: 16
     }
   });
 
