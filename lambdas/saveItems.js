@@ -106,7 +106,7 @@ const saveItems = async(anonymous_id, items_str) => {
                 if (!array_item.parent_item_uuid) {
                     parentUUIDtoIDMap[item.uuid] = item.id;
                 }
-                console.log(item); 
+                //console.log(item); 
 
                 // Retrieve embedding for task and insert into table
                 //console.log(`Begin retrieval and storing of embedding for item ${item.id}...`);
