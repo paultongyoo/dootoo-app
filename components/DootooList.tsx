@@ -45,8 +45,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const isPageLoading = useRef(false);
     const hasMoreThings = useRef(true);
     const initialLoad = useRef(true);
-    const calendars = useRef<Calendar.Calendar[]>([]);
+    const editableCalendars = useRef<Calendar.Calendar[]>([]);
+    const selectedCalendar = useRef();
     const calendarSelectionInputValue = useRef('no_reason');
+    const selectedTimerThing = useRef(null);
 
     // State Variables:  Changing these should intentionally cause this list to re-render
     const [currentlyTappedThing, setCurrentlyTappedThing] = useState();
@@ -383,22 +385,24 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
     const handleTimerTap = async (thing) => {
         console.log("handleTimerTap called");
+        selectedTimerThing.current = thing;
+
         const permissionsResponse = await Calendar.requestCalendarPermissionsAsync();
         if (permissionsResponse.status === 'granted') {
-            const response = await Calendar.createEventInCalendarAsync({title: thing.text});
-
-            return;
-
             const readCalendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
-            calendars.current = readCalendars;
+            editableCalendars.current = readCalendars.filter(calendar => calendar.allowsModifications);
             console.log("Attempting to display calendar selection dialog");
-            if (calendars.current.length > 0) {
+            if (editableCalendars.current.length == 1) {
+                selectedCalendar.current = editableCalendars.current[0];
+                const eventId = await createCalendarEvent();
+                console.log("Created new calendar event after default calendar selection: " + eventId);
+            } else if (editableCalendars.current.length > 1) {
                 amplitude.track("Calendar Selection Dialog Displayed", {
                     anonymous_id: anonymousId.current,
                     pathname: pathname
                 });
                 setShowCalendarSelectionDialog(true);
-            } else {
+            } else if (editableCalendars.current.length == 0) {
                 amplitude.track("No Calendars Found Message Displayed", {
                     anonymous_id: anonymousId.current,
                     pathname: pathname
@@ -463,10 +467,53 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             setCalendarSelectionInvalid(true);
         } else {
             setCalendarSelectionInvalid(false);
-            const calendarId = calendarSelectionInputValue.current;
-            
-            console.log("Calendar Create Event Response: " + JSON.stringify(response));
+            setShowCalendarSelectionDialog(false);
+            const selectedCalendarId = calendarSelectionInputValue.current;
+            const calIdx = editableCalendars.current.findIndex((calendar) => calendar.id == selectedCalendarId);
+            selectedCalendar.current = editableCalendars.current[calIdx];
+            const eventId = await createCalendarEvent();
+            if (eventId) {
+                console.log("Created new calendar event after manual calendar selection: " + eventId);
+                Alert.alert("Calendar Event Created",
+                    `New calendar event created named '${selectedTimerThing.current.text}' in your '${selectedCalendar.current.title}' calendar.`
+                );
+            } else {
+                Alert.alert("Unexpected Error Occurred",
+                    `An unexpected error occurred trying to create a new calendar event.  We've logged this issue and will fix it as soon as possible.`
+                );
+            }
         }
+    }
+
+    const createCalendarEvent = async() => {
+        if (!selectedCalendar.current) {
+            console.log("Selected Calendar unexpectedly null, cancelling creation of event!");
+            return;
+        }
+        const calendarId = selectedCalendar.current.id;
+        console.log("calendarId: " + calendarId);
+        if (!calendarId || calendarId.length == 0) {
+            Alert.alert(
+                'No Default Calendar Found',
+                'Not able to create an event because we couldn\'t find a default calendar on your device.'
+            );
+            return;
+        }
+        const eventTitle = (selectedTimerThing.current) ? selectedTimerThing.current.text : 'New Dootoo Item'; // Later case should not happen
+        const eventId = await Calendar.createEventAsync(calendarId, {
+            title: eventTitle,
+            alarms: [{ relativeOffset: -60, method: Calendar.AlarmMethod.ALERT}],
+            startDate: new Date(),
+            endDate: new Date(),
+            allDay: false,
+            availability: Calendar.Availability.BUSY,
+            location: '',
+            notes: 'Event created by dootoo',
+            recurrenceRule: null,   // assume one time event
+            status: Calendar.EventStatus.CONFIRMED,
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        });
+        return eventId;
     }
 
     const renderThing = ({ item, getIndex, drag, isActive }) => {
@@ -771,7 +818,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         onValueChange={(value) => { calendarSelectionInputValue.current = value; }}
                         placeholder={{ label: 'Select a calendar', value: 'no_calendar' }}
                         style={pickerSelectStyles}
-                        items={calendars.current.map((calendar) => ({ label: calendar.title, value: calendar.id }))} />
+                        items={editableCalendars.current.map((calendar) => ({ label: calendar.title, value: calendar.id }))} />
                     { (calendarSelectionInvalid) 
                             ? <Text style={formStyles.formValidationMessage}>Please select a calendar.</Text>
                             : <></>}
