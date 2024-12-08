@@ -263,7 +263,12 @@ export const initalizeUser = async() => {
   }
 };
 
-export const loadItems = async (page, callback) => {
+// 1.2  This function updated to load items from local cache if isPullDown == false
+//      and load from DB if isPullDown == true
+export const loadItems = async (isPullDown, page, callback) => {
+  
+  // TODO: Update based on isPullDown
+
   try {
     const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserStr) {
@@ -341,8 +346,13 @@ export const loadItemCounts = async (item_uuid) => {
   }
 };
 
-export const loadTips = async (item_uuid, page) => {
+// 1.2  This function updated to load items from local cache if isPullDown == false
+//      and load from DB if isPullDown == true
+export const loadTips = async (isPullDown, item_uuid, page) => {
   //console.log("loadTips called with item_uuid: " + item_uuid);
+
+  // TODO: Update based on isPullDown
+
   try {
 
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);

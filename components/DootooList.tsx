@@ -51,7 +51,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
     // State Variables:  Changing these should intentionally cause this list to re-render
     const [currentlyTappedThing, setCurrentlyTappedThing] = useState();
-    const [page, setPage] = useState(1);
 
     const initialLoadFadeInOpacity = useRef(new Animated.Value(0)).current;
     const initialLoadFadeInAnimation = Animated.timing(initialLoadFadeInOpacity, {
@@ -60,6 +59,21 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: true
     });
+
+    /* 1.2 Note: DEACTIVATING PAGINATION for now to prevent accidental 
+    //           orphaning as well as testing UX of maintaining local/cached list
+    //           instead.  
+                 -- DB loads only occur on Pull Down to Refresh actions.
+                 -- DB continues to be updated asynchrously in background.
+                 -- Lambda will be updated to return entire list on call.
+                 -- Counts were removed from load in prior release, so this
+                    call should be less heavy and less frequent given app
+                    will only call on pull down to refresh actions with this release.             
+                 -- All operations to sync backend DB updated to also update local cache
+    */
+
+    // 1.2 Page state var will remain and stay at its value of (1)
+    const [page, setPage] = useState(1);
 
     useEffect(() => {
         //console.log(`DootooList.useEffect([]) ${Date.now()}`);
@@ -184,44 +198,56 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
     }, [startPolling, stopPolling]);
 
+    // 1.2 This function is modified to always execute the page = 1 scenario on all calls,
+    //     whether it is first launch scenario or on refresh pull down
     const resetListWithFirstPageLoad = async (isPullDown = false) => {
-        if (page == 1) {
+//        if (page == 1) {
             // If current page is already 1, manually invoke LoadThingsForCurrentPage 
             // as useEffect(page) won't be called
             loadThingsForCurrentPage(isPullDown);
-        } else {
-            //console.log("Setting page var to 1 to trigger loadThingsForCurrentPage().")
-            setPage(1);
-        }
+        // } else {
+        //     //console.log("Setting page var to 1 to trigger loadThingsForCurrentPage().")
+        //     setPage(1);
+        // }
     };
 
-    const loadNextPage = () => {
-        //console.log("loadNextPage called");
-        if (hasMoreThings.current) {
-            if (!isRefreshing && !isPageLoading.current) {
-                //console.log(`List end reached, incrementing current page var (currently ${page}).`);
-                isPageLoading.current = true;
-                setPage((prevPage) => prevPage + 1);
-            } else {
-                //console.log(`Ignoring pull down action as page ${page} currently loading or full list is refreshing.`);
-            }
-        } else {
-            //console.log(`Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
-        }
-    };
+    // 1.2 We deactivate this effect because the page value will now longer change from 1
+    // useEffect(() => {
+    //     //console.log("useEffect(page) called for pathname " + Date.now());
+    //     if (screenInitialized) {
+    //         loadThingsForCurrentPage();
+    //     } else {
+    //         //("Not calling loadThingsForCurrentPage in useEffect(page) as it was called during first useEffect([]) call.");
+    //     }
+    // }, [page]);
 
-    useEffect(() => {
-        //console.log("useEffect(page) called for pathname " + Date.now());
-        if (screenInitialized) {
-            loadThingsForCurrentPage();
-        } else {
-            //("Not calling loadThingsForCurrentPage in useEffect(page) as it was called during first useEffect([]) call.");
-        }
-    }, [page]);
+    // 1.2 Pagination deactivated, see note at start of file
+    // const loadNextPage = () => {
+    //     //console.log("loadNextPage called");
+    //     if (hasMoreThings.current) {
+    //         if (!isRefreshing && !isPageLoading.current) {
+    //             //console.log(`List end reached, incrementing current page var (currently ${page}).`);
+    //             isPageLoading.current = true;
+    //             setPage((prevPage) => prevPage + 1);
+    //         } else {
+    //             //console.log(`Ignoring pull down action as page ${page} currently loading or full list is refreshing.`);
+    //         }
+    //     } else {
+    //         //console.log(`Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
+    //     }
+    // };
 
+    // 1.2 Pagination deactivated, see note at start of file
+    //     Even with pagination deactivated, we can keep the following
+    //     function as unchanged as the page = 1 scenario will retrieve entire list
+    //     as desired, we just will never hit the concatenation scenario which
+    //     breaks UX in unexpected orphan and done-ing situations.
+    //
+    //     The pulldown boolean becomes the switch that executes cache load (pulldown == false) or DB load (pulldown == true)
+    //     -- boolean is passed to loadAllThings so backend can distinguish
     const loadThingsForCurrentPage = async (isPullDown = false) => {
         //console.log(`Calling loadAllThings(page) with page = ${page}.`);
-        const loadResponse = await loadAllThings(page);
+        const loadResponse = await loadAllThings(isPullDown, page);
         const things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;
 
@@ -788,13 +814,16 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         refreshing={isRefreshing} />
                                 }
                                 renderItem={renderThing}
-                                onEndReached={({ distanceFromEnd }) => {
-                                    //console.log("onEndReached called, distance from end: " + distanceFromEnd);
-                                    if (distanceFromEnd > 0) {
-                                        loadNextPage();
-                                    }
-                                }}
-                                onEndReachedThreshold={0.1}
+
+                                // 1.2 Pagination deactivated, see note at start of file
+                                // onEndReached={({ distanceFromEnd }) => {
+                                //     //console.log("onEndReached called, distance from end: " + distanceFromEnd);
+                                //     if (distanceFromEnd > 0) {
+                                //         loadNextPage();
+                                //     }
+                                // }}
+                                // onEndReachedThreshold={0.1}
+
                                 ListFooterComponent={
                                     <View style={{ paddingTop: 10 }}>
                                         {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />}

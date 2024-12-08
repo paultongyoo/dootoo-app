@@ -620,7 +620,7 @@ export default function ItemTips() {
             saveAllThings={saveAllTips}
             saveTextUpdateFunc={saveTextUpdate}
             saveThingOrderFunc={saveTipOrder}
-            loadAllThings={(page) => loadTips(selectedItem.uuid, page)}
+            loadAllThings={(isPullDown, page) => loadTips(isPullDown, selectedItem.uuid, page)}
             transcribeAudioToThings={transcribeAudioToTips}
             ListThingSidebar={DootooTipSidebar}
             EmptyThingUX={() => <DootooTipEmptyUX styles={styles} selectedItem={selectedItem} tipArray={tips} />}
