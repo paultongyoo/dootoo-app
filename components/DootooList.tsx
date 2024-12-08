@@ -9,7 +9,7 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
-import { loadItemsCounts, updateItemHierarchy } from './Storage';
+import { loadItemsCounts, updateItemHierarchy, updateItemsCache } from './Storage';
 import usePolling from './Polling';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
@@ -41,6 +41,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
     // References:  Changing these should intentionally NOT cause this list to re-render
     //const itemFlatList = useRef(null);              // TODO: Consider deprecate
+    const isInitialMount  = useRef(true);
     const onChangeInputValue = useRef('');
     const isPageLoading = useRef(false);
     const hasMoreThings = useRef(true);
@@ -100,10 +101,17 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }, []);
 
     useEffect(() => {
-        //console.log(`useEffect[listArray] called`);
-        //console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
+        //console.log(`useEffect[listArray] called: List length ${listArray.length}, initialLoad: ${initialLoad.current}`);
+        //console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`); 
 
-        if (initialLoad.current) {
+        if (initialLoad.current && !isInitialMount.current) {
+
+            // Update local cache with latest listArray update
+            if (thingName == 'item') {
+                updateItemsCache(listArray);
+            } else {
+                // TODO: update tips cache
+            }
 
             if (fadeInListOnRender.current) {
                 listFadeInAnimation.start(() => {
@@ -141,8 +149,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
             // Immediately look for new counts on any list update
             restartPolling();
-        } else {
-            //console.log("UseEffect called before initial load completed, skipping..");
+        } else if (isInitialMount.current) {
+
+            console.log("Bypassing useEffect(listArray) logic on initial mount");
+            isInitialMount.current = false;
         }
     }, [listArray]);
 

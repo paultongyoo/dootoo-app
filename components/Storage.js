@@ -82,7 +82,6 @@ export const loadItems = async (isPullDown) => {
   // not called from pulldown (i.e. on first and return launches of app
   if (!isPullDown) {
     const cachedItems = await loadItemsCache();
-    console.log("Cached Items Count: " + cachedItems.length);
 
     // If app had local items cached, we'll return those immediately.
     // If an empty / no list is cached (which will occur for returning users too),
@@ -92,8 +91,10 @@ export const loadItems = async (isPullDown) => {
       console.log(`Cached items found ${cachedItems.length}, returning those to user...`)
       return { hasMore: false, things: cachedItems };
     } else {
-      console.log("No cached items found, proceeding with DB lookup for user");
+      console.log("No cached items found, proceeding with backend lookup for user");
     }
+  } else {
+    console.log("Load called on pull down, executing backend load...");
   }
 
   try {
@@ -782,6 +783,7 @@ const loadItemsCache = async() => {
   try {
     
     const items_list_str = await AsyncStorage.getItem(ITEM_LIST_KEY);
+    //console.log("loadItemsCache: " + items_list_str);
     return (items_list_str) ? JSON.parse(items_list_str) : [];
   } catch (e) {
     console.log("Error in loadItemsCache", e);
