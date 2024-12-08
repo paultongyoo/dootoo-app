@@ -126,7 +126,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     bottomOffset: 220,
                     props: {
                         onUndoPress: () => {
-                            listArraySetter((prevItems) => prevItems.slice(lastRecordedCount.current)); // This should update UI only and not invoke any syncronous backend operations
+
+                            // TODO: This doesn't delete in DB, check if there's a bug?
+                            listArraySetter((prevItems) => prevItems.slice(lastRecordedCount.current)); // This should update UI only and not invoke any syncronous backend operations            
                         }
                     }
                 });
