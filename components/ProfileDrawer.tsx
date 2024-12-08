@@ -4,7 +4,7 @@ import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Lin
 import { AppContext } from "./AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, showComingSoonAlert } from './Helpers';
-import { loadUsername, saveUserLocally, updateUsername } from "./Storage";
+import { loadUsername, overrideUserAnonId, saveUserLocally, updateUsername } from "./Storage";
 import { ProfileCountEventEmitter } from "./EventEmitters";
 import Dialog from "react-native-dialog";
 
@@ -24,6 +24,8 @@ const ProfileDrawer = ({ navigation }) => {
   const [usernameModerationFailedDialogVisible, setUsernameModerationFailedDialogVisible] = useState(false);
   const [usernameSpammingFailedDialogVisible, setUsernameSpammingFailedDialogVisible] = useState(false);
   const [usernameUnexpectedDialogVisible, setUsernameUnexpectedDialogVisible] = useState(false);
+  const [overrideAnonIdVisible, setOverrideAnonIdVisible] = useState(false);
+  const [overrideAnonIdInputValue, setOverrideAnonIdInputValue] = useState('');
 
   useEffect(() => {
         const listener_set_username = ProfileCountEventEmitter.addListener('username_set', (data) => {
@@ -348,6 +350,18 @@ const ProfileDrawer = ({ navigation }) => {
     usernameTextInputValue.current = username;
   }
 
+  const showAnonIdOverridePrompt = () => {
+    setOverrideAnonIdVisible(true);
+  }
+
+  const handleAnonIdOverrideCancel = () => {
+    setOverrideAnonIdVisible(false);
+  }
+
+  const handleAnonIdOverrideSubmit = async () => {
+    await overrideUserAnonId(overrideAnonIdInputValue);
+  }
+
   return (
     <View style={styles.profileDrawerContainer}>
       <Pressable style={styles.profileDrawerCloseContainer}
@@ -397,10 +411,13 @@ const ProfileDrawer = ({ navigation }) => {
         </Pressable>
       </View>
       <View style={styles.privacyContainer}>
-        {/* <View style={styles.anonIdDisplayContainer}>
+        <View style={styles.anonIdDisplayContainer}>
           <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
           <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId.current}</Text>
-        </View> */}
+          <Pressable onPress={showAnonIdOverridePrompt}>
+            <Text style={styles.deleteDataLinkText}>Override Anonymous ID</Text>
+          </Pressable>
+        </View>
         <View style={styles.deleteDataLinkContainer}>
           <Pressable onPress={showConfirmationPrompt}>
             <Text style={styles.deleteDataLinkText}>Delete My Data</Text>
@@ -448,6 +465,18 @@ const ProfileDrawer = ({ navigation }) => {
         <Dialog.Title>Unable To Change Username</Dialog.Title>
         <Dialog.Description>An unexpected error occurred while trying to save your new username.  Please try again later.</Dialog.Description>
         <Dialog.Button label="OK" onPress={() => setUsernameUnexpectedDialogVisible(false)} />
+      </Dialog.Container>
+      <Dialog.Container visible={overrideAnonIdVisible} onBackdropPress={handleAnonIdOverrideCancel}>
+        <Dialog.Title>Override Anonymous ID</Dialog.Title>
+        <Dialog.Input
+          multiline={false}
+          autoFocus={true}
+          onSubmitEditing={handleAnonIdOverrideSubmit}
+          onChangeText={(text) => {
+            setOverrideAnonIdInputValue(text);
+          }} />
+        <Dialog.Button label="Cancel" onPress={handleAnonIdOverrideCancel} />
+        <Dialog.Button label="Submit" onPress={handleAnonIdOverrideSubmit} disabled={overrideAnonIdInputValue.length == 0} />
       </Dialog.Container>
     </View>
   );
