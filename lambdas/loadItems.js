@@ -181,7 +181,7 @@ export const handler = async (event) => {
   // HACK ALERT:  Move any orphaned items to top of the list
   //              The UI was built to prevent orphans but they're still occurring occassionally.  
   //              Race conditions maybe?
-  retrievedItems = restructureList(retrievedItems);
+  retrievedItems = removeOrphans(retrievedItems);
 
   var response = null;
   if (event.loadAll) {
@@ -199,7 +199,7 @@ export const handler = async (event) => {
   return response;
 };
 
-function restructureList(items) {
+function removeOrphans(items) {
   // Create a set of parent IDs from the list
   const parentUUIDs = new Set(items.filter(item => !item.parent_item_uuid).map(item => item.uuid));
 
@@ -217,6 +217,8 @@ function restructureList(items) {
       }
   });
 
+  console.log(`Discarding ${orphanedSubitems} subitems from the list - Prevent these from occurring!`);
+
   // Combine orphaned subitems at the top with the valid items
-  return [...validItems, ...orphanedSubitems];
+  return validItems;
 }
