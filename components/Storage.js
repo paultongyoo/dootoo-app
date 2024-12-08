@@ -456,6 +456,7 @@ export const flagTip = async(tip_uuid) => {
   }
 }
 
+// 1.2 Will delete any children of item as well
 export const deleteItem = async(item_uuid) => {
   try {
     //console.log("Entering delete item, uuid: " + item_uuid);

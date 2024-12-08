@@ -33,10 +33,12 @@ const DootooSwipeAction_Delete = ({
                             var slideAnimationArray = [];
                             var heightAnimationArray = [];
                             const index = listArrayCopy.findIndex(obj => obj.uuid == thing.uuid);
-                            for (var i = index; i <= index + thingSubtasks.length; i++) {
 
-                                // Call asyncronous delete to mark item as deleted in backend to sync database
-                                deleteThing(listArrayCopy[i].uuid);
+                            // Call asyncronous delete to mark item as deleted in backend to sync database
+                            // 1.2  Deleting parent thing will delete its children too in DB
+                            deleteThing(listThing.uuid);
+
+                            for (var i = index; i <= index + thingSubtasks.length; i++) {
 
                                 amplitude.track(`${thingNameStr} Deleted`, {
                                     anonymous_id: anonymousId.current,

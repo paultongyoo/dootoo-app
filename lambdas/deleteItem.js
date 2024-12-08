@@ -25,14 +25,27 @@ export const handler = async (event) => {
         };
     }
 
-    const updatedItem = await prisma.item.update({
+    // Set specified item to deleted
+    const updatedAdult = await prisma.item.update({
         where: { id: item.id },
         data: { is_deleted: true}
     });
+    console.log("Deleted adult: " + JSON.stringify(updatedAdult));
+
+    // Set all item children to is_deleted as well, if any
+    const updateChildrenCount = await prisma.item.updateMany({
+        where: { 
+            parent: { 
+                id: item.id 
+            }
+        },
+        data: { is_deleted: true }
+    });
+    console.log("Num children set to deleted: " + updateChildrenCount.count);
 
     const response = {
         statusCode: 200,
-        body: JSON.stringify(updatedItem)
+        body: JSON.stringify({ deleted_uuid: updatedAdult.uuid, num_children_deleted: updateChildrenCount.count })
     };
     await prisma.$disconnect();
     return response;
