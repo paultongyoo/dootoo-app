@@ -5,6 +5,15 @@ const prisma = new PrismaClient();
 import AWS from 'aws-sdk';
 const kms = new AWS.KMS();
 
+// 1.2 Deactivated pagination logic as fast fix for 
+//     order mixup on completing items inside a page,
+//     and potential improved UX with move to locally
+//     cached lists.  This function should only be called
+//     now when user pulls down to refresh or they don't
+//     have any items cached locally.
+//
+//     To retain backwards compatibility, a boolean will be added to 
+//     deactivate pagination -- bool will be passed by v1.2+
 export const handler = async (event) => {
   const user = await prisma.user.findUnique({
     where: { anonymous_id: event.anonymous_id }
@@ -39,14 +48,7 @@ export const handler = async (event) => {
     });
   } else {
 
-    const pageSize = 15   // hardcode this for now
-    const page = event.page || 1;
-    const skip = (page - 1) * pageSize;
-    const take = pageSize + 1;  // Take one more than pageSize to determine if there are more items
-
-    console.log(`Calling item.findMany with skip (${skip}) and take (${take})`);
-    retrievedItems = await prisma.item.findMany({
-      skip, take,
+    let prismaParams = {
       where: {
         user: { id: user.id },
         is_deleted: false
@@ -66,14 +68,32 @@ export const handler = async (event) => {
       orderBy: {
         rank_idx: 'asc'
       }
-    });
+    };
 
-    hasMore = retrievedItems.length > pageSize;
-    console.log(`User does${(!hasMore) ? ' not' : ''} have more items.`);
+    if (!event.skipPagination) {
+        const pageSize = 15   // hardcode this for now
+        const page = event.page || 1;
+        const skip = (page - 1) * pageSize;
+        const take = pageSize + 1;  // Take one more than pageSize to determine if there are more items
 
-    // Remove the extra item if it exists
-    if (hasMore) {
-      retrievedItems.pop();
+        console.log(`Calling item.findMany with skip (${skip}) and take (${take})`);
+        prismaParams = { skip, take, ...prismaParams};
+      } else {
+        console.log("Skipping passing skip/take to item.findMany");
+      }
+
+      retrievedItems = await prisma.item.findMany(prismaParams);
+
+      if (!event.skipPagination) {
+      hasMore = retrievedItems.length > pageSize;
+      console.log(`User does${(!hasMore) ? ' not' : ''} have more items.`);
+
+      // Remove the extra item if it exists
+      if (hasMore) {
+        retrievedItems.pop();
+      }
+    } else {
+      hasMore = false;
     }
   }
   console.log(`Returned ${((retrievedItems && retrievedItems.length) || 0)} items.`);

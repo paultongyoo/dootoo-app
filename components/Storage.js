@@ -264,8 +264,9 @@ export const initalizeUser = async() => {
 };
 
 // 1.2  This function updated to load items from local cache if isPullDown == false
-//      and load from DB if isPullDown == true
-export const loadItems = async (isPullDown, page) => {
+//      and load from DB if isPullDown == true.  
+//      -- page parameter removed from loadItems signature
+export const loadItems = async (isPullDown) => {
   
   // Load local items from cache (or empty list) if
   // not called from pulldown (i.e. on first and return launches of app
@@ -275,7 +276,8 @@ export const loadItems = async (isPullDown, page) => {
 
     // If app had local items cached, we'll return those immediately.
     // If an empty / no list is cached (which will occur for returning users too),
-    // we'll execute pre-existing logic to look for BE data for the user.
+    // we'll execute pre-existing logic to look for BE data for the user WITH THE
+    // ADDITION of "skipPagination" boolean to deactivate BE pagination for 1.2+ users
     if (cachedItems.length > 0 ) {
       console.log(`Cached items found ${cachedItems.length}, returning those to user...`)
       return { hasMore: false, things: cachedItems };
@@ -295,8 +297,9 @@ export const loadItems = async (isPullDown, page) => {
     const response = await axios.post(LOADITEMS_URL,
       {
         anonymous_id : localAnonId,
-        page: page,
-        skipCounts: true
+        //page: page,                         // Removed in 1.2
+        skipCounts: true,
+        skipPagination: true                  // Added in 1.2
       }
     );
     const item_array = response.data.body.items;

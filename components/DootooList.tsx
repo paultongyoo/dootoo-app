@@ -247,6 +247,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     //     -- boolean is passed to loadAllThings so backend can distinguish
     const loadThingsForCurrentPage = async (isPullDown = false) => {
         //console.log(`Calling loadAllThings(page) with page = ${page}.`);
+        
+        // 1.2 page parameter ignored by loadItems, TODO to ignore in loadTIps
         const loadResponse = await loadAllThings(isPullDown, page);
         const things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;
