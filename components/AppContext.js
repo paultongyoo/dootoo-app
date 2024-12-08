@@ -43,7 +43,7 @@ export const AppProvider = ({ children }) => {
     const listOpacity = useRef(new Animated.Value(0)).current;
     const listFadeInAnimation = Animated.timing(listOpacity, {
         toValue: 1,
-        duration: 600,
+        duration: 500,
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: true
     });
