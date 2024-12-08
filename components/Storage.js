@@ -208,7 +208,7 @@ export const saveTips = async (item_obj, tip_list_obj, callback) => {
   }
 
   // Local data is the source of truth for the app (most reliable and lowest latency)
-  await saveTipsLocally(item_obj, tip_list_obj);
+  await updateTipsCache(item_obj, tip_list_obj);
 
   // Asyncronously save to backend to enable community features and refresh user counts.
   // Ensure all UI data uses only locally stored data and is not reliant on real-time backend state.
@@ -265,15 +265,32 @@ export const initalizeUser = async() => {
 
 // 1.2  This function updated to load items from local cache if isPullDown == false
 //      and load from DB if isPullDown == true
-export const loadItems = async (isPullDown, page, callback) => {
+export const loadItems = async (isPullDown, page) => {
   
-  // TODO: Update based on isPullDown
+  // Load local items from cache (or empty list) if
+  // not called from pulldown (i.e. on first and return launches of app
+  if (!isPullDown) {
+    const cachedItems = await loadItemsCache();
+    console.log("Cached Items Count: " + cachedItems.length);
+
+    // If app had local items cached, we'll return those immediately.
+    // If an empty / no list is cached (which will occur for returning users too),
+    // we'll execute pre-existing logic to look for BE data for the user.
+    if (cachedItems.length > 0 ) {
+      console.log(`Cached items found ${cachedItems.length}, returning those to user...`)
+      return { hasMore: false, things: cachedItems };
+    } else {
+      console.log("No cached items found, proceeding with DB lookup for user");
+    }
+  }
+
+  // If user pulled down, load the items from DB
 
   try {
     const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserStr) {
-      //console.log("Received null local anon Id, aborting loadItems!");
-      return [];
+      console.log("Received null local anon Id, aborting loadItems!");
+      return { hasMore: hasMore, things: [] };
     }
     const localUser = JSON.parse(localUserStr);
     const localAnonId = localUser.anonymous_id;
@@ -747,25 +764,44 @@ const saveTipsToBackend = async(item_obj, tip_list_obj, callback) => {
   }
 }
 
-const saveItemsLocally = async(item_list_obj) => {
+const updateItemsCache = async(item_list_obj) => {
   try {
     //console.log("Saving to local storage...");
     const item_list_str = JSON.stringify(item_list_obj);
     await AsyncStorage.setItem(ITEM_LIST_KEY, item_list_str);
     //console.log(`Saved list to local storage with ${item_list_obj.length} items.`)
   } catch (e) {
-    //console.log("Error saving list to local storage.", e);
+    console.log("Error in updateItemsCache", e);
   }
 }
 
-const saveTipsLocally = async(item_obj, tip_list_obj) => {
+const loadItemsCache = async() => {
+  try {
+    
+    const items_list_str = await AsyncStorage.getItem(ITEM_LIST_KEY);
+    return (items_list_str) ? JSON.parse(items_list_str) : [];
+  } catch (e) {
+    console.log("Error in loadItemsCache", e);
+  }
+}
+
+const updateTipsCache = async(item_obj, tip_list_obj) => {
   try {
     //console.log("Saving to local storage...");
     const tip_list_str = JSON.stringify(tip_list_obj);
     await AsyncStorage.setItem(`${TIP_LIST_KEY_PREFIX}_${item_obj.uuid}`, tip_list_str);
     //console.log(`Saved tip list to local storage with ${tip_list_obj.length} tips.`)
   } catch (e) {
-    //console.log("Error saving list to local storage.", e);
+    console.log("Error in updateTipsCache", e);
+  }
+}
+
+const loadTipsCache = async(item_obj) => {
+  try {
+    const tip_list_str = await AsyncStorage.getItem(`${TIP_LIST_KEY_PREFIX}_${item_obj.uuid}`);
+    return (tip_list_str) ? JSON.parse(tip_list_str) : [];
+  } catch (e) {
+    console.log("Error in loadTipsCache", e);
   }
 }
 
