@@ -73,6 +73,68 @@ const BLOCKUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amaz
 const UPDATEUSERNAME_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateUsername_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateUsername';
 
+// 1.2  This function updated to load items from local cache if isPullDown == false
+//      and load from DB if isPullDown == true.  
+//      -- page parameter removed from loadItems signature
+export const loadItems = async (isPullDown) => {
+  
+  // Load local items from cache (or empty list) if
+  // not called from pulldown (i.e. on first and return launches of app
+  if (!isPullDown) {
+    const cachedItems = await loadItemsCache();
+    console.log("Cached Items Count: " + cachedItems.length);
+
+    // If app had local items cached, we'll return those immediately.
+    // If an empty / no list is cached (which will occur for returning users too),
+    // we'll execute pre-existing logic to look for BE data for the user WITH THE
+    // ADDITION of "skipPagination" boolean to deactivate BE pagination for 1.2+ users
+    if (cachedItems.length > 0 ) {
+      console.log(`Cached items found ${cachedItems.length}, returning those to user...`)
+      return { hasMore: false, things: cachedItems };
+    } else {
+      console.log("No cached items found, proceeding with DB lookup for user");
+    }
+  }
+
+  try {
+    const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserStr) {
+      console.log("Received null local anon Id, aborting loadItems!");
+      return { hasMore: hasMore, things: [] };
+    }
+    const localUser = JSON.parse(localUserStr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(LOADITEMS_URL,
+      {
+        anonymous_id : localAnonId,
+        //page: page,                         // Removed in 1.2
+        skipCounts: true,
+        skipPagination: true                  // Added in 1.2
+      }
+    );
+    const item_array = response.data.body.items;
+    const hasMore = response.data.body.hasMore;
+    // console.log(`item_array: ${item_array}`);
+    // console.log(`hasMore: ${hasMore}`);
+    return { hasMore: hasMore, things: item_array };
+  } catch (error) {
+    console.error('Error calling loadItems API:', error);
+  }
+};
+
+export const updateItemsCache = async(item_list_obj) => {
+  try {
+    if (item_list_obj) {
+      console.log(`Updating items cache with ${(item_list_obj) ? item_list_obj.length : 0} size list.`);
+      const item_list_str = JSON.stringify(item_list_obj);
+      await AsyncStorage.setItem(ITEM_LIST_KEY, item_list_str);
+    } else {
+      console.log("Update items cache based null param, ignoring call (was this unexpected?");
+    }
+  } catch (e) {
+    console.log("Error in updateItemsCache", e);
+  }
+}
 
 export const saveItems = async (item_list_obj, callback) => {
   if (item_list_obj === undefined) {
@@ -260,55 +322,6 @@ export const initalizeUser = async() => {
     }
   } catch (e) {
       //console.log("Error reading user data:", e);
-  }
-};
-
-// 1.2  This function updated to load items from local cache if isPullDown == false
-//      and load from DB if isPullDown == true.  
-//      -- page parameter removed from loadItems signature
-export const loadItems = async (isPullDown) => {
-  
-  // Load local items from cache (or empty list) if
-  // not called from pulldown (i.e. on first and return launches of app
-  if (!isPullDown) {
-    const cachedItems = await loadItemsCache();
-    console.log("Cached Items Count: " + cachedItems.length);
-
-    // If app had local items cached, we'll return those immediately.
-    // If an empty / no list is cached (which will occur for returning users too),
-    // we'll execute pre-existing logic to look for BE data for the user WITH THE
-    // ADDITION of "skipPagination" boolean to deactivate BE pagination for 1.2+ users
-    if (cachedItems.length > 0 ) {
-      console.log(`Cached items found ${cachedItems.length}, returning those to user...`)
-      return { hasMore: false, things: cachedItems };
-    } else {
-      console.log("No cached items found, proceeding with DB lookup for user");
-    }
-  }
-
-  try {
-    const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
-    if (!localUserStr) {
-      console.log("Received null local anon Id, aborting loadItems!");
-      return { hasMore: hasMore, things: [] };
-    }
-    const localUser = JSON.parse(localUserStr);
-    const localAnonId = localUser.anonymous_id;
-    const response = await axios.post(LOADITEMS_URL,
-      {
-        anonymous_id : localAnonId,
-        //page: page,                         // Removed in 1.2
-        skipCounts: true,
-        skipPagination: true                  // Added in 1.2
-      }
-    );
-    const item_array = response.data.body.items;
-    const hasMore = response.data.body.hasMore;
-    // console.log(`item_array: ${item_array}`);
-    // console.log(`hasMore: ${hasMore}`);
-    return { hasMore: hasMore, things: item_array };
-  } catch (error) {
-    console.error('Error calling loadItems API:', error);
   }
 };
 
@@ -762,17 +775,6 @@ const saveTipsToBackend = async(item_obj, tip_list_obj, callback) => {
 
   } catch (e) {
     //console.log("Error saving tip list to backend", e);
-  }
-}
-
-const updateItemsCache = async(item_list_obj) => {
-  try {
-    //console.log("Saving to local storage...");
-    const item_list_str = JSON.stringify(item_list_obj);
-    await AsyncStorage.setItem(ITEM_LIST_KEY, item_list_str);
-    //console.log(`Saved list to local storage with ${item_list_obj.length} items.`)
-  } catch (e) {
-    console.log("Error in updateItemsCache", e);
   }
 }
 
