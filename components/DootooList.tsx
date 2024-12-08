@@ -297,7 +297,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
     }
 
-    function handleThingDrag(newData: unknown[], toIndex, draggedThing) {
+    function handleThingDrag(newData: unknown[], fromIndex, toIndex, draggedThing) {
 
         amplitude.track("List Item Dragged", {
             anonymous_id: anonymousId.current,
@@ -308,7 +308,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
         if (isThingDraggable) {
 
-            // If this is a child but was dragged immediately above a parent and is NOT being 
+            // If draggedThing is a child but was dragged immediately above a parent and is NOT being 
             // dragged to the bottom of its family list,
             // assume user wnats to make the thing a parent / detach it from its siblings
             if (draggedThing.parent_item_uuid &&
@@ -325,7 +325,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 updateItemHierarchy(newData[toIndex].uuid, null);
             }
 
-            // If this is a child and is dragged immediately above a child from another family
+            // If draggedThing is a child and is dragged immediately above a child from another family
             // assume the user wants to move the child to the new family
             if (draggedThing.parent_item_uuid &&
                 newData[toIndex + 1] &&
@@ -346,9 +346,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             // If thing is a parent but was dragged immediately above a child,
             // assume user wants to make the thing a sibling.
             // If the thing has children, make the thing's children siblings too
-            if (newData[toIndex + 1] &&
-                newData[toIndex + 1].parent_item_uuid &&
-                !draggedThing.parent_item_uuid) {
+            if (!draggedThing.parent_item_uuid && 
+                (newData[toIndex + 1] && newData[toIndex + 1].parent_item_uuid)) {
 
                 const newParentUUID = newData[toIndex + 1].parent_item_uuid;
 
@@ -375,7 +374,19 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 });
             }
 
-            // Keep children with their parents
+            // If thing is an open adult and was dragged beneath a done adult, 
+            // cancel the drag operation (move it back to where it was)
+            if ((!draggedThing.parent_item_uuid && !draggedThing.is_done) &&
+                (newData[toIndex-1] && newData[toIndex-1].is_done && !newData[toIndex-1].parent_item_uuid)) {
+                    const [itemToMoveBack] = newData.splice(toIndex, 1);  // Yes, redundant to draggedThing param
+                newData.splice(fromIndex, 0, itemToMoveBack);
+            }
+
+            // 1.2 NOTE:  The following logic assumes no orphans (children with missing parents) are in the list.
+            //            The likelihood of orphans was reduced by making parent/child deletion atomic in 1.2 release
+            //            Length check between parentChildOrderData and newData performed to check if orphans exist after the loop
+            //            completes (array lengths should match; if newData ends up larger, orphans existed).
+            //              
             // TODO: Make this more efficient (loops through entire list regardless of what was dragged)
             const parentChildOrderedData = [];
             newData.forEach((thing) => {
@@ -385,6 +396,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     parentChildOrderedData.push(...children);
                 }
             });
+            if (newData.length != parentChildOrderedData.length) {
+                console.warn(`ALERT: newData length (${newData.length}) / parentChildOrderedData length (${parentChildOrderedData.length}) mismatch occurred, potential orphan(s) stripped!!`)
+            }
 
             // This should update UI only and not invoke any synchronous backend operations
             // We use ... spread operate to guarantee we're treating previous data as immutable
@@ -812,7 +826,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 data={listArray.filter(item => !item.is_deleted)}
                                 onDragEnd={({ data, from, to }) => {
                                     if (from != to) {
-                                        handleThingDrag(data, to, data[to]);
+                                        handleThingDrag(data, from, to, data[to]);
                                     }
                                 }}
                                 nestedScrollEnabled={true}
