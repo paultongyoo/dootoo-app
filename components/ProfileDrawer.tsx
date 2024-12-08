@@ -24,6 +24,7 @@ const ProfileDrawer = ({ navigation }) => {
   const [usernameModerationFailedDialogVisible, setUsernameModerationFailedDialogVisible] = useState(false);
   const [usernameSpammingFailedDialogVisible, setUsernameSpammingFailedDialogVisible] = useState(false);
   const [usernameUnexpectedDialogVisible, setUsernameUnexpectedDialogVisible] = useState(false);
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
         const listener_set_username = ProfileCountEventEmitter.addListener('username_set', (data) => {
@@ -37,39 +38,45 @@ const ProfileDrawer = ({ navigation }) => {
   
   useEffect(() => {
     //console.log("Inside Profile Drawer useEffect");
-    let ignore = false;
 
-    const fetchUsernameCounts = async () => {
-      const usernameCounts = await loadUsername(username);
-      if (!ignore) {
-        //console.log("Updating latest profile counts: " + JSON.stringify(usernameCounts));
-        setDoneCount(usernameCounts.doneCount);
-        setTipCount(usernameCounts.tipCount);
+    if (isInitialMount.current) {
+      console.log("ProfileDrawer skipping useEffect(username) on initial mount.");
+      isInitialMount.current = false;
+    } else {
+      let ignore = false;
+
+      const fetchUsernameCounts = async () => {
+        const usernameCounts = await loadUsername(username);
+        if (!ignore) {
+          //console.log("Updating latest profile counts: " + JSON.stringify(usernameCounts));
+          setDoneCount(usernameCounts.doneCount);
+          setTipCount(usernameCounts.tipCount);
+        }
       }
-    }
-    // Initialize counts
-    fetchUsernameCounts();
+      // Initialize counts
+      fetchUsernameCounts();
 
-    const listener_incr_done = ProfileCountEventEmitter.addListener('incr_done', () => {
-      setDoneCount((prev) => prev + 1);
-    });
-    const listener_descr_done = ProfileCountEventEmitter.addListener('decr_done', () => {
-      setDoneCount((prev) => prev - 1);
-    });
-    const listener_incr_tips = ProfileCountEventEmitter.addListener('incr_tips', (data) => {
-      setTipCount((prev) => prev + data.count);
-    });
-    const listener_decr_tips = ProfileCountEventEmitter.addListener('decr_tips', () => {
-      setTipCount((prev) => prev - 1);
-    });
+      const listener_incr_done = ProfileCountEventEmitter.addListener('incr_done', () => {
+        setDoneCount((prev) => prev + 1);
+      });
+      const listener_descr_done = ProfileCountEventEmitter.addListener('decr_done', () => {
+        setDoneCount((prev) => prev - 1);
+      });
+      const listener_incr_tips = ProfileCountEventEmitter.addListener('incr_tips', (data) => {
+        setTipCount((prev) => prev + data.count);
+      });
+      const listener_decr_tips = ProfileCountEventEmitter.addListener('decr_tips', () => {
+        setTipCount((prev) => prev - 1);
+      });
 
-    return () => {
-      // Race Condition Mgmt: Only allow last render of this compononent to update state
-      ignore = true;
-      listener_incr_done.remove();
-      listener_descr_done.remove();
-      listener_incr_tips.remove();
-      listener_decr_tips.remove();
+      return () => {
+        // Race Condition Mgmt: Only allow last render of this compononent to update state
+        ignore = true;
+        listener_incr_done.remove();
+        listener_descr_done.remove();
+        listener_incr_tips.remove();
+        listener_decr_tips.remove();
+      }
     }
   }, [username])
 
