@@ -1,4 +1,4 @@
-import { Platform, Image, Text, View, StyleSheet, Pressable, ActivityIndicator, Animated, Alert, Easing } from "react-native";
+import { Platform, Image, View, StyleSheet, Pressable, ActivityIndicator, Alert } from "react-native";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import RNFS from 'react-native-fs';
 import { AppContext } from './AppContext.js';
@@ -10,6 +10,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { ListItemEventEmitter } from "./EventEmitters";
 import { checkOpenAPIStatus } from "./BackendServices.js";
+import Animated from "react-native-reanimated";
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
@@ -36,7 +37,11 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const bannerRef = useRef<BannerAd>(null);
     var retryCount = 0;
 
-    const footerPosition = useRef(new Animated.Value(200)).current;
+    const opacitySV = useSharedValue(0);
+    const opacityAnimatedStyle = useAnimatedStyle(() => {
+        return { opacity: opacitySV.value };
+    });
+
     const ITEMS_PATHNAME = "/meDrawer/communityDrawer/stack";
 
     useEffect(() => {
@@ -77,15 +82,9 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         //console.log(`Pathname: ${pathname}`);
         if (pathname == ITEMS_PATHNAME) {
             //console.log("Attempting to animate footer in...");
-            Animated.sequence([
-                Animated.delay(500),
-                Animated.timing(footerPosition, {
-                    toValue: 0,
-                    duration: 800,
-                    easing: Easing.out(Easing.quad),
-                    useNativeDriver: true
-                })
-            ]).start();
+            opacitySV.value = withTiming(1, {
+                duration: 500
+            });
         }
     }, [pathname]);
 
@@ -540,7 +539,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
     if (!hideRecordButton) {
         return (
-            <Animated.View style={[styles.footerContainer, (pathname == ITEMS_PATHNAME) && { transform: [{ translateY: footerPosition }] }]}>
+            <Animated.View style={[styles.footerContainer, (pathname == ITEMS_PATHNAME) && opacityAnimatedStyle ]}>
                 {/* <Pressable
                     style={[styles.footerButton, styles.cancelButton]}
                     onPress={makeTestData}>

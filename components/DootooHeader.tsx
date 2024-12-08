@@ -1,25 +1,23 @@
-import { useNavigation, usePathname, useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
-import { Animated, Platform, View, StyleSheet, Easing, Text, Pressable, Image } from "react-native";
+import { Platform, View, StyleSheet, Text, Pressable, Image } from "react-native";
 import * as amplitude from '@amplitude/analytics-react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 const DootooHeader = ({ meDrawerNavigation }) => {
     const router = useRouter();
     const pathname = usePathname();
-    const headerPosition = useRef(new Animated.Value(-200)).current;
+    const opacitySV = useSharedValue(0);
+    const opacityAnimatedStyle = useAnimatedStyle(() => {
+        return { opacity: opacitySV.value };
+    });
 
     const ITEMS_PATHNAME = "/meDrawer/communityDrawer/stack";
 
     useEffect(() => {
-        Animated.sequence([
-            Animated.delay(500),
-            Animated.timing(headerPosition, {
-                toValue: 0,
-                duration: 800,
-                easing: Easing.out(Easing.quad),
-                useNativeDriver: true
-            })
-        ]).start();
+        opacitySV.value = withTiming(1, {
+            duration: 500
+        })
     }, [pathname]);
 
     const styles = StyleSheet.create({
@@ -75,7 +73,7 @@ const DootooHeader = ({ meDrawerNavigation }) => {
     });
 
     return (
-        <Animated.View style={[styles.headerContainer, { transform: [{ translateY: headerPosition }] }]}>
+        <Animated.View style={[styles.headerContainer, opacityAnimatedStyle]}>
             <View style={styles.headerLeftContainer}>
                 {((pathname == ITEMS_PATHNAME)) ?
                     <View style={styles.mainLogoContainer}>
