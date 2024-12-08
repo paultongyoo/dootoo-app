@@ -284,8 +284,6 @@ export const loadItems = async (isPullDown, page) => {
     }
   }
 
-  // If user pulled down, load the items from DB
-
   try {
     const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserStr) {
