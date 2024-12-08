@@ -158,6 +158,11 @@ export const handler = async (event) => {
     }
   }
 
+  // HACK ALERT:  Move any orphaned items to top of the list
+  //              The UI was built to prevent orphans but they're still occurring occassionally.  
+  //              Race conditions maybe?
+  retrievedItems = restructureList(retrievedItems);
+
   var response = null;
   if (event.loadAll) {
     response = {
@@ -173,3 +178,25 @@ export const handler = async (event) => {
   await prisma.$disconnect();
   return response;
 };
+
+function restructureList(items) {
+  // Create a set of parent IDs from the list
+  const parentUUIDs = new Set(items.filter(item => !item.parent_item_uuid).map(item => item.uuid));
+
+  // Separate orphaned subitems and valid items
+  const orphanedSubitems = [];
+  const validItems = [];
+
+  items.forEach(item => {
+      if (item.parent_item_uuid && !parentUUIDs.has(item.parent_item_uuid)) {
+          // Clear parentId for orphaned subitems
+          item.parent_item_uuid = null;
+          orphanedSubitems.push(item);
+      } else {
+          validItems.push(item);
+      }
+  });
+
+  // Combine orphaned subitems at the top with the valid items
+  return [...validItems, ...orphanedSubitems];
+}
