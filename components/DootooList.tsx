@@ -15,6 +15,7 @@ import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
+import { isThingOverdue } from './Helpers';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = (item, index) => { return <></> },
@@ -739,7 +740,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 { ((thingName == 'item') && (item.scheduled_date || item.scheduled_time)) ?
                                     <Pressable style={styles.timerIconContainer}
                                         onPress={() => handleTimerClick(item)}>
-                                        <Image style={styles.timerIcon} source={require("@/assets/images/timer_icon_556B2F.png")} />
+                                        <Image style={styles.timerIcon} source={
+                                            (isThingOverdue(item)) 
+                                                ? require("@/assets/images/timer_icon_FF0000.png") 
+                                                : require("@/assets/images/timer_icon_556B2F.png")
+                                                } />
                                     </Pressable>
                                     : <></> }
                                 {(currentlyTappedThing?.uuid == item.uuid) ?
