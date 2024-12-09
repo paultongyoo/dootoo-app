@@ -6,6 +6,7 @@ import { AppContext } from './AppContext';
 import { usePathname, useRouter } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter } from "@/components/EventEmitters";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { flushTipsCache } from './Storage';
 
 const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
     const router = useRouter();
@@ -60,6 +61,14 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
     }
 
     const handleTipCountTap = () => {
+        if (thing.is_done) {
+            goToTips();
+        } else {
+            flushTipsCache(thing.uuid, goToTips);
+        }
+    }
+
+    const goToTips = () => {
         setSelectedItem(thing);
         router.push(TIPS_PATHNAME);
     }

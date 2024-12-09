@@ -442,6 +442,20 @@ export const loadTips = async (isPullDown, item_uuid) => {
   }
 };
 
+export const flushTipsCache = async(item_uuid, callback) => {
+  try {
+    const storageKey = `${TIP_LIST_KEY_PREFIX}_${item_uuid}`;
+    //console.log('Generated Tips AsyncStorage key: ' + storageKey);
+    await AsyncStorage.removeItem(storageKey);
+    console.log("Tips cache flushed for storage key " + storageKey);
+    if (callback) {
+      callback();
+    }
+  } catch (e) {
+    console.log("Error in loadTipsCache", e);
+  }
+}
+
 export const tipVote = async(tip_uuid, voteValue) => {
   try {
     //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
