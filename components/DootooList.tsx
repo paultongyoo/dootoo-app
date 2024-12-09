@@ -738,7 +738,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             }
                             <View style={styles.itemNameContainer}>
                                 { ((thingName == 'item') && (item.scheduled_date || item.scheduled_time)) ?
-                                    <Pressable style={styles.timerIconContainer}
+                                    <Pressable hitSlop={10} style={styles.timerIconContainer}
                                         onPress={() => handleTimerClick(item)}>
                                         <Image style={styles.timerIcon} source={
                                             (isThingOverdue(item)) 
