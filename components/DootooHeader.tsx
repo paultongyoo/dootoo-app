@@ -7,15 +7,12 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-na
 const DootooHeader = ({ meDrawerNavigation }) => {
     const router = useRouter();
     const pathname = usePathname();
-    const opacitySV = useSharedValue(0);
-    const opacityAnimatedStyle = useAnimatedStyle(() => {
-        return { opacity: opacitySV.value };
-    });
+    const opacity = useSharedValue(0);
 
     const ITEMS_PATHNAME = "/meDrawer/communityDrawer/stack";
 
     useEffect(() => {
-        opacitySV.value = withTiming(1, {
+        opacity.value = withTiming(1, {
             duration: 500
         })
     }, [pathname]);
@@ -73,7 +70,7 @@ const DootooHeader = ({ meDrawerNavigation }) => {
     });
 
     return (
-        <Animated.View style={[styles.headerContainer, opacityAnimatedStyle]}>
+        <Animated.View style={[styles.headerContainer, { opacity }]}>
             <View style={styles.headerLeftContainer}>
                 {((pathname == ITEMS_PATHNAME)) ?
                     <View style={styles.mainLogoContainer}>

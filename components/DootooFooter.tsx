@@ -37,10 +37,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const bannerRef = useRef<BannerAd>(null);
     var retryCount = 0;
 
-    const opacitySV = useSharedValue(0);
-    const opacityAnimatedStyle = useAnimatedStyle(() => {
-        return { opacity: opacitySV.value };
-    });
+    const opacity = useSharedValue(0);
 
     const ITEMS_PATHNAME = "/meDrawer/communityDrawer/stack";
 
@@ -82,7 +79,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         //console.log(`Pathname: ${pathname}`);
         if (pathname == ITEMS_PATHNAME) {
             //console.log("Attempting to animate footer in...");
-            opacitySV.value = withTiming(1, {
+            opacity.value = withTiming(1, {
                 duration: 500
             });
         }
@@ -539,7 +536,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
     if (!hideRecordButton) {
         return (
-            <Animated.View style={[styles.footerContainer, (pathname == ITEMS_PATHNAME) && opacityAnimatedStyle ]}>
+            <Animated.View style={[(pathname == ITEMS_PATHNAME) && { opacity }, styles.footerContainer]}>
                 {/* <Pressable
                     style={[styles.footerButton, styles.cancelButton]}
                     onPress={makeTestData}>
