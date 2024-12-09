@@ -23,6 +23,7 @@ import Reanimated, {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
+import Toast from "react-native-toast-message";
 
 export default function Index() {
   const pathname = usePathname();
@@ -508,7 +509,14 @@ export default function Index() {
   }
 
   const handleTimerClick = (item) => {
-    Alert.alert("TODO", "Handle tap for item: " + item.text + " scheduled for: " + item.scheduled_date + " " + " at " + item.scheduled_time);
+    Toast.show({
+        type: 'timerInfo',
+        position: 'bottom',
+        bottomOffset: 220,
+        props: {
+            thing: item
+        }
+    });
   }
 
   const styles = StyleSheet.create({

@@ -370,7 +370,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                     pathname: pathname
                 });
                 Toast.show({
-                    type: 'msgOnlyToast',
+                    type: 'msgWithLink',
                     text1: `Please try again.`,
                     position: 'bottom',
                     bottomOffset: 220

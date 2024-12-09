@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
+import { momentFromNow } from './Helpers';
 
 const toastConfig = {
   undoableToast: ({ text1 = '', props }) => (
@@ -27,7 +28,7 @@ const toastConfig = {
       </Pressable>
     </View>
   ),
-  msgOnlyToast: ({ text1 = '', props }) => (
+  msgWithLink: ({ text1 = '', props }) => (
     <View style={{
       height: 50,
       width: (props.width) ? props.width : 190,
@@ -54,6 +55,22 @@ const toastConfig = {
         </Pressable> : <></>
 
       }
+    </View>
+  ),
+  timerInfo: ({ props }) => (
+    <View style={{
+      padding: 15,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderLeftColor: '#556B2F',
+      backgroundColor: '#FAF3E0',
+      borderRadius: 10,
+      flexDirection: 'row',
+      flex: 1
+    }}>
+      <Text style={{
+        fontSize: 16
+      }}>{momentFromNow(props.thing)}</Text>
     </View>
   )
 };

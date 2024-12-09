@@ -81,8 +81,7 @@ const saveItems = async(anonymous_id, items_str) => {
                         rank_idx: i,
                         is_done: array_item.is_done,
                         is_deleted: array_item.is_deleted,
-                        scheduled_date: (array_item.scheduled_date) ? new Date(`${array_item.scheduled_date}T00:00:00Z`).toISOString() : null,
-                        scheduled_time: array_item.scheduled_time,
+                        scheduled_datetime_utc: array_item.scheduled_datetime_utc,
                         ...((array_item.parent_item_uuid) && parentUUIDtoIDMap[array_item.parent_item_uuid] && { parent: {
                                 connect: {
                                     id: parentUUIDtoIDMap[array_item.parent_item_uuid] 
@@ -95,8 +94,7 @@ const saveItems = async(anonymous_id, items_str) => {
                         rank_idx: i,
                         is_done: array_item.is_done,
                         is_deleted: array_item.is_deleted,
-                        scheduled_date: (array_item.scheduled_date) ? new Date(`${array_item.scheduled_date}T00:00:00Z`).toISOString() : null,
-                        scheduled_time: array_item.scheduled_time,
+                        scheduled_datetime_utc: array_item.scheduled_datetime_utc,
                         ...((array_item.parent_item_uuid) && parentUUIDtoIDMap[array_item.parent_item_uuid] && { parent: {
                                 connect: {
                                     id: parentUUIDtoIDMap[array_item.parent_item_uuid] 

@@ -35,19 +35,20 @@ export const showComingSoonAlert = (anonymousId, featureName, pathname) => {
 
 export const isThingOverdue = (thing) => {
 
-  const scheduled_date = thing.scheduled_date;
-  const scheduled_time = thing.scheduled_time
-
-  // Combine date and time into a single datetime string
-  const scheduledDateTimeStr = `${scheduled_date} ${scheduled_time}`;
+  const scheduled_datetime_utc = thing.scheduled_datetime_utc;
 
   // Parse the combined string into a Moment.js datetime object
-  const scheduledDateTime = moment(scheduledDateTimeStr, "YYYY-MM-DD HH:mm:ss");
+  const scheduledDateTime = moment.utc(scheduled_datetime_utc);
 
   // Get the current datetime
   const currentDateTime = moment();
 
   // Check if the scheduled datetime is in the past
   return scheduledDateTime.isBefore(currentDateTime)
+}
+
+export const momentFromNow = (thing) => {
+  const scheduled_datetime_utc = thing.scheduled_datetime_utc;
+  return moment.utc(scheduled_datetime_utc).fromNow();
 }
 
