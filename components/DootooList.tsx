@@ -19,7 +19,9 @@ import * as Linking from 'expo-linking';
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = (item, index) => { return <></> },
     renderRightActions = (item, index) => { return <></> },
-    isDoneable = true, handleDoneClick = (index) => { return; },
+    isDoneable = true, 
+    handleDoneClick = (thing) => { return; },
+    handleTimerClick = (thing) => { return; },
     saveAllThings, saveTextUpdateFunc, saveThingOrderFunc, loadAllThings,
     transcribeAudioToThings,
     isThingPressable,
@@ -438,6 +440,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
     }
 
+    // Orphaned call left for POC historical reference.  Actual timer handler provided by handleTimerClick(item)
     const handleTimerTap = async (thing) => {
         console.log("handleTimerTap called");
         selectedTimerThing.current = thing;
@@ -735,7 +738,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             <View style={styles.itemNameContainer}>
                                 { ((thingName == 'item') && (item.scheduled_date || item.scheduled_time)) ?
                                     <Pressable style={styles.timerIconContainer}
-                                        onPress={() => handleTimerTap(item)}>
+                                        onPress={() => handleTimerClick(item)}>
                                         <Image style={styles.timerIcon} source={require("@/assets/images/timer_icon_556B2F.png")} />
                                     </Pressable>
                                     : <></> }

@@ -507,6 +507,10 @@ export default function Index() {
     }
   }
 
+  const handleTimerClick = (item) => {
+    Alert.alert("TODO", "Handle tap for item: " + item.text + " scheduled for: " + item.scheduled_date + " " + " at " + item.scheduled_time);
+  }
+
   const styles = StyleSheet.create({
     listContainer: {
       //padding: 10,
@@ -767,6 +771,7 @@ export default function Index() {
       renderLeftActions={renderLeftActions}
       renderRightActions={renderRightActions}
       handleDoneClick={handleDoneClick}
+      handleTimerClick={handleTimerClick}
       saveAllThings={saveAllItems}
       saveTextUpdateFunc={saveTextUpdate}
       saveThingOrderFunc={saveItemOrder}
