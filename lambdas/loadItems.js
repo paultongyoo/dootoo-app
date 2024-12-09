@@ -59,6 +59,8 @@ export const handler = async (event) => {
         is_done: true,
         uuid: true,
         text: true,
+        scheduled_date: true,
+        scheduled_time: true,
         parent: {
           select: {
             uuid: true
