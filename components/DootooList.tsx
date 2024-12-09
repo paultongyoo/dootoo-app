@@ -9,7 +9,7 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
-import { loadItemsCounts, updateItemHierarchy, updateItemsCache } from './Storage';
+import { loadItemsCounts, updateItemHierarchy, updateItemsCache, updateTipsCache } from './Storage';
 import usePolling from './Polling';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
@@ -30,7 +30,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, initializeLocalUser,
         fadeInListOnRender, listOpacity, listFadeInAnimation, listFadeOutAnimation,
-        thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap
+        thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap, selectedItem
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [errorMsg, setErrorMsg] = useState();
@@ -106,11 +106,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
         if (initialLoad.current && !isInitialMount.current) {
 
-            // Update local cache with latest listArray update
+            // Asyncronously update local cache with latest listArray update
             if (thingName == 'item') {
                 updateItemsCache(listArray);
             } else {
-                // TODO: update tips cache
+                updateTipsCache(selectedItem, listArray);
             }
 
             if (fadeInListOnRender.current) {
@@ -260,8 +260,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const loadThingsForCurrentPage = async (isPullDown = false) => {
         //console.log(`Calling loadAllThings(page) with page = ${page}.`);
         
-        // 1.2 page parameter ignored by loadItems, TODO to ignore in loadTIps
-        const loadResponse = await loadAllThings(isPullDown, page);
+        // 1.2 Removed page parameter pass to loadAllThings
+        //const loadResponse = await loadAllThings(isPullDown, page);
+        const loadResponse = await loadAllThings(isPullDown);
+
         const things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;
 
@@ -731,10 +733,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 </Pressable> : <></>
                             }
                             <View style={styles.itemNameContainer}>
-                                <Pressable style={styles.timerIconContainer}
-                                    onPress={() => handleTimerTap(item)}>
-                                    <Image style={styles.timerIcon} source={require("@/assets/images/timer_icon_556B2F.png")} />
-                                </Pressable>
+                                { (thingName == 'item') ?
+                                    <Pressable style={styles.timerIconContainer}
+                                        onPress={() => handleTimerTap(item)}>
+                                        <Image style={styles.timerIcon} source={require("@/assets/images/timer_icon_556B2F.png")} />
+                                    </Pressable>
+                                    : <></> }
                                 {(currentlyTappedThing?.uuid == item.uuid) ?
                                     <TextInput
                                         blurOnSubmit={true}

@@ -11,8 +11,8 @@ export const AppProvider = ({ children }) => {
 
     // State Variables:  Changing these SHOULD intentionally cause components to re-render
     const [dootooItems, setDootooItems] = useState([]);
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [selectedProfile, setSelectedProfile] = useState(null);
+    const [selectedItem, setSelectedItem] = useState(null);         // Selected Item context of Tips pages
+    const [selectedProfile, setSelectedProfile] = useState(null);   // Selected Profile from Tip pages
     
     // Reference variables:  Changing these should intentionally NOT cause components to re-render
     const swipeableRefs = useRef({});
