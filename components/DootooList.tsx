@@ -733,7 +733,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 </Pressable> : <></>
                             }
                             <View style={styles.itemNameContainer}>
-                                { (thingName == 'item') ?
+                                { ((thingName == 'item') && (item.scheduled_date || item.scheduled_time)) ?
                                     <Pressable style={styles.timerIconContainer}
                                         onPress={() => handleTimerTap(item)}>
                                         <Image style={styles.timerIcon} source={require("@/assets/images/timer_icon_556B2F.png")} />

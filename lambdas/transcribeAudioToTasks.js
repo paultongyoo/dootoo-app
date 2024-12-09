@@ -46,21 +46,44 @@ export const handler = async (event) => {
       };
     }
 
+    // Note: Lambda lowercases all header keys
+    let currentDateStringPrompt = '';
+    const userLocalTime = event.headers['userlocaltime'];
+    const userTimeZone = event.headers['usertimezone'];
+    const utcDateTime = event.headers['utcdatetime'];
+    console.log("All Headers: " + JSON.stringify(event.headers));
+    if (userLocalTime && userTimeZone && utcDateTime) {
+      currentDateStringPrompt = `The user's current local date and time is ${userLocalTime} (timezone: ${userTimeZone}). The current UTC time is ${utcDateTime}.`;
+      console.log("Generated date/time string: " + currentDateStringPrompt);
+    } else {
+      console.log(`Skipping date/time prompt generation as we're missing one or more components: userLocalTime (${userLocalTime}) userTimeZone (${userTimeZone}) utcDateTime (${utcDateTime})`);
+    }
+
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           "role": "system",
           "content": `
-                The user is speaking a list of items. Your role is to identify the main tasks and sub-tasks described in their input, ordering each sub-task immediately after its corresponding main task. Only consider a task as a sub-task if it is described as part of another task.
-                "Do NOT guess additional items beyond what the user stays in their input.  Respond only in English.  Return your analysis in the following JSON format:
+                ${currentDateStringPrompt}
+                The user is speaking a list of items.
+                Your role is to identify the main tasks and sub-tasks described in their input, ordering each sub-task immediately after its corresponding main task.
+                Only consider a task as a sub-task if it is described as part of another task.
+                If the user cites date and/or time information within a task, remove referral to the date/time from the task and cite it in the JSON fields below.
+                If they mention only a time in their task, assume the scheduled date is the current date.
+                If they don't mention a time in their task, leave the field null in the JSON output.
+                "Do NOT guess additional items beyond what the user stays in their input.
+                Respond only in English.
+                Return your analysis in the following JSON format:
                 {
                   "tasks": [
                     {
                       "uuid": "<RFC-compliant UUID>",
                       "text": "<task name>", 
                       "is_child": <false if main task, true otherwise>},
-                      "parent_item_uuid": <UUID of parent task if this is a subtask>
+                      "parent_item_uuid": <UUID of parent task if this is a subtask>,
+                      "scheduled_date": <SQL Date string per rules above>,
+                      "scheduled_time": <String in HH:mm format if specified, null otherwise>
                   ]
                 }`
         },
@@ -82,5 +105,9 @@ export const handler = async (event) => {
     return response;
   } catch (error) {
     console.log("Unexpected error occurred: " + JSON.stringify(error));
+    return {
+      statusCode: 500,
+      body: "Unexpected error occurred: " + JSON.stringify(error)
+    };
   }
 };

@@ -27,14 +27,33 @@ export const transcribeAudioToTasks = async (fileUri, anonymous_id) => {
   const fileExtension = fileUri.split('.').pop();
   //console.log("Audio File Extension: " + fileExtension);
 
+
+  // Generate user time info to pass to the API for handling of any scheduled tasks
+  const currentDate = new Date();
+  const userLocalTime = currentDate.toLocaleString(undefined, { 
+    weekday: 'long', // Include the weekday (e.g., "Monday")
+    year: 'numeric',
+    month: 'long', // Full month name (e.g., "December")
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short' // Include timezone abbreviation
+  });
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const utcDateTime = currentDate.toISOString();
+
   try {
 
+    // Note:  Lambda lowercases all header keys
     const response = await axios.post(
       BACKEND_TRANSCRIPTION_URL,
       binaryData,
       {
         headers: {
           'anonymous_id': anonymous_id,
+          'userlocaltime' : userLocalTime,
+          'usertimezone'  : userTimeZone,
+          'utcdatetime': utcDateTime,
           'Content-Type': `audio/${fileExtension}`
         },
       }
