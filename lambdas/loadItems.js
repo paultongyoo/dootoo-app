@@ -70,8 +70,8 @@ export const handler = async (event) => {
       }
     };
 
+    const pageSize = 15   // hardcode this for now
     if (!event.skipPagination) {
-        const pageSize = 15   // hardcode this for now
         const page = event.page || 1;
         const skip = (page - 1) * pageSize;
         const take = pageSize + 1;  // Take one more than pageSize to determine if there are more items
