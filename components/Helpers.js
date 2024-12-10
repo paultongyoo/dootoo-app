@@ -45,6 +45,22 @@ export const momentFromNow = (thing) => {
   return formatLocalizedTime(scheduled_datetime_utc);
 }
 
+export const extractDate = (dateObj) => {
+  if (dateObj) {
+    return DateTime.fromJSDate(dateObj).toFormat("EEE, MMM d, yyyy");
+  } else {
+    return "No date found";
+  }
+}
+
+export const extractTime = (dateObj) => {
+  if (dateObj) {
+    return DateTime.fromJSDate(dateObj).toLocal().toFormat("h:mm a");
+  } else {
+    return "No time found";
+  }
+}
+
 
 function formatLocalizedTime(utcISOString) {
   // Parse the UTC time and localize it to the user's timezone

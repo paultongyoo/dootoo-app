@@ -15,7 +15,8 @@ import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { isThingOverdue } from './Helpers';
+import { extractDate, extractTime, isThingOverdue } from './Helpers';
+import RNDateTimePicker from '@react-native-community/datetimepicker';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = (item, index) => { return <></> },
@@ -41,6 +42,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const [calendarSelectionInvalid, setCalendarSelectionInvalid] = useState(false);
     const [calendarSelectionInputValue, setCalendarSelectionInputValue] = useState('no_calendar');
     const [showScheduleEditDialog, setShowScheduleEditDialog] = useState(false);
+    const [scheduleEditDialogDate, setScheduleEditDialogDate] = useState(new Date());
 
     // References:  Changing these should intentionally NOT cause this list to re-render
     //const itemFlatList = useRef(null);              // TODO: Consider deprecate
@@ -456,6 +458,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }
 
     const handleTimerToastEditClick = (thing) => {
+        setScheduleEditDialogDate(new Date(thing.scheduled_datetime_utc));
         setShowScheduleEditDialog(true);
     }
 
@@ -466,6 +469,15 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const handleScheduleEditDialogSubmission = () => {
         Alert.alert("Implement Me");
     }
+
+    const handleScheduleEditDialogEditDateClick = () => {
+        Alert.alert("Implement Me");
+    }
+
+    const handleScheduleEditDialogEditTimeClick = () => {
+        Alert.alert("Implement Me");
+    }
+
 
     const handleTimerToastCalendarClick = async (thing) => {
         console.log("handleTimerToastCalendarClick called");
@@ -838,8 +850,28 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             paddingBottom: 20,
             paddingLeft: (Platform.OS == 'android') ? 10 : 0,
             textAlign: (Platform.OS == 'ios') ? 'center' : 'left'
+        },
+        scheduleEditDialogDateLink: {
+            textAlign: 'right',
+            fontWeight: 'bold',
+            color: (Platform.OS == 'ios') ? '#007ff9' :'#169689'
+        },
+        dateTimeContainer: {
+            padding: 10,
+            flexDirection: 'row',
+            justifyContent: 'space-between'
+        },
+        dateTimeTextContainer: {
+            justifyContent: 'center'
+        },
+        dateTimeText: {
+            fontSize: 16
+        },
+        dateTimeEditLinkContainer: {
+            paddingRight: 60,
+            justifyContent: 'center'
         }
-    })
+    });
 
     return (
         <TouchableWithoutFeedback onPress={() => {
@@ -928,9 +960,16 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 </Dialog.Container>
                 <Dialog.Container visible={showScheduleEditDialog} onBackdropPress={handleScheduleEditDialogCancel}>
                     <Dialog.Title>Edit Scheduled Date & Time</Dialog.Title>
-
+                    <View style={formStyles.dateTimeContainer}>
+                        <View style={formStyles.dateTimeTextContainer}>
+                            <Text onPress={handleScheduleEditDialogEditDateClick} style={formStyles.dateTimeText}>{extractDate(scheduleEditDialogDate)}</Text>
+                        </View>
+                        <View style={formStyles.dateTimeTextContainer}>
+                            <Text onPress={handleScheduleEditDialogEditTimeClick} style={formStyles.dateTimeText}>{extractTime(scheduleEditDialogDate)}</Text>
+                        </View>
+                    </View>
                     <Dialog.Button label="Cancel" onPress={handleScheduleEditDialogCancel} />
-                    <Dialog.Button label="Continue" onPress={handleScheduleEditDialogSubmission} />
+                    <Dialog.Button label="Submit" onPress={handleScheduleEditDialogSubmission} />
                 </Dialog.Container>
             </View>
         </TouchableWithoutFeedback>
