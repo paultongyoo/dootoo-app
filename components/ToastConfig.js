@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { momentFromNow } from './Helpers';
+import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
+import { momentFromNow, isThingOverdue } from './Helpers';
 
 
 const styles = StyleSheet.create({
@@ -32,6 +32,14 @@ const styles = StyleSheet.create({
     color: '#A23E48',
     textDecorationLine: 'underline',
     fontSize: 16
+  },
+  timerIconContainer: {
+    justifyContent: 'center',
+    paddingRight: 10
+  },
+  timerIcon: {
+    height: 16,
+    width: 16
   }
 });
 
@@ -59,6 +67,12 @@ const toastConfig = {
   ),
   timerInfo: ({ props }) => (
     <View style={[styles.baseToast, styles.timerInfo]}>
+      <View style={styles.timerIconContainer}>
+        <Image style={styles.timerIcon} source={(isThingOverdue(props.thing)) 
+                                                  ? require("@/assets/images/timer_icon_FF0000.png") 
+                                                  : require("@/assets/images/timer_icon_556B2F.png")
+                                                  } />
+      </View>
       <Text style={styles.toastText}>{momentFromNow(props.thing)}</Text>
     </View>
   )
