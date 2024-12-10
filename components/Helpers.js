@@ -1,6 +1,6 @@
 import { Alert } from "react-native";
 import * as amplitude from '@amplitude/analytics-react-native';
-import moment from 'moment';
+import { DateTime } from 'luxon';
 
 export const formatNumber = (num) => {
   if (!num) return null;
@@ -34,21 +34,15 @@ export const showComingSoonAlert = (anonymousId, featureName, pathname) => {
 };
 
 export const isThingOverdue = (thing) => {
-
   const scheduled_datetime_utc = thing.scheduled_datetime_utc;
-
-  // Parse the combined string into a Moment.js datetime object
-  const scheduledDateTime = moment.utc(scheduled_datetime_utc);
-
-  // Get the current datetime
-  const currentDateTime = moment();
-
-  // Check if the scheduled datetime is in the past
-  return scheduledDateTime.isBefore(currentDateTime)
+  const utcDateTime = DateTime.fromISO(scheduled_datetime_utc, { zone: "utc" });
+  const now = DateTime.now().toUTC();
+  return utcDateTime < now;
 }
 
 export const momentFromNow = (thing) => {
   const scheduled_datetime_utc = thing.scheduled_datetime_utc;
-  return moment.utc(scheduled_datetime_utc).fromNow();
+  const scheduledDate = DateTime.fromISO(scheduled_datetime_utc);
+  return scheduledDate.toRelative();
 }
 
