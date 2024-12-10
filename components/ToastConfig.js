@@ -40,6 +40,10 @@ const styles = StyleSheet.create({
   timerIcon: {
     height: 16,
     width: 16
+  },
+  timerText_overdue: {
+    fontWeight: 'bold',
+    color: '#FF0000'
   }
 });
 
@@ -73,7 +77,7 @@ const toastConfig = {
                                                   : require("@/assets/images/timer_icon_556B2F.png")
                                                   } />
       </View>
-      <Text style={styles.toastText}>{momentFromNow(props.thing)}</Text>
+      <Text style={[styles.toastText, isThingOverdue(props.thing) && styles.timerText_overdue]}>{momentFromNow(props.thing)}</Text>
     </View>
   )
 };
