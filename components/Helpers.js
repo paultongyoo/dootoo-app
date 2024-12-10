@@ -45,11 +45,39 @@ export const momentFromNow = (thing) => {
   return formatLocalizedTime(scheduled_datetime_utc);
 }
 
-export const extractDateInLocalTZ = (dateObj) => {
-  if (dateObj) {
-    return DateTime.fromJSDate(dateObj).toLocal().toFormat("EEE, MMM d, yyyy");
+// export const extractDateInLocalTZ = (dateObj) => {
+//   if (dateObj) {
+//     return DateTime.fromJSDate(dateObj).toLocal().toFormat("EEE, MMM d, yyyy");
+//   } else {
+//     return "No date found";
+//   }
+// }
+
+export const extractDateInLocalTZ = (date) => {
+  const inputDate = DateTime.fromJSDate(date).startOf('day');
+  const today = DateTime.now().startOf('day');
+  const tomorrow = today.plus({ days: 1 });
+
+  if (inputDate.equals(today)) {
+    return "Today";
+  } else if (inputDate.equals(tomorrow)) {
+    return "Tomorrow";
   } else {
-    return "No date found";
+    return inputDate.toFormat("EEE, MMM d") + getOrdinalSuffix(inputDate.day) + inputDate.toFormat(" yyyy");
+  }
+}
+
+function getOrdinalSuffix(day) {
+  if (day >= 11 && day <= 13) return "th"; // Special case for 11th, 12th, 13th
+  switch (day % 10) {
+    case 1:
+      return "st";
+    case 2:
+      return "nd";
+    case 3:
+      return "rd";
+    default:
+      return "th";
   }
 }
 
@@ -154,4 +182,33 @@ function formatLocalizedTime(utcISOString) {
     }
     return `${formatDate(scheduledTime)}`;
   }
+}
+
+export const generateEventCreatedMessage = (calendarName, scheduledUtcIsoString, alertMinutesPrior) => {
+
+  // Parse the scheduled date/time
+  const scheduledDate = new Date(scheduledUtcIsoString);
+
+  // Ensure the alert time is always positive for the message
+  const absoluteAlertMinutes = Math.abs(alertMinutesPrior);
+
+  // Convert scheduled UTC time to a readable format
+  const scheduledDateTime = scheduledDate.toLocaleString('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  });
+
+  // Calculate the alert time in human-readable terms
+  const alertTime =
+    absoluteAlertMinutes < 1440
+      ? `${absoluteAlertMinutes} minutes`
+      : `${Math.floor(absoluteAlertMinutes / 1440)} ${Math.floor(absoluteAlertMinutes / 1440) === 1 ? 'day' : 'days'}`;
+
+  // Construct and return the statement
+  return `A new event has been created in your '${calendarName}' calendar for ${scheduledDateTime} and will remind you ${alertTime} prior.`;
 }

@@ -15,7 +15,7 @@ import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, getLocalDateObj, isThingOverdue } from './Helpers';
+import { deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, generateEventCreatedMessage, getLocalDateObj, isThingOverdue } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
@@ -615,9 +615,27 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     // TODO   Generate URL for event to navigate user to event in schedule app on calendar click
 
                     Alert.alert("Calendar Event Created",
-                        `A new event on ${selectedTimerThing.current.scheduled_datetime_utc} has been created ` +
-                        `named '${selectedTimerThing.current.text}' in your '${selectedCalendar.current.title}' calendar ` +
-                        `configured to remind you ${deriveAlertMinutesOffset(selectedTimerThing.current) * -1} minutes prior.`
+                        generateEventCreatedMessage(selectedCalendar.current.title, selectedTimerThing.current.scheduled_datetime_utc, deriveAlertMinutesOffset(selectedTimerThing.current)),
+                        [
+                            {
+                                text: 'Go to Calendar',
+                                onPress: () => {
+                                    amplitude.track("Go to Calendar Button Pressed", {
+                                        anonymous_id: anonymousId.current,
+                                        pathname: pathname
+                                    });
+                                }
+                            },
+                            {
+                                text: 'OK',
+                                onPress: () => {
+                                    amplitude.track("Calendar Event Created Message Dimissed", {
+                                        anonymous_id: anonymousId.current,
+                                        pathname: pathname
+                                    });
+                                }
+                            }
+                        ]
                     );
                 } else {
                     Alert.alert("Unexpected Error Occurred",
