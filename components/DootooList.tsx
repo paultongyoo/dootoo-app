@@ -137,6 +137,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     text1: `Added ${lastRecordedCount.current} ${thingName}${(lastRecordedCount.current > 1) ? 's' : ''}.`,
                     position: 'bottom',
                     bottomOffset: 220,
+                    visibilityTime: 8000,
                     props: {
                         onUndoPress: () => {
 
