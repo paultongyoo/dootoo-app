@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
 import { momentFromNow, isThingOverdue } from './Helpers';
-
+import Toast from 'react-native-toast-message';
 
 const styles = StyleSheet.create({
   baseToast: {
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
 const toastConfig = {
   undoableToast: ({ text1 = '', props }) => (
     <View style={[styles.baseToast, styles.undoableToast]}>
-      <Text style={styles.toastText}>{text1}     </Text>
+      <Text onPress={() => Toast.hide()} style={styles.toastText}>{text1}     </Text>
       <Pressable onPress={props.onUndoPress}>
         <Text style={styles.toastLink}>undo</Text>
       </Pressable>
@@ -78,7 +78,7 @@ const toastConfig = {
       styles.baseToast, 
       styles.msgWithLink,
       { width: (props.width) ? props.width : 190 }]}>
-      <Text style={styles.toastText}>{text1}</Text>
+      <Text onPress={() => Toast.hide()} style={styles.toastText}>{text1}</Text>
       {(props.linkText) ?
         <Pressable onPress={props.onLinkPress}>
           <Text style={styles.toastLink}>{props.linkText}</Text>
@@ -94,7 +94,7 @@ const toastConfig = {
                                                   : require("@/assets/images/timer_icon_556B2F.png")
                                                   } />
       </View>
-      <Text style={[styles.toastText, isThingOverdue(props.thing) && styles.timerText_overdue]}>{momentFromNow(props.thing)}</Text>
+      <Text onPress={() => Toast.hide()} style={[styles.toastText, isThingOverdue(props.thing) && styles.timerText_overdue]}>{momentFromNow(props.thing)}</Text>
       { (!props.thing.event_id)
         ? <Pressable hitSLop={10} style={styles.timerEditIconContainer}
                      onPress={props.onEditIconClick}>
