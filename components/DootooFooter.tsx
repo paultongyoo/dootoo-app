@@ -128,7 +128,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             // Poll metering level and update the animated scale
             const interval = setInterval(async () => {
                 const status = await recording.getStatusAsync();
-                const metering_divisor = (Platform.OS == 'ios') ? 30 : 100;
+                const metering_divisor = (Platform.OS == 'ios') ? 30 : 120;
                 if (status.isRecording) {
                     //console.log("Unmodified sound level: " + status.metering);
                     meteringLevel.value = withTiming(1 + Math.max(0, 1 + (status.metering / metering_divisor)), { duration: 100 });
