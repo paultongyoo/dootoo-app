@@ -283,10 +283,13 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         setIsRecordingProcessing(true);
         const fileUri = await stopRecording(localRecordingObject, isAutoStop);
         const response = await callBackendTranscribeService(fileUri);
+        const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
+        console.log("Number of scheduled items recorded: " + numScheduledItems);
         amplitude.track("Recording Processing Completed", {
             anonymous_id: anonymousId.current,
             flagged: (response == "flagged"),
             thing_count: (response && response.length >= 0) ? response.length : -1,
+            numScheduledItems: numScheduledItems,
             pathname: pathname
         });
 
