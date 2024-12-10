@@ -946,6 +946,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         dateTimeEditLinkContainer: {
             paddingRight: 60,
             justifyContent: 'center'
+        },
+        dateTimePickerContainer: {
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingBottom: 20
         }
     });
 
@@ -1046,7 +1051,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 <Text onPress={handleScheduleEditDialogEditTimeClick} style={formStyles.dateTimeText}>{extractTimeInLocalTZ(scheduleEditDialogDate)}</Text>
                             </View>
                         </View>
-                        : <RNDateTimePicker mode="datetime" value={scheduleEditDialogDate} onChange={(event, date) => setScheduleEditDialogDate(date)} />
+                        : <View style={formStyles.dateTimePickerContainer}>
+                            <RNDateTimePicker style={{alignContent: 'center'}} mode="datetime" value={scheduleEditDialogDate} onChange={(event, date) => setScheduleEditDialogDate(date)} />
+                          </View>
                     }
                     <Dialog.Button label="Cancel" onPress={handleScheduleEditDialogCancel} />
                     <Dialog.Button label="Submit" onPress={handleScheduleEditDialogSubmission} />
