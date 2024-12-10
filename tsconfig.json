@@ -4,7 +4,7 @@
     "jsx": "react-jsx",  // or "react"
     "target": "es6",
     "module": "commonjs",
-    "strict": true,
+    "strict": false,
     "paths": {
       "@/*": [
         "./*"
