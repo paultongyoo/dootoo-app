@@ -44,6 +44,23 @@ const styles = StyleSheet.create({
   timerText_overdue: {
     fontWeight: 'bold',
     color: '#FF0000'
+  },
+  timerEditIconContainer: {
+    justifyContent: 'center',
+    paddingRight: 10,
+    paddingLeft: 20
+  },
+  timerEditIcon: {
+    height: 16,
+    width: 16
+  },
+  calendarIconContainer: {
+    justifyContent: 'center',
+    paddingLeft: 10
+  },
+  calendarIcon: {
+    height: 16,
+    width: 16
   }
 });
 
@@ -78,6 +95,16 @@ const toastConfig = {
                                                   } />
       </View>
       <Text style={[styles.toastText, isThingOverdue(props.thing) && styles.timerText_overdue]}>{momentFromNow(props.thing)}</Text>
+      { (!props.thing.event_id)
+        ? <Pressable hitSLop={10} style={styles.timerEditIconContainer}
+                     onPress={props.onEditClick}>
+            <Image style={styles.timerEditIcon} source={require("@/assets/images/edit_icon_A23E48.png")} />
+          </Pressable>
+        : <></>}    
+        <Pressable hitSLop={10} style={styles.calendarIconContainer}
+                     onPress={props.onCalendarClick}>
+            <Image style={styles.calendarIcon} source={require("@/assets/images/calendar_A23E48.png")} />
+        </Pressable>                                    
     </View>
   )
 };
