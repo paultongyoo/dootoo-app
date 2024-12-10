@@ -9,7 +9,7 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
-import { loadItemsCounts, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateTipsCache } from './Storage';
+import { loadItemsCounts, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
 import usePolling from './Polling';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
@@ -600,7 +600,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 onChange: (event, date) => setScheduleEditDialogDate(date)
             })
         } else {
-            Alert.alert("Implement me differently on iOS!");
+            console.log("This shouldn't be reached on iOS as field should be hidden.");
         }
     }
 
@@ -612,7 +612,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 onChange: (event, date) => setScheduleEditDialogDate(date)
             })
         } else {
-            Alert.alert("Implement me differently on iOS!");
+            console.log("This shouldn't be reached on iOS as field should be hidden.");
         }
     }
 
@@ -816,13 +816,15 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 console.log(`Asynchronously ${calendaredThings.length} scheduled items to see if updated in Calendar...`);
                 calendaredThings.forEach(async (thing) => {
                     const event_id = thing.event_id;
+                    const saved_thing_text = thing.text;
                     const saved_scheduled_local_date = getLocalDateObj(thing);
                     try {
                         const calEvent = await Calendar.getEventAsync(event_id);
                         if (calEvent) {
                             const calStartLocalDate = new Date(calEvent.startDate);
-                            if (!areDateObjsEqual(saved_scheduled_local_date, calStartLocalDate)) {
-                                console.log("Calendar Event " + calEvent.title + " has different start date than scheduled event, updating saved item...");
+                            if (!areDateObjsEqual(saved_scheduled_local_date, calStartLocalDate) ||
+                                    !(saved_thing_text === calEvent.title)) {
+                                console.log("Calendar Event " + calEvent.title + " has different start date and/or title than scheduled event, updating saved item...");
                                 // console.log("saved_scheduled_local_date: " + saved_scheduled_local_date);
                                 // console.log("calStartLocalDate: " + calStartLocalDate);
 
@@ -832,10 +834,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         ? {
                                             ...prevThing,
                                             scheduled_datetime_utc: calStartLocalDate.toISOString(),
+                                            text: calEvent.title
                                         }
                                         : prevThing));
 
-                                updateItemSchedule(thing.uuid, calStartLocalDate.toISOString());                  
+                                updateItemSchedule(thing.uuid, calStartLocalDate.toISOString()); 
+                                updateItemText({ uuid: thing.uuid, text: calEvent.title });                 
                             } else {
                                 //console.log("Calendar Event " + calEvent.title + " matches what's saved.");
                             }
@@ -942,8 +946,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 deepItem.text = textOnChange;
                 saveTextUpdateFunc(deepItem);
 
-                // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
-                //updatedTasks![index].counts_updating = true;    // Set this in case new text results in new counts
+                const eventIdToUpdate = item.event_id;
+                if (eventIdToUpdate) {
+                    Calendar.updateEventAsync(eventIdToUpdate, {
+                        title: textOnChange
+                    });
+                    console.log("Calendar Event title updated asyncronously: " + eventIdToUpdate);
+                }    
 
                 // Always treat React state as immutable!  
                 // React was designed to only react to state changes of new objects/values
