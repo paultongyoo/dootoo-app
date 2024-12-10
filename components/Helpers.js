@@ -1,4 +1,4 @@
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { DateTime } from 'luxon';
 
@@ -211,4 +211,15 @@ export const generateEventCreatedMessage = (calendarName, scheduledUtcIsoString,
 
   // Construct and return the statement
   return `A new event has been created in your '${calendarName}' calendar for ${scheduledDateTime} and will remind you ${alertTime} prior.`;
+}
+
+
+export const generateCalendarUri = (startDate) => {
+  const date = new Date(startDate);
+  if (Platform.OS === 'android') {
+    return `content://com.android.calendar/time/${date.getTime()}`;
+  } else if (Platform.OS === 'ios') {
+    return `calshow:${date.getTime() / 1000}`;
+  }
+  return null; // Unsupported platform
 }

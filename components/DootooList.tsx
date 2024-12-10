@@ -15,7 +15,7 @@ import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, generateEventCreatedMessage, getLocalDateObj, isThingOverdue } from './Helpers';
+import { deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, generateCalendarUri, generateEventCreatedMessage, getLocalDateObj, isThingOverdue } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
@@ -624,6 +624,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         anonymous_id: anonymousId.current,
                                         pathname: pathname
                                     });
+
+                                    const calendarUri = generateCalendarUri(selectedTimerThing.current.scheduled_datetime_utc);
+                                    if (calendarUri) {
+                                        Linking.openURL(calendarUri).catch(err =>
+                                            console.error("Couldn't load calendar", err)
+                                        );
+                                    }
                                 }
                             },
                             {
