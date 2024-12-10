@@ -506,10 +506,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         const thingToUpdateUUID = selectedTimerThing.current.uuid;
         const eventIdToDelete = selectedTimerThing.current.event_id;
 
-        // Delete calendar event
+        // Asyncronously delete calendar event
         if (eventIdToDelete) {
-            await Calendar.deleteEventAsync(eventIdToDelete);
-            console.log("Calendar Event ID Deleted: " + eventIdToDelete)
+            Calendar.deleteEventAsync(eventIdToDelete); 
+            console.log("Calendar Event ID Deleted asynchronously: " + eventIdToDelete)
         }
 
         // Clear both scheduled_datetime_utc and event_id fields
