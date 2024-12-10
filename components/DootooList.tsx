@@ -467,6 +467,55 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         setShowScheduleEditDialog(false);
     }
 
+    const handleScheduleEditDialogClear = () => {
+        amplitude.track("Schedule Item Clear Message Displayed", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname
+        });     
+        Alert.alert(
+            "Clear Schedule",
+            "Are you sure you want to remove the schedule from this item?  This currently can't be undone.",
+            [
+                {
+                    text: 'Cancel',
+                    onPress: () => {
+                        amplitude.track("Schedule Item Clear Message Cancelled", {
+                            anonymous_id: anonymousId.current,
+                            pathname: pathname
+                        });  
+                    },
+                    style: 'cancel'
+                },
+                {
+                    text: 'Yes',
+                    onPress: () => {
+                        amplitude.track("Schedule Item Clear Message Yes Button Pressed", {
+                            anonymous_id: anonymousId.current,
+                            pathname: pathname
+                        });  
+                        clearScheduleInfo();
+                    }
+                }
+            ],
+            { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+        );
+    }
+
+    const clearScheduleInfo = () => {
+        const thingToUpdateUUID = selectedTimerThing.current.uuid;
+
+        listArraySetter((prevList) => prevList.map((thing) =>
+            (thing.uuid == thingToUpdateUUID)
+                ? {
+                    ...thing,
+                    scheduled_datetime_utc: null
+                }
+                : thing));
+
+        updateItemSchedule(thingToUpdateUUID, null);
+        setShowScheduleEditDialog(false);
+    }
+
     const handleScheduleEditDialogSubmission = () => {
         if (!selectedTimerThing.current) {
             console.log("selectedTimerThing.current unexpectedly null on edit submit, exiting!!");
@@ -1063,6 +1112,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                           </View>
                     }
                     <Dialog.Button label="Cancel" onPress={handleScheduleEditDialogCancel} />
+                    <Dialog.Button label="Clear" onPress={handleScheduleEditDialogClear} />
                     <Dialog.Button label="Submit" onPress={handleScheduleEditDialogSubmission} />
                 </Dialog.Container>
             </View>
