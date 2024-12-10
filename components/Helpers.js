@@ -42,65 +42,48 @@ export const isThingOverdue = (thing) => {
 
 export const momentFromNow = (thing) => {
   const scheduled_datetime_utc = thing.scheduled_datetime_utc;
-  return formatRelativeTimeDetailed(scheduled_datetime_utc);
+  return formatLocalizedTime(scheduled_datetime_utc);
 }
 
-function formatRelativeTimeDetailed(scheduledTimeISO) {
-  const now = DateTime.now().toUTC();
-  const scheduledTime = DateTime.fromISO(scheduledTimeISO, { zone: "utc" });
 
-  // Calculate the total difference in milliseconds
-  const diffMilliseconds = scheduledTime.diff(now).milliseconds;
+function formatLocalizedTime(utcISOString) {
+  // Parse the UTC time and localize it to the user's timezone
+  const scheduledTime = DateTime.fromISO(utcISOString, { zone: 'utc' }).toLocal();
+  const now = DateTime.now().toLocal();
 
-  // Determine if the scheduled time is in the past or future
-  const isPast = diffMilliseconds < 0;
+  // Helper to format times
+  const formatTime = (dt) => dt.toFormat("h:mma").toLowerCase(); // e.g., "3:30pm"
 
-  // Calculate the absolute difference
-  const totalMinutes = Math.abs(diffMilliseconds) / (1000 * 60);
-  const totalHours = totalMinutes / 60;
-  const totalDays = totalHours / 24;
-  const totalWeeks = totalDays / 7;
-  const totalMonths = totalDays / 30; // Approximation
-  const totalYears = totalDays / 365; // Approximation
+  // Helper to format dates
+  const formatDate = (dt) => dt.toFormat("MMM d"); // e.g., "Dec 14"
 
-  let timeString = "";
+  // Helper to format dates with the year
+  const formatDateWithYear = (dt) => dt.toFormat("MMM d, yyyy"); // e.g., "Jan 7, 2025"
 
-  // Helper function to handle singular/plural
-  const formatUnit = (value, unit) => `${value} ${unit}${value === 1 ? '' : 's'}`;
+  // Determine the difference in days
+  const daysDifference = scheduledTime.startOf('day').diff(now.startOf('day'), 'days').toObject().days;
 
-  // Choose the appropriate unit
-  if (totalYears >= 1) {
-    const years = Math.floor(totalYears);
-    const remainingMonths = Math.floor((totalYears - years) * 12);
-    timeString = `${formatUnit(years, 'year')}`;
-    if (remainingMonths > 0) timeString += ` and ${formatUnit(remainingMonths, 'month')}`;
-  } else if (totalMonths >= 1) {
-    const months = Math.floor(totalMonths);
-    const remainingDays = Math.floor((totalMonths - months) * 30);
-    timeString = `${formatUnit(months, 'month')}`;
-    if (remainingDays > 0) timeString += ` and ${formatUnit(remainingDays, 'day')}`;
-  } else if (totalWeeks >= 1) {
-    const weeks = Math.floor(totalWeeks);
-    const remainingDays = Math.floor((totalWeeks - weeks) * 7);
-    timeString = `${formatUnit(weeks, 'week')}`;
-    if (remainingDays > 0) timeString += ` and ${formatUnit(remainingDays, 'day')}`;
-  } else if (totalDays >= 1) {
-    const days = Math.floor(totalDays);
-    const remainingHours = Math.floor((totalDays - days) * 24);
-    timeString = `${formatUnit(days, 'day')}`;
-    if (remainingHours > 0) timeString += ` and ${formatUnit(remainingHours, 'hour')}`;
-  } else if (totalHours >= 1) {
-    const hours = Math.floor(totalHours);
-    const remainingMinutes = Math.floor(totalMinutes % 60);
-    timeString = `${formatUnit(hours, 'hour')}`;
-    if (remainingMinutes > 0) timeString += ` and ${formatUnit(remainingMinutes, 'minute')}`;
-  } else {
-    const minutes = Math.floor(totalMinutes);
-    timeString = `${formatUnit(minutes, 'minute')}`;
+  // Format based on proximity
+  if (daysDifference === 0) {
+    // Same day
+    return `Today ${formatTime(scheduledTime)}`;
+  } else if (daysDifference === 1) {
+    // Tomorrow
+    return `Tomorrow ${formatTime(scheduledTime)}`;
+  } else if (daysDifference === -1) {
+    // Yesterday
+    return `Yesterday ${formatTime(scheduledTime)}`;
+  } else if (scheduledTime.year !== now.year) {
+    // Different year
+    if (scheduledTime.hour || scheduledTime.minute) {
+      return `${formatDateWithYear(scheduledTime)} ${formatTime(scheduledTime)}`;
+    }
+    return `${formatDateWithYear(scheduledTime)}`;
+  } else if (Math.abs(daysDifference) > 1) {
+    // Same year but more than a day away
+    if (scheduledTime.hour || scheduledTime.minute) {
+      return `${formatDate(scheduledTime)} ${formatTime(scheduledTime)}`;
+    }
+    return `${formatDate(scheduledTime)}`;
   }
-
-  // Add "in" or "ago" based on the direction of the difference
-  timeString = isPast ? `${timeString} ago` : `in ${timeString}`;
-
-  return timeString;
 }
