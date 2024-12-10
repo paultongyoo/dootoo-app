@@ -61,6 +61,44 @@ export const extractTimeInLocalTZ = (dateObj) => {
   }
 }
 
+export const deriveAlertMinutesOffset = (thing) => {
+  return getAlertMinutes(thing.scheduled_datetime_utc);
+}
+
+function getAlertMinutes(scheduledISO) {
+  const now = DateTime.now();
+  const scheduled = DateTime.fromISO(scheduledISO);
+
+  // Calculate the difference in minutes
+  const diffInMinutes = scheduled.diff(now, "minutes").minutes;
+
+  // Within 1 hour: Alert 30 minutes prior
+  if (diffInMinutes <= 60) {
+    return -30; // Alert 30 minutes before
+  }
+
+  // Within today but more than 1 hour away: Alert 1 hour prior
+  if (scheduled.hasSame(now, "day")) {
+    return -60; // Alert 1 hour before
+  }
+
+  // Tomorrow: Alert at 11:00 AM on the event day
+  if (scheduled.diff(now, "days").days <= 1) {
+    const alertTime = scheduled.startOf("day").plus({ hours: 11 });
+    return Math.round(alertTime.diff(scheduled, "minutes").minutes); // Negative value
+  }
+
+  // Within a week but more than a day: Alert at 11:00 AM the day before
+  if (scheduled.diff(now, "days").days <= 7) {
+    const alertTime = scheduled.minus({ days: 1 }).startOf("day").plus({ hours: 11 });
+    return Math.round(alertTime.diff(scheduled, "minutes").minutes); // Negative value
+  }
+
+  // More than a week away: Alert at 11:00 AM 3 days before
+  const alertTime = scheduled.minus({ days: 3 }).startOf("day").plus({ hours: 11 });
+  return Math.round(alertTime.diff(scheduled, "minutes").minutes); // Negative value
+}
+
 
 function formatLocalizedTime(utcISOString) {
   // Parse the UTC time and localize it to the user's timezone

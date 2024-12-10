@@ -565,7 +565,7 @@ export const updateItemSchedule = async(item_uuid, scheduled_datetime_utc) => {
         scheduled_datetime_utc: scheduled_datetime_utc
       }
     );
-    console.log("updateItemSchedule Response Obj: " + JSON.stringify(response.data.body));
+    //console.log("updateItemSchedule Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateItemSchedule API:', error);
   }

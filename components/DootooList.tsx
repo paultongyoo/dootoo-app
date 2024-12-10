@@ -15,7 +15,7 @@ import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { extractDateInLocalTZ, extractTimeInLocalTZ, isThingOverdue } from './Helpers';
+import { deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, isThingOverdue } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
@@ -521,6 +521,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         const permissionsResponse = await Calendar.requestCalendarPermissionsAsync();
         if (permissionsResponse.status === 'granted') {
             const readCalendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+            console.log("readCalendars.length: " + readCalendars.length);
             editableCalendars.current = readCalendars.filter(calendar => calendar.allowsModifications);
             console.log("Attempting to display calendar selection dialog");
             if (editableCalendars.current.length == 1) {
@@ -540,7 +541,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 });
                 Alert.alert(
                     "No Calendars Found",
-                    "Please confirm you can access an existing calendar on this device via your calendar app.",
+                    "Please sign into a calendar app on this device so that dootoo can access your calendars.",
                     [
                         {
                             text: 'OK',
@@ -605,8 +606,15 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             const eventId = await createCalendarEvent();
             if (eventId) {
                 console.log("Created new calendar event after manual calendar selection: " + eventId);
+
+                // TODO:  Update cache and DB with event ID
+                // TODO   Generate URL for event to navigate user to event in schedule app on calendar click
+
                 Alert.alert("Calendar Event Created",
-                    `New calendar event created named '${selectedTimerThing.current.text}' in your '${selectedCalendar.current.title}' calendar.`
+                    `A new event on ${selectedTimerThing.current.scheduled_datetime_utc} has been created 
+                     named '${selectedTimerThing.current.text}' in your '${selectedCalendar.current.title}' calendar 
+                     configured to remind you ${deriveAlertMinutesOffset(selectedTimerThing.current) * -1} minutes
+                     prior.`  
                 );
             } else {
                 Alert.alert("Unexpected Error Occurred",
@@ -630,12 +638,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             );
             return;
         }
-        const eventTitle = (selectedTimerThing.current) ? selectedTimerThing.current.text : 'New Dootoo Item'; // Later case should not happen
+        const eventTitle = selectedTimerThing.current?.text
         const eventId = await Calendar.createEventAsync(calendarId, {
             title: eventTitle,
-            alarms: [{ relativeOffset: -60, method: Calendar.AlarmMethod.ALERT }],
-            startDate: new Date(),
-            endDate: new Date(),
+            alarms: [{ relativeOffset: deriveAlertMinutesOffset(selectedTimerThing.current), method: Calendar.AlarmMethod.ALERT }],
+            startDate: new Date(selectedTimerThing.current?.selected_datetime_utc),
+            endDate: new Date(selectedTimerThing.current?.selected_datetime_utc),
             allDay: false,
             availability: Calendar.Availability.BUSY,
             location: '',
