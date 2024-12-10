@@ -511,12 +511,23 @@ export default function Index() {
   const handleTimerClick = (item) => {
     Toast.show({
         type: 'timerInfo',
+        visibilityTime: 8000,
         position: 'bottom',
         bottomOffset: 220,
         props: {
-            thing: item
+            thing: item,
+            onEditIconClick: () => handleTimerToastEditClick(item),
+            onCalendarIconClick: () => handleTimerToastCalendarClick(item)
         }
     });
+  }
+
+  const handleTimerToastEditClick = (item) => {
+    Alert.alert("Implement Me", "Implement scheduled time edit UX!");
+  }
+
+  const handleTimerToastCalendarClick = (item) => {
+    Alert.alert("Implement Me", "Implement calendar integration UX!");
   }
 
   const styles = StyleSheet.create({
@@ -791,38 +802,6 @@ export default function Index() {
       isThingDraggable={true} />
   );
 
-
-
-
-  // Update v1.1.1:  This function will likely be deprecated/removed as now item counts
-  // refresh at the DootooItemSidebar component level
-  // function refreshItemCounts(latestItems: any, updatedItems: any) {
-  //   var displayedListToUpdate = [...latestItems];
-  //   for (var i = 0; i < updatedItems.length; i++) {
-  //     const currUpdatedItem = updatedItems[i];
-  //     for (var j = 0; j < displayedListToUpdate.length; j++) {
-  //       if (displayedListToUpdate[j].uuid == currUpdatedItem.uuid) {
-  //         displayedListToUpdate[j].tip_count = currUpdatedItem.tip_count;
-  //         displayedListToUpdate[j].similar_count = currUpdatedItem.similar_count;
-  //         displayedListToUpdate[j].counts_updating = false;
-
-  //         // Fire a tracking event if user is displayed an item with non zero count(s)
-  //         if (displayedListToUpdate[j].tip_count + displayedListToUpdate[j].similar_count > 0) {
-  //           amplitude.track("Item Counts UI Refreshed", {
-  //             anonymous_id: anonymousId.current,
-  //             item_uuid: displayedListToUpdate[j].uuid,
-  //             item_is_done: displayedListToUpdate[j].is_done,
-  //             tip_count: displayedListToUpdate[j].tip_count,
-  //             similar_count: displayedListToUpdate[j].similar_count
-  //           });
-  //         }
-
-  //         break;
-  //       }
-  //     }
-  //   }
-  //   return displayedListToUpdate;
-  // }
 }
 
 function moveItemToTopOfDoneAdults(itemList, item_uuid) {

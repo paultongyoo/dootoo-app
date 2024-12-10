@@ -97,12 +97,12 @@ const toastConfig = {
       <Text style={[styles.toastText, isThingOverdue(props.thing) && styles.timerText_overdue]}>{momentFromNow(props.thing)}</Text>
       { (!props.thing.event_id)
         ? <Pressable hitSLop={10} style={styles.timerEditIconContainer}
-                     onPress={props.onEditClick}>
+                     onPress={props.onEditIconClick}>
             <Image style={styles.timerEditIcon} source={require("@/assets/images/edit_icon_A23E48.png")} />
           </Pressable>
         : <></>}    
         <Pressable hitSLop={10} style={styles.calendarIconContainer}
-                     onPress={props.onCalendarClick}>
+                     onPress={props.onCalendarIconClick}>
             <Image style={styles.calendarIcon} source={require("@/assets/images/calendar_A23E48.png")} />
         </Pressable>                                    
     </View>
