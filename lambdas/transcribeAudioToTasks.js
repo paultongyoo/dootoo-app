@@ -70,8 +70,8 @@ export const handler = async (event) => {
                 Your role is to identify the main tasks and sub-tasks described in their input, ordering each sub-task immediately after its corresponding main task.
                 Only consider a task as a sub-task if it is described as part of another task.
                 If the user cites date and/or time information within a task, remove referral to the date/time from the task and cite it in the scheduled_datetime_utc field below.
-                If they mention only a time in their task, assume the scheduled date is the current date in the user's timezone.
-                If they don't mention a time in their task, assume the scheduled time is 12:00AM in the user's timezone.
+                If they only mention a time in their task, assume the scheduled date is the current date in the user's timezone.
+                If they only mention a date in their task, assume the scheduled time is 12:00AM in the user's timezone.
                 "Do NOT guess additional items beyond what the user stays in their input.
                 Respond only in English.
                 Return your analysis in the following JSON format:
@@ -82,7 +82,7 @@ export const handler = async (event) => {
                       "text": "<task name>", 
                       "is_child": <false if main task, true otherwise>},
                       "parent_item_uuid": <UUID of parent task if this is a subtask>,
-                      "scheduled_datetime_utc": <ISO 8601 formatted string in UTC timezone per rules above, or null if no schedule info provided>
+                      "scheduled_datetime_utc": <ISO 8601 formatted string in UTC timezone per rules above, or null if no date or time info provided>
                   ]
                 }`
         },
