@@ -590,7 +590,7 @@ export const updateItemEventId = async(item_uuid, event_id) => {
         event_id: event_id
       }
     );
-    console.log("updateItemEventId Response Obj: " + JSON.stringify(response.data.body));
+    //console.log("updateItemEventId Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateItemEventId API:', error);
   }

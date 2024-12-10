@@ -474,7 +474,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         });     
         Alert.alert(
             "Clear Schedule",
-            "Are you sure you want to remove the schedule from this item?  This currently can't be undone.",
+            `Are you sure you want to remove the schedule from this item? ` +
+            `${(selectedTimerThing.current.event_id) ? 'This will delete your calendar event as well.' : ''}`,
             [
                 {
                     text: 'Cancel',
@@ -501,9 +502,17 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         );
     }
 
-    const clearScheduleInfo = () => {
+    const clearScheduleInfo = async () => {
         const thingToUpdateUUID = selectedTimerThing.current.uuid;
+        const eventIdToDelete = selectedTimerThing.current.event_id;
 
+        // Delete calendar event
+        if (eventIdToDelete) {
+            await Calendar.deleteEventAsync(eventIdToDelete);
+            console.log("Calendar Event ID Deleted: " + eventIdToDelete)
+        }
+
+        // Clear both scheduled_datetime_utc and event_id fields
         listArraySetter((prevList) => prevList.map((thing) =>
             (thing.uuid == thingToUpdateUUID)
                 ? {
@@ -512,8 +521,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     event_id: null
                 }
                 : thing));
-
-        // TODO Delete calendar event
 
         updateItemSchedule(thingToUpdateUUID, null);
         updateItemEventId(thingToUpdateUUID, null);
