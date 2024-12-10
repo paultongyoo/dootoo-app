@@ -659,7 +659,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 });
                 Alert.alert(
                     "No Calendars Found",
-                    "Please sign into a calendar app on this device so that dootoo can access your calendars.",
+                    "Sign into a calendar app on this device so that dootoo can access it.",
                     [
                         {
                             text: 'OK',
@@ -677,7 +677,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         } else {
             Alert.alert(
                 "Calendar Permissions Required",
-                "Please grant dootoo permission to access your calendar via app settings.",
+                "The access will allow dootoo to create and edit calendar events for your items.",
                 [
                     {
                         text: 'Cancel',
