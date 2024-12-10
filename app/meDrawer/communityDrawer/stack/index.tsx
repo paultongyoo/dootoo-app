@@ -8,7 +8,7 @@ import DootooItemSidebar from "@/components/DootooItemSidebar";
 import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
 import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import * as amplitude from '@amplitude/analytics-react-native';
-
+import * as Calendar from 'expo-calendar';
 
 import {
   Image, StyleSheet, Pressable,
@@ -56,6 +56,13 @@ export default function Index() {
   const saveTextUpdate = async (item) => {
     updateItemText(item, () => {
       ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
+
+      if (item.event_id) {
+          Calendar.updateEventAsync(item.event_id, {
+              title: item.text
+          });
+          console.log("Calendar Event title updated asyncronously: " + item.event_id);
+      }   
     });
   }
 

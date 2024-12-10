@@ -944,15 +944,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 //// we don't accidentally change React state and cause re-renders
                 const deepItem = JSON.parse(JSON.stringify(item));
                 deepItem.text = textOnChange;
-                saveTextUpdateFunc(deepItem);
-
-                const eventIdToUpdate = item.event_id;
-                if (eventIdToUpdate) {
-                    Calendar.updateEventAsync(eventIdToUpdate, {
-                        title: textOnChange
-                    });
-                    console.log("Calendar Event title updated asyncronously: " + eventIdToUpdate);
-                }    
+                saveTextUpdateFunc(deepItem); 
 
                 // Always treat React state as immutable!  
                 // React was designed to only react to state changes of new objects/values
