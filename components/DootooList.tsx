@@ -15,7 +15,7 @@ import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, generateCalendarUri, generateEventCreatedMessage, getLocalDateObj, isThingOverdue } from './Helpers';
+import { areDateObjsEqual, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, generateCalendarUri, generateEventCreatedMessage, getLocalDateObj, isThingOverdue } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
@@ -154,6 +154,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
             // Immediately look for new counts on any list update
             restartPolling();
+
+            // Look for any calendar item updates
+            syncCalendarUpdates();
+
         } else if (isInitialMount.current) {
 
             console.log("Bypassing useEffect(listArray) logic on initial mount");
@@ -202,6 +206,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             console.log("App State Changed: " + nextAppState);
             if (nextAppState === "active") {
                 startPolling();
+
+                // Asynchronously check if updated any events in Calendar app
+                syncCalendarUpdates();
             } else {
                 stopPolling();
             }
@@ -799,6 +806,61 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             timeZone: timeZone
         });
         return eventId;
+    }
+
+    const syncCalendarUpdates = async() => {
+        if (listArray && listArray.length > 0) {
+            const calendaredThings = listArray.filter((thing) => thing.event_id);
+            if (calendaredThings.length > 0) {
+                console.log(`Asynchronously ${calendaredThings.length} scheduled items to see if updated in Calendar...`);
+                calendaredThings.forEach(async (thing) => {
+                    const event_id = thing.event_id;
+                    const saved_scheduled_local_date = getLocalDateObj(thing);
+                    try {
+                        const calEvent = await Calendar.getEventAsync(event_id);
+                        if (calEvent) {
+                            const calStartLocalDate = new Date(calEvent.startDate);
+                            if (!areDateObjsEqual(saved_scheduled_local_date, calStartLocalDate)) {
+                                console.log("Calendar Event " + calEvent.title + " has different start date than scheduled event, updating saved item...");
+                                // console.log("saved_scheduled_local_date: " + saved_scheduled_local_date);
+                                // console.log("calStartLocalDate: " + calStartLocalDate);
+
+                                // Clear both scheduled_datetime_utc and event_id fields
+                                listArraySetter((prevList) => prevList.map((prevThing) =>
+                                    (prevThing.uuid == thing.uuid)
+                                        ? {
+                                            ...prevThing,
+                                            scheduled_datetime_utc: calStartLocalDate.toISOString(),
+                                        }
+                                        : prevThing));
+
+                                updateItemSchedule(thing.uuid, calStartLocalDate.toISOString());                  
+                            } else {
+                                //console.log("Calendar Event " + calEvent.title + " matches what's saved.");
+                            }
+                        }
+                    } catch (error) {
+                        console.log("Error was thrown calling getEventAsync on event_id: " + event_id);
+                        console.log("Currently ASSUMING (bad!) this means event was removed and we should clear the item's event schedule");
+                        
+                        // Clear both scheduled_datetime_utc and event_id fields
+                        listArraySetter((prevList) => prevList.map((prevThing) =>
+                            (prevThing.uuid == thing.uuid)
+                                ? {
+                                    ...prevThing,
+                                    scheduled_datetime_utc: null,
+                                    event_id: null
+                                }
+                                : prevThing));
+
+                        updateItemSchedule(thing.uuid, null);
+                        updateItemEventId(thing.uuid, null);
+                    }
+                });
+            } else {
+                //console.log("No calendar items to try to sync.");
+            }
+        }
     }
 
     const renderThing = ({ item, getIndex, drag, isActive }) => {

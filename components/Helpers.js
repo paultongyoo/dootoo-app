@@ -107,6 +107,12 @@ export const getLocalDateObj = (thing) => {
   return dateTimeInLocal.toJSDate();
 }
 
+export const areDateObjsEqual = (date1, date2) => {
+  const luxonDate1 = DateTime.fromJSDate(date1);
+  const luxonDate2 = DateTime.fromJSDate(date2);
+  return luxonDate1.equals(luxonDate2);
+}
+
 function getAlertMinutes(scheduledISO) {
   const now = DateTime.now();
   const scheduled = DateTime.fromISO(scheduledISO);
