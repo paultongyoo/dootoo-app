@@ -16,7 +16,7 @@ import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
 import { extractDateInLocalTZ, extractTimeInLocalTZ, isThingOverdue } from './Helpers';
-import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = (item, index) => { return <></> },
@@ -995,14 +995,18 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 </Dialog.Container>
                 <Dialog.Container visible={showScheduleEditDialog} onBackdropPress={handleScheduleEditDialogCancel}>
                     <Dialog.Title>Edit Scheduled Date & Time</Dialog.Title>
-                    <View style={formStyles.dateTimeContainer}>
-                        <View style={formStyles.dateTimeTextContainer}>
-                            <Text onPress={handleScheduleEditDialogEditDateClick} style={formStyles.dateTimeText}>{extractDateInLocalTZ(scheduleEditDialogDate)}</Text>
+                    { (Platform.OS == 'android') 
+                        ? 
+                        <View style={formStyles.dateTimeContainer}>
+                            <View style={formStyles.dateTimeTextContainer}>
+                                <Text onPress={handleScheduleEditDialogEditDateClick} style={formStyles.dateTimeText}>{extractDateInLocalTZ(scheduleEditDialogDate)}</Text>
+                            </View>
+                            <View style={formStyles.dateTimeTextContainer}>
+                                <Text onPress={handleScheduleEditDialogEditTimeClick} style={formStyles.dateTimeText}>{extractTimeInLocalTZ(scheduleEditDialogDate)}</Text>
+                            </View>
                         </View>
-                        <View style={formStyles.dateTimeTextContainer}>
-                            <Text onPress={handleScheduleEditDialogEditTimeClick} style={formStyles.dateTimeText}>{extractTimeInLocalTZ(scheduleEditDialogDate)}</Text>
-                        </View>
-                    </View>
+                        : <RNDateTimePicker mode="datetime" value={scheduleEditDialogDate} onChange={(event, date) => setScheduleEditDialogDate(date)} />
+                    }
                     <Dialog.Button label="Cancel" onPress={handleScheduleEditDialogCancel} />
                     <Dialog.Button label="Submit" onPress={handleScheduleEditDialogSubmission} />
                 </Dialog.Container>
