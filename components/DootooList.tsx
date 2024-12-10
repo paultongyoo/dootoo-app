@@ -854,7 +854,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                     <Pressable hitSlop={10} style={styles.timerIconContainer}
                                         onPress={() => handleTimerClick(item)}>
                                         <Image style={styles.timerIcon} source={
-                                            (isThingOverdue(item))
+                                            (isThingOverdue(item) && !item.is_done)
                                                 ? require("@/assets/images/timer_icon_FF0000.png")
                                                 : require("@/assets/images/timer_icon_556B2F.png")
                                         } />

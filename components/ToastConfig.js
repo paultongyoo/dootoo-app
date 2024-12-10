@@ -89,12 +89,12 @@ const toastConfig = {
   timerInfo: ({ props }) => (
     <View style={[styles.baseToast, styles.timerInfo]}>
       <View style={styles.timerIconContainer}>
-        <Image style={styles.timerIcon} source={(isThingOverdue(props.thing)) 
+        <Image style={styles.timerIcon} source={(isThingOverdue(props.thing) && !props.thing.is_done) 
                                                   ? require("@/assets/images/timer_icon_FF0000.png") 
                                                   : require("@/assets/images/timer_icon_556B2F.png")
                                                   } />
       </View>
-      <Text onPress={() => Toast.hide()} style={[styles.toastText, isThingOverdue(props.thing) && styles.timerText_overdue]}>{momentFromNow(props.thing)}</Text>
+      <Text onPress={() => Toast.hide()} style={[styles.toastText, isThingOverdue(props.thing) && !props.thing.is_done && styles.timerText_overdue]}>{momentFromNow(props.thing)}</Text>
       { (!props.thing.event_id)
         ? <Pressable hitSLop={10} style={styles.timerEditIconContainer}
                      onPress={props.onEditIconClick}>
