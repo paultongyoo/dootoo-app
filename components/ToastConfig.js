@@ -68,7 +68,7 @@ const toastConfig = {
   undoableToast: ({ text1 = '', props }) => (
     <View style={[styles.baseToast, styles.undoableToast]}>
       <Text onPress={() => Toast.hide()} style={styles.toastText}>{text1}     </Text>
-      <Pressable onPress={props.onUndoPress}>
+      <Pressable hitSLop={10} onPress={props.onUndoPress}>
         <Text style={styles.toastLink}>undo</Text>
       </Pressable>
     </View>
@@ -101,7 +101,10 @@ const toastConfig = {
         </Pressable>  
         <Pressable hitSLop={10} style={styles.calendarIconContainer}
                      onPress={props.onCalendarIconClick}>
-            <Image style={styles.calendarIcon} source={require("@/assets/images/calendar_A23E48.png")} />
+            <Image style={styles.calendarIcon} source={(!props.thing.event_id) 
+                                                  ? require("@/assets/images/calendar_A23E48.png")    // TODO Create better image
+                                                  : require("@/assets/images/calendar_A23E48.png")
+                                                  } />
         </Pressable>                                    
     </View>
   )
