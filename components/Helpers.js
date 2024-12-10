@@ -65,6 +65,20 @@ export const deriveAlertMinutesOffset = (thing) => {
   return getAlertMinutes(thing.scheduled_datetime_utc);
 }
 
+export const getLocalDateObj = (thing) => {
+
+  const scheduled_datetime_utc = thing.scheduled_datetime_utc;
+
+  // Parse the UTC ISO string as a Luxon DateTime in UTC
+  const dateTimeInUTC = DateTime.fromISO(scheduled_datetime_utc, { zone: 'utc' });
+
+  // Convert it to the local timezone
+  const dateTimeInLocal = dateTimeInUTC.setZone('local');
+
+  // Get the JavaScript Date object
+  return dateTimeInLocal.toJSDate();
+}
+
 function getAlertMinutes(scheduledISO) {
   const now = DateTime.now();
   const scheduled = DateTime.fromISO(scheduledISO);

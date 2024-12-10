@@ -15,7 +15,7 @@ import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, isThingOverdue } from './Helpers';
+import { deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, getLocalDateObj, isThingOverdue } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
@@ -479,13 +479,14 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         console.log("Updated schedule date time UTC String: " + newScheduledDateTimeUTCStr);
 
         listArraySetter((prevList) => prevList.map((thing) =>
-            (thing.uuid == thingToUpdateUUID) 
-                ? { ...thing, 
+            (thing.uuid == thingToUpdateUUID)
+                ? {
+                    ...thing,
                     scheduled_datetime_utc: newScheduledDateTimeUTCStr
-                  }
+                }
                 : thing));
 
-        updateItemSchedule(thingToUpdateUUID, newScheduledDateTimeUTCStr) ;  
+        updateItemSchedule(thingToUpdateUUID, newScheduledDateTimeUTCStr);
         setShowScheduleEditDialog(false);
     }
 
@@ -594,33 +595,38 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }
 
     const handleCalendarSelectDialogSubmission = async () => {
-        console.log("Inside handleCalendarSelectDialogSubmission");
-        if (calendarSelectionInputValue == 'no_calendar') {
-            setCalendarSelectionInvalid(true);
-        } else {
-            setCalendarSelectionInvalid(false);
-            setShowCalendarSelectionDialog(false);
-            const selectedCalendarId = calendarSelectionInputValue;
-            const calIdx = editableCalendars.current.findIndex((calendar) => calendar.id == selectedCalendarId);
-            selectedCalendar.current = editableCalendars.current[calIdx];
-            const eventId = await createCalendarEvent();
-            if (eventId) {
-                console.log("Created new calendar event after manual calendar selection: " + eventId);
-
-                // TODO:  Update cache and DB with event ID
-                // TODO   Generate URL for event to navigate user to event in schedule app on calendar click
-
-                Alert.alert("Calendar Event Created",
-                    `A new event on ${selectedTimerThing.current.scheduled_datetime_utc} has been created 
-                     named '${selectedTimerThing.current.text}' in your '${selectedCalendar.current.title}' calendar 
-                     configured to remind you ${deriveAlertMinutesOffset(selectedTimerThing.current) * -1} minutes
-                     prior.`  
-                );
+        try {
+            console.log("Inside handleCalendarSelectDialogSubmission");
+            if (calendarSelectionInputValue == 'no_calendar') {
+                setCalendarSelectionInvalid(true);
             } else {
-                Alert.alert("Unexpected Error Occurred",
-                    `An unexpected error occurred trying to create a new calendar event.  We've logged this issue and will fix it as soon as possible.`
-                );
+                setCalendarSelectionInvalid(false);
+                setShowCalendarSelectionDialog(false);
+                const selectedCalendarId = calendarSelectionInputValue;
+                const calIdx = editableCalendars.current.findIndex((calendar) => calendar.id == selectedCalendarId);
+                console.log("calIdx: " + calIdx);
+                selectedCalendar.current = editableCalendars.current[calIdx];
+                console.log("selectedCalendar.current: " + selectedCalendar.current);
+                const eventId = await createCalendarEvent();
+                if (eventId) {
+                    console.log("Created new calendar event after manual calendar selection: " + eventId);
+
+                    // TODO:  Update cache and DB with event ID
+                    // TODO   Generate URL for event to navigate user to event in schedule app on calendar click
+
+                    Alert.alert("Calendar Event Created",
+                        `A new event on ${selectedTimerThing.current.scheduled_datetime_utc} has been created ` +
+                        `named '${selectedTimerThing.current.text}' in your '${selectedCalendar.current.title}' calendar ` +
+                        `configured to remind you ${deriveAlertMinutesOffset(selectedTimerThing.current) * -1} minutes prior.`
+                    );
+                } else {
+                    Alert.alert("Unexpected Error Occurred",
+                        `An unexpected error occurred trying to create a new calendar event.  We've logged this issue and will fix it as soon as possible.`
+                    );
+                }
             }
+        } catch (error) {
+            console.error("Unexpected error occurred submitting calendar selection: ", error);
         }
     }
 
@@ -638,19 +644,21 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             );
             return;
         }
+        const alertMinutesOffset = deriveAlertMinutesOffset(selectedTimerThing.current);
         const eventTitle = selectedTimerThing.current?.text
+        const startEndDate = getLocalDateObj(selectedTimerThing.current);
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const eventId = await Calendar.createEventAsync(calendarId, {
             title: eventTitle,
-            alarms: [{ relativeOffset: deriveAlertMinutesOffset(selectedTimerThing.current), method: Calendar.AlarmMethod.ALERT }],
-            startDate: new Date(selectedTimerThing.current?.selected_datetime_utc),
-            endDate: new Date(selectedTimerThing.current?.selected_datetime_utc),
+            alarms: [{ relativeOffset: alertMinutesOffset, method: Calendar.AlarmMethod.ALERT }],
+            startDate: startEndDate,
+            endDate: startEndDate,
             allDay: false,
             availability: Calendar.Availability.BUSY,
             location: '',
             notes: 'Event created by dootoo',
-            recurrenceRule: null,   // assume one time event
             status: Calendar.EventStatus.CONFIRMED,
-            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            timeZone: timeZone
         });
         return eventId;
     }
@@ -897,7 +905,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         scheduleEditDialogDateLink: {
             textAlign: 'right',
             fontWeight: 'bold',
-            color: (Platform.OS == 'ios') ? '#007ff9' :'#169689'
+            color: (Platform.OS == 'ios') ? '#007ff9' : '#169689'
         },
         dateTimeContainer: {
             padding: 10,
@@ -1003,8 +1011,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 </Dialog.Container>
                 <Dialog.Container visible={showScheduleEditDialog} onBackdropPress={handleScheduleEditDialogCancel}>
                     <Dialog.Title>Edit Scheduled Date & Time</Dialog.Title>
-                    { (Platform.OS == 'android') 
-                        ? 
+                    {(Platform.OS == 'android')
+                        ?
                         <View style={formStyles.dateTimeContainer}>
                             <View style={formStyles.dateTimeTextContainer}>
                                 <Text onPress={handleScheduleEditDialogEditDateClick} style={formStyles.dateTimeText}>{extractDateInLocalTZ(scheduleEditDialogDate)}</Text>
