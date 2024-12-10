@@ -7,11 +7,13 @@ import { usePathname, useRouter } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter } from "@/components/EventEmitters";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { flushTipsCache } from './Storage';
+import * as amplitude from '@amplitude/analytics-react-native';
+
 
 const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
     const router = useRouter();
     const pathname = usePathname();
-    const { setSelectedItem, itemCountsMap } = useContext(AppContext);
+    const { anonymousId, setSelectedItem, itemCountsMap } = useContext(AppContext);
     const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
     const [tipCount, setTipCount] = 
         useState((itemCountsMap.current && itemCountsMap.current.get(thing.uuid)) ? itemCountsMap.current.get(thing.uuid).tip_count : null);
@@ -49,6 +51,14 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
     }, []);
 
     const handleSimilarCountTap = () => {
+        amplitude.track(`Item Similar Count Tapped`, {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            uuid: thing.uuid,
+            similarCount: similarCount,
+            tipCount: tipCount
+        });
+
         Toast.show({
             type: 'msgWithLink',
             text1: `${similarCount} ${(similarCount > 1) ? 'people' : 'person'} had similar thing`,
@@ -61,6 +71,14 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
     }
 
     const handleTipCountTap = () => {
+        amplitude.track(`Item Tip Count Tapped`, {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            uuid: thing.uuid,
+            similarCount: similarCount,
+            tipCount: tipCount
+        });
+
         if (thing.is_done) {
             goToTips();
         } else {
