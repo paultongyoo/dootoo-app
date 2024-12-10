@@ -39,6 +39,9 @@ const UPDATEITEMDONESTATE_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-e
 
 const UPDATEITEMSCHEDULE_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemSchedule_Dev'
                                      : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemSchedule';
+                               
+const UPDATEITEMEVENTID_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemEventId_Dev'
+                                     : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemEventId';
 
 const LOADTIPS_URL =  (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadTips_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadTips';
@@ -568,6 +571,28 @@ export const updateItemSchedule = async(item_uuid, scheduled_datetime_utc) => {
     //console.log("updateItemSchedule Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateItemSchedule API:', error);
+  }
+}
+
+export const updateItemEventId = async(item_uuid, event_id) => {
+  try {
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(UPDATEITEMEVENTID_URL,
+      {
+        anonymous_id : localAnonId,
+        item_uuid: item_uuid,
+        event_id: event_id
+      }
+    );
+    console.log("updateItemEventId Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling updateItemEventId API:', error);
   }
 }
 

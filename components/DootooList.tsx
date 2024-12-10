@@ -9,7 +9,7 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
-import { loadItemsCounts, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateTipsCache } from './Storage';
+import { loadItemsCounts, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateTipsCache } from './Storage';
 import usePolling from './Polling';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
@@ -508,11 +508,34 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             (thing.uuid == thingToUpdateUUID)
                 ? {
                     ...thing,
-                    scheduled_datetime_utc: null
+                    scheduled_datetime_utc: null,
+                    event_id: null
                 }
                 : thing));
 
+        // TODO Delete calendar event
+
         updateItemSchedule(thingToUpdateUUID, null);
+        updateItemEventId(thingToUpdateUUID, null);
+        setShowScheduleEditDialog(false);
+    }
+
+    const updateThingEventId = (eventId) => {
+        const thingToUpdateUUID = selectedTimerThing.current.uuid;
+
+        listArraySetter((prevList) => prevList.map((thing) =>
+            (thing.uuid == thingToUpdateUUID)
+                ? {
+                    ...thing,
+                    event_id: eventId
+                }
+                : thing));
+
+        if (thingName == 'item') {
+            updateItemEventId(thingToUpdateUUID, eventId);
+        } else {
+            console.log("Event Ids currently not supported on " + thingName + "s");
+        }
         setShowScheduleEditDialog(false);
     }
 
@@ -567,6 +590,21 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const handleTimerToastCalendarClick = async (thing) => {
         console.log("handleTimerToastCalendarClick called");
         selectedTimerThing.current = thing;
+
+        // If thing already has an event_id, assume the event already exists in the
+        // user's calendar so do not create another one.  Navigate them to the thing's scheduled date
+        // NOTE AT THIS TIME the thing's scheduled date is not guranteed to match the calendar event time
+        if (thing.event_id) {
+            const calendarUri = generateCalendarUri(selectedTimerThing.current.scheduled_datetime_utc);
+            if (calendarUri) {
+                Linking.openURL(calendarUri).catch(err =>
+                    console.error("Couldn't load calendar", err)
+                );
+            }
+            return;
+        }
+
+        // Else, assume the calendar event hasn't been created so proceed with creation UX
 
         const permissionsResponse = await Calendar.requestCalendarPermissionsAsync();
         if (permissionsResponse.status === 'granted') {
@@ -657,6 +695,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 selectedCalendar.current = editableCalendars.current[calIdx];
                 console.log("selectedCalendar.current: " + selectedCalendar.current);
                 const eventId = await createCalendarEvent();
+
+                // Asyncronous
+                updateThingEventId(eventId);
+
                 if (eventId) {
                     console.log("Created new calendar event after manual calendar selection: " + eventId);
 

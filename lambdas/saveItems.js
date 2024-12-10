@@ -82,6 +82,7 @@ const saveItems = async(anonymous_id, items_str) => {
                         is_done: array_item.is_done,
                         is_deleted: array_item.is_deleted,
                         scheduled_datetime_utc: array_item.scheduled_datetime_utc,
+                        event_id: array_item.event_id,
                         ...((array_item.parent_item_uuid) && parentUUIDtoIDMap[array_item.parent_item_uuid] && { parent: {
                                 connect: {
                                     id: parentUUIDtoIDMap[array_item.parent_item_uuid] 
@@ -95,6 +96,7 @@ const saveItems = async(anonymous_id, items_str) => {
                         is_done: array_item.is_done,
                         is_deleted: array_item.is_deleted,
                         scheduled_datetime_utc: array_item.scheduled_datetime_utc,
+                        event_id: array_item.event_id,
                         ...((array_item.parent_item_uuid) && parentUUIDtoIDMap[array_item.parent_item_uuid] && { parent: {
                                 connect: {
                                     id: parentUUIDtoIDMap[array_item.parent_item_uuid] 
