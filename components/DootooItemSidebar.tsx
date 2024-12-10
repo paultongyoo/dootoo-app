@@ -51,7 +51,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
     const handleSimilarCountTap = () => {
         Toast.show({
             type: 'msgWithLink',
-            text1: `${similarCount} ${(similarCount > 1) ? 'people' : 'person'} did similar thing`,
+            text1: `${similarCount} ${(similarCount > 1) ? 'people' : 'person'} had similar thing`,
             position: 'bottom',
             bottomOffset: 220,
             props: {
