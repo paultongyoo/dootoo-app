@@ -20,7 +20,7 @@ import { isThingOverdue } from './Helpers';
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = (item, index) => { return <></> },
     renderRightActions = (item, index) => { return <></> },
-    isDoneable = true, 
+    isDoneable = true,
     handleDoneClick = (thing) => { return; },
     saveAllThings, saveTextUpdateFunc, saveThingOrderFunc, loadAllThings,
     transcribeAudioToThings,
@@ -44,7 +44,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
     // References:  Changing these should intentionally NOT cause this list to re-render
     //const itemFlatList = useRef(null);              // TODO: Consider deprecate
-    const isInitialMount  = useRef(true);
+    const isInitialMount = useRef(true);
     const onChangeInputValue = useRef('');
     const isPageLoading = useRef(false);
     const hasMoreThings = useRef(true);
@@ -216,10 +216,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     // 1.2 This function is modified to always execute the page = 1 scenario on all calls,
     //     whether it is first launch scenario or on refresh pull down
     const resetListWithFirstPageLoad = async (isPullDown = false) => {
-//        if (page == 1) {
-            // If current page is already 1, manually invoke LoadThingsForCurrentPage 
-            // as useEffect(page) won't be called
-            loadThingsForCurrentPage(isPullDown);
+        //        if (page == 1) {
+        // If current page is already 1, manually invoke LoadThingsForCurrentPage 
+        // as useEffect(page) won't be called
+        loadThingsForCurrentPage(isPullDown);
         // } else {
         //     //console.log("Setting page var to 1 to trigger loadThingsForCurrentPage().")
         //     setPage(1);
@@ -262,7 +262,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     //     -- boolean is passed to loadAllThings so backend can distinguish
     const loadThingsForCurrentPage = async (isPullDown = false) => {
         //console.log(`Calling loadAllThings(page) with page = ${page}.`);
-        
+
         // 1.2 Removed page parameter pass to loadAllThings
         //const loadResponse = await loadAllThings(isPullDown, page);
         const loadResponse = await loadAllThings(isPullDown);
@@ -351,7 +351,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             // If thing is a parent but was dragged immediately above a child,
             // assume user wants to make the thing a sibling.
             // If the thing has children, make the thing's children siblings too
-            if (!draggedThing.parent_item_uuid && 
+            if (!draggedThing.parent_item_uuid &&
                 (newData[toIndex + 1] && newData[toIndex + 1].parent_item_uuid)) {
 
                 const newParentUUID = newData[toIndex + 1].parent_item_uuid;
@@ -382,8 +382,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             // If thing is an open adult and was dragged beneath a done adult, 
             // cancel the drag operation (move it back to where it was)
             if ((!draggedThing.parent_item_uuid && !draggedThing.is_done) &&
-                (newData[toIndex-1] && newData[toIndex-1].is_done && !newData[toIndex-1].parent_item_uuid)) {
-                    const [itemToMoveBack] = newData.splice(toIndex, 1);  // Yes, redundant to draggedThing param
+                (newData[toIndex - 1] && newData[toIndex - 1].is_done && !newData[toIndex - 1].parent_item_uuid)) {
+                const [itemToMoveBack] = newData.splice(toIndex, 1);  // Yes, redundant to draggedThing param
                 newData.splice(fromIndex, 0, itemToMoveBack);
             }
 
@@ -453,19 +453,19 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 onCalendarIconClick: () => handleTimerToastCalendarClick(thing)
             }
         });
-      }
-    
-      const handleTimerToastEditClick = (thing) => {
+    }
+
+    const handleTimerToastEditClick = (thing) => {
         setShowScheduleEditDialog(true);
-      }
+    }
 
-      const handleScheduleEditDialogCancel = () => {
+    const handleScheduleEditDialogCancel = () => {
         setShowScheduleEditDialog(false);
-      }
+    }
 
-      const handleScheduleEditDialogSubmission = () => { 
+    const handleScheduleEditDialogSubmission = () => {
         Alert.alert("Implement Me");
-      }
+    }
 
     const handleTimerToastCalendarClick = async (thing) => {
         console.log("handleTimerToastCalendarClick called");
@@ -569,7 +569,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
     }
 
-    const createCalendarEvent = async() => {
+    const createCalendarEvent = async () => {
         if (!selectedCalendar.current) {
             console.log("Selected Calendar unexpectedly null, cancelling creation of event!");
             return;
@@ -586,7 +586,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         const eventTitle = (selectedTimerThing.current) ? selectedTimerThing.current.text : 'New Dootoo Item'; // Later case should not happen
         const eventId = await Calendar.createEventAsync(calendarId, {
             title: eventTitle,
-            alarms: [{ relativeOffset: -60, method: Calendar.AlarmMethod.ALERT}],
+            alarms: [{ relativeOffset: -60, method: Calendar.AlarmMethod.ALERT }],
             startDate: new Date(),
             endDate: new Date(),
             allDay: false,
@@ -762,16 +762,16 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 </Pressable> : <></>
                             }
                             <View style={styles.itemNameContainer}>
-                                { ((thingName == 'item') && item.scheduled_datetime_utc) ?
+                                {((thingName == 'item') && item.scheduled_datetime_utc) ?
                                     <Pressable hitSlop={10} style={styles.timerIconContainer}
                                         onPress={() => handleTimerClick(item)}>
                                         <Image style={styles.timerIcon} source={
-                                            (isThingOverdue(item)) 
-                                                ? require("@/assets/images/timer_icon_FF0000.png") 
+                                            (isThingOverdue(item))
+                                                ? require("@/assets/images/timer_icon_FF0000.png")
                                                 : require("@/assets/images/timer_icon_556B2F.png")
-                                                } />
+                                        } />
                                     </Pressable>
-                                    : <></> }
+                                    : <></>}
                                 {(currentlyTappedThing?.uuid == item.uuid) ?
                                     <TextInput
                                         blurOnSubmit={true}
@@ -911,18 +911,18 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     <Dialog.Description>Which calendar to put this item?</Dialog.Description>
                     <RNPickerSelect
                         value={calendarSelectionInputValue}
-                        onValueChange={(value) => { 
+                        onValueChange={(value) => {
                             setCalendarSelectionInputValue(value);
                             if (value != 'no_calendar') {
                                 setCalendarSelectionInvalid(false);
-                            } 
+                            }
                         }}
                         placeholder={{ label: 'Select a calendar', value: 'no_calendar' }}
                         style={pickerSelectStyles}
                         items={editableCalendars.current.map((calendar) => ({ label: calendar.title, value: calendar.id }))} />
-                    { (calendarSelectionInvalid) 
-                            ? <Text style={formStyles.formValidationMessage}>Please select a calendar.</Text>
-                            : <></>}
+                    {(calendarSelectionInvalid)
+                        ? <Text style={formStyles.formValidationMessage}>Please select a calendar.</Text>
+                        : <></>}
                     <Dialog.Button label="Cancel" onPress={handleCalendarSelectDialogCancel} />
                     <Dialog.Button label="Continue" onPress={handleCalendarSelectDialogSubmission} />
                 </Dialog.Container>
