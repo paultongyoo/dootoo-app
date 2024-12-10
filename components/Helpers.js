@@ -47,7 +47,7 @@ export const momentFromNow = (thing) => {
 
 export const extractDateInLocalTZ = (dateObj) => {
   if (dateObj) {
-    return DateTime.fromJSDate(dateObj).toFormat("EEE, MMM d, yyyy");
+    return DateTime.fromJSDate(dateObj).toLocal().toFormat("EEE, MMM d, yyyy");
   } else {
     return "No date found";
   }

@@ -9,7 +9,7 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
-import { loadItemsCounts, updateItemHierarchy, updateItemsCache, updateTipsCache } from './Storage';
+import { loadItemsCounts, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateTipsCache } from './Storage';
 import usePolling from './Polling';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
@@ -458,6 +458,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }
 
     const handleTimerToastEditClick = (thing) => {
+        selectedTimerThing.current = thing;
         setScheduleEditDialogDate(new Date(thing.scheduled_datetime_utc));
         setShowScheduleEditDialog(true);
     }
@@ -467,7 +468,25 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }
 
     const handleScheduleEditDialogSubmission = () => {
-        Alert.alert("Implement Me", "Submit edited date: " + scheduleEditDialogDate);
+        if (!selectedTimerThing.current) {
+            console.log("selectedTimerThing.current unexpectedly null on edit submit, exiting!!");
+            return;
+        }
+
+        const thingToUpdateUUID = selectedTimerThing.current.uuid;
+        const newScheduledDateTimeUTCStr = scheduleEditDialogDate.toISOString();
+
+        console.log("Updated schedule date time UTC String: " + newScheduledDateTimeUTCStr);
+
+        listArraySetter((prevList) => prevList.map((thing) =>
+            (thing.uuid == thingToUpdateUUID) 
+                ? { ...thing, 
+                    scheduled_datetime_utc: newScheduledDateTimeUTCStr
+                  }
+                : thing));
+
+        updateItemSchedule(thingToUpdateUUID, newScheduledDateTimeUTCStr) ;  
+        setShowScheduleEditDialog(false);
     }
 
     const handleScheduleEditDialogEditDateClick = () => {
