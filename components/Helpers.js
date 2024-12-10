@@ -45,7 +45,7 @@ export const momentFromNow = (thing) => {
   return formatLocalizedTime(scheduled_datetime_utc);
 }
 
-export const extractDate = (dateObj) => {
+export const extractDateInLocalTZ = (dateObj) => {
   if (dateObj) {
     return DateTime.fromJSDate(dateObj).toFormat("EEE, MMM d, yyyy");
   } else {
@@ -53,7 +53,7 @@ export const extractDate = (dateObj) => {
   }
 }
 
-export const extractTime = (dateObj) => {
+export const extractTimeInLocalTZ = (dateObj) => {
   if (dateObj) {
     return DateTime.fromJSDate(dateObj).toLocal().toFormat("h:mm a");
   } else {

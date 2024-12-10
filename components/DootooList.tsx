@@ -15,8 +15,8 @@ import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { extractDate, extractTime, isThingOverdue } from './Helpers';
-import RNDateTimePicker from '@react-native-community/datetimepicker';
+import { extractDateInLocalTZ, extractTimeInLocalTZ, isThingOverdue } from './Helpers';
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = (item, index) => { return <></> },
@@ -467,15 +467,31 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }
 
     const handleScheduleEditDialogSubmission = () => {
-        Alert.alert("Implement Me");
+        Alert.alert("Implement Me", "Submit edited date: " + scheduleEditDialogDate);
     }
 
     const handleScheduleEditDialogEditDateClick = () => {
-        Alert.alert("Implement Me");
+        if (Platform.OS == 'android') {
+            DateTimePickerAndroid.open({
+                mode: 'date',
+                value: scheduleEditDialogDate,
+                onChange: (event, date) => setScheduleEditDialogDate(date)
+            })
+        } else {
+            Alert.alert("Implement me differently on iOS!");
+        }
     }
 
     const handleScheduleEditDialogEditTimeClick = () => {
-        Alert.alert("Implement Me");
+        if (Platform.OS == 'android') {
+            DateTimePickerAndroid.open({
+                mode: 'time',
+                value: scheduleEditDialogDate,
+                onChange: (event, date) => setScheduleEditDialogDate(date)
+            })
+        } else {
+            Alert.alert("Implement me differently on iOS!");
+        }
     }
 
 
@@ -962,10 +978,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     <Dialog.Title>Edit Scheduled Date & Time</Dialog.Title>
                     <View style={formStyles.dateTimeContainer}>
                         <View style={formStyles.dateTimeTextContainer}>
-                            <Text onPress={handleScheduleEditDialogEditDateClick} style={formStyles.dateTimeText}>{extractDate(scheduleEditDialogDate)}</Text>
+                            <Text onPress={handleScheduleEditDialogEditDateClick} style={formStyles.dateTimeText}>{extractDateInLocalTZ(scheduleEditDialogDate)}</Text>
                         </View>
                         <View style={formStyles.dateTimeTextContainer}>
-                            <Text onPress={handleScheduleEditDialogEditTimeClick} style={formStyles.dateTimeText}>{extractTime(scheduleEditDialogDate)}</Text>
+                            <Text onPress={handleScheduleEditDialogEditTimeClick} style={formStyles.dateTimeText}>{extractTimeInLocalTZ(scheduleEditDialogDate)}</Text>
                         </View>
                     </View>
                     <Dialog.Button label="Cancel" onPress={handleScheduleEditDialogCancel} />
