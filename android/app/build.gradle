@@ -109,7 +109,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.thoughtswork.dootoo'
+    namespace "com.dootoo"
     defaultConfig {
         applicationId 'com.thoughtswork.dootoo'
         minSdkVersion rootProject.ext.minSdkVersion
