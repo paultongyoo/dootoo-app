@@ -63,7 +63,7 @@ function formatRelativeTimeDetailed(scheduledTimeISO) {
   const totalMonths = totalDays / 30; // Approximation
   const totalYears = totalDays / 365; // Approximation
 
-  let timeString;
+  let timeString = "";
 
   // Helper function to handle singular/plural
   const formatUnit = (value, unit) => `${value} ${unit}${value === 1 ? '' : 's'}`;
@@ -72,23 +72,31 @@ function formatRelativeTimeDetailed(scheduledTimeISO) {
   if (totalYears >= 1) {
     const years = Math.floor(totalYears);
     const remainingMonths = Math.floor((totalYears - years) * 12);
-    timeString = `${formatUnit(years, 'year')}${remainingMonths > 0 ? ` and ${formatUnit(remainingMonths, 'month')}` : ''}`;
+    timeString = `${formatUnit(years, 'year')}`;
+    if (remainingMonths > 0) timeString += ` and ${formatUnit(remainingMonths, 'month')}`;
   } else if (totalMonths >= 1) {
     const months = Math.floor(totalMonths);
     const remainingDays = Math.floor((totalMonths - months) * 30);
-    timeString = `${formatUnit(months, 'month')}${remainingDays > 0 ? ` and ${formatUnit(remainingDays, 'day')}` : ''}`;
+    timeString = `${formatUnit(months, 'month')}`;
+    if (remainingDays > 0) timeString += ` and ${formatUnit(remainingDays, 'day')}`;
   } else if (totalWeeks >= 1) {
     const weeks = Math.floor(totalWeeks);
     const remainingDays = Math.floor((totalWeeks - weeks) * 7);
-    timeString = `${formatUnit(weeks, 'week')}${remainingDays > 0 ? ` and ${formatUnit(remainingDays, 'day')}` : ''}`;
+    timeString = `${formatUnit(weeks, 'week')}`;
+    if (remainingDays > 0) timeString += ` and ${formatUnit(remainingDays, 'day')}`;
   } else if (totalDays >= 1) {
     const days = Math.floor(totalDays);
     const remainingHours = Math.floor((totalDays - days) * 24);
-    timeString = `${formatUnit(days, 'day')}${remainingHours > 0 ? ` and ${formatUnit(remainingHours, 'hour')}` : ''}`;
-  } else {
+    timeString = `${formatUnit(days, 'day')}`;
+    if (remainingHours > 0) timeString += ` and ${formatUnit(remainingHours, 'hour')}`;
+  } else if (totalHours >= 1) {
     const hours = Math.floor(totalHours);
     const remainingMinutes = Math.floor(totalMinutes % 60);
-    timeString = `${formatUnit(hours, 'hour')}${remainingMinutes > 0 ? ` and ${formatUnit(remainingMinutes, 'minute')}` : ''}`;
+    timeString = `${formatUnit(hours, 'hour')}`;
+    if (remainingMinutes > 0) timeString += ` and ${formatUnit(remainingMinutes, 'minute')}`;
+  } else {
+    const minutes = Math.floor(totalMinutes);
+    timeString = `${formatUnit(minutes, 'minute')}`;
   }
 
   // Add "in" or "ago" based on the direction of the difference
