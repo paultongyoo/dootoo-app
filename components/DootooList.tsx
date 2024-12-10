@@ -951,6 +951,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             justifyContent: 'center',
             alignItems: 'center',
             paddingBottom: 20
+        },
+        dateTimePicker: {
+            // borderWidth: 1,
+            // borderColor: 'black',
+            paddingLeft: 0,
+            position: 'relative',
+            left: -3    // Accounts for padding left of date field that won't remove with paddingLeft: 0
         }
     });
 
@@ -1052,7 +1059,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             </View>
                         </View>
                         : <View style={formStyles.dateTimePickerContainer}>
-                            <RNDateTimePicker style={{alignContent: 'center'}} mode="datetime" value={scheduleEditDialogDate} onChange={(event, date) => setScheduleEditDialogDate(date)} />
+                            <RNDateTimePicker style={formStyles.dateTimePicker} mode="datetime" value={scheduleEditDialogDate} onChange={(event, date) => setScheduleEditDialogDate(date)} />
                           </View>
                     }
                     <Dialog.Button label="Cancel" onPress={handleScheduleEditDialogCancel} />
