@@ -22,7 +22,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     renderRightActions = (item, index) => { return <></> },
     isDoneable = true, 
     handleDoneClick = (thing) => { return; },
-    handleTimerClick = (thing) => { return; },
     saveAllThings, saveTextUpdateFunc, saveThingOrderFunc, loadAllThings,
     transcribeAudioToThings,
     isThingPressable,
@@ -41,6 +40,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const [showCalendarSelectionDialog, setShowCalendarSelectionDialog] = useState(false);
     const [calendarSelectionInvalid, setCalendarSelectionInvalid] = useState(false);
     const [calendarSelectionInputValue, setCalendarSelectionInputValue] = useState('no_calendar');
+    const [showScheduleEditDialog, setShowScheduleEditDialog] = useState(false);
 
     // References:  Changing these should intentionally NOT cause this list to re-render
     //const itemFlatList = useRef(null);              // TODO: Consider deprecate
@@ -441,9 +441,34 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
     }
 
-    // Orphaned call left for POC historical reference.  Actual timer handler provided by handleTimerClick(item)
-    const handleTimerTap = async (thing) => {
-        console.log("handleTimerTap called");
+    const handleTimerClick = (thing) => {
+        Toast.show({
+            type: 'timerInfo',
+            visibilityTime: 8000,
+            position: 'bottom',
+            bottomOffset: 220,
+            props: {
+                thing: thing,
+                onEditIconClick: () => handleTimerToastEditClick(thing),
+                onCalendarIconClick: () => handleTimerToastCalendarClick(thing)
+            }
+        });
+      }
+    
+      const handleTimerToastEditClick = (thing) => {
+        setShowScheduleEditDialog(true);
+      }
+
+      const handleScheduleEditDialogCancel = () => {
+        setShowScheduleEditDialog(false);
+      }
+
+      const handleScheduleEditDialogSubmission = () => { 
+        Alert.alert("Implement Me");
+      }
+
+    const handleTimerToastCalendarClick = async (thing) => {
+        console.log("handleTimerToastCalendarClick called");
         selectedTimerThing.current = thing;
 
         const permissionsResponse = await Calendar.requestCalendarPermissionsAsync();
@@ -900,6 +925,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             : <></>}
                     <Dialog.Button label="Cancel" onPress={handleCalendarSelectDialogCancel} />
                     <Dialog.Button label="Continue" onPress={handleCalendarSelectDialogSubmission} />
+                </Dialog.Container>
+                <Dialog.Container visible={showScheduleEditDialog} onBackdropPress={handleScheduleEditDialogCancel}>
+                    <Dialog.Title>Edit Scheduled Date & Time</Dialog.Title>
+
+                    <Dialog.Button label="Cancel" onPress={handleScheduleEditDialogCancel} />
+                    <Dialog.Button label="Continue" onPress={handleScheduleEditDialogSubmission} />
                 </Dialog.Container>
             </View>
         </TouchableWithoutFeedback>

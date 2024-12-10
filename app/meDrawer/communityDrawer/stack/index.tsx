@@ -508,28 +508,6 @@ export default function Index() {
     }
   }
 
-  const handleTimerClick = (item) => {
-    Toast.show({
-        type: 'timerInfo',
-        visibilityTime: 8000,
-        position: 'bottom',
-        bottomOffset: 220,
-        props: {
-            thing: item,
-            onEditIconClick: () => handleTimerToastEditClick(item),
-            onCalendarIconClick: () => handleTimerToastCalendarClick(item)
-        }
-    });
-  }
-
-  const handleTimerToastEditClick = (item) => {
-    Alert.alert("Implement Me", "Implement scheduled time edit UX!");
-  }
-
-  const handleTimerToastCalendarClick = (item) => {
-    Alert.alert("Implement Me", "Implement calendar integration UX!");
-  }
-
   const styles = StyleSheet.create({
     listContainer: {
       //padding: 10,
@@ -790,7 +768,6 @@ export default function Index() {
       renderLeftActions={renderLeftActions}
       renderRightActions={renderRightActions}
       handleDoneClick={handleDoneClick}
-      handleTimerClick={handleTimerClick}
       saveAllThings={saveAllItems}
       saveTextUpdateFunc={saveTextUpdate}
       saveThingOrderFunc={saveItemOrder}
