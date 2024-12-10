@@ -554,6 +554,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
         const thingToUpdateUUID = selectedTimerThing.current.uuid;
         const newScheduledDateTimeUTCStr = scheduleEditDialogDate.toISOString();
+        const eventIdToUpdate = selectedTimerThing.current.event_id;       // May be null
 
         console.log("Updated schedule date time UTC String: " + newScheduledDateTimeUTCStr);
 
@@ -566,6 +567,20 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 : thing));
 
         updateItemSchedule(thingToUpdateUUID, newScheduledDateTimeUTCStr);
+
+        if (eventIdToUpdate) {
+            const updatedTimerThing = { ...selectedTimerThing.current, scheduled_datetime_utc: newScheduledDateTimeUTCStr };
+            const updatedDate = getLocalDateObj(updatedTimerThing);
+            const alertMinutesOffset = deriveAlertMinutesOffset(updatedTimerThing);
+            console.log("Updated alertMinutesOffset: " + alertMinutesOffset);
+            Calendar.updateEventAsync(eventIdToUpdate, {
+                alarms: [{ relativeOffset: alertMinutesOffset, method: Calendar.AlarmMethod.ALERT }],
+                startDate: updatedDate,
+                endDate: updatedDate
+            });
+            //console.log("Calendar Event Updated Asyncronously: " + eventIdToUpdate);
+        }       
+
         setShowScheduleEditDialog(false);
     }
 
