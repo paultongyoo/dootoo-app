@@ -454,6 +454,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }
 
     const handleTimerClick = (thing) => {
+        amplitude.track("Item Timer Icon Tapped", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            uuid: thing.uuid
+        });  
         Toast.show({
             type: 'timerInfo',
             visibilityTime: 8000,
@@ -468,17 +473,26 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }
 
     const handleTimerToastEditClick = (thing) => {
+        amplitude.track("Edit Schedule Icon Tapped", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            uuid: thing.uuid
+        });  
         selectedTimerThing.current = thing;
         setScheduleEditDialogDate(new Date(thing.scheduled_datetime_utc));
         setShowScheduleEditDialog(true);
     }
 
     const handleScheduleEditDialogCancel = () => {
+        amplitude.track("Edit Schedule Dialog Cancelled", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname
+        });  
         setShowScheduleEditDialog(false);
     }
 
     const handleScheduleEditDialogClear = () => {
-        amplitude.track("Schedule Item Clear Message Displayed", {
+        amplitude.track("Item Schedule Clear Message Displayed", {
             anonymous_id: anonymousId.current,
             pathname: pathname
         });     
@@ -490,7 +504,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 {
                     text: 'Cancel',
                     onPress: () => {
-                        amplitude.track("Schedule Item Clear Message Cancelled", {
+                        amplitude.track("Item Schedule Clear Message Cancelled", {
                             anonymous_id: anonymousId.current,
                             pathname: pathname
                         });  
@@ -500,7 +514,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 {
                     text: 'Yes',
                     onPress: () => {
-                        amplitude.track("Schedule Item Clear Message Yes Button Pressed", {
+                        amplitude.track("Item Schedule Cleared", {
                             anonymous_id: anonymousId.current,
                             pathname: pathname
                         });  
@@ -562,6 +576,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             return;
         }
 
+        amplitude.track("Edit Schedule Dialog Submitted", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            uuid: selectedTimerThing.current.uuid
+        }); 
+
         const thingToUpdateUUID = selectedTimerThing.current.uuid;
         const newScheduledDateTimeUTCStr = scheduleEditDialogDate.toISOString();
         const eventIdToUpdate = selectedTimerThing.current.event_id;       // May be null
@@ -595,6 +615,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }
 
     const handleScheduleEditDialogEditDateClick = () => {
+        amplitude.track("Edit Schedule Dialog Date Tapped", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
+        }); 
         if (Platform.OS == 'android') {
             DateTimePickerAndroid.open({
                 mode: 'date',
@@ -607,6 +632,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }
 
     const handleScheduleEditDialogEditTimeClick = () => {
+        amplitude.track("Edit Schedule Dialog Time Tapped", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
+        }); 
         if (Platform.OS == 'android') {
             DateTimePickerAndroid.open({
                 mode: 'time',
@@ -620,7 +650,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
 
     const handleTimerToastCalendarClick = async (thing) => {
-        console.log("handleTimerToastCalendarClick called");
+        amplitude.track("Calendar Icon Tapped", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            uuid: thing.uuid
+        }); 
+        //console.log("handleTimerToastCalendarClick called");
         selectedTimerThing.current = thing;
 
         // If thing already has an event_id, assume the event already exists in the
@@ -629,6 +664,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         if (thing.event_id) {
             const calendarUri = generateCalendarUri(selectedTimerThing.current.scheduled_datetime_utc);
             if (calendarUri) {
+                amplitude.track("Calendar App URI Opened", {
+                    anonymous_id: anonymousId.current,
+                    pathname: pathname,
+                    uuid: thing.uuid
+                }); 
                 Linking.openURL(calendarUri).catch(err =>
                     console.error("Couldn't load calendar", err)
                 );
@@ -639,6 +679,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         // Else, assume the calendar event hasn't been created so proceed with creation UX
 
         const permissionsResponse = await Calendar.requestCalendarPermissionsAsync();
+        amplitude.track("Calendar Permissions Requested", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            uuid: thing.uuid,
+            permissionsResponse: permissionsResponse.status
+        }); 
         if (permissionsResponse.status === 'granted') {
             const readCalendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
             console.log("readCalendars.length: " + readCalendars.length);
@@ -677,6 +723,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 );
             }
         } else {
+            amplitude.track("Calendar Permissions Required Displayed", {
+                anonymous_id: anonymousId.current,
+                pathname: pathname
+            });
             Alert.alert(
                 "Calendar Permissions Required",
                 "The access will allow dootoo to create and edit calendar events for your items.",
@@ -684,7 +734,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     {
                         text: 'Cancel',
                         onPress: () => {
-                            amplitude.track("Calendar Permissions Required Prompt Dimissed", {
+                            amplitude.track("Calendar Permissions Required Dimissed", {
                                 anonymous_id: anonymousId.current,
                                 pathname: pathname
                             });
@@ -694,7 +744,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     {
                         text: 'Go to Settings',
                         onPress: () => {
-                            amplitude.track("Calendar Permissions Required Prompt: Go to Settings Pressed", {
+                            amplitude.track("Calendar Permissions Required Go to Settings Pressed", {
                                 anonymous_id: anonymousId.current,
                                 pathname: pathname
                             });
@@ -708,14 +758,24 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }
 
     const handleCalendarSelectDialogCancel = () => {
+        amplitude.track("Calendar Selection Dialog Cancelled", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
+        }); 
         setShowCalendarSelectionDialog(false);
         setCalendarSelectionInvalid(false);
         setCalendarSelectionInputValue('no_calendar');
     }
 
     const handleCalendarSelectDialogSubmission = async () => {
+        amplitude.track("Calendar Selection Dialog Submitted", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
+        }); 
         try {
-            console.log("Inside handleCalendarSelectDialogSubmission");
+            //console.log("Inside handleCalendarSelectDialogSubmission");
             if (calendarSelectionInputValue == 'no_calendar') {
                 setCalendarSelectionInvalid(true);
             } else {
@@ -731,11 +791,14 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 // Asyncronous
                 updateThingEventId(eventId);
 
+                amplitude.track("Calendar Event Created", {
+                    anonymous_id: anonymousId.current,
+                    pathname: pathname,
+                    uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
+                });  
+
                 if (eventId) {
                     console.log("Created new calendar event after manual calendar selection: " + eventId);
-
-                    // TODO:  Update cache and DB with event ID
-                    // TODO   Generate URL for event to navigate user to event in schedule app on calendar click
 
                     Alert.alert("Calendar Event Created",
                         generateEventCreatedMessage(selectedCalendar.current.title, selectedTimerThing.current.scheduled_datetime_utc, deriveAlertMinutesOffset(selectedTimerThing.current)),
@@ -743,7 +806,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             {
                                 text: 'Go to Calendar',
                                 onPress: () => {
-                                    amplitude.track("Go to Calendar Button Pressed", {
+                                    amplitude.track("Calendar Event Created Go to Calendar Button Pressed", {
                                         anonymous_id: anonymousId.current,
                                         pathname: pathname
                                     });
