@@ -892,9 +892,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             //     preventing edits from sticking (see corresponding comment on Items index.tsx)
                             if (!areDateObjsEqual(saved_scheduled_local_date, calStartLocalDate)) { //||
                                     //!(saved_thing_text === calEvent.title)) {
-                                console.log("Calendar Event " + calEvent.title + " has different start date and/or title than scheduled event, updating saved item...");
-                                // console.log("saved_scheduled_local_date: " + saved_scheduled_local_date);
-                                // console.log("calStartLocalDate: " + calStartLocalDate);
+                                console.log("Calendar Event " + calEvent.title + " has different start date than scheduled event, updating saved item...");
+                                console.log("saved_scheduled_local_date: " + saved_scheduled_local_date);
+                                console.log("calStartLocalDate: " + calStartLocalDate);
 
                                 // Clear both scheduled_datetime_utc and event_id fields
                                 listArraySetter((prevList) => prevList.map((prevThing) =>
