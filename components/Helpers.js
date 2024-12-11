@@ -228,7 +228,11 @@ export const generateEventCreatedMessage = (calendarName, scheduledUtcIsoString,
   }
 
   // Construct and return the statement
-  return `A new event has been created in your '${calendarName}' calendar for ${scheduledDateTime} and will remind you ${alertTime} prior.`;
+  let message = `A new event has been created in your '${calendarName}' calendar for ${scheduledDateTime} and will remind you ${alertTime} prior.`
+  if (Platform.OS == 'android') {
+    message += " The event should appear on your calendar within a few minutes."
+  }
+  return message;
 };
 
 
