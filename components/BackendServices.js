@@ -42,7 +42,8 @@ export const transcribeAudioToTasks = async (fileUri, anonymous_id) => {
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const utcDateTime = currentDate.toISOString();
 
-  try {
+  // 1.2:  Intentionally allowing exceptions to bubble up the stack so UI can catch error and inform user.
+  // try {
 
     // Note:  Lambda lowercases all header keys
     const response = await axios.post(
@@ -59,9 +60,11 @@ export const transcribeAudioToTasks = async (fileUri, anonymous_id) => {
       }
     );
     return response.data;
-  } catch (error) {
-    console.error('Error calling API:', JSON.stringify(error));
-  }
+
+  // } catch (error) {
+  //   console.error('Error calling API:', JSON.stringify(error));
+  //   throw new Error(error);
+  // }
 };
 
 export const transcribeAudioToTips = async (fileUri, anonymous_id) => {
@@ -78,7 +81,8 @@ export const transcribeAudioToTips = async (fileUri, anonymous_id) => {
   const fileExtension = fileUri.split('.').pop();
   //console.log("Audio File Extension: " + fileExtension);
 
-  try {
+  // 1.2:  Intentionally allowing exceptions to bubble up the stack so UI can catch error and inform user.
+  // try {
 
     const response = await axios.post(
       BACKEND_TRANSCRIPTION_TIPS_URL,
@@ -91,9 +95,9 @@ export const transcribeAudioToTips = async (fileUri, anonymous_id) => {
       }
     );
     return response.data;
-  } catch (error) {
-    console.error('Error calling API:', error);
-  }
+  // } catch (error) {
+  //   console.error('Error calling API:', error);
+  // }
 };
 
 export const generateTipCTA = async(anonymous_id, item_uuid) => {
