@@ -191,7 +191,6 @@ function formatLocalizedTime(utcISOString) {
 }
 
 export const generateEventCreatedMessage = (calendarName, scheduledUtcIsoString, alertMinutesPrior) => {
-
   // Parse the scheduled date/time
   const scheduledDate = new Date(scheduledUtcIsoString);
 
@@ -210,22 +209,42 @@ export const generateEventCreatedMessage = (calendarName, scheduledUtcIsoString,
   });
 
   // Calculate the alert time in human-readable terms
-  const alertTime =
-    absoluteAlertMinutes < 1440
-      ? `${absoluteAlertMinutes} minutes`
-      : `${Math.floor(absoluteAlertMinutes / 1440)} ${Math.floor(absoluteAlertMinutes / 1440) === 1 ? 'day' : 'days'}`;
+  let alertTime;
+  if (absoluteAlertMinutes < 60) {
+    alertTime = `${absoluteAlertMinutes} minutes`;
+  } else if (absoluteAlertMinutes < 1440) {
+    const hours = Math.floor(absoluteAlertMinutes / 60);
+    const minutes = absoluteAlertMinutes % 60;
+    alertTime = `${hours} ${hours === 1 ? 'hour' : 'hours'}${
+      minutes > 0 ? ` and ${minutes} minutes` : ''
+    }`;
+  } else {
+    const days = Math.floor(absoluteAlertMinutes / 1440);
+    const remainingMinutes = absoluteAlertMinutes % 1440;
+    const hours = Math.floor(remainingMinutes / 60);
+    alertTime = `${days} ${days === 1 ? 'day' : 'days'}${
+      hours > 0 ? ` and ${hours} ${hours === 1 ? 'hour' : 'hours'}` : ''
+    }`;
+  }
 
   // Construct and return the statement
   return `A new event has been created in your '${calendarName}' calendar for ${scheduledDateTime} and will remind you ${alertTime} prior.`;
-}
+};
 
 
 export const generateCalendarUri = (startDate) => {
   const date = new Date(startDate);
+
+  console.log("URI Date: " + date);
   if (Platform.OS === 'android') {
     return `content://com.android.calendar/time/${date.getTime()}`;
   } else if (Platform.OS === 'ios') {
-    return `calshow:${date.getTime() / 1000}`;
+    const dateTime = DateTime.fromISO(startDate);
+    console.log("URI dateTime: " + dateTime);
+    const timestampInSeconds = Math.floor(dateTime.toMillis() / 1000);
+    console.log("URI timestampInSeconds: " + timestampInSeconds);
+    const calshowURI = `calshow:${timestampInSeconds}`;
+    return calshowURI;
   }
   return null; // Unsupported platform
 }
