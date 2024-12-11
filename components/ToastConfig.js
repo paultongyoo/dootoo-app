@@ -21,6 +21,12 @@ const styles = StyleSheet.create({
     height: 50,
     padding: 15
   },
+  msgOpenWidth: {
+    marginLeft: 20,
+    marginRight: 20,
+    padding: 15,
+    alignContent: 'center'
+  },
   timerInfo: {
     padding: 15
   },
@@ -84,6 +90,13 @@ const toastConfig = {
           <Text style={styles.toastLink}>{props.linkText}</Text>
         </Pressable> : <></>
       }
+    </View>
+  ),
+  msgOpenWidth: ({ text1 = '' }) => (
+    <View style={[
+      styles.baseToast, 
+      styles.msgOpenWidth]}>
+      <Text onPress={() => Toast.hide()} style={styles.toastText}>{text1}</Text>
     </View>
   ),
   timerInfo: ({ props }) => (

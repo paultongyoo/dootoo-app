@@ -374,8 +374,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                         pathname: pathname
                     });
                     Toast.show({
-                        type: 'msgWithLink',
-                        text1: `Please try again.`,
+                        type: 'msgOpenWidth',
+                        text1: `We couldn't transcribe your voice into items.  Please try again.`,
                         position: 'bottom',
                         bottomOffset: 220
                     });
