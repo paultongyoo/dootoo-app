@@ -1,7 +1,7 @@
-import React from 'react';
 import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
 import { momentFromNow, isThingOverdue } from './Helpers';
 import Toast from 'react-native-toast-message';
+
 
 const styles = StyleSheet.create({
   baseToast: {
@@ -28,7 +28,10 @@ const styles = StyleSheet.create({
     alignContent: 'center'
   },
   timerInfo: {
-    padding: 15
+    paddingTop: 5,
+    paddingBottom: 5,
+    paddingLeft: 15,
+    paddingRight: 10
   },
   toastText: {
     fontSize: 16
@@ -54,6 +57,8 @@ const styles = StyleSheet.create({
   timerEditIconContainer: {
     justifyContent: 'center',
     paddingRight: 10,
+    paddingTop:10,
+    paddingBottom: 10,
     paddingLeft: 20
   },
   timerEditIcon: {
@@ -62,7 +67,7 @@ const styles = StyleSheet.create({
   },
   calendarIconContainer: {
     justifyContent: 'center',
-    paddingLeft: 10
+    padding: 10
   },
   calendarIcon: {
     height: 16,
@@ -108,16 +113,16 @@ const toastConfig = {
                                                   } />
       </View>
       <Text onPress={() => Toast.hide()} style={[styles.toastText, isThingOverdue(props.thing) && !props.thing.is_done && styles.timerText_overdue]}>{momentFromNow(props.thing)}</Text>
-        <Pressable hitSLop={10} style={styles.timerEditIconContainer}
+        <Pressable hitSLop={10} style={({ pressed }) => [styles.timerEditIconContainer/*, pressed && { backgroundColor: '#000' }*/]}
                      onPress={props.onEditIconClick}>
             <Image style={styles.timerEditIcon} source={require("@/assets/images/edit_icon_A23E48.png")} />
         </Pressable>  
-        <Pressable hitSLop={10} style={styles.calendarIconContainer}
+        <Pressable hitSLop={10} style={({ pressed }) => [styles.calendarIconContainer/*, pressed && { backgroundColor: '#000' }*/]}
                      onPress={props.onCalendarIconClick}>
-            <Image style={styles.calendarIcon} source={(!props.thing.event_id) 
-                                                  ? require("@/assets/images/calendar_A23E48.png")    // TODO Create better image
-                                                  : require("@/assets/images/calendar_A23E48.png")
-                                                  } />
+              <Image style={styles.calendarIcon} source={(!props.thing.event_id) 
+                                                    ? require("@/assets/images/calendar_A23E48.png")    // TODO Create better image
+                                                    : require("@/assets/images/calendar_A23E48.png")
+                                                    } />
         </Pressable>                                    
     </View>
   )
