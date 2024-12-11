@@ -590,7 +590,8 @@ export default function Index() {
       marginLeft: 15
     },
     itemCircleOpen_isDone: {
-      backgroundColor: '#556B2F50'
+      backgroundColor: '#556B2F50',
+      borderWidth: 1
     },
     childItemSpacer: {
       width: 20
