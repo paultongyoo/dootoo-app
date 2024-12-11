@@ -56,7 +56,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             });
             Alert.alert(
                 "Voice Transcription May Be Impacted",
-                "Please be aware that our AI partner is currently experiencing issues that may impact posting new tasks and tips.  " + 
+                "Please be aware that our AI partner is currently experiencing issues that may impact posting new tasks and tips.  " +
                 "This message will cease to appear once their issues are resolved.",
                 [
                     {
@@ -234,7 +234,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 await localRecordingObject.stopAndUnloadAsync();
             }
             uri = localRecordingObject.getURI();
-        }  
+        }
         setRecording(undefined);
         await Audio.setAudioModeAsync(
             {
@@ -242,7 +242,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             }
         );
         meteringLevel.value = withTiming(1); // reset scale when stopped
-        
+
         //console.log('Recording stopped and stored at', uri);
         return uri;
     }
@@ -282,108 +282,117 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         });
         setIsRecordingProcessing(true);
         const fileUri = await stopRecording(localRecordingObject, isAutoStop);
-        const response = await callBackendTranscribeService(fileUri);
-        const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
-        console.log("Number of scheduled items recorded: " + numScheduledItems);
-        amplitude.track("Recording Processing Completed", {
-            anonymous_id: anonymousId.current,
-            flagged: (response == "flagged"),
-            thing_count: (response && response.length >= 0) ? response.length : -1,
-            numScheduledItems: numScheduledItems,
-            pathname: pathname
-        });
-
-        if (response == "flagged") {
-            //console.log(`Audio flagged, displaying alert prompt`);
-            amplitude.track("Recording Flagged", {
+        try {
+            const response = await callBackendTranscribeService(fileUri);
+            const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
+            console.log("Number of scheduled items recorded: " + numScheduledItems);
+            amplitude.track("Recording Processing Completed", {
                 anonymous_id: anonymousId.current,
+                flagged: (response == "flagged"),
+                thing_count: (response && response.length >= 0) ? response.length : -1,
+                numScheduledItems: numScheduledItems,
                 pathname: pathname
             });
-            amplitude.track("Recording Flagged Prompt Displayed", {
-                anonymous_id: anonymousId.current,
-                pathname: pathname
-            });
-            Alert.alert(
-                'Content Advisory', // Title of the alert
-                'Our app detected language that may not align with our guidelines for a safe and supportive experience. Please consider using positive, constructive expressions.', // Message of the alert
-                [
-                    {
-                        text: 'I Understand',
-                        onPress: () => {
-                            //console.log('Audio Content Advisory Acknowledgement button Pressed');
-                            amplitude.track("Recording Flagged Prompt Dismissed", {
-                                anonymous_id: anonymousId.current,
-                                pathname: pathname
-                            });
-                        },
-                    },
-                ]
-            );
-        } else {
-            //const response =  generateStubData(); 
-            console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
 
-            if (listArray && response && response.length > 0) {
-                lastRecordedCount.current = response.length;  // Set for future toast undo potential
-
-                // Set UI flag to inform user that counts may change after async backend save complete
-                // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
-                // for (var i = 0; i < response.length; i++) {
-                //     response[i].counts_updating = true; 
-                // }
-
-
-                if (listArray.length == 0) {
-
-                    // Assume the empty list CTA is visible, so fade it out first
-                    //("Attempting to fade out empty CTA animation...");
-                    // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
-                    // emptyListCTAFadeOutAnimation.reset();
-                    // emptyListCTAOpacity.current = 1;
-                    // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
-
-                    emptyListCTAFadeOutAnimation.start(() => {
-
-                        //If list is initially empty, fade in the new list
-                        listArraySetterFunc((prevThings) => response.concat(prevThings));
-
-                        // fadeInListOnRender.current = true;
-                        // listFadeInAnimation.start(() => {
-                        //     fadeInListOnRender.current = false;
-                        //     listFadeInAnimation.reset();
-                        // });
-
-                        emptyListCTAFadeOutAnimation.reset();
-                    });
-                } else {
-
-                    // TODO:  When appending, move current list down and to insert new items
-                    listArraySetterFunc((prevThings) => response.concat(prevThings));
-                }
-
-                // Make sure this function is asynchronous!!!
-                var updatedItems = response.concat(listArray);
-                saveAllThingsFunc(updatedItems, () => {
-                    ListItemEventEmitter.emit("items_saved");
-                });
-            } else {
-                //console.log("Did not call setter with updated list, attempting to show toast.");
-                amplitude.track("Empty Recording Toast Displayed", {
+            if (response == "flagged") {
+                //console.log(`Audio flagged, displaying alert prompt`);
+                amplitude.track("Recording Flagged", {
                     anonymous_id: anonymousId.current,
                     pathname: pathname
                 });
-                Toast.show({
-                    type: 'msgWithLink',
-                    text1: `Please try again.`,
-                    position: 'bottom',
-                    bottomOffset: 220
+                amplitude.track("Recording Flagged Prompt Displayed", {
+                    anonymous_id: anonymousId.current,
+                    pathname: pathname
                 });
+                Alert.alert(
+                    'Content Advisory', // Title of the alert
+                    'Our app detected language that may not align with our guidelines for a safe and supportive experience. Please consider using positive, constructive expressions.', // Message of the alert
+                    [
+                        {
+                            text: 'I Understand',
+                            onPress: () => {
+                                //console.log('Audio Content Advisory Acknowledgement button Pressed');
+                                amplitude.track("Recording Flagged Prompt Dismissed", {
+                                    anonymous_id: anonymousId.current,
+                                    pathname: pathname
+                                });
+                            },
+                        },
+                    ]
+                );
+            } else {
+                //const response =  generateStubData(); 
+                console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
+
+                if (listArray && response && response.length > 0) {
+                    lastRecordedCount.current = response.length;  // Set for future toast undo potential
+
+                    // Set UI flag to inform user that counts may change after async backend save complete
+                    // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
+                    // for (var i = 0; i < response.length; i++) {
+                    //     response[i].counts_updating = true; 
+                    // }
+
+
+                    if (listArray.length == 0) {
+
+                        // Assume the empty list CTA is visible, so fade it out first
+                        //("Attempting to fade out empty CTA animation...");
+                        // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
+                        // emptyListCTAFadeOutAnimation.reset();
+                        // emptyListCTAOpacity.current = 1;
+                        // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
+
+                        emptyListCTAFadeOutAnimation.start(() => {
+
+                            //If list is initially empty, fade in the new list
+                            listArraySetterFunc((prevThings) => response.concat(prevThings));
+
+                            // fadeInListOnRender.current = true;
+                            // listFadeInAnimation.start(() => {
+                            //     fadeInListOnRender.current = false;
+                            //     listFadeInAnimation.reset();
+                            // });
+
+                            emptyListCTAFadeOutAnimation.reset();
+                        });
+                    } else {
+
+                        // TODO:  When appending, move current list down and to insert new items
+                        listArraySetterFunc((prevThings) => response.concat(prevThings));
+                    }
+
+                    // Make sure this function is asynchronous!!!
+                    var updatedItems = response.concat(listArray);
+                    saveAllThingsFunc(updatedItems, () => {
+                        ListItemEventEmitter.emit("items_saved");
+                    });
+                } else {
+                    //console.log("Did not call setter with updated list, attempting to show toast.");
+                    amplitude.track("Empty Recording Toast Displayed", {
+                        anonymous_id: anonymousId.current,
+                        pathname: pathname
+                    });
+                    Toast.show({
+                        type: 'msgWithLink',
+                        text1: `Please try again.`,
+                        position: 'bottom',
+                        bottomOffset: 220
+                    });
+                }
             }
+        } catch (error) {
+            console.error("Unexpected error occurred during recording processing!!", error);
+            Alert.alert(
+                "An Unexpected Error Occurred",
+                "Your voice recording may have been too long or we were unable to transcribe it into items.  Please try again."
+            )
+        } finally {
+            setIsRecordingProcessing(false);
+            recorderProcessLocked.current = false;      // Reset process lock for future
+            console.log("Finished parsing file, deleting...");
+            deleteFile(fileUri);
         }
-        setIsRecordingProcessing(false);
-        recorderProcessLocked.current = false;      // Reset process lock for future
-        //console.log("Finished parsing file, deleting...");
-        deleteFile(fileUri);
     }
 
     const callBackendTranscribeService = async (fileUri: string) => {
@@ -548,9 +557,10 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 <View style={styles.footerButton_Underlay}></View>
                 <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || isRecordingProcessing) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
                     <Pressable
+                        disabled={isRecordingProcessing}
                         onPress={() => {
                             if (isRecordingProcessing) {
-                                cancelRecordingProcessing();
+                                cancelRecordingProcessing();       // 1.2: Made this scenario unreachable for now to prevent user from accidentally cancelling working process
                             } else if (recording) {
                                 processRecording();
                             } else {
@@ -569,11 +579,11 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                     </Pressable>
                 </Reanimated.View>
                 <View style={styles.bannerAdContainer}>
-                    <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER} 
-                            onPaid={() => amplitude.track("Banner Ad Paid")}
-                            onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
-                            onAdOpened={() => amplitude.track("Banner Ad Opened")}
-                            onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
+                    <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+                        onPaid={() => amplitude.track("Banner Ad Paid")}
+                        onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
+                        onAdOpened={() => amplitude.track("Banner Ad Opened")}
+                        onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
                 </View>
             </Animated.View>
         );
