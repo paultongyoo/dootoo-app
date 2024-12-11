@@ -252,3 +252,20 @@ export const generateCalendarUri = (startDate) => {
   }
   return null; // Unsupported platform
 }
+
+export const calculateAndroidButtonScale = (audioLevel) => {
+  // Define the input range and output range
+  const minAudioLevel = -50; // Silent
+  const maxAudioLevel = 0;   // Normal speaking voice
+
+  const minScale = 1;   // No growth
+  const maxScale = 1.5; // 50% growth
+
+  // Clamp the audio level to the defined range
+  const clampedAudioLevel = Math.max(minAudioLevel, Math.min(maxAudioLevel, audioLevel));
+
+  // Map the audio level to the scale range
+  const scale = minScale + (clampedAudioLevel - minAudioLevel) / (maxAudioLevel - minAudioLevel) * (maxScale - minScale);
+
+  return scale;
+}

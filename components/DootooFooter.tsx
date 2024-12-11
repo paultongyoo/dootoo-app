@@ -11,6 +11,7 @@ import { usePathname } from 'expo-router';
 import { ListItemEventEmitter } from "./EventEmitters";
 import { checkOpenAPIStatus } from "./BackendServices.js";
 import Animated from "react-native-reanimated";
+import { calculateAndroidButtonScale } from './Helpers'
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
@@ -128,15 +129,17 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             // Poll metering level and update the animated scale
             const interval = setInterval(async () => {
                 const status = await recording.getStatusAsync();
-                const metering_divisor = (Platform.OS == 'ios') ? 30 : 120;
                 if (status.isRecording) {
                     //console.log("Unmodified sound level: " + status.metering);
-                    meteringLevel.value = withTiming(1 + Math.max(0, 1 + (status.metering / metering_divisor)), { duration: 100 });
-                    //console.log(`Platform: ${Platform.OS} - status.metering: ${status.metering} - Metering Level: ${meteringLevel.value} - Metering modifier: ${1 + (status.metering / metering_divisor)}`);
+                    meteringLevel.value = 
+                        (Platform.OS == 'ios')
+                            ? withTiming(1 + Math.max(0, 1 + (status.metering / 30)), { duration: 100 })
+                            : withTiming(calculateAndroidButtonScale(status.metering), { duration: 100 });
+                    //console.log(`Platform: ${Platform.OS} | status.metering: ${status.metering} | Metering Level: ${meteringLevel.value} `);
 
                     // Sound Level Threshold Auto Stop Feature
                     const soundLevel = status.metering || 0;
-                    //console.log(`Sound Level ${soundLevel} - Threshold ${audioTreshold.current} - HasBreached ${hasBreachedThreshold.current}`)
+                    console.log(`Sound Level ${soundLevel} - Threshold ${audioTreshold.current} - HasBreached ${hasBreachedThreshold.current}`)
 
                     // Only auto-stop after the user started talking
                     if (soundLevel > (audioTreshold.current + 10)) {
