@@ -95,7 +95,7 @@ export const handler = async (event) => {
     var object_from_chat = JSON.parse(completion.choices[0].message.content);
     var item_array = object_from_chat.tasks;
 
-    console.log("Final Output: ", item_array);
+    //console.log("Final Output: ", item_array);        DO NOT TRANSCRIBE ITEMS TO LOGS TO RESPECT USER PRIVACY
 
     const response = {
       statusCode: 200,
