@@ -156,9 +156,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             // Immediately look for new counts on any list update
             restartPolling();
 
-            // Look for any calendar item updates
-            syncCalendarUpdates();
-
+            if (thingName == "item") {
+                syncItemCalendarUpdates();
+            }
         } else if (isInitialMount.current) {
 
             console.log("Bypassing useEffect(listArray) logic on initial mount");
@@ -209,7 +209,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 startPolling();
 
                 // Asynchronously check if updated any events in Calendar app
-                syncCalendarUpdates();
+                if (thingName == "item") {
+                    syncItemCalendarUpdates();
+                }
             } else {
                 stopPolling();
             }
@@ -809,7 +811,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         return eventId;
     }
 
-    const syncCalendarUpdates = async() => {
+    const syncItemCalendarUpdates = async() => {
         if (listArray && listArray.length > 0) {
             const calendaredThings = listArray.filter((thing) => thing.event_id);
             if (calendaredThings.length > 0) {
@@ -822,8 +824,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         const calEvent = await Calendar.getEventAsync(event_id);
                         if (calEvent) {
                             const calStartLocalDate = new Date(calEvent.startDate);
-                            if (!areDateObjsEqual(saved_scheduled_local_date, calStartLocalDate) ||
-                                    !(saved_thing_text === calEvent.title)) {
+
+                            // 1.2 TODO REVISIT: Deactivating text sync here as there's a bug with Calendar.updateEventAsync for title updating
+                            //     preventing edits from sticking (see corresponding comment on Items index.tsx)
+                            if (!areDateObjsEqual(saved_scheduled_local_date, calStartLocalDate)) { //||
+                                    //!(saved_thing_text === calEvent.title)) {
                                 console.log("Calendar Event " + calEvent.title + " has different start date and/or title than scheduled event, updating saved item...");
                                 // console.log("saved_scheduled_local_date: " + saved_scheduled_local_date);
                                 // console.log("calStartLocalDate: " + calStartLocalDate);
@@ -834,12 +839,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         ? {
                                             ...prevThing,
                                             scheduled_datetime_utc: calStartLocalDate.toISOString(),
-                                            text: calEvent.title
+                                            //text: calEvent.title
                                         }
                                         : prevThing));
 
                                 updateItemSchedule(thing.uuid, calStartLocalDate.toISOString()); 
-                                updateItemText({ uuid: thing.uuid, text: calEvent.title });                 
+                                //updateItemText({ uuid: thing.uuid, text: calEvent.title });                 
                             } else {
                                 //console.log("Calendar Event " + calEvent.title + " matches what's saved.");
                             }

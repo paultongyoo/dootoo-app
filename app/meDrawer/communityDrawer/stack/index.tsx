@@ -54,15 +54,17 @@ export default function Index() {
   };
 
   const saveTextUpdate = async (item) => {
-    updateItemText(item, () => {
+    updateItemText(item, async () => {
       ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
 
-      if (item.event_id) {
-          Calendar.updateEventAsync(item.event_id, {
-              title: item.text
-          });
-          console.log("Calendar Event title updated asyncronously: " + item.event_id);
-      }   
+      // 1.2 Event Text edit not working for some reason TODO revisit
+      // if (item.event_id) {
+      //    const response = await Calendar.updateEventAsync(item.event_id, {
+      //         title: item.text
+      //     });
+      //     console.log("Event ID Event Update Response: " + JSON.stringify(response));
+      //     console.log("Calendar Event title updated asyncronously to (" + item.event_id + "): " + item.text);
+      // }   
     });
   }
 
