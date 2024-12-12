@@ -53,8 +53,8 @@ const updateItemOrder = async (anonymousId, uuid_array) => {
 
     try {
         const response = await lambda.invoke(lambdaParams).promise();
-        const user = JSON.parse(response.Payload).body;
-        return user;
+        const result = JSON.parse(response.Payload).body;
+        return result;
     } catch (error) {
         console.error("Error invoking updateItemOrder Lambda function:", error);
         throw error;
