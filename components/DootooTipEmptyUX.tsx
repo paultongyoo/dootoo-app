@@ -51,7 +51,7 @@ const DootooTipEmptyUX = ({ styles, selectedItem, tipArray }) => {
                 <Animated.View style={[styles.emptyListContainer, {opacity: emptyListCTAOpacity }]}>
                 {/* <Animated.View style={[styles.emptyListContainer, {opacity: emptyListCTAOpacity }, !ctaLoading && {opacity: fadeCTA}]}> */}
                     <Text style={styles.emptyListContainer_words}>{emptyListCTA}</Text>
-                    <Image style={styles.emptyListContainer_arrow} source={require("@/assets/images/sketch_arrow_556B2F.png")} />
+                    {/* <Image style={styles.emptyListContainer_arrow} source={require("@/assets/images/sketch_arrow_556B2F.png")} /> */}
                 </Animated.View>
             }
         </>

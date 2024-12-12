@@ -4,7 +4,7 @@ import RNFS from 'react-native-fs';
 import { AppContext } from './AppContext.js';
 import { useState, useContext, useRef, useEffect } from "react";
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
-import Reanimated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Reanimated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import Toast from "react-native-toast-message";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
@@ -449,6 +449,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     };
 
     const recordButton_handlePressOut = () => {
+        keyboardButtonTop.value = withTiming(-40, { duration: 150, easing: Easing.out(Easing.exp)});
         recordButtonOpacity.value = withTiming(1, { duration: 150 }); // Return to full opacity
     };
 
@@ -468,8 +469,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             borderRadius: 38,
             borderColor: '#3E2723',
             borderWidth: 1,
-            position: 'absolute',
-            bottom: 120,
+           // position: 'absolute',
+           // bottom: 120,
             flex: 1,
             alignItems: 'center',
             justifyContent: 'center'
@@ -479,7 +480,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             width: 76,
             borderRadius: 38,
             position: 'absolute',
-            bottom: 120,
+            top: 0,
             backgroundColor: 'black'
         },
         footerButtonImage_Record: {
@@ -504,6 +505,10 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             left: 34
         },
         recordButton: {
+            backgroundColor: '#556B2F',
+            marginRight: 60
+        },
+        keyboardButton: {
             backgroundColor: '#556B2F'
         },
         stopRecordButton: {
@@ -522,6 +527,40 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             width: 25,
             height: 25,
             backgroundColor: 'white'
+        },
+        keyboardFooterButton: {
+            backgroundColor: '#556B2F',
+            height: 76,
+            width: 76,
+            borderRadius: 38,
+            borderColor: '#3E2723',
+            borderWidth: 1,
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center'
+        },
+        keyboardFooterButton_Underlay: {
+            height: 76,
+            width: 76,
+            borderRadius: 38,
+            backgroundColor: 'black'
+        },
+        keyboardIcon: {
+            width: 40,
+            height: 28.3
+        },
+        keyboardButtonContainer: {
+            
+        },
+        footerButtonsContainer: {
+            //backgroundColor: 'orange',
+            flexDirection: 'row',
+            flex: 1,
+            position: 'relative',
+            top: -40
+        },
+        footerButtonContainer: {
+            height: 76
         }
     });
 
@@ -569,30 +608,40 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                     onPress={makeTestData}>
                     <Text>Test Data</Text>
                 </Pressable> */}
-                <View style={styles.footerButton_Underlay}></View>
-                <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || isRecordingProcessing) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
-                    <Pressable
-                        disabled={isRecordingProcessing}
-                        onPress={() => {
-                            if (isRecordingProcessing) {
-                                cancelRecordingProcessing();       // 1.2: Made this scenario unreachable for now to prevent user from accidentally cancelling working process
-                            } else if (recording) {
-                                processRecording();
-                            } else {
-                                startRecording();
-                            }
-                        }}
-                        onPressIn={recordButton_handlePressIn}
-                        onPressOut={recordButton_handlePressOut}>
-                        {(isRecordingProcessing) ?
-                            <View style={styles.loadingAnim}>
-                                <ActivityIndicator size={"large"} color="white" />
-                            </View>
-                            : (recording) ?
-                                <View style={styles.footerButtonIcon_Stop}></View>
-                                : <Image style={styles.footerButtonImage_Record} source={require("@/assets/images/microphone_white.png")} />}
-                    </Pressable>
-                </Reanimated.View>
+                <View style={styles.footerButtonsContainer}>
+                    <View style={styles.footerButtonContainer}>
+                        <View style={styles.footerButton_Underlay}></View>
+                        <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || isRecordingProcessing) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
+                            <Pressable
+                                disabled={isRecordingProcessing}
+                                onPress={() => {
+                                    if (isRecordingProcessing) {
+                                        cancelRecordingProcessing();       // 1.2: Made this scenario unreachable for now to prevent user from accidentally cancelling working process
+                                    } else if (recording) {
+                                        processRecording();
+                                    } else {
+                                        startRecording();
+                                    }
+                                }}
+                                onPressIn={recordButton_handlePressIn}
+                                onPressOut={recordButton_handlePressOut}>
+                                {(isRecordingProcessing) ?
+                                    <View style={styles.loadingAnim}>
+                                        <ActivityIndicator size={"large"} color="white" />
+                                    </View>
+                                    : (recording) ?
+                                        <View style={styles.footerButtonIcon_Stop}></View>
+                                        : <Image style={styles.footerButtonImage_Record} source={require("@/assets/images/microphone_white.png")} />}
+                            </Pressable>
+                        </Reanimated.View>
+                    </View>
+                    <View style={styles.footerButtonContainer}>
+                        <View style={styles.footerButton_Underlay}></View>
+                        <Pressable style={[styles.footerButton, styles.keyboardButton]}>
+                            <Image style={styles.keyboardIcon} source={require("@/assets/images/keyboard_white.png")} />
+                        </Pressable>
+                    </View>
+                </View>
                 <View style={styles.bannerAdContainer}>
                     <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
                         onPaid={() => amplitude.track("Banner Ad Paid")}

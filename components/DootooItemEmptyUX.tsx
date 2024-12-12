@@ -30,12 +30,12 @@ const DootooItemEmptyUX = ({ styles }) => {
       easing: Easing.inOut(Easing.ease),
       useNativeDriver: true
     }),
-    Animated.timing(fadeAnimArrow, {
-      toValue: 1,
-      duration: 800,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true
-    }),
+    // Animated.timing(fadeAnimArrow, {
+    //   toValue: 1,
+    //   duration: 800,
+    //   easing: Easing.inOut(Easing.ease),
+    //   useNativeDriver: true
+    // }),
   ]);
 
   useFocusEffect(
@@ -64,9 +64,9 @@ const DootooItemEmptyUX = ({ styles }) => {
     <Animated.View style={[{ opacity: fadeAnimChallenges }]}>
       <Text style={[styles.emptyListContainer_words, { color: '#556B2F' }]}>challenges?</Text>
     </Animated.View>
-    <Animated.View style={{ opacity: fadeAnimArrow }}>
+    {/* <Animated.View style={{ opacity: fadeAnimArrow }}>
       <Image style={styles.emptyListContainer_arrow} source={require("@/assets/images/sketch_arrow_556B2F.png")} />
-    </Animated.View>
+    </Animated.View> */}
   </Animated.View>;
 };
 

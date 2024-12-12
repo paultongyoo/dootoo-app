@@ -349,7 +349,8 @@ export default function ItemTips() {
       marginLeft: 15
     },
     itemCircleOpen_isDone: {
-      backgroundColor: '#556B2F50'
+      backgroundColor: '#556B2F50',
+      borderWidth: 0
     },
     itemNameContainer: {
       paddingBottom: 10,
