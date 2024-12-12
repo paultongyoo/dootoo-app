@@ -460,7 +460,11 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         },
         bannerAdContainer: {
             position: 'absolute',
-            bottom: 40
+            bottom: 40,
+            borderTopWidth: 1,
+            borderColor: "#eee",
+            justifyContent: 'center',
+            alignItems: 'center'
         },
         footerButton: {
             height: 76,
