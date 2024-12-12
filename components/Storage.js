@@ -713,6 +713,21 @@ export const resetAllData = async () => {
   }
 };
 
+export const overrideUserAnonId = async(new_anon_id) => {
+  try {
+    console.log("Inside overrideUserAnonId");
+    const curr_user_obj_str = await AsyncStorage.getItem(USER_OBJ_KEY);
+    const curr_user_obj = JSON.parse(curr_user_obj_str);
+    console.log("Current anonymous_id: " + curr_user_obj.anonymous_id);
+    const new_user_obj = {...curr_user_obj, anonymous_id: new_anon_id };
+    const user_obj_str = JSON.stringify(new_user_obj);
+    await AsyncStorage.setItem(USER_OBJ_KEY, user_obj_str);
+    console.log("Saved new anonymous_id: " + new_user_obj.anonymous_id);
+  } catch (e) {
+    console.log("Error saving user to local storage.", e);
+  }
+}
+
 export const saveUserLocally = async(user_obj) => {
   //console.log("Saving user data to local storage...");
 
