@@ -289,7 +289,7 @@ export const saveNewItem = async (item, latest_item_uuids) => {
   }
 }
 
-export const saveNewTip = async (tip, latest_tip_uuids) => {
+export const saveNewTip = async (tip, item_uuid, latest_tip_uuids) => {
   try {
     //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
@@ -302,6 +302,7 @@ export const saveNewTip = async (tip, latest_tip_uuids) => {
     const response = await axios.post(SAVENEWTIP_URL,
       {
         anonymous_id : localAnonId,
+        item_uuid: item_uuid,
         tip_str: JSON.stringify(tip),
         uuid_array: JSON.stringify(latest_tip_uuids)
       }
