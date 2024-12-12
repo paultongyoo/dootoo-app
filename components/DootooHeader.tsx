@@ -22,10 +22,10 @@ const DootooHeader = ({ meDrawerNavigation }) => {
             backgroundColor: '#FAF3E0',
             height: (Platform.OS == 'ios') ? 100 : 90,
             shadowColor: '#000', 
-            shadowOffset: { width: 0, height: 4 }, 
+            shadowOffset: { width: 0, height: 1 }, 
             shadowOpacity: 0.2, 
-            shadowRadius: 5,
-            elevation: 5, // Elevation for Android       
+            shadowRadius: 2,
+            elevation: 2, // Elevation for Android       
         },
         headerLeftContainer: {
             position: 'absolute',
