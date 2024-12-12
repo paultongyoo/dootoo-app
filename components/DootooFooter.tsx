@@ -464,7 +464,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             borderTopWidth: 1,
             borderColor: "#eee",
             justifyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
+            backgroundColor: "#eee"
         },
         footerButton: {
             height: 76,
