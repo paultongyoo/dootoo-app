@@ -23,6 +23,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const [permissionResponse, requestPermission] = Audio.usePermissions();
     const meteringLevel = useSharedValue(1); // shared value for animated scale
     const recordButtonOpacity = useSharedValue(1);
+    const keyboardButtonOpacity = useSharedValue(1);
     const recordingTimeStart = useRef(null);        // Var used for calculating time
 
     // Auto stop threshold feature
@@ -443,6 +444,11 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             opacity: recordButtonOpacity.value,
         };
     });
+    const keyboardButtonOpacityAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            opacity: keyboardButtonOpacity.value,
+        };
+    });
 
     const recordButton_handlePressIn = () => {
         recordButtonOpacity.value = withTiming(0.7, { duration: 150 }); // Dim button on press
@@ -451,6 +457,18 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const recordButton_handlePressOut = () => {
         recordButtonOpacity.value = withTiming(1, { duration: 150 }); // Return to full opacity
     };
+
+    const keyboardButton_handlePressIn = () => {
+        keyboardButtonOpacity.value = withTiming(0.7, { duration: 150 }); // Dim button on press
+    };
+
+    const keyboardButton_handlePressOut = () => {
+        keyboardButtonOpacity.value = withTiming(1, { duration: 150 }); // Return to full opacity
+    };
+
+    const handleKeyboardButtonPress = () => {
+        Alert.alert("Implement Me!");
+    }
 
     const styles = StyleSheet.create({
         footerContainer: {
@@ -647,9 +665,14 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                     </View>
                     <View style={styles.footerButtonContainer}>
                         <View style={styles.footerButton_Underlay}></View>
-                        <Pressable style={[styles.footerButton, styles.keyboardButton]}>
-                            <Image style={styles.keyboardIcon} source={require("@/assets/images/keyboard_white.png")} />
-                        </Pressable>
+                        <Reanimated.View style={[styles.footerButton, styles.keyboardButton, keyboardButtonOpacityAnimatedStyle]}>
+                            <Pressable
+                                onPress={handleKeyboardButtonPress}
+                                onPressIn={keyboardButton_handlePressIn}
+                                onPressOut={keyboardButton_handlePressOut}>
+                                <Image style={styles.keyboardIcon} source={require("@/assets/images/keyboard_white.png")} />
+                            </Pressable>
+                        </Reanimated.View>
                     </View>
                 </View>
                 <View style={styles.bannerAdContainer}>
