@@ -62,9 +62,9 @@ export const handler = async (event) => {
             WHERE "uuid" IN (${newRanks.map(({ uuid }) => `'${uuid}'`).join(',')});
             `;
 
-        console.log("Query: " + query);
+        //console.log("Query: " + query);
         const result = await prisma.$executeRawUnsafe(query);
-        console.log("Result: " + JSON.stringify(result));
+        //console.log("Result: " + JSON.stringify(result));
 
         const response = {
             statusCode: 200,
