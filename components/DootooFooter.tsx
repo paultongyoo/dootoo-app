@@ -449,7 +449,6 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     };
 
     const recordButton_handlePressOut = () => {
-        keyboardButtonTop.value = withTiming(-40, { duration: 150, easing: Easing.out(Easing.exp)});
         recordButtonOpacity.value = withTiming(1, { duration: 150 }); // Return to full opacity
     };
 
@@ -473,7 +472,12 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
            // bottom: 120,
             flex: 1,
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            shadowColor: '#000', 
+            shadowOffset: { width: 0, height: 4 }, 
+            shadowOpacity: 0.2, 
+            shadowRadius: 5,
+            elevation: 5, // Elevation for Android        
         },
         footerButton_Underlay: {
             height: 76,
