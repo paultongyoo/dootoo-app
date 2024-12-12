@@ -5,7 +5,6 @@ import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
-import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
 import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import * as amplitude from '@amplitude/analytics-react-native';
 import * as Calendar from 'expo-calendar';
@@ -734,14 +733,15 @@ export default function Index() {
   });
 
 
-  const renderRightActions = (item, index) => {
+  const renderRightActions = (item, handleThingDeleteFunc) => {
     return (
       <>
-        <DootooSwipeAction_Delete
-          styles={styles}
-          listArray={dootooItems} listArraySetter={setDootooItems}
-          listThing={item}
-          deleteThing={deleteItem} />
+        <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
+            <Pressable
+                onPress={() => handleThingDeleteFunc(item)}>
+                <Image style={styles.swipeActionIcon_trash} source={require("@/assets/images/trash_icon_white.png")} />
+            </Pressable>
+        </Reanimated.View>
         {item.parent_item_uuid ?
           <Reanimated.View style={[styles.itemSwipeAction]}>
             <Pressable
@@ -782,6 +782,7 @@ export default function Index() {
       saveTextUpdateFunc={saveTextUpdate}
       saveThingOrderFunc={saveItemOrder}
       loadAllThings={loadItems}
+      deleteThing={deleteItem}
       transcribeAudioToThings={transcribeAudioToTasks}
       ListThingSidebar={DootooItemSidebar}
       EmptyThingUX={DootooItemEmptyUX}

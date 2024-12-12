@@ -23,7 +23,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     renderRightActions = (item, index) => { return <></> },
     isDoneable = true,
     handleDoneClick = (thing) => { return; },
-    saveAllThings, saveTextUpdateFunc, saveThingOrderFunc, loadAllThings,
+    saveAllThings, 
+    saveTextUpdateFunc, 
+    saveThingOrderFunc, 
+    loadAllThings,
+    deleteThing,
     transcribeAudioToThings,
     isThingPressable,
     isThingDraggable,
@@ -441,6 +445,150 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         } else {
             console.log("Ignoring drag operation given isThingDraggable == false");
         }
+    }
+
+    const handleThingDelete = (thing: any) => {
+        //console.log("Entering handle delete item...");
+        const listArrayCopy = listArray.map((obj) => ({ ...obj }));
+
+        // If the thing is a parent and has one or more children, ask user if they want to remove all children too
+        const thingSubtasks = listArrayCopy.filter((obj) => obj.parent_item_uuid == thing.uuid);
+
+        if (!thing.parent_item_uuid && (thingSubtasks.length > 0)) {
+
+            Alert.alert(
+                `${thingName} Has ${thingSubtasks.length} Sub${thingName.toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''}`,
+                `Deleting this ${thingName.toLowerCase()} will delete its sub${thingName.toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''} too.  Continue?`,
+                [
+                    {
+                        text: 'Yes',
+                        onPress: () => {
+
+                            // Three step process:
+                            // 1) Animate away the item and its subitems
+                            // 2) Delete each item from backend
+                            // 3) Remove each item from UI array
+                            var slideAnimationArray = [];
+                            var heightAnimationArray = [];
+                            const index = listArrayCopy.findIndex(obj => obj.uuid == thing.uuid);
+
+                            // Call asyncronous delete to mark item as deleted in backend to sync database
+                            // 1.2  Deleting parent thing will delete its children too in DB
+                            // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
+                            if (!thing.newKeyboardEntry) deleteThing(thing.uuid);
+
+                            for (var i = index; i <= index + thingSubtasks.length; i++) {
+
+                                amplitude.track(`${thingName} Deleted`, {
+                                    anonymous_id: anonymousId.current,
+                                    thing_uuid: listArrayCopy[i].uuid,
+                                    thing_type: thingName
+                                });
+
+                                // Add the animation to slide the item off the screen
+                                slideAnimationArray.push(
+                                    Animated.timing(thingRowPositionXs.current[listArrayCopy[i].uuid], {
+                                        toValue: -600,
+                                        duration: 300,
+                                        easing: Easing.in(Easing.quad),
+                                        useNativeDriver: false
+                                    })
+                                );
+
+                                if (i < (listArrayCopy.length - 1)) {
+                                    heightAnimationArray.push(
+                                        Animated.timing(thingRowHeights.current[listArrayCopy[i].uuid], {
+                                            toValue: 0,
+                                            duration: 300,
+                                            easing: Easing.in(Easing.quad),
+                                            useNativeDriver: false
+                                        })
+                                    );
+                                }
+                            }
+                            Animated.parallel(slideAnimationArray).start(() => {
+                                Animated.parallel(heightAnimationArray).start(() => {
+
+                                    // v1.1.1 Deprecate
+                                    //listArrayCopy.splice(index, 1 + thingSubtasks.length);  // Remove item and its subtasks from array
+                                    
+                                    delete thingRowPositionXs.current[thing.uuid];
+                                    delete thingRowHeights.current[thing.uuid];                        
+                                    for (const subtask in thingSubtasks) {
+                                        delete thingRowPositionXs.current[subtask.uuid];
+                                        delete thingRowHeights.current[subtask.uuid]
+                                    }
+
+                                    // v1.1.1 Deprecate
+                                    //listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations   
+                                    
+                                    const subtaskUUIDSet = new Set(thingSubtasks.map(obj => obj.uuid));   
+                                    listArraySetter((prevThings) => prevThings.filter((obj) => (obj.uuid != thing.uuid) && !subtaskUUIDSet.has(obj.uuid)));                            
+                                })
+                            });
+                        }
+                    },
+                    {
+                        text: 'Cancel',
+                        style: 'cancel'
+                    }
+                ],
+                { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+            );
+        } else {
+
+            //console.log("thingRowPositionXs contents: " + JSON.stringify(thingRowPositionXs.current));
+            const currentRowPositionX = thingRowPositionXs.current[thing.uuid];
+            const currentRowHeight = thingRowHeights.current[thing.uuid]
+
+            //console.log(`Stats of row before deleting - positionX ${JSON.stringify(currentRowPositionX)}, rowHeight ${JSON.stringify(currentRowHeight)}`);
+            var animationArray = [
+                Animated.timing(currentRowPositionX, {
+                    toValue: -600,
+                    duration: 300,
+                    easing: Easing.in(Easing.quad),
+                    useNativeDriver: false
+                })
+            ];
+
+            // Only animate reduction of the height of the item if there are items underneath it
+            const index = listArrayCopy.findIndex(obj => obj.uuid == thing.uuid);
+            if (index < (listArrayCopy.length - 1)) {
+                animationArray.push(
+                    Animated.timing(currentRowHeight, {
+                        toValue: 0,
+                        duration: 300,
+                        easing: Easing.in(Easing.quad),
+                        useNativeDriver: false
+                    })
+                );
+            }
+            Animated.parallel(animationArray).start(() => {
+                //console.log(`Deleting sole item at index ${index}: ${updatedThings[index].text}`);
+
+                amplitude.track(`${thingName} Deleted`, {
+                    anonymous_id: anonymousId.current,
+                    thing_uuid: thing.uuid,
+                    thing_type: thingName
+                });
+
+                // Call asyncronous delete to mark item as deleted in backend to sync database
+                // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
+                if (!thing.newKeyboardEntry) deleteThing(thing.uuid);
+
+                // Remove item from displayed and thingRowPositionXs lists
+                listArrayCopy.splice(index, 1);
+                delete thingRowPositionXs.current[thing.uuid];
+                delete thingRowHeights.current[thing.uuid];
+
+                //console.log(`updatedThings post delete (${updatedThings.length}): ${JSON.stringify(updatedThings)}`);
+
+                //listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
+                listArraySetter((prevThings) => prevThings.filter((obj) => (obj.uuid != thing.uuid)));                            
+            });
+        }
+
+       //console.log(`Exiting handle delete ${thingNameStr.toLowerCase()} at index ${index}...`);
     }
 
     // Function to close all Swipeables except the one being opened
@@ -1019,17 +1167,22 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             onChangeInputValue.current = thing.text;
         }
 
-        const handleBlur = (item) => {
+        const handleBlur = (thing) => {
             //console.log(`Inside handleBlur for item ${item.text}`);
 
             const textOnChange = onChangeInputValue.current;
-            if (textOnChange != item.text) {
+
+            // If blur after field changed to empty, assume the user wants to delete it
+            if (!textOnChange || textOnChange.length == 0) {
+                console.log("Blur occurred on empty field, deleting it!");
+                handleThingDelete(thing);
+            } else if (textOnChange != thing.text) {
                 //console.log("Text changed to: " + textOnChange);
 
                 // Asynchronously sync new item text to DB
                 //// Make a deep copy of item before editting to ensure
                 //// we don't accidentally change React state and cause re-renders
-                const deepItem = JSON.parse(JSON.stringify(item));
+                const deepItem = JSON.parse(JSON.stringify(thing));
                 deepItem.text = textOnChange;
                 saveTextUpdateFunc(deepItem); 
 
@@ -1037,18 +1190,18 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 // React was designed to only react to state changes of new objects/values
                 // therefore use 'map' to create new object from previous
                 listArraySetter((prevArray) => prevArray.map((thing) =>
-                    thing.uuid == item.uuid
+                    thing.uuid == thing.uuid
                         ? { ...thing, text: textOnChange }
                         : thing));
 
                 amplitude.track("Thing Text Edited", {
                     anonymous_id: anonymousId.current,
                     pathname: pathname,
-                    thing_uuid: item.uuid,
+                    thing_uuid: thing.uuid,
                     thing_type: thingName
                 });
             } else {
-                //console.log(`Ignoring blur as text has not changed (${textOnChange})`);
+                console.log(`Ignoring blur as text has not changed (${textOnChange})`);
             }
 
             // Renable the height override + reset known row height
@@ -1093,7 +1246,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         });
                     }}
                     renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(item, getIndex()) } else { return <></> } }}
-                    renderRightActions={(progress, dragX) => { if (renderRightActions) { return renderRightActions(item, getIndex()) } else { return <></> } }}>
+                    renderRightActions={(progress, dragX) => { if (renderRightActions) { return renderRightActions(item, handleThingDelete) } else { return <></> } }}>
                     <ScaleDecorator>
                         <View style={[styles.itemContainer, (getIndex() == 0) && styles.itemContainer_firstItem]}>
                             {(item.parent_item_uuid) ?

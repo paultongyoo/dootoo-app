@@ -14,7 +14,6 @@ import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText, updateT
 import DootooTipSidebar from "@/components/DootooTipSidebar";
 import DootooTipEmptyUX from "@/components/DootooTipEmptyUX";
 import DootooList from "@/components/DootooList";
-import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
@@ -206,23 +205,16 @@ export default function ItemTips() {
 
   }
 
-  const renderRightActions = (tip, index) => {
+  const renderRightActions = (tip, handleThingDeleteFunc) => {
     return (
       <>
         {(selectedItem.is_done) ?
-          <DootooSwipeAction_Delete
-            thingNameStr="Tip"
-            styles={styles}
-            listArray={tips} listArraySetter={setTips}
-            listThing={tip}
-            deleteThing={(tip_uuid) => {
-              deleteTip(tip_uuid);
-
-              // Update tip count in displayed header
-              setSelectedItem((prevItem) => ({ ...prevItem, tip_count: prevItem.tipCount - 1}));
-
-              ProfileCountEventEmitter.emit('decr_tips');
-            }} />
+          <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
+              <Pressable
+                  onPress={() => handleThingDeleteFunc(tip)}>
+                  <Image style={styles.swipeActionIcon_trash} source={require("@/assets/images/trash_icon_white.png")} />
+              </Pressable>
+          </Reanimated.View>
           :
           <>
             <Reanimated.View style={[styles.itemSwipeAction, styles.action_Upvote, (tip.user_vote_value == 1) && styles.action_vote_selected]}>
@@ -622,6 +614,14 @@ export default function ItemTips() {
             saveTextUpdateFunc={saveTextUpdate}
             saveThingOrderFunc={saveTipOrder}
             loadAllThings={(isPullDown) => loadTips(isPullDown, selectedItem.uuid)}
+            deleteThing={(tip_uuid) => {
+              deleteTip(tip_uuid);
+
+              // Update tip count in displayed header
+              setSelectedItem((prevItem) => ({ ...prevItem, tip_count: prevItem.tipCount - 1}));
+
+              ProfileCountEventEmitter.emit('decr_tips');
+            }}
             transcribeAudioToThings={transcribeAudioToTips}
             ListThingSidebar={DootooTipSidebar}
             EmptyThingUX={() => <DootooTipEmptyUX styles={styles} selectedItem={selectedItem} tipArray={tips} />}
