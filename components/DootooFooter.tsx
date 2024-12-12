@@ -516,7 +516,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             backgroundColor: '#556B2F'
         },
         stopRecordButton: {
-            backgroundColor: '#A23E48'
+            backgroundColor: '#A23E48',
+            marginRight: 60
         },
         clearButton: {
             backgroundColor: '#FAF3E0',
