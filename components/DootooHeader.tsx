@@ -20,7 +20,12 @@ const DootooHeader = ({ meDrawerNavigation }) => {
     const styles = StyleSheet.create({
         headerContainer: {
             backgroundColor: '#FAF3E0',
-            height: (Platform.OS == 'ios') ? 100 : 90
+            height: (Platform.OS == 'ios') ? 100 : 90,
+            shadowColor: '#000', 
+            shadowOffset: { width: 0, height: 4 }, 
+            shadowOpacity: 0.2, 
+            shadowRadius: 5,
+            elevation: 5, // Elevation for Android       
         },
         headerLeftContainer: {
             position: 'absolute',
