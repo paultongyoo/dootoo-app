@@ -8,7 +8,7 @@ import DootooItemSidebar from "@/components/DootooItemSidebar";
 import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
 import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import * as amplitude from '@amplitude/analytics-react-native';
-
+import * as Calendar from 'expo-calendar';
 
 import {
   Image, StyleSheet, Pressable,
@@ -23,6 +23,7 @@ import Reanimated, {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
+import Toast from "react-native-toast-message";
 
 export default function Index() {
   const pathname = usePathname();
@@ -53,8 +54,17 @@ export default function Index() {
   };
 
   const saveTextUpdate = async (item) => {
-    updateItemText(item, () => {
+    updateItemText(item, async () => {
       ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
+
+      // 1.2 Event Text edit not working for some reason TODO revisit
+      // if (item.event_id) {
+      //    const response = await Calendar.updateEventAsync(item.event_id, {
+      //         title: item.text
+      //     });
+      //     console.log("Event ID Event Update Response: " + JSON.stringify(response));
+      //     console.log("Calendar Event title updated asyncronously to (" + item.event_id + "): " + item.text);
+      // }   
     });
   }
 
@@ -580,7 +590,8 @@ export default function Index() {
       marginLeft: 15
     },
     itemCircleOpen_isDone: {
-      backgroundColor: '#556B2F50'
+      backgroundColor: '#556B2F50',
+      borderWidth: 0
     },
     childItemSpacer: {
       width: 20
@@ -778,38 +789,6 @@ export default function Index() {
       isThingDraggable={true} />
   );
 
-
-
-
-  // Update v1.1.1:  This function will likely be deprecated/removed as now item counts
-  // refresh at the DootooItemSidebar component level
-  // function refreshItemCounts(latestItems: any, updatedItems: any) {
-  //   var displayedListToUpdate = [...latestItems];
-  //   for (var i = 0; i < updatedItems.length; i++) {
-  //     const currUpdatedItem = updatedItems[i];
-  //     for (var j = 0; j < displayedListToUpdate.length; j++) {
-  //       if (displayedListToUpdate[j].uuid == currUpdatedItem.uuid) {
-  //         displayedListToUpdate[j].tip_count = currUpdatedItem.tip_count;
-  //         displayedListToUpdate[j].similar_count = currUpdatedItem.similar_count;
-  //         displayedListToUpdate[j].counts_updating = false;
-
-  //         // Fire a tracking event if user is displayed an item with non zero count(s)
-  //         if (displayedListToUpdate[j].tip_count + displayedListToUpdate[j].similar_count > 0) {
-  //           amplitude.track("Item Counts UI Refreshed", {
-  //             anonymous_id: anonymousId.current,
-  //             item_uuid: displayedListToUpdate[j].uuid,
-  //             item_is_done: displayedListToUpdate[j].is_done,
-  //             tip_count: displayedListToUpdate[j].tip_count,
-  //             similar_count: displayedListToUpdate[j].similar_count
-  //           });
-  //         }
-
-  //         break;
-  //       }
-  //     }
-  //   }
-  //   return displayedListToUpdate;
-  // }
 }
 
 function moveItemToTopOfDoneAdults(itemList, item_uuid) {

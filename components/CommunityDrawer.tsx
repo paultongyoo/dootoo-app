@@ -1,5 +1,5 @@
 import { usePathname, useRouter } from "expo-router";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, TextInput, Platform } from "react-native";
 import { AppContext } from "./AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
@@ -25,25 +25,30 @@ const CommunityDrawer = ({ navigation }) => {
   const [selectedBlockReason, setSelectedBlockReason] = useState('no_reason');
   const [blockReasonOtherText, setBlockReasonOtherText] = useState();
   const [isBlockProcessing, setIsBlockingProcessing] = useState(false);
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
     //console.log("Checking selectedItem context: " + JSON.stringify(selectedItem));
 
-    animatedOpacity.value = 0;
-    animatedOpacity.value = withTiming(1, {
-      duration: 300
-    });
-
-    if (selectedProfile && !selectedProfile.doneCount) {
-      loadSelectedProfile();
-
-      amplitude.track("Community Profile Viewed", {
-        anonymous_id: anonymousId.current,
-        pathname: pathname,
-        name: selectedProfile.name
+    if (isInitialMount.current) {
+      console.log("CommunityDrawer skipping useEffect(selectedProfile) on initial mount.");
+      isInitialMount.current = false;
+    } else {
+      animatedOpacity.value = 0;
+      animatedOpacity.value = withTiming(1, {
+        duration: 300
       });
-    }
 
+      if (selectedProfile && !selectedProfile.doneCount) {
+        loadSelectedProfile();
+
+        amplitude.track("Community Profile Viewed", {
+          anonymous_id: anonymousId.current,
+          pathname: pathname,
+          name: selectedProfile.name
+        });
+      }
+    }
   }, [selectedProfile]);
 
   const loadSelectedProfile = async () => {

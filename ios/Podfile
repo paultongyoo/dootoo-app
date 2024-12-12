@@ -43,7 +43,7 @@ setup_permissions([
 ])
 # @generated end setup
 
-target 'dootooapp' do
+target 'dootoo' do
   use_expo_modules!
   config = use_native_modules!
 

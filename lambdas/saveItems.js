@@ -81,7 +81,9 @@ const saveItems = async(anonymous_id, items_str) => {
                         rank_idx: i,
                         is_done: array_item.is_done,
                         is_deleted: array_item.is_deleted,
-                        ...((array_item.parent_item_uuid) && { parent: {
+                        scheduled_datetime_utc: array_item.scheduled_datetime_utc,
+                        event_id: array_item.event_id,
+                        ...((array_item.parent_item_uuid) && parentUUIDtoIDMap[array_item.parent_item_uuid] && { parent: {
                                 connect: {
                                     id: parentUUIDtoIDMap[array_item.parent_item_uuid] 
                                 }
@@ -93,7 +95,9 @@ const saveItems = async(anonymous_id, items_str) => {
                         rank_idx: i,
                         is_done: array_item.is_done,
                         is_deleted: array_item.is_deleted,
-                        ...((array_item.parent_item_uuid) && { parent: {
+                        scheduled_datetime_utc: array_item.scheduled_datetime_utc,
+                        event_id: array_item.event_id,
+                        ...((array_item.parent_item_uuid) && parentUUIDtoIDMap[array_item.parent_item_uuid] && { parent: {
                                 connect: {
                                     id: parentUUIDtoIDMap[array_item.parent_item_uuid] 
                                 }
@@ -106,7 +110,7 @@ const saveItems = async(anonymous_id, items_str) => {
                 if (!array_item.parent_item_uuid) {
                     parentUUIDtoIDMap[item.uuid] = item.id;
                 }
-                console.log(item); 
+                //console.log(item); 
 
                 // Retrieve embedding for task and insert into table
                 //console.log(`Begin retrieval and storing of embedding for item ${item.id}...`);
