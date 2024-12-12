@@ -43,6 +43,9 @@ const UPDATEITEMSCHEDULE_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-ea
 const UPDATEITEMEVENTID_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemEventId_Dev'
                                      : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemEventId';
 
+const SAVENEWITEM_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveNewItem_Dev'
+                                  : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveNewItem';
+
 const LOADTIPS_URL =  (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadTips_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadTips';
 
@@ -54,6 +57,9 @@ const UPDATETIPORDER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2
                                 
 const UPDATETIPTEXT_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateTipText_Dev'
                                     : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateTipText';
+
+const SAVENEWTIP_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveNewTip_Dev'
+                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveNewTip';    
 
 const TIPVOTE_URL =  (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/tipVote_Dev'
                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/tipVote';
@@ -257,6 +263,52 @@ export const updateItemDoneState = async (item, callback) => {
     //console.log("updateDoneState Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateDoneState API:', error);
+  }
+}
+
+export const saveNewItem = async (item, latest_item_uuids) => {
+  try {
+    //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(SAVENEWITEM_URL,
+      {
+        anonymous_id : localAnonId,
+        item_str: JSON.stringify(item),
+        uuid_array: JSON.stringify(latest_item_uuids)
+      }
+    );
+    console.log("saveNewItem Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling saveNewItem API:', error);
+  }
+}
+
+export const saveNewTip = async (tip, latest_tip_uuids) => {
+  try {
+    //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(SAVENEWTIP_URL,
+      {
+        anonymous_id : localAnonId,
+        tip_str: JSON.stringify(tip),
+        uuid_array: JSON.stringify(latest_tip_uuids)
+      }
+    );
+    console.log("saveNewTip Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling saveNewTip API:', error);
   }
 }
 

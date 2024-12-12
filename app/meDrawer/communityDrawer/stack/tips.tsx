@@ -10,7 +10,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { AppContext } from '@/components/AppContext';
 import { transcribeAudioToTips } from '@/components/BackendServices';
-import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText, updateTipOrder } from '@/components/Storage';
+import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText, updateTipOrder, saveNewTip } from '@/components/Storage';
 import DootooTipSidebar from "@/components/DootooTipSidebar";
 import DootooTipEmptyUX from "@/components/DootooTipEmptyUX";
 import DootooList from "@/components/DootooList";
@@ -622,6 +622,7 @@ export default function ItemTips() {
 
               ProfileCountEventEmitter.emit('decr_tips');
             }}
+            saveNewThing={saveNewTip}
             transcribeAudioToThings={transcribeAudioToTips}
             ListThingSidebar={DootooTipSidebar}
             EmptyThingUX={() => <DootooTipEmptyUX styles={styles} selectedItem={selectedItem} tipArray={tips} />}

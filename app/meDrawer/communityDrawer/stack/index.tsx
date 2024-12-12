@@ -1,13 +1,12 @@
 import { useContext } from "react";
-import { router, usePathname } from 'expo-router';
-import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState } from '@/components/Storage';
+import { usePathname } from 'expo-router';
+import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import * as amplitude from '@amplitude/analytics-react-native';
-import * as Calendar from 'expo-calendar';
 
 import {
   Image, StyleSheet, Pressable,
@@ -18,17 +17,14 @@ import {
 } from "react-native";
 import { AppContext } from '@/components/AppContext';
 import Reanimated, {
-  SharedValue,
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
-import Toast from "react-native-toast-message";
 
 export default function Index() {
   const pathname = usePathname();
-  const { anonymousId, setSelectedItem, dootooItems, setDootooItems,
+  const { anonymousId, dootooItems, setDootooItems,
     thingRowHeights, thingRowPositionXs } = useContext(AppContext);
-  const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
@@ -783,6 +779,7 @@ export default function Index() {
       saveThingOrderFunc={saveItemOrder}
       loadAllThings={loadItems}
       deleteThing={deleteItem}
+      saveNewThing={saveNewItem}
       transcribeAudioToThings={transcribeAudioToTasks}
       ListThingSidebar={DootooItemSidebar}
       EmptyThingUX={DootooItemEmptyUX}

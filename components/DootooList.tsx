@@ -28,6 +28,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     saveThingOrderFunc, 
     loadAllThings,
     deleteThing,
+    saveNewThing,
     transcribeAudioToThings,
     isThingPressable,
     isThingDraggable,
@@ -1179,20 +1180,29 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             } else if (textOnChange != thing.text) {
                 //console.log("Text changed to: " + textOnChange);
 
-                // Asynchronously sync new item text to DB
-                //// Make a deep copy of item before editting to ensure
+                //// Make a deep copy of thing before editting to ensure
                 //// we don't accidentally change React state and cause re-renders
-                const deepItem = JSON.parse(JSON.stringify(thing));
-                deepItem.text = textOnChange;
-                saveTextUpdateFunc(deepItem); 
+                const updatedThing = JSON.parse(JSON.stringify(thing));
+                updatedThing.text = textOnChange;
+
+                if (thing.newKeyboardEntry) {
+                    const latestUuidOrder = listArray.map((thing) => ({ uuid: thing.uuid }));
+                    saveNewThing(updatedThing, latestUuidOrder);
+                } else {
+                    // Asynchronously sync new item text to DB
+                    saveTextUpdateFunc(updatedThing); 
+                }
 
                 // Always treat React state as immutable!  
                 // React was designed to only react to state changes of new objects/values
                 // therefore use 'map' to create new object from previous
-                listArraySetter((prevArray) => prevArray.map((thing) =>
-                    thing.uuid == thing.uuid
-                        ? { ...thing, text: textOnChange }
-                        : thing));
+                // 1.3:  Reset entry newKeyboardEntry state to prevent future new entry treatment
+                listArraySetter((prevArray) => prevArray.map((prevThing) =>
+                    prevThing.uuid == thing.uuid
+                        ? { ...prevThing, 
+                            text: textOnChange,
+                            newKeyboardEntry: false }
+                        : prevThing));
 
                 amplitude.track("Thing Text Edited", {
                     anonymous_id: anonymousId.current,
