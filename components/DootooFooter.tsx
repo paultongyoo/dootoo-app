@@ -1,4 +1,4 @@
-import { Platform, Image, View, StyleSheet, Pressable, ActivityIndicator, Alert } from "react-native";
+import { Platform, Image, View, StyleSheet, Pressable, ActivityIndicator, Alert, AppState } from "react-native";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import RNFS from 'react-native-fs';
 import { AppContext } from './AppContext.js';
@@ -46,10 +46,22 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         if (!hideRecordButton) {
             checkOpenAPIHealth();
         }
+
+        const handleAppStateChange = (nextAppState) => {
+            if (nextAppState === "active") {
+                checkOpenAPIHealth();
+            } 
+        };
+        const subscription = AppState.addEventListener("change", handleAppStateChange);
+
+        return () => {
+            subscription.remove();
+        }
     }, []);
 
     const checkOpenAPIHealth = async () => {
         const status = await checkOpenAPIStatus();
+        console.log("OpenAPI Health Status: " + status);
         if (status != "operational") {
             amplitude.track("OpenAI API Impacted Prompt Displayed", {
                 anonymous_id: anonymousId.current,
