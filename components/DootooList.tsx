@@ -159,6 +159,18 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             if (thingName == "item") {
                 syncItemCalendarUpdates();
             }
+
+            // If list contains new keyboard entries, give focus to the first one
+            const newKeyboardEntries = listArray.filter((thing) => thing.newKeyboardEntry);
+            if (newKeyboardEntries.length > 0) {
+                //console.log("Attempting to programmatically give focus to new keyboard entry");
+                const programmaticallyTappedThing = newKeyboardEntries[0];
+                setCurrentlyTappedThing(programmaticallyTappedThing);
+                onChangeInputValue.current = programmaticallyTappedThing.text;
+            } else {
+                //console.log("Did not find new keyboard entries");
+            }
+
         } else if (isInitialMount.current) {
 
             console.log("Bypassing useEffect(listArray) logic on initial mount");
@@ -944,6 +956,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         const fullRowHeight = useRef(-1);                                    // Placeholder set in onLayout handler
         const rowHeight = useRef(new Animated.Value(1)).current;   // Set once onLayout event fires for Animated.View
         thingRowHeights.current[item.uuid] = rowHeight;
+        const textInputRef = useRef(null);
+        const initialMount = useRef(true);
 
         // useEffect(() => {
 
@@ -970,16 +984,21 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         // })
 
         useEffect(() => {
-            //console.log("renderThing useEffect([listArray]) for thing: " + item.text);
-            //console.log("thingRowHeights: " + JSON.stringify(thingRowHeights));
-            if (item.shouldAnimateIntoView) {
-                //console.log("Inside shouldAnimateIntoView for index " + getIndex());
-                Animated.timing(rowHeight, {
-                    toValue: fullRowHeight.current,
-                    duration: 300,
-                    easing: Easing.out(Easing.quad),
-                    useNativeDriver: false
-                }).start();
+            if (initialMount.current) {
+                initialMount.current = false;
+            } else {
+
+                // 1.3 TODO the following animation isn't working, fix in future         
+                // if (item.shouldAnimateIntoView) {
+                //     console.log("Inside shouldAnimateIntoView for index " + getIndex());
+                //     rowHeight.setValue(0);
+                //     Animated.timing(rowHeight, {
+                //         toValue: fullRowHeight.current,
+                //         duration: 300,
+                //         easing: Easing.out(Easing.quad),
+                //         useNativeDriver: false
+                //     }).start();
+                // }         
             }
         }, [listArray]);
 
@@ -1107,6 +1126,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                     : <></>}
                                 {(currentlyTappedThing?.uuid == item.uuid) ?
                                     <TextInput
+                                        ref={textInputRef}
                                         blurOnSubmit={true}
                                         multiline={true}
                                         style={styles.itemTextInput}
