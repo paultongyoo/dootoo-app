@@ -13,6 +13,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#DCC7AA"
     },
+    "jsEngine": "hermes",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.thoughtswork.dootoo",
