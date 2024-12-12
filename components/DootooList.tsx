@@ -1191,18 +1191,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 } else {
                     // Asynchronously sync new item text to DB
                     saveTextUpdateFunc(updatedThing); 
-                }
-
-                // Always treat React state as immutable!  
-                // React was designed to only react to state changes of new objects/values
-                // therefore use 'map' to create new object from previous
-                // 1.3:  Reset entry newKeyboardEntry state to prevent future new entry treatment
-                listArraySetter((prevArray) => prevArray.map((prevThing) =>
-                    prevThing.uuid == thing.uuid
-                        ? { ...prevThing, 
-                            text: textOnChange,
-                            newKeyboardEntry: false }
-                        : prevThing));
+                }    
 
                 amplitude.track("Thing Text Edited", {
                     anonymous_id: anonymousId.current,
@@ -1213,6 +1202,17 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             } else {
                 console.log(`Ignoring blur as text has not changed (${textOnChange})`);
             }
+
+            // Always treat React state as immutable!  
+            // React was designed to only react to state changes of new objects/values
+            // therefore use 'map' to create new object from previous
+            // 1.3:  Always reset entry newKeyboardEntry state to prevent future new entry treatment
+            listArraySetter((prevArray) => prevArray.map((prevThing) =>
+                prevThing.uuid == thing.uuid
+                    ? { ...prevThing, 
+                        text: textOnChange,
+                        newKeyboardEntry: false }
+                    : prevThing));
 
             // Renable the height override + reset known row height
             setAllowHeightOverride(true);
