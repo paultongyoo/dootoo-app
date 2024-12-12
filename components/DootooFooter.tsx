@@ -151,7 +151,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
                     // Sound Level Threshold Auto Stop Feature
                     const soundLevel = status.metering || 0;
-                    console.log(`Sound Level ${soundLevel} - Threshold ${audioTreshold.current} - HasBreached ${hasBreachedThreshold.current}`)
+                    //console.log(`Sound Level ${soundLevel} - Threshold ${audioTreshold.current} - HasBreached ${hasBreachedThreshold.current}`)
 
                     // Only auto-stop after the user started talking
                     if (soundLevel > (audioTreshold.current + 10)) {
