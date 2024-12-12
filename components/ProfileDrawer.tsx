@@ -418,13 +418,13 @@ const ProfileDrawer = ({ navigation }) => {
         </Pressable>
       </View>
       <View style={styles.privacyContainer}>
-        <View style={styles.anonIdDisplayContainer}>
+        {/* <View style={styles.anonIdDisplayContainer}>
           <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
           <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId.current}</Text>
           <Pressable onPress={showAnonIdOverridePrompt}>
             <Text style={styles.deleteDataLinkText}>Override Anonymous ID</Text>
           </Pressable>
-        </View>
+        </View> */}
         <View style={styles.deleteDataLinkContainer}>
           <Pressable onPress={showConfirmationPrompt}>
             <Text style={styles.deleteDataLinkText}>Delete My Data</Text>
