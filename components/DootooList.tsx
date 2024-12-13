@@ -1223,6 +1223,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 // the user would appreciate creation of another item
                 if (blurredOnSubmit.current && textOnChange && textOnChange.length > 0) {
                     const newItem = generateNewKeyboardEntry();
+                    if (thing.parent_item_uuid) {
+                        newItem.parent_item_uuid = thing.parent_item_uuid;
+                    }
                     const thingIdx = updatedArray.findIndex((prevThing) => prevThing.uuid == thing.uuid);
                     if (thingIdx < (updatedArray.length - 1)) {
                         const insertIdx = thingIdx + 1;
