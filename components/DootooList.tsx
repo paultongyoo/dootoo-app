@@ -1087,13 +1087,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const renderThing = ({ item, getIndex, drag, isActive }) => {
         const rowPositionX = useRef(new Animated.Value(0)).current;
         thingRowPositionXs.current[item.uuid] = rowPositionX;
-        const [rowHeightKnown, setRowHeightKnown] = useState(false);
         const fullRowHeight = useRef(-1);                                    // Placeholder set in onLayout handler
         const rowHeight = useRef(new Animated.Value(1)).current;   // Set once onLayout event fires for Animated.View
         thingRowHeights.current[item.uuid] = rowHeight;
         const textInputRef = useRef(null);
         const initialMount = useRef(true);
         const allowHeightOverride = useRef(true);
+        const rowHeightKnown = useRef(false);
 
         // useEffect(() => {
 
@@ -1123,10 +1123,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             if (initialMount.current) {
                 initialMount.current = false;
             } else {
-
-                // Renable the height override + reset known row height
-                allowHeightOverride.current = true;
-                setRowHeightKnown(false);
 
                 // 1.3 TODO the following animation isn't working, fix in future         
                 // if (item.shouldAnimateIntoView) {
@@ -1238,29 +1234,26 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 }
                 onChangeInputValue.current = null;
 
+                // Renable the height override + reset known row height
+                allowHeightOverride.current = true;
+                rowHeightKnown.current = false;
+
                 // Reset blurredOnSubmit state
                 blurredOnSubmit.current = false
                 return updatedArray;
             });
-
-            // // Renable the height override + reset known row height
-            // setAllowHeightOverride(true);
-            // setRowHeightKnown(false);
-
-            // // Clear currently tapped thing re-renders list and causes thing to display as pressable again
-            // setCurrentlyTappedThing(null);
         }
 
         return (
             <Animated.View style={[
                 { transform: [{ translateX: rowPositionX }] },
-                allowHeightOverride.current && rowHeightKnown && { height: rowHeight }]}
+                allowHeightOverride.current && rowHeightKnown.current && { height: rowHeight }]}
                 onLayout={(event) => {
-                    if (!rowHeightKnown && allowHeightOverride.current) {
+                    if (!rowHeightKnown.current && allowHeightOverride.current) {
                         //console.log(`Resetting row height for row ${getIndex()} ${Date.now()}`);
                         fullRowHeight.current = event.nativeEvent.layout.height;
                         rowHeight.setValue(fullRowHeight.current);
-                        setRowHeightKnown(true);
+                        rowHeightKnown.current = true;
                     }
                 }}>
                 <Swipeable
