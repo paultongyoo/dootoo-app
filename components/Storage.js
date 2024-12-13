@@ -283,7 +283,7 @@ export const saveNewItem = async (item, latest_item_uuids) => {
         uuid_array: JSON.stringify(latest_item_uuids)
       }
     );
-    console.log("saveNewItem Response Obj: " + JSON.stringify(response.data.body));
+    //console.log("saveNewItem Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling saveNewItem API:', error);
   }
@@ -307,7 +307,7 @@ export const saveNewTip = async (tip, item_uuid, latest_tip_uuids) => {
         uuid_array: JSON.stringify(latest_tip_uuids)
       }
     );
-    console.log("saveNewTip Response Obj: " + JSON.stringify(response.data.body));
+    //console.log("saveNewTip Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling saveNewTip API:', error);
   }
