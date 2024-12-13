@@ -1236,6 +1236,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     // Reset currently tapped thing so no item's text input appears on re-render
                     currentlyTappedThing.current = null;
                 }
+                onChangeInputValue.current = null;
 
                 // Reset blurredOnSubmit state
                 blurredOnSubmit.current = false
@@ -1323,6 +1324,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         style={styles.itemTextInput}
                                         defaultValue={item.text}
                                         autoFocus={true}
+                                        onKeyPress={({nativeEvent}) => {
+                                            if (nativeEvent.key == 'Backspace' && (!onChangeInputValue.current || onChangeInputValue.current.length == 0)) {
+                                                handleBlur(item);   // As of 1.3, this should delete the row
+                                            } else {
+                                                //console.log("nativeEvent.key: " + nativeEvent.key + " onChangeInputValue: " + onChangeInputValue.current);
+                                            }
+                                        }}
                                         onSubmitEditing={(event) => {
                                             blurredOnSubmit.current = true;
                                             onChangeInputValue.current = event.nativeEvent.text;
