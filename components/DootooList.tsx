@@ -1,5 +1,6 @@
-import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, Easing, TouchableWithoutFeedback, AppState, StyleSheet, Platform, Alert } from 'react-native';
+import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, TouchableWithoutFeedback, AppState, StyleSheet, Platform, Alert } from 'react-native';
 import { useState, useRef, useContext, useEffect, useMemo, memo } from 'react';
+import Reanimated, { Easing, runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { AppContext } from './AppContext';
@@ -23,9 +24,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     renderRightActions = (item, index) => { return <></> },
     isDoneable = true,
     handleDoneClick = (thing) => { return; },
-    saveAllThings, 
-    saveTextUpdateFunc, 
-    saveThingOrderFunc, 
+    saveAllThings,
+    saveTextUpdateFunc,
+    saveThingOrderFunc,
     loadAllThings,
     deleteThing,
     saveNewThing,
@@ -105,7 +106,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         });
 
         return () => {
-            console.log("DootooList.useEffect([]) component unmounted " + new Date(Date.now()).toLocaleString());
+            //console.log("DootooList.useEffect([]) component unmounted " + new Date(Date.now()).toLocaleString());
         }
     }, []);
 
@@ -456,8 +457,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             // 1) Animate away the item and its subitems
                             // 2) Delete each item from backend
                             // 3) Remove each item from UI array
-                            var slideAnimationArray = [];
-                            var heightAnimationArray = [];
                             const index = listArrayCopy.findIndex(obj => obj.uuid == thing.uuid);
 
                             // Call asyncronous delete to mark item as deleted in backend to sync database
@@ -474,46 +473,28 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 });
 
                                 // Add the animation to slide the item off the screen
-                                slideAnimationArray.push(
-                                    Animated.timing(thingRowPositionXs.current[listArrayCopy[i].uuid], {
-                                        toValue: -600,
-                                        duration: 300,
-                                        easing: Easing.in(Easing.quad),
-                                        useNativeDriver: false
-                                    })
-                                );
-
-                                if (i < (listArrayCopy.length - 1)) {
-                                    heightAnimationArray.push(
-                                        Animated.timing(thingRowHeights.current[listArrayCopy[i].uuid], {
-                                            toValue: 0,
+                                thingRowPositionXs.current[listArrayCopy[i].uuid].value = withTiming(-600, {
+                                    duration: 300,
+                                    easing: Easing.in(Easing.quad)
+                                }, (isFinished) => {
+                                    if (isFinished) {
+                                        thingRowHeights.current[listArrayCopy[i].uuid].value = withTiming(0, {
                                             duration: 300,
-                                            easing: Easing.in(Easing.quad),
-                                            useNativeDriver: false
-                                        })
-                                    );
-                                }
-                            }
-                            Animated.parallel(slideAnimationArray).start(() => {
-                                Animated.parallel(heightAnimationArray).start(() => {
-
-                                    // v1.1.1 Deprecate
-                                    //listArrayCopy.splice(index, 1 + thingSubtasks.length);  // Remove item and its subtasks from array
-                                    
-                                    delete thingRowPositionXs.current[thing.uuid];
-                                    delete thingRowHeights.current[thing.uuid];                        
-                                    for (const subtask in thingSubtasks) {
-                                        delete thingRowPositionXs.current[subtask.uuid];
-                                        delete thingRowHeights.current[subtask.uuid]
+                                            easing: Easing.in(Easing.quad)
+                                        });
                                     }
+                                });
+                            }
 
-                                    // v1.1.1 Deprecate
-                                    //listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations   
-                                    
-                                    const subtaskUUIDSet = new Set(thingSubtasks.map(obj => obj.uuid));   
-                                    listArraySetter((prevThings) => prevThings.filter((obj) => (obj.uuid != thing.uuid) && !subtaskUUIDSet.has(obj.uuid)));                            
-                                })
-                            });
+                            delete thingRowPositionXs.current[thing.uuid];
+                            delete thingRowHeights.current[thing.uuid];
+                            for (const subtask in thingSubtasks) {
+                                delete thingRowPositionXs.current[subtask.uuid];
+                                delete thingRowHeights.current[subtask.uuid]
+                            }
+
+                            const subtaskUUIDSet = new Set(thingSubtasks.map(obj => obj.uuid));
+                            listArraySetter((prevThings) => prevThings.filter((obj) => (obj.uuid != thing.uuid) && !subtaskUUIDSet.has(obj.uuid)));
                         }
                     },
                     {
@@ -528,55 +509,47 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             //console.log("thingRowPositionXs contents: " + JSON.stringify(thingRowPositionXs.current));
             const currentRowPositionX = thingRowPositionXs.current[thing.uuid];
             const currentRowHeight = thingRowHeights.current[thing.uuid]
+            const index = listArrayCopy.findIndex(obj => obj.uuid == thing.uuid);
 
             //console.log(`Stats of row before deleting - positionX ${JSON.stringify(currentRowPositionX)}, rowHeight ${JSON.stringify(currentRowHeight)}`);
-            var animationArray = [
-                Animated.timing(currentRowPositionX, {
-                    toValue: -600,
-                    duration: 300,
-                    easing: Easing.in(Easing.quad),
-                    useNativeDriver: false
-                })
-            ];
-
-            // Only animate reduction of the height of the item if there are items underneath it
-            const index = listArrayCopy.findIndex(obj => obj.uuid == thing.uuid);
-            if (index < (listArrayCopy.length - 1)) {
-                animationArray.push(
-                    Animated.timing(currentRowHeight, {
-                        toValue: 0,
+            currentRowPositionX.value = withTiming(-600, {
+                duration: 300,
+                easing: Easing.in(Easing.quad)
+            }, (isFinished) => {
+                if (isFinished) {
+                    currentRowHeight.value = withTiming(0, {
                         duration: 300,
-                        easing: Easing.in(Easing.quad),
-                        useNativeDriver: false
-                    })
-                );
-            }
-            Animated.parallel(animationArray).start(() => {
-                //console.log(`Deleting sole item at index ${index}: ${updatedThings[index].text}`);
-
-                amplitude.track(`${thingName} Deleted`, {
-                    anonymous_id: anonymousId.current,
-                    thing_uuid: thing.uuid,
-                    thing_type: thingName
-                });
-
-                // Call asyncronous delete to mark item as deleted in backend to sync database
-                // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
-                if (!thing.newKeyboardEntry) deleteThing(thing.uuid);
-
-                // Remove item from displayed and thingRowPositionXs lists
-                listArrayCopy.splice(index, 1);
-                delete thingRowPositionXs.current[thing.uuid];
-                delete thingRowHeights.current[thing.uuid];
-
-                //console.log(`updatedThings post delete (${updatedThings.length}): ${JSON.stringify(updatedThings)}`);
-
-                //listArraySetter(updatedThings); // This should update UI only and not invoke any syncronous backend operations
-                listArraySetter((prevThings) => prevThings.filter((obj) => (obj.uuid != thing.uuid)));                            
+                        easing: Easing.in(Easing.quad)
+                    }, (isFinished) => {
+                        if (isFinished) {
+                            runOnJS(postSingleDeletionActions)(listArrayCopy, index, thing);
+                        }
+                    });
+                }
             });
         }
+    }
 
-       //console.log(`Exiting handle delete ${thingNameStr.toLowerCase()} at index ${index}...`);
+    const postSingleDeletionActions = (listArrayCopy, index, thing) => {
+
+        amplitude.track(`${thingName} Deleted`, {
+            anonymous_id: anonymousId.current,
+            thing_uuid: thing.uuid,
+            thing_type: thingName
+        });
+
+        // Call asyncronous delete to mark item as deleted in backend to sync database
+        // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
+        if (!thing.newKeyboardEntry) deleteThing(thing.uuid);
+
+        // Remove item from displayed and thingRowPositionXs lists
+        listArrayCopy.splice(index, 1);
+        delete thingRowPositionXs.current[thing.uuid];
+        delete thingRowHeights.current[thing.uuid];
+
+        //console.log(`updatedThings post delete (${updatedThings.length}): ${JSON.stringify(updatedThings)}`);
+
+        listArraySetter((prevThings) => prevThings.filter((obj) => (obj.uuid != thing.uuid)));
     }
 
     // Function to close all Swipeables except the one being opened
@@ -606,7 +579,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             anonymous_id: anonymousId.current,
             pathname: pathname,
             uuid: thing.uuid
-        });  
+        });
         Toast.show({
             type: 'timerInfo',
             visibilityTime: 8000,
@@ -625,7 +598,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             anonymous_id: anonymousId.current,
             pathname: pathname,
             uuid: thing.uuid
-        });  
+        });
         selectedTimerThing.current = thing;
         setScheduleEditDialogDate(new Date(thing.scheduled_datetime_utc));
         setShowScheduleEditDialog(true);
@@ -635,7 +608,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         amplitude.track("Edit Schedule Dialog Cancelled", {
             anonymous_id: anonymousId.current,
             pathname: pathname
-        });  
+        });
         setShowScheduleEditDialog(false);
     }
 
@@ -643,7 +616,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         amplitude.track("Item Schedule Clear Message Displayed", {
             anonymous_id: anonymousId.current,
             pathname: pathname
-        });     
+        });
         Alert.alert(
             "Clear Schedule",
             `Are you sure you want to remove the schedule from this item? ` +
@@ -655,7 +628,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         amplitude.track("Item Schedule Clear Message Cancelled", {
                             anonymous_id: anonymousId.current,
                             pathname: pathname
-                        });  
+                        });
                     },
                     style: 'cancel'
                 },
@@ -665,7 +638,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         amplitude.track("Item Schedule Cleared", {
                             anonymous_id: anonymousId.current,
                             pathname: pathname
-                        });  
+                        });
                         clearScheduleInfo();
                     }
                 }
@@ -680,7 +653,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
         // Asyncronously delete calendar event
         if (eventIdToDelete) {
-            Calendar.deleteEventAsync(eventIdToDelete); 
+            Calendar.deleteEventAsync(eventIdToDelete);
             console.log("Calendar Event ID Deleted asynchronously: " + eventIdToDelete)
         }
 
@@ -728,7 +701,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             anonymous_id: anonymousId.current,
             pathname: pathname,
             uuid: selectedTimerThing.current.uuid
-        }); 
+        });
 
         const thingToUpdateUUID = selectedTimerThing.current.uuid;
         const newScheduledDateTimeUTCStr = scheduleEditDialogDate.toISOString();
@@ -757,7 +730,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 endDate: updatedDate
             });
             //console.log("Calendar Event Updated Asyncronously: " + eventIdToUpdate);
-        }       
+        }
 
         setShowScheduleEditDialog(false);
     }
@@ -767,7 +740,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             anonymous_id: anonymousId.current,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
-        }); 
+        });
         if (Platform.OS == 'android') {
             DateTimePickerAndroid.open({
                 mode: 'date',
@@ -784,7 +757,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             anonymous_id: anonymousId.current,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
-        }); 
+        });
         if (Platform.OS == 'android') {
             DateTimePickerAndroid.open({
                 mode: 'time',
@@ -802,7 +775,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             anonymous_id: anonymousId.current,
             pathname: pathname,
             uuid: thing.uuid
-        }); 
+        });
         //console.log("handleTimerToastCalendarClick called");
         selectedTimerThing.current = thing;
 
@@ -816,7 +789,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     anonymous_id: anonymousId.current,
                     pathname: pathname,
                     uuid: thing.uuid
-                }); 
+                });
                 Linking.openURL(calendarUri).catch(err =>
                     console.error("Couldn't load calendar", err)
                 );
@@ -832,7 +805,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             pathname: pathname,
             uuid: thing.uuid,
             permissionsResponse: permissionsResponse.status
-        }); 
+        });
         if (permissionsResponse.status === 'granted') {
             const readCalendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
             console.log("readCalendars.length: " + readCalendars.length);
@@ -910,7 +883,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             anonymous_id: anonymousId.current,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
-        }); 
+        });
         setShowCalendarSelectionDialog(false);
         setCalendarSelectionInvalid(false);
         setCalendarSelectionInputValue('no_calendar');
@@ -921,7 +894,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             anonymous_id: anonymousId.current,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
-        }); 
+        });
         try {
             //console.log("Inside handleCalendarSelectDialogSubmission");
             if (calendarSelectionInputValue == 'no_calendar') {
@@ -943,7 +916,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     anonymous_id: anonymousId.current,
                     pathname: pathname,
                     uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
-                });  
+                });
 
                 if (eventId) {
                     console.log("Created new calendar event after manual calendar selection: " + eventId);
@@ -1022,7 +995,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         return eventId;
     }
 
-    const syncItemCalendarUpdates = async() => {
+    const syncItemCalendarUpdates = async () => {
         if (listArray && listArray.length > 0) {
             const calendaredThings = listArray.filter((thing) => thing.event_id);
             if (calendaredThings.length > 0) {
@@ -1039,7 +1012,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             // 1.2 TODO REVISIT: Deactivating text sync here as there's a bug with Calendar.updateEventAsync for title updating
                             //     preventing edits from sticking (see corresponding comment on Items index.tsx)
                             if (!areDateObjsEqual(saved_scheduled_local_date, calStartLocalDate)) { //||
-                                    //!(saved_thing_text === calEvent.title)) {
+                                //!(saved_thing_text === calEvent.title)) {
                                 console.log("Calendar Event " + calEvent.title + " has different start date than scheduled event, updating saved item...");
                                 console.log("saved_scheduled_local_date: " + saved_scheduled_local_date);
                                 console.log("calStartLocalDate: " + calStartLocalDate);
@@ -1054,7 +1027,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         }
                                         : prevThing));
 
-                                updateItemSchedule(thing.uuid, calStartLocalDate.toISOString()); 
+                                updateItemSchedule(thing.uuid, calStartLocalDate.toISOString());
                                 //updateItemText({ uuid: thing.uuid, text: calEvent.title });                 
                             } else {
                                 //console.log("Calendar Event " + calEvent.title + " matches what's saved.");
@@ -1063,7 +1036,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     } catch (error) {
                         console.log("Error was thrown calling getEventAsync on event_id: " + event_id);
                         console.log("Currently ASSUMING (bad!) this means event was removed and we should clear the item's event schedule");
-                        
+
                         // Clear both scheduled_datetime_utc and event_id fields
                         listArraySetter((prevList) => prevList.map((prevThing) =>
                             (prevThing.uuid == thing.uuid)
@@ -1085,15 +1058,16 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }
 
     const renderThing = ({ item, getIndex, drag, isActive }) => {
-        const rowPositionX = useRef(new Animated.Value(0)).current;
+        const rowPositionX = useSharedValue(0);
+        const rowHeight = useSharedValue(1);                       // Set to non-zero so row isn't removed completely
         thingRowPositionXs.current[item.uuid] = rowPositionX;
-        const fullRowHeight = useRef(-1);                                    // Placeholder set in onLayout handler
-        const rowHeight = useRef(new Animated.Value(1)).current;   // Set once onLayout event fires for Animated.View
         thingRowHeights.current[item.uuid] = rowHeight;
-        const textInputRef = useRef(null);
+        const fullRowHeight = useRef(63);                          // Default row height 
         const initialMount = useRef(true);
         const allowHeightOverride = useRef(true);
         const rowHeightKnown = useRef(false);
+        const [readyToAnimate, setReadyToAnimate] = useState(false);
+        const ROW_HEIGHT_ASSUMPTION = 55;
 
         // useEffect(() => {
 
@@ -1120,23 +1094,17 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         // })
 
         useEffect(() => {
-            if (initialMount.current) {
-                initialMount.current = false;
+            console.log("Inside renderItem useEffect([]): " + readyToAnimate);
+            if (item.shouldAnimateIntoView) {
+                console.log("Inside shouldAnimateIntoView for index " + getIndex() + " rowHeight: " + JSON.stringify(rowHeight));
+                rowHeight.value = withTiming(ROW_HEIGHT_ASSUMPTION, {
+                    duration: 300,
+                    easing: Easing.out(Easing.quad)
+                });
             } else {
-
-                // 1.3 TODO the following animation isn't working, fix in future         
-                // if (item.shouldAnimateIntoView) {
-                //     console.log("Inside shouldAnimateIntoView for index " + getIndex());
-                //     rowHeight.setValue(0);
-                //     Animated.timing(rowHeight, {
-                //         toValue: fullRowHeight.current,
-                //         duration: 300,
-                //         easing: Easing.out(Easing.quad),
-                //         useNativeDriver: false
-                //     }).start();
-                // }         
+                rowHeight.value = ROW_HEIGHT_ASSUMPTION;
             }
-        }, [listArray]);
+        }, []);
 
         const handleThingTextTap = (thing) => {
             //console.log(`handleItemTextTap for ${JSON.stringify(thing)}`);
@@ -1159,10 +1127,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
 
         const handleBlur = (thing) => {
-            console.log(`Inside handleBlur for item ${thing.text}`);
+            //console.log(`Inside handleBlur for item ${thing.text}`);
 
             const textOnChange = onChangeInputValue.current;
-            console.log("textOnChange: " + textOnChange);
+            //console.log("textOnChange: " + textOnChange);
 
             // If blur after field changed to empty, assume the user wants to delete it
             if (!textOnChange || textOnChange.length == 0) {
@@ -1181,8 +1149,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     saveNewThing(updatedThing, latestUuidOrder);
                 } else {
                     // Asynchronously sync new item text to DB
-                    saveTextUpdateFunc(updatedThing); 
-                }    
+                    saveTextUpdateFunc(updatedThing);
+                }
 
                 amplitude.track("Thing Text Edited", {
                     anonymous_id: anonymousId.current,
@@ -1204,18 +1172,20 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
                 let updatedArray = prevArray.map((prevThing) =>
                     prevThing.uuid == thing.uuid
-                        ? { ...prevThing, 
+                        ? {
+                            ...prevThing,
                             text: textOnChange,
-                            newKeyboardEntry: false }
+                            newKeyboardEntry: false
+                        }
                         : prevThing);
 
                 // If blur occurred on submit of a non empty item, assume
                 // the user would appreciate creation of another item
-                if (blurredOnSubmit.current && textOnChange && textOnChange.length > 0) {
+                if (blurredOnSubmit.current && textOnChange && (textOnChange.length > 0) && !thing.is_done) {
                     const newItem = generateNewKeyboardEntry();
 
                     // Set this so new item textinput automatically appears on re-render
-                    currentlyTappedThing.current = newItem;        
+                    currentlyTappedThing.current = newItem;
 
                     if (thing.parent_item_uuid) {
                         newItem.parent_item_uuid = thing.parent_item_uuid;
@@ -1228,7 +1198,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         updatedArray = [...updatedArray, newItem]
                     }
                 } else {
-                    
+
                     // Reset currently tapped thing so no item's text input appears on re-render
                     currentlyTappedThing.current = null;
                 }
@@ -1245,17 +1215,21 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
 
         return (
-            <Animated.View style={[
+            <Reanimated.View style={[
                 { transform: [{ translateX: rowPositionX }] },
-                allowHeightOverride.current && rowHeightKnown.current && { height: rowHeight }]}
-                onLayout={(event) => {
-                    if (!rowHeightKnown.current && allowHeightOverride.current) {
-                        //console.log(`Resetting row height for row ${getIndex()} ${Date.now()}`);
-                        fullRowHeight.current = event.nativeEvent.layout.height;
-                        rowHeight.setValue(fullRowHeight.current);
-                        rowHeightKnown.current = true;
-                    }
-                }}>
+                //allowHeightOverride.current && rowHeightKnown.current && 
+                { height: rowHeight }]}
+            // onLayout={(event) => {
+            //     if (!rowHeightKnown.current && allowHeightOverride.current) {
+            //         fullRowHeight.current = event.nativeEvent.layout.height;
+            //         //rowHeight.setValue(fullRowHeight.current);
+            //         rowHeightKnown.current = true;
+            //         console.log(`Reset row height for row ${getIndex()} to ${fullRowHeight.current}`);
+
+            //         setReadyToAnimate(true);
+            //     }
+            // }}
+            >
                 <Swipeable
                     key={Math.random()}
                     ref={(ref) => {
@@ -1311,13 +1285,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                     : <></>}
                                 {(currentlyTappedThing.current && (currentlyTappedThing.current.uuid == item.uuid)) ?
                                     <TextInput
-                                        ref={textInputRef}
                                         blurOnSubmit={true}
                                         multiline={true}
                                         style={styles.itemTextInput}
                                         defaultValue={item.text}
                                         autoFocus={true}
-                                        onKeyPress={({nativeEvent}) => {
+                                        onKeyPress={({ nativeEvent }) => {
                                             if (nativeEvent.key == 'Backspace' && (!onChangeInputValue.current || onChangeInputValue.current.length == 0)) {
                                                 handleBlur(item);   // As of 1.3, this should delete the row
                                             } else {
@@ -1350,7 +1323,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         </View>
                     </ScaleDecorator>
                 </Swipeable>
-            </Animated.View>
+            </Reanimated.View>
         );
     }
 
@@ -1521,7 +1494,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         </View>
                         : <View style={formStyles.dateTimePickerContainer}>
                             <RNDateTimePicker style={formStyles.dateTimePicker} mode="datetime" value={scheduleEditDialogDate} onChange={(event, date) => setScheduleEditDialogDate(date)} />
-                          </View>
+                        </View>
                     }
                     <Dialog.Button label="Cancel" onPress={handleScheduleEditDialogCancel} />
                     <Dialog.Button label="Clear" onPress={handleScheduleEditDialogClear} />
