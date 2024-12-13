@@ -100,7 +100,7 @@ export const loadItems = async (isPullDown) => {
     // we'll execute pre-existing logic to look for BE data for the user WITH THE
     // ADDITION of "skipPagination" boolean to deactivate BE pagination for 1.2+ users
     if (cachedItems.length > 0 ) {
-      console.log(`Cached items found ${cachedItems.length}, returning those to user...`)
+      //console.log(`Cached items found ${cachedItems.length}, returning those to user...`)
       return { hasMore: false, things: cachedItems };
     } else {
       console.log("No cached items found, proceeding with backend lookup for user");
@@ -138,11 +138,11 @@ export const loadItems = async (isPullDown) => {
 export const updateItemsCache = async(item_list_obj) => {
   try {
     if (item_list_obj) {
-      console.log(`Updating items cache with ${(item_list_obj) ? item_list_obj.length : 0} size list.`);
+      //console.log(`Updating items cache with ${(item_list_obj) ? item_list_obj.length : 0} size list.`);
       const item_list_str = JSON.stringify(item_list_obj);
       await AsyncStorage.setItem(ITEM_LIST_KEY, item_list_str);
     } else {
-      console.log("Update items cache based null param, ignoring call (was this unexpected?");
+      //console.log("Update items cache based null param, ignoring call (was this unexpected?");
     }
   } catch (e) {
     console.log("Error in updateItemsCache", e);
@@ -154,11 +154,11 @@ export const updateTipsCache = async(item_obj, tip_list_obj) => {
     if (item_obj && tip_list_obj) {
       const storageKey = `${TIP_LIST_KEY_PREFIX}_${item_obj.uuid}`;
       //console.log('Generated Tips AsyncStorage key: ' + storageKey);
-      console.log(`Updating tips cache with ${(tip_list_obj) ? tip_list_obj.length : 0} size list.`);
+      //console.log(`Updating tips cache with ${(tip_list_obj) ? tip_list_obj.length : 0} size list.`);
       const tip_list_str = JSON.stringify(tip_list_obj);
       await AsyncStorage.setItem(storageKey, tip_list_str);
     } else {
-      console.log("Update tips cache based with one or more null params, ignoring call (was this unexpected?");
+      //console.log("Update tips cache based with one or more null params, ignoring call (was this unexpected?");
     }
   } catch (e) {
     console.log("Error in updateTipsCache", e);
