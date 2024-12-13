@@ -280,3 +280,7 @@ export const generateNewKeyboardEntry = () => {
   };
   return newItem;
 }
+
+export const calculateRowHeight = (text_or_textInput_height) => {
+      return text_or_textInput_height + 27;             // LAST UPDATED 12.13.24:  This height prevents the debug background red from appearing 
+}
