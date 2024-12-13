@@ -38,7 +38,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, initializeLocalUser,
         fadeInListOnRender, listOpacity, listFadeInAnimation, listFadeOutAnimation,
-        thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap, selectedItem
+        thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap, selectedItem,
+        currentlyTappedThing
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [errorMsg, setErrorMsg] = useState();
@@ -60,9 +61,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const selectedCalendar = useRef();
     const selectedTimerThing = useRef(null);
     const blurredOnSubmit = useRef(false);
-
-    // State Variables:  Changing these should intentionally cause this list to re-render
-    const [currentlyTappedThing, setCurrentlyTappedThing] = useState();
 
     const initialLoadFadeInOpacity = useRef(new Animated.Value(0)).current;
     const initialLoadFadeInAnimation = Animated.timing(initialLoadFadeInOpacity, {
@@ -165,18 +163,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             if (thingName == "item") {
                 syncItemCalendarUpdates();
             }
-
-            // If list contains new keyboard entries, give focus to the first one
-            const newKeyboardEntries = listArray.filter((thing) => thing.newKeyboardEntry);
-            if (newKeyboardEntries.length > 0) {
-                //console.log("Attempting to programmatically give focus to new keyboard entry");
-                const programmaticallyTappedThing = newKeyboardEntries[0];
-                setCurrentlyTappedThing(programmaticallyTappedThing);
-                onChangeInputValue.current = programmaticallyTappedThing.text;
-            } else {
-                //console.log("Did not find new keyboard entries");
-            }
-
         } else if (isInitialMount.current) {
 
             console.log("Bypassing useEffect(listArray) logic on initial mount");
@@ -1101,13 +1087,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const renderThing = ({ item, getIndex, drag, isActive }) => {
         const rowPositionX = useRef(new Animated.Value(0)).current;
         thingRowPositionXs.current[item.uuid] = rowPositionX;
-        const [allowHeightOverride, setAllowHeightOverride] = useState(true);
         const [rowHeightKnown, setRowHeightKnown] = useState(false);
         const fullRowHeight = useRef(-1);                                    // Placeholder set in onLayout handler
         const rowHeight = useRef(new Animated.Value(1)).current;   // Set once onLayout event fires for Animated.View
         thingRowHeights.current[item.uuid] = rowHeight;
         const textInputRef = useRef(null);
         const initialMount = useRef(true);
+        const allowHeightOverride = useRef(true);
 
         // useEffect(() => {
 
@@ -1138,6 +1124,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 initialMount.current = false;
             } else {
 
+                // Renable the height override + reset known row height
+                allowHeightOverride.current = true;
+                setRowHeightKnown(false);
+
                 // 1.3 TODO the following animation isn't working, fix in future         
                 // if (item.shouldAnimateIntoView) {
                 //     console.log("Inside shouldAnimateIntoView for index " + getIndex());
@@ -1158,21 +1148,25 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             // Disable the fixed height override to allow the item height
             // to grow or shrink with the text field.  We'll re-enable the
             // override and reset the fixed height setting in handleBlur
-            setAllowHeightOverride(false);
+            allowHeightOverride.current = false;
 
             // Update currently tapped thing to cause
             // list to re-render and display text field for currently tapped thing
-            setCurrentlyTappedThing(thing);
+            currentlyTappedThing.current = thing;
 
             // Remember/baseline future handleBlur comparision with original value
             // We use a ref instead of state var to not invoke state change / re-render
             onChangeInputValue.current = thing.text;
+
+            // Forcing refresh of list component
+            listArraySetter((prevItems) => prevItems.map((prevItem) => prevItem));
         }
 
         const handleBlur = (thing) => {
-            //console.log(`Inside handleBlur for item ${item.text}`);
+            console.log(`Inside handleBlur for item ${thing.text}`);
 
             const textOnChange = onChangeInputValue.current;
+            console.log("textOnChange: " + textOnChange);
 
             // If blur after field changed to empty, assume the user wants to delete it
             if (!textOnChange || textOnChange.length == 0) {
@@ -1223,6 +1217,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 // the user would appreciate creation of another item
                 if (blurredOnSubmit.current && textOnChange && textOnChange.length > 0) {
                     const newItem = generateNewKeyboardEntry();
+
+                    // Set this so new item textinput automatically appears on re-render
+                    currentlyTappedThing.current = newItem;        
+
                     if (thing.parent_item_uuid) {
                         newItem.parent_item_uuid = thing.parent_item_uuid;
                     }
@@ -1233,6 +1231,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     } else {
                         updatedArray = [...updatedArray, newItem]
                     }
+                } else {
+                    
+                    // Reset currently tapped thing so no item's text input appears on re-render
+                    currentlyTappedThing.current = null;
                 }
 
                 // Reset blurredOnSubmit state
@@ -1240,20 +1242,20 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 return updatedArray;
             });
 
-            // Renable the height override + reset known row height
-            setAllowHeightOverride(true);
-            setRowHeightKnown(false);
+            // // Renable the height override + reset known row height
+            // setAllowHeightOverride(true);
+            // setRowHeightKnown(false);
 
-            // Clear currently tapped thing re-renders list and causes thing to display as pressable again
-            setCurrentlyTappedThing(null);
+            // // Clear currently tapped thing re-renders list and causes thing to display as pressable again
+            // setCurrentlyTappedThing(null);
         }
 
         return (
             <Animated.View style={[
                 { transform: [{ translateX: rowPositionX }] },
-                allowHeightOverride && rowHeightKnown && { height: rowHeight }]}
+                allowHeightOverride.current && rowHeightKnown && { height: rowHeight }]}
                 onLayout={(event) => {
-                    if (!rowHeightKnown && allowHeightOverride) {
+                    if (!rowHeightKnown && allowHeightOverride.current) {
                         //console.log(`Resetting row height for row ${getIndex()} ${Date.now()}`);
                         fullRowHeight.current = event.nativeEvent.layout.height;
                         rowHeight.setValue(fullRowHeight.current);
@@ -1313,7 +1315,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         } />
                                     </Pressable>
                                     : <></>}
-                                {(currentlyTappedThing?.uuid == item.uuid) ?
+                                {(currentlyTappedThing.current && (currentlyTappedThing.current.uuid == item.uuid)) ?
                                     <TextInput
                                         ref={textInputRef}
                                         blurOnSubmit={true}
@@ -1321,8 +1323,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         style={styles.itemTextInput}
                                         defaultValue={item.text}
                                         autoFocus={true}
-                                        onSubmitEditing={() => {
+                                        onSubmitEditing={(event) => {
                                             blurredOnSubmit.current = true;
+                                            onChangeInputValue.current = event.nativeEvent.text;
                                         }}
                                         onChangeText={(text) => {
                                             onChangeInputValue.current = text;

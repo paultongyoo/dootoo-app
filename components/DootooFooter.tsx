@@ -15,7 +15,7 @@ import { calculateAndroidButtonScale, generateNewKeyboardEntry } from './Helpers
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
-    const { anonymousId, listFadeInAnimation, fadeInListOnRender,
+    const { anonymousId, listFadeInAnimation, fadeInListOnRender, currentlyTappedThing,
         lastRecordedCount, emptyListCTAOpacity, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
     const recorderProcessLocked = useRef(false);
@@ -468,6 +468,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
     const handleKeyboardButtonPress = () => {
         const newItem = generateNewKeyboardEntry();
+        currentlyTappedThing.current = newItem;
         listArraySetterFunc((prevItems) => [ newItem, ...prevItems]);
     }
 

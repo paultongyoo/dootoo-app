@@ -23,6 +23,7 @@ export const AppProvider = ({ children }) => {
     const username = useRef();
     const anonymousId = useRef();
     const itemCountsMap = useRef(new Map());
+    const currentlyTappedThing = useRef(null);
     
 
     // Animation related
@@ -92,7 +93,8 @@ export const AppProvider = ({ children }) => {
             thingRowHeights,
             selectedProfile, setSelectedProfile,
             swipeableRefs,
-            itemCountsMap
+            itemCountsMap,
+            currentlyTappedThing
              }}>
           {children}
         </AppContext.Provider>
