@@ -476,15 +476,17 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 thingRowPositionXs.current[listArrayCopy[i].uuid].value = withTiming(-600, {
                                     duration: 300,
                                     easing: Easing.in(Easing.quad)
-                                }, (isFinished) => {
-                                    if (isFinished) {
-                                        thingRowHeights.current[listArrayCopy[i].uuid].value = withTiming(0, {
-                                            duration: 300,
-                                            easing: Easing.in(Easing.quad)
-                                        });
-                                    }
                                 });
                             }
+
+                            for (var i = index; i <= index + thingSubtasks.length; i++) {
+                                thingRowHeights.current[listArrayCopy[i].uuid].value = withTiming(0, {
+                                    duration: 300,
+                                    easing: Easing.in(Easing.quad)
+                                });
+                            }
+
+
 
                             delete thingRowPositionXs.current[thing.uuid];
                             delete thingRowHeights.current[thing.uuid];
