@@ -1,6 +1,6 @@
 import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, TouchableWithoutFeedback, AppState, StyleSheet, Platform, Alert } from 'react-native';
 import { useState, useRef, useContext, useEffect, useMemo, memo } from 'react';
-import Reanimated, { Easing, runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
+import Reanimated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { AppContext } from './AppContext';
@@ -446,7 +446,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         if (!thing.parent_item_uuid && (thingSubtasks.length > 0)) {
 
             Alert.alert(
-                `${thingName} Has ${thingSubtasks.length} Sub${thingName.toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''}`,
+                `${(thingName == "item") ? "Item" : "Tip"} Has ${thingSubtasks.length} Sub${thingName.toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''}`,
                 `Deleting this ${thingName.toLowerCase()} will delete its sub${thingName.toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''} too.  Continue?`,
                 [
                     {
@@ -485,8 +485,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                     easing: Easing.in(Easing.quad)
                                 });
                             }
-
-
 
                             delete thingRowPositionXs.current[thing.uuid];
                             delete thingRowHeights.current[thing.uuid];
@@ -1061,60 +1059,38 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
     const renderThing = ({ item, getIndex, drag, isActive }) => {
         const rowPositionX = useSharedValue(0);
-        const rowHeight = useSharedValue(1);                       // Set to non-zero so row isn't removed completely
-        thingRowPositionXs.current[item.uuid] = rowPositionX;
-        thingRowHeights.current[item.uuid] = rowHeight;
-        const fullRowHeight = useRef(63);                          // Default row height 
-        const initialMount = useRef(true);
-        const allowHeightOverride = useRef(true);
+        const rowHeight = useSharedValue(-1);                       // Set to non-zero so row isn't removed completely
+        thingRowPositionXs.current[item.uuid] = rowPositionX;       // Pass shared values to global map so they can be animated
+        thingRowHeights.current[item.uuid] = rowHeight;             // via user actions such as handleThingDelete
+        const [refreshKey, setRefreshKey] = useState(1);
+
+        // 1.3  Using AnimatedStyle for row height as access is needed to the rowHeight SV 
+        //      in order to grow/shrink row height based on text input height changes
+        const animatedHeightStyle = useAnimatedStyle(() => ({
+            height: rowHeight.value
+        }));
+
         const rowHeightKnown = useRef(false);
-        const [readyToAnimate, setReadyToAnimate] = useState(false);
-        const ROW_HEIGHT_ASSUMPTION = 55;
-
+        
+        // 1.3 TODO FIX Prevented this boolean from being set to true as animation still janky
+        //     TODO Redesign this using Renanimated 2 SharedValue asynchronicity
         // useEffect(() => {
-
-        //     TODO:  Move these events somewhere else as render is firing more times than just once
-        //     if (thingName == 'tip') {
-        //         amplitude.track("Tip Viewed", {
-        //             anonymousId: anonymousId.current,
-        //             pathname: pathname,
-        //             tip_uuid: item.uuid,
-        //             tip_score: item.upvote_count
+        //     // console.log(item.text + " Index " + getIndex() + " useEffect([rowHeightKnown]): " + rowHeightKnown);
+        //     // console.log("fullRowHeight.current: " + fullRowHeight.current);
+        //     if (item.shouldAnimateIntoView) {
+        //         console.log("shouldAnimateIntoView for index " + getIndex() + 
+        //         " rowHeight: " + JSON.stringify(rowHeight) +
+        //         " fullRowHeight.current: " + fullRowHeight.current);
+        //         rowHeight.value = withTiming(fullRowHeight.current, {
+        //             duration: 300,
+        //             easing: Easing.out(Easing.quad)
         //         });
-        //     } else if (item.text && item.text == "(flagged)") {
-        //         amplitude.track("Flagged Thing Rendered", {
-        //             anonymousId: anonymousId.current,
-        //             pathname: pathname,
-        //             thing_uuid: item.uuid,
-        //             thing_type: thingName
-        //         });
-        //     } 
-        // }, [item]);
+        //     }
+        // }, [rowHeightKnown]);
 
-        // useEffect(() => {
-        //     console.log("Row rendering: " + item.text);
-        // })
-
-        useEffect(() => {
-            console.log("Inside renderItem useEffect([]): " + readyToAnimate);
-            if (item.shouldAnimateIntoView) {
-                console.log("Inside shouldAnimateIntoView for index " + getIndex() + " rowHeight: " + JSON.stringify(rowHeight));
-                rowHeight.value = withTiming(ROW_HEIGHT_ASSUMPTION, {
-                    duration: 300,
-                    easing: Easing.out(Easing.quad)
-                });
-            } else {
-                rowHeight.value = ROW_HEIGHT_ASSUMPTION;
-            }
-        }, []);
 
         const handleThingTextTap = (thing) => {
-            //console.log(`handleItemTextTap for ${JSON.stringify(thing)}`);
-
-            // Disable the fixed height override to allow the item height
-            // to grow or shrink with the text field.  We'll re-enable the
-            // override and reset the fixed height setting in handleBlur
-            allowHeightOverride.current = false;
+            console.log(`handleItemTextTap for ${JSON.stringify(thing)}`);
 
             // Update currently tapped thing to cause
             // list to re-render and display text field for currently tapped thing
@@ -1125,7 +1101,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             onChangeInputValue.current = thing.text;
 
             // Forcing refresh of list component
-            listArraySetter((prevItems) => prevItems.map((prevItem) => prevItem));
+
+            // 1.3 TODO Determine if full list update needed to deactivate text field of prior field
+            //listArraySetter((prevItems) => prevItems.map((prevItem) => prevItem));
+            setRefreshKey(prevVal => prevVal + 1);
         }
 
         const handleBlur = (thing) => {
@@ -1177,7 +1156,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         ? {
                             ...prevThing,
                             text: textOnChange,
-                            newKeyboardEntry: false
+                            newKeyboardEntry: false,
+                            shouldAnimateIntoView: false
                         }
                         : prevThing);
 
@@ -1206,10 +1186,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 }
                 onChangeInputValue.current = null;
 
-                // Renable the height override + reset known row height
-                allowHeightOverride.current = true;
-                rowHeightKnown.current = false;
-
                 // Reset blurredOnSubmit state
                 blurredOnSubmit.current = false
                 return updatedArray;
@@ -1218,19 +1194,25 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
         return (
             <Reanimated.View style={[
+                //{ backgroundColor: 'red' },                                           // For Debugging: If seen, unexpected row height change/non-change likely
                 { transform: [{ translateX: rowPositionX }] },
-                //allowHeightOverride.current && rowHeightKnown.current && 
-                { height: rowHeight }]}
-            // onLayout={(event) => {
-            //     if (!rowHeightKnown.current && allowHeightOverride.current) {
-            //         fullRowHeight.current = event.nativeEvent.layout.height;
-            //         //rowHeight.setValue(fullRowHeight.current);
-            //         rowHeightKnown.current = true;
-            //         console.log(`Reset row height for row ${getIndex()} to ${fullRowHeight.current}`);
+                animatedHeightStyle                                                   // 1.3 Using AnimatedStyle for height
 
-            //         setReadyToAnimate(true);
-            //     }
-            // }}
+            ]}
+                onLayout={(event) => {
+
+                    // 1.3 NOTE OnLayout does NOT fire when TextInput grows because we've given the containing view the fixed SharedValue height.
+                    //          rowHeight.value must be explicitly reset in TextInput onContentSizeChange handler
+                    console.log("onLayout fired with event.nativeEvent.layout.height: " + event.nativeEvent.layout.height);         
+                    if (!rowHeightKnown.current) {
+                        const layoutHeight = event.nativeEvent.layout.height;
+                        console.log("Setting rowHeight.value with timing to: " + layoutHeight);
+                        rowHeight.value = withTiming(layoutHeight, { duration: 150 });              // 1.3 REMEMBER SharedValue updates are ASYNCRONOUS!!
+                                                                                                    //     Console.logging rowHeight.value immediately after
+                                                                                                    //     setting rowHeight.value shows previous value
+                        rowHeightKnown.current = true;
+                    }
+                }}
             >
                 <Swipeable
                     key={Math.random()}
@@ -1292,6 +1274,22 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         style={styles.itemTextInput}
                                         defaultValue={item.text}
                                         autoFocus={true}
+                                        onContentSizeChange={(event) => {
+                                            console.log("Text Input content size changed: " + event.nativeEvent.contentSize.height + " rowHeightKnown: " + rowHeightKnown.current);
+                                            
+                                            /*
+                                                Style hierarchy note to redefine row height:
+                                                renderItem -->  Reanimated.View (no height) 
+                                                                    -> Swipeable (no height) 
+                                                                            -> View.itemContainer (currently no height styled )
+                                                                                -> View.itemNameContainer  ( total wrapping height 21px = 
+                                                                                                                10px paddingBottom + 10px paddingTop + 1px bottomBorder)
+                                                                                    -> TextInput (event.nativeEvent.contentSize.height)
+
+                                            */
+                                            const newRowHeight = event.nativeEvent.contentSize.height + 21;             // LAST UPDATED 12.13.24
+                                            rowHeight.value = withTiming(newRowHeight, { duration: 150 });
+                                        }}
                                         onKeyPress={({ nativeEvent }) => {
                                             if (nativeEvent.key == 'Backspace' && (!onChangeInputValue.current || onChangeInputValue.current.length == 0)) {
                                                 handleBlur(item);   // As of 1.3, this should delete the row

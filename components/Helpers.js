@@ -276,7 +276,7 @@ export const generateNewKeyboardEntry = () => {
     parent_item_uuid: null,
     scheduled_datetime_utc: null,
     newKeyboardEntry: true,
-    shouldAnimateIntoView: true             // 1.3 TODO Fix animation in future (not appearing)
+    shouldAnimateIntoView: false             // 1.3 
   };
   return newItem;
 }

@@ -77,6 +77,7 @@ export default function Index() {
     // Asyncronously update item hierarhcy in DB
     updateItemHierarchy(item.uuid, null);
 
+    console.log("Setting new parent into list");
     setDootooItems((prevItems) => {
 
       var newListToReturn = prevItems.map((obj) =>
@@ -129,6 +130,7 @@ export default function Index() {
     // Asyncronously update item hierarhcy in DB
     updateItemHierarchy(item.uuid, nearestParentUUID);
 
+    console.log("Setting new child into list");
     setDootooItems((prevItems) => prevItems.map((obj) =>
       (obj.uuid == item.uuid)
         ? {
