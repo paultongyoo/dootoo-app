@@ -1312,19 +1312,18 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                     : <></>}
                                 {(currentlyTappedThing?.uuid == item.uuid) ?
                                     <TextInput
-                                        ref={textInputRef}                                     
-                                        multiline={false}
+                                        ref={textInputRef}
+                                        blurOnSubmit={true}
+                                        multiline={true}
                                         style={styles.itemTextInput}
                                         defaultValue={item.text}
                                         autoFocus={true}
                                         onSubmitEditing={() => {
                                             blurredOnSubmit.current = true;
-                                            handleBlur(item)
                                         }}
                                         onChangeText={(text) => {
                                             onChangeInputValue.current = text;
                                         }}
-                                        blurOnSubmit={false}
                                         onBlur={() => handleBlur(item)} />
                                     :
                                     (isThingPressable(item)) ?
