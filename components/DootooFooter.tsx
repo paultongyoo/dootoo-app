@@ -11,8 +11,7 @@ import { usePathname } from 'expo-router';
 import { ListItemEventEmitter } from "./EventEmitters";
 import { checkOpenAPIStatus } from "./BackendServices.js";
 import Animated from "react-native-reanimated";
-import { calculateAndroidButtonScale } from './Helpers'
-import uuid from 'react-native-uuid';
+import { calculateAndroidButtonScale, generateNewKeyboardEntry } from './Helpers'
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
@@ -468,14 +467,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     };
 
     const handleKeyboardButtonPress = () => {
-        const newItem = {
-            uuid: uuid.v4(),
-            text: null,
-            parent_item_uuid: null,
-            scheduled_datetime_utc: null,
-            newKeyboardEntry: true,
-            shouldAnimateIntoView: true             // 1.3 TODO Fix animation in future (not appearing)
-        };
+        const newItem = generateNewKeyboardEntry();
         listArraySetterFunc((prevItems) => [ newItem, ...prevItems]);
     }
 

@@ -1,6 +1,7 @@
 import { Alert, Platform } from "react-native";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { DateTime } from 'luxon';
+import uuid from 'react-native-uuid';
 
 export const formatNumber = (num) => {
   if (!num) return null;
@@ -215,16 +216,14 @@ export const generateEventCreatedMessage = (calendarName, scheduledUtcIsoString,
   } else if (absoluteAlertMinutes < 1440) {
     const hours = Math.floor(absoluteAlertMinutes / 60);
     const minutes = absoluteAlertMinutes % 60;
-    alertTime = `${hours} ${hours === 1 ? 'hour' : 'hours'}${
-      minutes > 0 ? ` and ${minutes} minutes` : ''
-    }`;
+    alertTime = `${hours} ${hours === 1 ? 'hour' : 'hours'}${minutes > 0 ? ` and ${minutes} minutes` : ''
+      }`;
   } else {
     const days = Math.floor(absoluteAlertMinutes / 1440);
     const remainingMinutes = absoluteAlertMinutes % 1440;
     const hours = Math.floor(remainingMinutes / 60);
-    alertTime = `${days} ${days === 1 ? 'day' : 'days'}${
-      hours > 0 ? ` and ${hours} ${hours === 1 ? 'hour' : 'hours'}` : ''
-    }`;
+    alertTime = `${days} ${days === 1 ? 'day' : 'days'}${hours > 0 ? ` and ${hours} ${hours === 1 ? 'hour' : 'hours'}` : ''
+      }`;
   }
 
   // Construct and return the statement
@@ -268,4 +267,16 @@ export const calculateAndroidButtonScale = (audioLevel) => {
   const scale = minScale + (clampedAudioLevel - minAudioLevel) / (maxAudioLevel - minAudioLevel) * (maxScale - minScale);
 
   return scale;
+}
+
+export const generateNewKeyboardEntry = () => {
+  const newItem = {
+    uuid: uuid.v4(),
+    text: null,
+    parent_item_uuid: null,
+    scheduled_datetime_utc: null,
+    newKeyboardEntry: true,
+    shouldAnimateIntoView: true             // 1.3 TODO Fix animation in future (not appearing)
+  };
+  return newItem;
 }

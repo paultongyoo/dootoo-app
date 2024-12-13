@@ -15,7 +15,7 @@ import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { areDateObjsEqual, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, generateCalendarUri, generateEventCreatedMessage, getLocalDateObj, isThingOverdue } from './Helpers';
+import { areDateObjsEqual, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, isThingOverdue } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
@@ -59,6 +59,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     const editableCalendars = useRef<Calendar.Calendar[]>([]);
     const selectedCalendar = useRef();
     const selectedTimerThing = useRef(null);
+    const blurredOnSubmit = useRef(false);
 
     // State Variables:  Changing these should intentionally cause this list to re-render
     const [currentlyTappedThing, setCurrentlyTappedThing] = useState();
@@ -1199,6 +1200,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     thing_uuid: thing.uuid,
                     thing_type: thingName
                 });
+
+
             } else {
                 console.log(`Ignoring blur as text has not changed (${textOnChange})`);
             }
@@ -1207,12 +1210,32 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             // React was designed to only react to state changes of new objects/values
             // therefore use 'map' to create new object from previous
             // 1.3:  Always reset entry newKeyboardEntry state to prevent future new entry treatment
-            listArraySetter((prevArray) => prevArray.map((prevThing) =>
-                prevThing.uuid == thing.uuid
-                    ? { ...prevThing, 
-                        text: textOnChange,
-                        newKeyboardEntry: false }
-                    : prevThing));
+            listArraySetter((prevArray) => {
+
+                let updatedArray = prevArray.map((prevThing) =>
+                    prevThing.uuid == thing.uuid
+                        ? { ...prevThing, 
+                            text: textOnChange,
+                            newKeyboardEntry: false }
+                        : prevThing);
+
+                // If blur occurred on submit of a non empty item, assume
+                // the user would appreciate creation of another item
+                if (blurredOnSubmit.current && textOnChange && textOnChange.length > 0) {
+                    const newItem = generateNewKeyboardEntry();
+                    const thingIdx = updatedArray.findIndex((prevThing) => prevThing.uuid == thing.uuid);
+                    if (thingIdx < (updatedArray.length - 1)) {
+                        const insertIdx = thingIdx + 1;
+                        updatedArray = [...updatedArray.slice(0, insertIdx), newItem, ...updatedArray.slice(insertIdx)]
+                    } else {
+                        updatedArray = [...updatedArray, newItem]
+                    }
+                }
+
+                // Reset blurredOnSubmit state
+                blurredOnSubmit.current = false
+                return updatedArray;
+            });
 
             // Renable the height override + reset known row height
             setAllowHeightOverride(true);
@@ -1295,6 +1318,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         style={styles.itemTextInput}
                                         defaultValue={item.text}
                                         autoFocus={true}
+                                        onSubmitEditing={() => {
+                                            blurredOnSubmit.current = true;
+                                        }}
                                         onChangeText={(text) => {
                                             onChangeInputValue.current = text;
                                         }}
