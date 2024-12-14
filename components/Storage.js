@@ -100,7 +100,7 @@ export const loadItems = async (isPullDown) => {
     // we'll execute pre-existing logic to look for BE data for the user WITH THE
     // ADDITION of "skipPagination" boolean to deactivate BE pagination for 1.2+ users
     if (cachedItems.length > 0 ) {
-      //console.log(`Cached items found ${cachedItems.length}, returning those to user...`)
+      console.log(`Cached items found ${cachedItems.length}, returning those to user...`)
       return { hasMore: false, things: cachedItems };
     } else {
       console.log("No cached items found, proceeding with backend lookup for user");
@@ -127,8 +127,6 @@ export const loadItems = async (isPullDown) => {
     );
     const item_array = response.data.body.items;
     const hasMore = response.data.body.hasMore;
-    // console.log(`item_array: ${item_array}`);
-    // console.log(`hasMore: ${hasMore}`);
     return { hasMore: hasMore, things: item_array };
   } catch (error) {
     console.error('Error calling loadItems API:', error);
