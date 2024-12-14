@@ -310,19 +310,19 @@ export default function Index() {
 
                         // Call asyncronous delete to mark item as deleted in backend to sync database
                         deleteItem(child.uuid);
-           
+
                         animationPromises.push(
                           new Promise<void>((resolve) => thingRowPositionXs.current[child.uuid].value = withTiming(-600, {
                             duration: 300,
                             easing: Easing.in(Easing.quad)
-                          }, (isFinished) => { if (isFinished) { runOnJS(resolve)()}})
-                        ));
+                          }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                          ));
                         animationPromises.push(
                           new Promise<void>((resolve) => thingRowHeights.current[child.uuid].value = withTiming(0, {
                             duration: 300,
                             easing: Easing.in(Easing.quad)
-                          }, (isFinished) => { if (isFinished) { runOnJS(resolve)()}})
-                        ));
+                          }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                          ));
                       });
 
                       await Promise.all(animationPromises);
