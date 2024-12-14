@@ -111,12 +111,6 @@ export default function Index() {
 
   const handleMakeChild = (item, index) => {
 
-    amplitude.track("Item Made Into Child", {
-      anonymous_id: anonymousId.current,
-      item_uuid: item.uuid,
-      parent_item_uuid: nearestParentUUID
-    });
-
     let nearestParentUUID = '';
     for (var i = index - 1; i >= 0; i--) {
       const currItem = dootooItems[i];
@@ -126,6 +120,12 @@ export default function Index() {
         break;
       }
     }
+
+    amplitude.track("Item Made Into Child", {
+      anonymous_id: anonymousId.current,
+      item_uuid: item.uuid,
+      parent_item_uuid: nearestParentUUID
+    });
 
     // Asyncronously update item hierarhcy in DB
     updateItemHierarchy(item.uuid, nearestParentUUID);
@@ -730,6 +730,14 @@ export default function Index() {
     }
   });
 
+  const onSwipeableOpen = (direction, item, index) => {
+    console.log("opSwipeableOpen: " + direction + " " + item.text + " " + index);
+    if (!item.parent_item_uuid && (direction == "left")) {
+      handleMakeChild(item, index);
+    } else if (item.parent_item_uuid && (direction == "right")) {
+      handleMakeParent(item);
+    }
+  }
 
   const renderRightActions = (item, handleThingDeleteFunc) => {
     return (
@@ -775,6 +783,7 @@ export default function Index() {
       styles={styles}
       renderLeftActions={renderLeftActions}
       renderRightActions={renderRightActions}
+      swipeableOpenFunc={onSwipeableOpen}
       handleDoneClick={handleDoneClick}
       saveAllThings={saveAllItems}
       saveTextUpdateFunc={saveTextUpdate}

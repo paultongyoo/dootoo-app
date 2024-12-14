@@ -22,6 +22,7 @@ import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = (item, index) => { return <></> },
     renderRightActions = (item, index) => { return <></> },
+    swipeableOpenFunc = (direction, thing, index) => { return; },
     isDoneable = true,
     handleDoneClick = (thing) => { return; },
     saveAllThings,
@@ -1266,7 +1267,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             delete swipeableRefs.current[item.uuid];
                         }
                     }}
-                    onSwipeableOpen={() => closeOtherSwipeables(item.uuid)}
+                    onSwipeableOpen={(direction) => {
+                        closeOtherSwipeables(item.uuid);
+                        swipeableOpenFunc(direction, item, getIndex());
+                    }}
                     childrenContainerStyle={styles.swipeableContainer}
                     overshootLeft={false}
                     overshootRight={false}
