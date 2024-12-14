@@ -46,6 +46,9 @@ const UPDATEITEMEVENTID_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-eas
 const SAVENEWITEM_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveNewItem_Dev'
                                   : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveNewItem';
 
+const ENRICHITEM_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/enrichItem_Dev'
+                                  : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/enrichItem';
+
 const LOADTIPS_URL =  (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadTips_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadTips';
 
@@ -284,6 +287,28 @@ export const saveNewItem = async (item, latest_item_uuids) => {
     //console.log("saveNewItem Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling saveNewItem API:', error);
+  }
+}
+
+export const enrichItem = async (item) => {
+  try {
+    //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(ENRICHITEM_URL,
+      {
+        anonymous_id : localAnonId,
+        item_uuid: item.uuid
+      }
+    );
+    console.log("enrichItem Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling enrichItem API:', error);
   }
 }
 
