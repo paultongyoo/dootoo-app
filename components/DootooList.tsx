@@ -123,11 +123,12 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 updateTipsCache(selectedItem, listArray);
             }
 
-            if (fadeInListOnRender.current) {
-                listFadeInAnimation.start(() => {
-                    fadeInListOnRender.current = false;
-                });
-            }
+            // 1.3 Deactivated fade in render to prevent flicker
+            // if (fadeInListOnRender.current) {
+            //     listFadeInAnimation.start(() => {
+            //         fadeInListOnRender.current = false;
+            //     });
+            // }
 
             if (lastRecordedCount.current > 0) {
                 // If we're inside here, we were called after recording new things
@@ -301,18 +302,19 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         if (page == 1) {
             //console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
 
-            if (isPullDown) {
-                //console.log("Loading page 1 as part of pulldown refresh, attempting to fade out current list before fading in new list");
-                fadeInListOnRender.current = true;
-                listFadeOutAnimation.start(() => {
-                    listArraySetter([...things]);
-                });
-            } else {
+            // 1.3 Deactivated fade in animation to prevent flicker on launch
+            // if (isPullDown) {
+            //     //console.log("Loading page 1 as part of pulldown refresh, attempting to fade out current list before fading in new list");
+            //     fadeInListOnRender.current = true;
+            //     listFadeOutAnimation.start(() => {
+            //         listArraySetter([...things]);
+            //     });
+            // } else {
                 fadeInListOnRender.current = true;
 
                 //console.log("Loading page 1 outside of pulldown refresh, simply fading in list");
                 listArraySetter([...things]);
-            }
+           // }
         } else {
             //console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
             listArraySetter((prevItems) => prevItems.concat(things));
@@ -1099,7 +1101,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             if (isInitialRowHeightKnownMount.current) {
                 isInitialRowHeightKnownMount.current = false;
             } else {
-                console.log("Index " + getIndex() + ": useEffect([rowHeightKnown]) - rowHeightKnown: " + rowHeightKnown + ", fullRowHeight: " + fullRowHeight.current);
+                //console.log("Index " + getIndex() + ": useEffect([rowHeightKnown]) - rowHeightKnown: " + rowHeightKnown + ", fullRowHeight: " + fullRowHeight.current);
                 
                 if (rowHeightKnown) {
                     
@@ -1113,7 +1115,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }, [rowHeightKnown])
 
         const handleThingTextTap = (thing) => {
-            console.log(`handleItemTextTap for ${thing.text}`);
+            //console.log(`handleItemTextTap for ${thing.text}`);
 
             // Update currently tapped thing to cause
             // list to re-render and display text field for currently tapped thing
@@ -1131,17 +1133,17 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
 
         const handleBlur = (thing) => {
-            console.log(`Inside handleBlur for index ${getIndex()}`);
+            //console.log(`Inside handleBlur for index ${getIndex()}`);
 
             const textOnChange = onChangeInputValue.current;
             //console.log("textOnChange: " + textOnChange);
 
             // If blur after field changed to empty, assume the user wants to delete it
             if (!textOnChange || textOnChange.length == 0) {
-                console.log("Blur occurred on empty field, deleting it!");
+                //console.log("Blur occurred on empty field, deleting it!");
                 handleThingDelete(thing);
             } else if (textOnChange != thing.text) {
-                console.log("Text changed to: " + textOnChange);
+                //console.log("Text changed to: " + textOnChange);
 
                 //// Make a deep copy of thing before editting to ensure
                 //// we don't accidentally change React state and cause re-renders
@@ -1217,7 +1219,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
         return (
             <Reanimated.View style={[
-                { backgroundColor: 'red' },                                           // For Debugging: If seen, unexpected row height change/non-change likely
+                //{ backgroundColor: 'red' },                                           // For Debugging: If seen, unexpected row height change/non-change likely
                 { transform: [{ translateX: rowPositionX }] },
                 animatedHeightStyle,                                                   // 1.3 Using AnimatedStyle for height
                 //!rowHeightKnown && { position: 'absolute', opacity: 0 }
@@ -1226,13 +1228,13 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
                     // 1.3 NOTE OnLayout does NOT fire when TextInput grows because we've given the containing view the fixed SharedValue height.
                     //          rowHeight.value must be explicitly reset in TextInput onContentSizeChange handler
-                    console.log("Index " + getIndex() + ": onLayout fired with height: " + event.nativeEvent.layout.height +
-                        ", rowHeightKnown: " + rowHeightKnown +
-                        ", rowHeight: " + rowHeight.value);
+                    //console.log("Index " + getIndex() + ": onLayout fired with height: " + event.nativeEvent.layout.height +
+                        // ", rowHeightKnown: " + rowHeightKnown +
+                        // ", rowHeight: " + rowHeight.value);
                     if (!rowHeightKnown) {
                         const layoutHeight = event.nativeEvent.layout.height;
                         fullRowHeight.current = layoutHeight;
-                        console.log("Index " + getIndex() + ": Set fullRowHeight.current to: " + layoutHeight);
+                        //console.log("Index " + getIndex() + ": Set fullRowHeight.current to: " + layoutHeight);
                         setRowHeightKnown(true);
                     }
                 }}
