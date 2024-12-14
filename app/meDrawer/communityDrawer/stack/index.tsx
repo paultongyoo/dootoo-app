@@ -357,7 +357,7 @@ export default function Index() {
                       // Update latest list by:
                       // 1) filtering out the deleted children
                       // 2) Setting the item to done
-                      // 3) TODO: Moving doned item plus any of its done children to top of done adults
+                      // 3) Moving doned item plus any of its done children to top of done adults
                       const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
                       setDootooItems((prevItems) => {
 
@@ -368,10 +368,8 @@ export default function Index() {
                               ? { ...obj, is_done: true }
                               : obj);
 
-                        // Move done item to top of DAWNKs
-                        const dawnkedList = moveItemToTopOfDoneAdults(filteredAndDonedList, item.uuid);
-
-                        // 1.3 KNOWN ISSUE BUG/TODO - Move any of its previously done children with it!!
+                        // Move done item and any of its kids to top of DAWNKs
+                        const dawnkedList = moveItemFamilyToTopOfDoneAdults(filteredAndDonedList, item.uuid);
 
                         // Update order in backend
                         const uuidArray = dawnkedList.map((thing) => ({ uuid: thing.uuid }));
@@ -446,7 +444,7 @@ export default function Index() {
             setDootooItems((prevItems) => {
 
               const donedList = prevItems.map((obj) => (obj.uuid == item.uuid) ? { ...obj, is_done: true } : obj);
-              const doneAdults = moveItemToTopOfDoneAdults(donedList, item.uuid);
+              const doneAdults = moveItemFamilyToTopOfDoneAdults(donedList, item.uuid);
 
               const uuidArray = doneAdults.map((thing) => ({ uuid: thing.uuid }));
               saveItemOrder(uuidArray);
@@ -861,19 +859,28 @@ export default function Index() {
 
 }
 
-function moveItemToTopOfDoneAdults(itemList, item_uuid) {
+// 1.3 Modified to include family and then noticed function right after it is named to do same thing
+//     Consolidate at some point?
+function moveItemFamilyToTopOfDoneAdults(itemList, item_uuid) {
+
+  // Check if item has any kids
+  const itemChildren = itemList.filter((obj) => obj.parent_item_uuid == item_uuid);
   const itemIdx = itemList.findIndex((obj) => obj.uuid == item_uuid);
-  const [movedItem] = itemList.splice(itemIdx, 1);
+
+  // Extract the item and any of its kids, we ASSume they're listed immediately after it!!!  TODO Dehack this!
+  const movedItems = itemList.splice(itemIdx, 1 + itemChildren.length);
+
   const doneAdults = itemList.filter((obj) => obj.is_done && !obj.parent_item_uuid);
   if (doneAdults.length == 0) {
-    return itemList.concat(movedItem);
+    return itemList.concat(movedItems);
   } else {
     const firstDoneAdultIdx = itemList.findIndex((obj) => obj.uuid == doneAdults[0].uuid);
-    itemList.splice(firstDoneAdultIdx, 0, movedItem);
+    itemList.splice(firstDoneAdultIdx, 0, movedItems);
     return itemList;
   }
 }
 
+// 1.3  See potentially redundant function above!
 function
   doneItemAndMoveFamilyToTopOfDoneAdults(setDootooItems: any, item: any, saveItemOrder: (uuidArray: any) => Promise<void>) {
   setDootooItems((prevItems) => {
