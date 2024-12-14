@@ -2,6 +2,8 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 import OpenAI from "openai";
 const openai = new OpenAI();
+import AWS from 'aws-sdk';
+const kms = new AWS.KMS();
 
 export const handler = async (event) => {
 
