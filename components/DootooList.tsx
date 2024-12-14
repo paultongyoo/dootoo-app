@@ -1065,6 +1065,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         const [refreshKey, setRefreshKey] = useState(1);
 
         const fullRowHeight = useRef(-1);
+        const lastTextInputHeight = useRef(0);         // iOS-specific var used to keep track of last input height and
+                                                       // only alter rowHeight.value if difference exceeds 5 px (i.e. new line is formed by text)
 
         // 1.3 This boolean is used to only set rowHeight.value at explict times to prevent continuous layout changes/loops
         const [rowHeightKnown, setRowHeightKnown] = useState(false);
@@ -1127,7 +1129,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
 
         const handleBlur = (thing) => {
-            console.log(`Inside handleBlur for item ${thing.text}`);
+            console.log(`Inside handleBlur for index ${getIndex()}`);
 
             const textOnChange = onChangeInputValue.current;
             //console.log("textOnChange: " + textOnChange);
@@ -1293,15 +1295,21 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         style={styles.itemTextInput}
                                         defaultValue={item.text}
                                         autoFocus={true}
-                                        onContentSizeChange={(event) => {
-                                            //console.log("TextInput height changed: " + event.nativeEvent.contentSize.height);
-                                            rowHeight.value = -1; //withTiming(calculateRowHeight(event.nativeEvent.contentSize.height), { duration: 150 });
+                                        onContentSizeChange={(event) => {           
+                                            
+                                            // 1.3 IOS NOTE: This event fires on every keypress on iOS, therefore requiring 
+                                            //               threshold variable to only apply animation updates if height changes more
+                                            //               than 5 px (assumes this mostly only occurs when new lines are formed and not when single 
+                                            //               character changes are made)
+                                            if (Math.abs(lastTextInputHeight.current - event.nativeEvent.contentSize.height) > 5) {
+                                                console.log("Text field change exceeded threshold, animating row to new height");
+                                                lastTextInputHeight.current = event.nativeEvent.contentSize.height
+                                                rowHeight.value = withTiming(calculateRowHeight(event.nativeEvent.contentSize.height), { duration: 150 });
+                                            }
                                         }}
                                         onKeyPress={({ nativeEvent }) => {
                                             if (nativeEvent.key == 'Backspace' && (!onChangeInputValue.current || onChangeInputValue.current.length == 0)) {
                                                 handleBlur(item);   // As of 1.3, this should delete the row
-                                            } else {
-                                                //console.log("nativeEvent.key: " + nativeEvent.key + " onChangeInputValue: " + onChangeInputValue.current);
                                             }
                                         }}
                                         onSubmitEditing={(event) => {
