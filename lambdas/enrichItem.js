@@ -15,23 +15,25 @@ export const handler = async (event) => {
             body: JSON.stringify({ error: 'Can\'t find user!' })
         };
     }
-
-    const item = JSON.parse(event.item_str);
-
-    // Run text through moderation API 
-    const moderation = await openai.moderations.create({
-      model: "omni-moderation-latest",
-      input: item.text
+    const item = await prisma.item.findUnique({
+      where: {
+          user: { id: user.id },
+          uuid: event.item_uuid
+      }
     });
-
-    var flagged = moderation.results[0].flagged;
-    console.log("Text Input Flagged by Moderation API? ", moderation.results[0].flagged);
-    if (flagged) {
-      return {
-        statusCode: 200,
-        body: { text: '(flagged)' }
-      };
+    if (item == null) {
+        return {
+            statusCode: 403,
+            body: JSON.stringify({ error: 'Can\'t find item owned by user!' })
+        };
     }
+
+    // Decrypt item text
+    const decryptParams = {
+      CiphertextBlob: Buffer.from(item.text, 'base64')
+    };
+    const decryptedData = await kms.decrypt(decryptParams).promise();          
+    const decryptedText = decryptedData.Plaintext.toString('utf-8');
 
     // Note: Lambda lowercases all header keys
     let currentDateStringPrompt = '';
@@ -64,7 +66,7 @@ export const handler = async (event) => {
                   "scheduled_datetime_utc": <ISO 8601 formatted string in UTC timezone per rules above, or null if no date or time info provided>
                 }`
         },
-        { "role": "user", "content": `User-provided input: ${item.text}` }
+        { "role": "user", "content": `User-provided input: ${decryptedText}` }
       ], 
       response_format: { "type": "json_object" },
       user: event.headers['anonymous_id']
