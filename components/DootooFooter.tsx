@@ -488,9 +488,9 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             backgroundColor: "#eee"
         },
         footerButton: {
-            height: 76,
-            width: 76,
-            borderRadius: 38,
+            height: 58,
+            width: 58,
+            borderRadius: 29,
             borderColor: '#3E2723',
             borderWidth: 1,
            // position: 'absolute',
@@ -505,24 +505,24 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             elevation: 5, // Elevation for Android        
         },
         footerButton_Underlay: {
-            height: 76,
-            width: 76,
-            borderRadius: 38,
+            height: 58,
+            width: 58,
+            borderRadius: 29,
             position: 'absolute',
             top: 0,
             backgroundColor: 'black'
         },
         footerButtonImage_Record: {
-            height: 43,
-            width: 43
+            height: 38,
+            width: 38
         },
         footerButtonImage_Restart: {
-            height: 43,
-            width: 43
+            height: 38,
+            width: 38
         },
         footerButtonImage_Cancel: {
-            height: 43,
-            width: 43
+            height: 38,
+            width: 38
         },
         footerButtonTitle: {
             fontWeight: 'bold',
@@ -554,15 +554,15 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             left: 1
         },
         footerButtonIcon_Stop: {
-            width: 25,
-            height: 25,
+            width: 21,
+            height: 21,
             backgroundColor: 'white'
         },
         keyboardFooterButton: {
             backgroundColor: '#556B2F',
-            height: 76,
-            width: 76,
-            borderRadius: 38,
+            height: 58,
+            width: 58,
+            borderRadius: 29,
             borderColor: '#3E2723',
             borderWidth: 1,
             flex: 1,
@@ -570,14 +570,14 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             justifyContent: 'center'
         },
         keyboardFooterButton_Underlay: {
-            height: 76,
-            width: 76,
-            borderRadius: 38,
+            height: 58,
+            width: 58,
+            borderRadius: 29,
             backgroundColor: 'black'
         },
         keyboardIcon: {
-            width: 40,
-            height: 28.3
+            width: 31,
+            height: 22
         },
         keyboardButtonContainer: {
             
@@ -587,10 +587,10 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             flexDirection: 'row',
             flex: 1,
             position: 'relative',
-            top: -40
+            top: -30
         },
         footerButtonContainer: {
-            height: 76
+            height: 58
         }
     });
 
@@ -657,7 +657,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                                 onPressOut={recordButton_handlePressOut}>
                                 {(isRecordingProcessing) ?
                                     <View style={styles.loadingAnim}>
-                                        <ActivityIndicator size={"large"} color="white" />
+                                        <ActivityIndicator size={"small"} color="white" />
                                     </View>
                                     : (recording) ?
                                         <View style={styles.footerButtonIcon_Stop}></View>
