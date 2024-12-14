@@ -300,7 +300,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         // (e.g. on a pull-down-to-refresh action).  If page > 1, assume we want to append the page to what's currently
         // displayed.
         if (page == 1) {
-            //console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
+            console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
 
             // 1.3 Deactivated fade in animation to prevent flicker on launch
             // if (isPullDown) {
@@ -310,11 +310,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             //         listArraySetter([...things]);
             //     });
             // } else {
-                fadeInListOnRender.current = true;
+            //fadeInListOnRender.current = true;
 
-                //console.log("Loading page 1 outside of pulldown refresh, simply fading in list");
-                listArraySetter([...things]);
-           // }
+            //console.log("Loading page 1 outside of pulldown refresh, simply fading in list");
+            listArraySetter([...things]);
+            // }
         } else {
             //console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
             listArraySetter((prevItems) => prevItems.concat(things));
@@ -453,7 +453,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 [
                     {
                         text: 'Yes',
-                        onPress: () => {
+                        onPress: async () => {
 
                             // Three step process:
                             // 1) Animate away the item and its subitems
@@ -466,6 +466,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
                             if (!thing.newKeyboardEntry) deleteThing(thing.uuid);
 
+                            const animationPromises = [];
                             for (var i = index; i <= index + thingSubtasks.length; i++) {
 
                                 amplitude.track(`${thingName} Deleted`, {
@@ -474,19 +475,33 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                     thing_type: thingName
                                 });
 
-                                // Add the animation to slide the item off the screen
-                                thingRowPositionXs.current[listArrayCopy[i].uuid].value = withTiming(-600, {
-                                    duration: 300,
-                                    easing: Easing.in(Easing.quad)
-                                });
+                                animationPromises.push(
+                                    new Promise<void>((resolve) => {
+                                        thingRowPositionXs.current[listArrayCopy[i].uuid].value = withTiming(-600, {
+                                            duration: 300,
+                                            easing: Easing.in(Easing.quad)
+                                        }, (isFinished) => {
+                                            if (isFinished) {
+                                                runOnJS(resolve)()
+                                            }
+                                        });
+                                    })
+                                );
+                                animationPromises.push(
+                                    new Promise<void>((resolve) => {
+                                        thingRowHeights.current[listArrayCopy[i].uuid].value = withTiming(0, {
+                                            duration: 300,
+                                            easing: Easing.in(Easing.quad)
+                                        }, (isFinished) => {
+                                            if (isFinished) {
+                                                runOnJS(resolve)()
+                                            }
+                                        });
+                                    })
+                                );
                             }
 
-                            for (var i = index; i <= index + thingSubtasks.length; i++) {
-                                thingRowHeights.current[listArrayCopy[i].uuid].value = withTiming(0, {
-                                    duration: 300,
-                                    easing: Easing.in(Easing.quad)
-                                });
-                            }
+                            await Promise.all(animationPromises);
 
                             delete thingRowPositionXs.current[thing.uuid];
                             delete thingRowHeights.current[thing.uuid];
@@ -494,9 +509,11 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 delete thingRowPositionXs.current[subtask.uuid];
                                 delete thingRowHeights.current[subtask.uuid]
                             }
-
-                            const subtaskUUIDSet = new Set(thingSubtasks.map(obj => obj.uuid));
-                            listArraySetter((prevThings) => prevThings.filter((obj) => (obj.uuid != thing.uuid) && !subtaskUUIDSet.has(obj.uuid)));
+                           
+                            listArraySetter((prevThings) => {
+                                const subtaskUUIDSet = new Set(thingSubtasks.map(obj => obj.uuid));
+                                return prevThings.filter((obj) => (obj.uuid != thing.uuid) && !subtaskUUIDSet.has(obj.uuid))
+                            });
                         }
                     },
                     {
@@ -1060,6 +1077,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     }
 
     const renderThing = ({ item, getIndex, drag, isActive }) => {
+        const textInputRef = useRef(null);
         const rowPositionX = useSharedValue(0);
         const rowHeight = useSharedValue(-1);                       // Setting to -1 forces initial calculation of actual row height and onLayout call
         thingRowPositionXs.current[item.uuid] = rowPositionX;       // Pass shared values to global map so they can be animated
@@ -1068,7 +1086,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
         const fullRowHeight = useRef(-1);
         const lastTextInputHeight = useRef(0);         // iOS-specific var used to keep track of last input height and
-                                                       // only alter rowHeight.value if difference exceeds 5 px (i.e. new line is formed by text)
+        // only alter rowHeight.value if difference exceeds 5 px (i.e. new line is formed by text)
 
         // 1.3 This boolean is used to only set rowHeight.value at explict times to prevent continuous layout changes/loops
         const [rowHeightKnown, setRowHeightKnown] = useState(false);
@@ -1102,15 +1120,15 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 isInitialRowHeightKnownMount.current = false;
             } else {
                 //console.log("Index " + getIndex() + ": useEffect([rowHeightKnown]) - rowHeightKnown: " + rowHeightKnown + ", fullRowHeight: " + fullRowHeight.current);
-                
+
                 if (rowHeightKnown) {
-                    
+
                     // At this point, row will already be visible because it was previously set to -1
                     // Setting rowHeight.value to its full row height after it is render will prevent
                     // flickering when animating rowHeight on text field height adjustments (e.g.
                     // when animating to 0 on deletion actions)
                     rowHeight.value = fullRowHeight.current;
-                } 
+                }
             }
         }, [rowHeightKnown])
 
@@ -1133,7 +1151,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
 
         const handleBlur = (thing) => {
-            //console.log(`Inside handleBlur for index ${getIndex()}`);
+            console.log(`Inside handleBlur for index ${getIndex()}`);
 
             const textOnChange = onChangeInputValue.current;
             //console.log("textOnChange: " + textOnChange);
@@ -1229,8 +1247,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     // 1.3 NOTE OnLayout does NOT fire when TextInput grows because we've given the containing view the fixed SharedValue height.
                     //          rowHeight.value must be explicitly reset in TextInput onContentSizeChange handler
                     //console.log("Index " + getIndex() + ": onLayout fired with height: " + event.nativeEvent.layout.height +
-                        // ", rowHeightKnown: " + rowHeightKnown +
-                        // ", rowHeight: " + rowHeight.value);
+                    // ", rowHeightKnown: " + rowHeightKnown +
+                    // ", rowHeight: " + rowHeight.value);
                     if (!rowHeightKnown) {
                         const layoutHeight = event.nativeEvent.layout.height;
                         fullRowHeight.current = layoutHeight;
@@ -1294,13 +1312,14 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                     : <></>}
                                 {(currentlyTappedThing.current && (currentlyTappedThing.current.uuid == item.uuid)) ?
                                     <TextInput
+                                        ref={textInputRef}
                                         blurOnSubmit={true}
                                         multiline={true}
                                         style={styles.itemTextInput}
                                         defaultValue={item.text}
                                         autoFocus={true}
                                         onContentSizeChange={(event) => {
-                                            
+
                                             if (Platform.OS == 'android') {
 
                                                 // On Android, this event only fires when number of lines changes in text input
