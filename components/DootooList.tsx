@@ -1070,6 +1070,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
         // 1.3 This boolean is used to only set rowHeight.value at explict times to prevent continuous layout changes/loops
         const [rowHeightKnown, setRowHeightKnown] = useState(false);
+        //const rowHeightKnown = useRef(false);
 
         // 1.3  Using AnimatedStyle for row height as access is needed to the rowHeight SV 
         //      in order to grow/shrink row height based on text input height changes
@@ -1098,20 +1099,21 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             if (isInitialRowHeightKnownMount.current) {
                 isInitialRowHeightKnownMount.current = false;
             } else {
-                console.log("useEffect([rowHeightKnown]) - rowHeightKnown: " + rowHeightKnown + ", fullRowHeight: " + fullRowHeight.current);
+                console.log("Index " + getIndex() + ": useEffect([rowHeightKnown]) - rowHeightKnown: " + rowHeightKnown + ", fullRowHeight: " + fullRowHeight.current);
                 
                 if (rowHeightKnown) {
                     
                     // At this point, row will already be visible because it was previously set to -1
                     // Setting rowHeight.value to its full row height after it is render will prevent
-                    // flickering when animating rowHeight on text field height adjustments
+                    // flickering when animating rowHeight on text field height adjustments (e.g.
+                    // when animating to 0 on deletion actions)
                     rowHeight.value = fullRowHeight.current;
                 } 
             }
         }, [rowHeightKnown])
 
         const handleThingTextTap = (thing) => {
-            //console.log(`handleItemTextTap for ${JSON.stringify(thing)}`);
+            console.log(`handleItemTextTap for ${thing.text}`);
 
             // Update currently tapped thing to cause
             // list to re-render and display text field for currently tapped thing
@@ -1123,9 +1125,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
             // Forcing refresh of list component
 
-            // 1.3 TODO Determine if full list update needed to deactivate text field of prior field
-            //listArraySetter((prevItems) => prevItems.map((prevItem) => prevItem));
-            setRefreshKey(prevVal => prevVal + 1);
+            // Full list update needed to deactivate text field of prior field
+            // 1.3 Confirmed need to refresh entire list, not just renderItem component
+            listArraySetter((prevItems) => prevItems.map((prevItem) => prevItem));
         }
 
         const handleBlur = (thing) => {
@@ -1139,7 +1141,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 console.log("Blur occurred on empty field, deleting it!");
                 handleThingDelete(thing);
             } else if (textOnChange != thing.text) {
-                //console.log("Text changed to: " + textOnChange);
+                console.log("Text changed to: " + textOnChange);
 
                 //// Make a deep copy of thing before editting to ensure
                 //// we don't accidentally change React state and cause re-renders
@@ -1215,7 +1217,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
         return (
             <Reanimated.View style={[
-                //{ backgroundColor: 'red' },                                           // For Debugging: If seen, unexpected row height change/non-change likely
+                { backgroundColor: 'red' },                                           // For Debugging: If seen, unexpected row height change/non-change likely
                 { transform: [{ translateX: rowPositionX }] },
                 animatedHeightStyle,                                                   // 1.3 Using AnimatedStyle for height
                 //!rowHeightKnown && { position: 'absolute', opacity: 0 }
@@ -1230,7 +1232,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     if (!rowHeightKnown) {
                         const layoutHeight = event.nativeEvent.layout.height;
                         fullRowHeight.current = layoutHeight;
-                        console.log("Set fullRowHeight.current to: " + layoutHeight);
+                        console.log("Index " + getIndex() + ": Set fullRowHeight.current to: " + layoutHeight);
                         setRowHeightKnown(true);
                     }
                 }}
@@ -1295,16 +1297,23 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         style={styles.itemTextInput}
                                         defaultValue={item.text}
                                         autoFocus={true}
-                                        onContentSizeChange={(event) => {           
+                                        onContentSizeChange={(event) => {
                                             
-                                            // 1.3 IOS NOTE: This event fires on every keypress on iOS, therefore requiring 
-                                            //               threshold variable to only apply animation updates if height changes more
-                                            //               than 5 px (assumes this mostly only occurs when new lines are formed and not when single 
-                                            //               character changes are made)
-                                            if (Math.abs(lastTextInputHeight.current - event.nativeEvent.contentSize.height) > 5) {
-                                                console.log("Text field change exceeded threshold, animating row to new height");
-                                                lastTextInputHeight.current = event.nativeEvent.contentSize.height
+                                            if (Platform.OS == 'android') {
+
+                                                // On Android, this event only fires when number of lines changes in text input
                                                 rowHeight.value = withTiming(calculateRowHeight(event.nativeEvent.contentSize.height), { duration: 150 });
+                                            } else {
+                                                // 1.3 TODO: REVISIT iOS Handling Below                                           
+                                                // 1.3 IOS NOTE: This event fires on every keypress on iOS, therefore requiring 
+                                                //               threshold variable to only apply animation updates if height changes more
+                                                //               than 5 px (assumes this mostly only occurs when new lines are formed and not when single 
+                                                //               character changes are made)
+                                                // if (Math.abs(lastTextInputHeight.current - event.nativeEvent.contentSize.height) > 5) {
+                                                //     console.log("Text field change exceeded threshold, animating row to new height (" + event.nativeEvent.contentSize.height + ")");
+                                                //     lastTextInputHeight.current = event.nativeEvent.contentSize.height
+                                                //     rowHeight.value = withTiming(calculateRowHeight(event.nativeEvent.contentSize.height), { duration: 150 });
+                                                // }
                                             }
                                         }}
                                         onKeyPress={({ nativeEvent }) => {
