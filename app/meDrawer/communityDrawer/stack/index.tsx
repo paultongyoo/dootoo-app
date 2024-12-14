@@ -342,7 +342,7 @@ export default function Index() {
 
                       // Collapse the doned item and of its done children
                       const uuidsToCollapse = [item.uuid];
-                      uuidsToCollapse.push(doneChildren.map((child) => child.uuid));
+                      uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
                       const collapseAnimationPromises = [];
                       uuidsToCollapse.forEach((uuid) => {
                         collapseAnimationPromises.push(
@@ -382,12 +382,27 @@ export default function Index() {
                   },
                   {
                     text: 'Complete Them',
-                    onPress: () => {
+                    onPress: async () => {
                       amplitude.track("Doneify With Kids Prompt: Complete Chosen", {
                         anonymous_id: anonymousId.current,
                         pathname: pathname,
                         num_open_children: openChildren.length
                       });
+
+                      // Collapse the doned item and of ALL of its children
+                      const uuidsToCollapse = [item.uuid];
+                      uuidsToCollapse.push(...openChildren.map((child) => child.uuid));
+                      uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
+                      const collapseAnimationPromises = [];
+                      uuidsToCollapse.forEach((uuid) => {
+                        collapseAnimationPromises.push(
+                          new Promise<void>((resolve) => {
+                              thingRowHeights.current[uuid].value =
+                                withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                          })
+                        );
+                      });
+                      await Promise.all(collapseAnimationPromises);
 
                       // Set each OPEN child as done in backend and incr Profile counter
                       openChildren.forEach((child) => {
