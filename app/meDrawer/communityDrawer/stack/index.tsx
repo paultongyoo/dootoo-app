@@ -267,6 +267,7 @@ export default function Index() {
 
             // Check if item has open kids
             const openChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
+            const doneChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && child.is_done);
 
             // item has open children, prompt user how to handle them
             if (openChildren.length > 0) {
@@ -305,19 +306,19 @@ export default function Index() {
                       // var heightAnimationArray = [];
 
                       // Execute animations to slide/collapse the item off the screen  
-                      const animationPromises = [];
+                      const deleteAnimationPromises = [];
                       openChildren.forEach((child) => {
 
                         // Call asyncronous delete to mark item as deleted in backend to sync database
                         deleteItem(child.uuid);
 
-                        animationPromises.push(
+                        deleteAnimationPromises.push(
                           new Promise<void>((resolve) => thingRowPositionXs.current[child.uuid].value = withTiming(-600, {
                             duration: 300,
                             easing: Easing.in(Easing.quad)
                           }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
                           ));
-                        animationPromises.push(
+                        deleteAnimationPromises.push(
                           new Promise<void>((resolve) => thingRowHeights.current[child.uuid].value = withTiming(0, {
                             duration: 300,
                             easing: Easing.in(Easing.quad)
@@ -325,7 +326,7 @@ export default function Index() {
                           ));
                       });
 
-                      await Promise.all(animationPromises);
+                      await Promise.all(deleteAnimationPromises);
 
                       openChildren.forEach((child) => {
                         delete thingRowPositionXs.current[child.uuid];
@@ -339,7 +340,24 @@ export default function Index() {
                         ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
                       });
 
-                      // Update latest list by filtering out the deleted children PLUS setting the item to done
+                      // Collapse the doned item and of its done children
+                      const uuidsToCollapse = [item.uuid];
+                      uuidsToCollapse.push(doneChildren.map((child) => child.uuid));
+                      const collapseAnimationPromises = [];
+                      uuidsToCollapse.forEach((uuid) => {
+                        collapseAnimationPromises.push(
+                          new Promise<void>((resolve) => {
+                              thingRowHeights.current[uuid].value =
+                                withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                          })
+                        );
+                      });
+                      await Promise.all(collapseAnimationPromises);
+
+                      // Update latest list by:
+                      // 1) filtering out the deleted children
+                      // 2) Setting the item to done
+                      // 3) TODO: Moving doned item plus any of its done children to top of done adults
                       const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
                       setDootooItems((prevItems) => {
 
@@ -774,7 +792,7 @@ export default function Index() {
   });
 
   const onSwipeableOpen = (direction, item, index) => {
-    console.log("opSwipeableOpen: " + direction + " " + item.text + " " + index);
+    //console.log("opSwipeableOpen: " + direction + " " + item.text + " " + index);
     if (!item.parent_item_uuid && (direction == "left")) {
       handleMakeChild(item, index);
     } else if (item.parent_item_uuid && (direction == "right")) {
