@@ -19,6 +19,8 @@ import { AppContext } from '@/components/AppContext';
 import Reanimated, {
   configureReanimatedLogger,
   ReanimatedLogLevel,
+  runOnJS,
+  withTiming,
 } from 'react-native-reanimated';
 
 export default function Index() {
@@ -160,7 +162,7 @@ export default function Index() {
     });
   }
 
-  const handleDoneClick = (item) => {
+  const handleDoneClick = async (item) => {
 
     /*
     Rules as of v1.1.1 in priority order:
@@ -199,6 +201,16 @@ export default function Index() {
 
         // 1.3 If item being doned is a child...
         if (item.parent_item_uuid) {
+
+          // Collapse single done item
+          await new Promise<void>((resolve) => {
+            thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 }, 
+              (isFinished) => {
+                if (isFinished) { 
+                  runOnJS(resolve)()
+                }
+              })
+            });
 
           setDootooItems((prevItems) => {
 
