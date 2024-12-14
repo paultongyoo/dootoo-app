@@ -10,14 +10,13 @@ import * as amplitude from '@amplitude/analytics-react-native';
 
 import {
   Image, StyleSheet, Pressable,
-  Animated,
-  Easing,
   Platform,
   Alert
 } from "react-native";
 import { AppContext } from '@/components/AppContext';
 import Reanimated, {
   configureReanimatedLogger,
+  Easing,
   ReanimatedLogLevel,
   runOnJS,
   withTiming,
@@ -294,7 +293,7 @@ export default function Index() {
                   },
                   {
                     text: 'Delete Them',
-                    onPress: () => {
+                    onPress: async () => {
                       amplitude.track("Doneify With Kids Prompt: Delete Chosen", {
                         anonymous_id: anonymousId.current,
                         pathname: pathname,
@@ -302,68 +301,66 @@ export default function Index() {
                       });
 
                       // Delete item's kids
-                      var slideAnimationArray = [];
-                      var heightAnimationArray = [];
+                      // var slideAnimationArray = [];
+                      // var heightAnimationArray = [];
+
+                      // Execute animations to slide/collapse the item off the screen  
+                      const animationPromises = [];
                       openChildren.forEach((child) => {
 
                         // Call asyncronous delete to mark item as deleted in backend to sync database
                         deleteItem(child.uuid);
-
-                        // Add the animations to slide/collapse the item off the screen
-                        slideAnimationArray.push(
-                          Animated.timing(thingRowPositionXs.current[child.uuid], {
-                            toValue: -600,
+           
+                        animationPromises.push(
+                          new Promise<void>((resolve) => thingRowPositionXs.current[child.uuid].value = withTiming(-600, {
                             duration: 300,
-                            easing: Easing.in(Easing.quad),
-                            useNativeDriver: false
-                          })
-                        );
-                        heightAnimationArray.push(
-                          Animated.timing(thingRowHeights.current[child.uuid], {
-                            toValue: 0,
+                            easing: Easing.in(Easing.quad)
+                          }, (isFinished) => { if (isFinished) { runOnJS(resolve)()}})
+                        ));
+                        animationPromises.push(
+                          new Promise<void>((resolve) => thingRowHeights.current[child.uuid].value = withTiming(0, {
                             duration: 300,
-                            easing: Easing.in(Easing.quad),
-                            useNativeDriver: false
-                          })
-                        );
+                            easing: Easing.in(Easing.quad)
+                          }, (isFinished) => { if (isFinished) { runOnJS(resolve)()}})
+                        ));
                       });
-                      Animated.parallel(slideAnimationArray).start(() => {
-                        Animated.parallel(heightAnimationArray).start(() => {
 
-                          openChildren.forEach((child) => {
-                            delete thingRowPositionXs.current[child.uuid];
-                            delete thingRowHeights.current[child.uuid]
-                          });
+                      await Promise.all(animationPromises);
 
-                          // Asyncronously updated DB with item set done state
-                          item.is_done = true;
-                          updateItemDoneState(item, () => {
-                            ProfileCountEventEmitter.emit("incr_done");
-                            ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
-                          });
+                      openChildren.forEach((child) => {
+                        delete thingRowPositionXs.current[child.uuid];
+                        delete thingRowHeights.current[child.uuid]
+                      });
 
-                          // Update latest list by filtering out the deleted children PLUS setting the item to done
-                          const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
-                          setDootooItems((prevItems) => {
+                      // Asyncronously updated DB with item set done state
+                      item.is_done = true;
+                      updateItemDoneState(item, () => {
+                        ProfileCountEventEmitter.emit("incr_done");
+                        ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
+                      });
 
-                            // First filter out deleted items and set clicked item to done
-                            var filteredAndDonedList = prevItems.filter((obj) => !subtaskUUIDSet.has(obj.uuid))
-                              .map((obj) =>
-                                (obj.uuid == item.uuid)
-                                  ? { ...obj, is_done: true }
-                                  : obj);
+                      // Update latest list by filtering out the deleted children PLUS setting the item to done
+                      const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
+                      setDootooItems((prevItems) => {
 
-                            // Move done item to top of DAWNKs
-                            const dawnkedList = moveItemToTopOfDoneAdults(filteredAndDonedList, item.uuid);
+                        // First filter out deleted items and set clicked item to done
+                        var filteredAndDonedList = prevItems.filter((obj) => !subtaskUUIDSet.has(obj.uuid))
+                          .map((obj) =>
+                            (obj.uuid == item.uuid)
+                              ? { ...obj, is_done: true }
+                              : obj);
 
-                            // Update order in backend
-                            const uuidArray = dawnkedList.map((thing) => ({ uuid: thing.uuid }));
-                            saveItemOrder(uuidArray);
+                        // Move done item to top of DAWNKs
+                        const dawnkedList = moveItemToTopOfDoneAdults(filteredAndDonedList, item.uuid);
 
-                            // Return updated list to state setter
-                            return dawnkedList;
-                          });
-                        })
+                        // 1.3 KNOWN ISSUE BUG/TODO - Move any of its previously done children with it!!
+
+                        // Update order in backend
+                        const uuidArray = dawnkedList.map((thing) => ({ uuid: thing.uuid }));
+                        saveItemOrder(uuidArray);
+
+                        // Return updated list to state setter
+                        return dawnkedList;
                       });
                     }
                   },
