@@ -1100,7 +1100,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }));
 
         useEffect(() => {
-            console.log("renderItem.useEffect([]) " + item.text + " rowHeight: " + rowHeight.value);
+            //console.log("renderItem.useEffect([]) " + item.text + " rowHeight: " + rowHeight.value);
 
             // If row had a height of 0 on render, assume it was just collapsed via a prior animation
             // and restore it to full height.

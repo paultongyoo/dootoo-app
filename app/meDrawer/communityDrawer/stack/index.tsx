@@ -204,13 +204,13 @@ export default function Index() {
 
           // Collapse single done item
           await new Promise<void>((resolve) => {
-            thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 }, 
+            thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 },
               (isFinished) => {
-                if (isFinished) { 
+                if (isFinished) {
                   runOnJS(resolve)()
                 }
               })
-            });
+          });
 
           setDootooItems((prevItems) => {
 
@@ -451,6 +451,16 @@ export default function Index() {
 
         // if item is a child
         if (item.parent_item_uuid) {
+
+          // Collapse single undone item
+          await new Promise<void>((resolve) => {
+            thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 },
+              (isFinished) => {
+                if (isFinished) {
+                  runOnJS(resolve)()
+                }
+              })
+          });
 
           const [parent] = dootooItems.filter(obj => obj.uuid == item.parent_item_uuid);
 
