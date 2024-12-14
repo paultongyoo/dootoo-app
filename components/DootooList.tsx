@@ -1294,8 +1294,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                         defaultValue={item.text}
                                         autoFocus={true}
                                         onContentSizeChange={(event) => {
-                                            console.log("TextInput height changed: " + event.nativeEvent.contentSize.height);
-                                            rowHeight.value = withTiming(calculateRowHeight(event.nativeEvent.contentSize.height), { duration: 150 });
+                                            //console.log("TextInput height changed: " + event.nativeEvent.contentSize.height);
+                                            rowHeight.value = -1; //withTiming(calculateRowHeight(event.nativeEvent.contentSize.height), { duration: 150 });
                                         }}
                                         onKeyPress={({ nativeEvent }) => {
                                             if (nativeEvent.key == 'Backspace' && (!onChangeInputValue.current || onChangeInputValue.current.length == 0)) {
