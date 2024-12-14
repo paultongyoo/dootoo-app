@@ -848,8 +848,11 @@ export default function Index() {
     if (!item.parent_item_uuid && (direction == "left")) {
       handleMakeChild(item, index);
     } else if (item.parent_item_uuid && (direction == "right")) {
-      handleMakeParent(item);
-    }
+
+      // Don't automatically do parent because the Delete swipe action is available too.
+      // TODO:  Implement snapping(?) to only make parent if fully open
+      // handleMakeParent(item);   
+    }   
   }
 
   const renderRightActions = (item, handleThingDeleteFunc) => {
