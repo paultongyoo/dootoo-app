@@ -195,6 +195,10 @@ export default function Index() {
         item_type: (item.parent_item_uuid) ? 'child' : 'adult'
       });
 
+      // Check if item has open kids
+      const openChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
+      const doneChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && child.is_done);
+
       // 1) If attempting to set item TO done
       if (!item.is_done) {
 
@@ -264,10 +268,6 @@ export default function Index() {
 
           // Item has kids....
           if (children.length > 0) {
-
-            // Check if item has open kids
-            const openChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
-            const doneChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && child.is_done);
 
             // item has open children, prompt user how to handle them
             if (openChildren.length > 0) {
@@ -428,8 +428,22 @@ export default function Index() {
               );
             } else {
 
+              // Collapse the doned item and of all its done children
+              const uuidsToCollapse = [item.uuid];
+              uuidsToCollapse.push(...openChildren.map((child) => child.uuid));
+              uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
+              const collapseAnimationPromises = [];
+              uuidsToCollapse.forEach((uuid) => {
+                collapseAnimationPromises.push(
+                  new Promise<void>((resolve) => {
+                      thingRowHeights.current[uuid].value =
+                        withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                  })
+                );
+              });
+              await Promise.all(collapseAnimationPromises);
+
               // All the item's kids must be done
-              const doneChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && child.is_done);
               if (doneChildren.length > 0) {
 
                 // Item is a DAWNK with only done kids; set it to done and move it and its kids to Top of DAWNKs
@@ -571,17 +585,20 @@ export default function Index() {
 
         } else {
 
-          // Collapse single opened item
-          await new Promise<void>((resolve) => {
-            thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 },
-              (isFinished) => {
-                if (isFinished) {
-                  runOnJS(resolve)()
-                }
+          // Collapse opened item and all of its children
+          const uuidsToCollapse = [item.uuid];
+          uuidsToCollapse.push(...openChildren.map((child) => child.uuid));
+          uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
+          const collapseAnimationPromises = [];
+          uuidsToCollapse.forEach((uuid) => {
+            collapseAnimationPromises.push(
+              new Promise<void>((resolve) => {
+                  thingRowHeights.current[uuid].value =
+                    withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
               })
+            );
           });
-
-          // TODO Collapse any of its kids?
+          await Promise.all(collapseAnimationPromises);
 
           // Item is a parent -- move it and any of its children to the top of DA list
           setDootooItems((prevItems) => {
