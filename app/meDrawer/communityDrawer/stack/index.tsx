@@ -448,6 +448,16 @@ export default function Index() {
             }
           } else {
 
+            // Collapse single done item
+            await new Promise<void>((resolve) => {
+              thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 },
+                (isFinished) => {
+                  if (isFinished) {
+                    runOnJS(resolve)()
+                  }
+                })
+            });
+
             // Item doesn't have any kids, simply set it to done and move it to top of doneAdults
             item.is_done = true;
             updateItemDoneState(item, () => {
@@ -560,6 +570,18 @@ export default function Index() {
 
 
         } else {
+
+          // Collapse single opened item
+          await new Promise<void>((resolve) => {
+            thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 },
+              (isFinished) => {
+                if (isFinished) {
+                  runOnJS(resolve)()
+                }
+              })
+          });
+
+          // TODO Collapse any of its kids?
 
           // Item is a parent -- move it and any of its children to the top of DA list
           setDootooItems((prevItems) => {
@@ -890,7 +912,7 @@ function moveItemFamilyToTopOfDoneAdults(itemList, item_uuid) {
     return itemList.concat(movedItems);
   } else {
     const firstDoneAdultIdx = itemList.findIndex((obj) => obj.uuid == doneAdults[0].uuid);
-    itemList.splice(firstDoneAdultIdx, 0, movedItems);
+    itemList.splice(firstDoneAdultIdx, 0, ...movedItems);
     return itemList;
   }
 }
