@@ -111,6 +111,7 @@ export default function Index() {
 
   const handleMakeChild = (item, index) => {
 
+    // Get UUID of nearest parent above item to be made into child
     let nearestParentUUID = '';
     for (var i = index - 1; i >= 0; i--) {
       const currItem = dootooItems[i];
@@ -127,17 +128,36 @@ export default function Index() {
       parent_item_uuid: nearestParentUUID
     });
 
-    // Asyncronously update item hierarhcy in DB
+    // Make thing child of nearest parent
     updateItemHierarchy(item.uuid, nearestParentUUID);
 
+    // If item had children, make those children children of nearest parent too
+    const childrenOfItem = dootooItems.filter((prevItem) => prevItem.parent_item_uuid == item.uuid);
+    childrenOfItem.forEach((child) => updateItemHierarchy(child.uuid, nearestParentUUID));
+
     console.log("Setting new child into list");
-    setDootooItems((prevItems) => prevItems.map((obj) =>
-      (obj.uuid == item.uuid)
-        ? {
-          ...obj,
-          parent_item_uuid: nearestParentUUID
-        }
-        : obj)); // This should update UI only and not invoke any syncronous backend operations
+    setDootooItems((prevItems) => {
+
+      // Make selected item child of nearest parent
+      const listWithUpdatedItem = prevItems.map((obj) =>
+        (obj.uuid == item.uuid)
+          ? {
+            ...obj,
+            parent_item_uuid: nearestParentUUID
+          }
+          : obj);
+
+      // Make any children of selected item children of nearest parent
+      const listWithUpdatedItemKids = listWithUpdatedItem.map((obj) =>
+        (obj.parent_item_uuid == item.uuid)
+          ? {
+            ...obj,
+            parent_item_uuid: nearestParentUUID
+          }
+          : obj);
+
+      return listWithUpdatedItemKids
+    });
   }
 
   const handleDoneClick = (item) => {
@@ -419,7 +439,7 @@ export default function Index() {
 
         // if item is a child
         if (item.parent_item_uuid) {
-   
+
           const [parent] = dootooItems.filter(obj => obj.uuid == item.parent_item_uuid);
 
           // If Item's parent is done, convert item to adult and move it above the parent
@@ -428,28 +448,30 @@ export default function Index() {
 
             setDootooItems((prevItems) => {
 
-              const openedItems = prevItems.map(obj => 
-                (obj.uuid == item.uuid) 
-                  ? { ...obj, 
+              const openedItems = prevItems.map(obj =>
+                (obj.uuid == item.uuid)
+                  ? {
+                    ...obj,
                     parent_item_uuid: null,
-                    is_done: false } 
+                    is_done: false
+                  }
                   : obj);
-  
+
               const doneAdults = openedItems.filter((obj) => obj.is_done && !obj.parent_item_uuid && (obj.uuid != item.uuid));
-  
+
               // If DA(s) exist, move item to top of DA list
               const itemIdx = openedItems.findIndex(obj => obj.uuid == item.uuid);
               const [movedItem] = openedItems.splice(itemIdx, 1);
-              if (doneAdults.length > 0) {          
-                const firstDoneAdultIdx = openedItems.findIndex(obj => obj.uuid == doneAdults[0].uuid);           
+              if (doneAdults.length > 0) {
+                const firstDoneAdultIdx = openedItems.findIndex(obj => obj.uuid == doneAdults[0].uuid);
                 openedItems.splice(firstDoneAdultIdx, 0, movedItem);
               } else {
                 openedItems.push(movedItem);
               }
-  
+
               const uuidArray = openedItems.map((thing) => ({ uuid: thing.uuid }));
               saveItemOrder(uuidArray);
-  
+
               return openedItems;
             });
           } else {
@@ -457,29 +479,31 @@ export default function Index() {
 
             setDootooItems((prevItems) => {
 
-              const openedItems = prevItems.map(obj => 
-                (obj.uuid == item.uuid) 
-                  ? { ...obj, 
-                    is_done: false } 
+              const openedItems = prevItems.map(obj =>
+                (obj.uuid == item.uuid)
+                  ? {
+                    ...obj,
+                    is_done: false
+                  }
                   : obj);
-  
-              const doneSiblings = openedItems.filter((obj) => 
+
+              const doneSiblings = openedItems.filter((obj) =>
                 obj.is_done && (obj.parent_item_uuid == item.parent_item_uuid) && (obj.uuid != item.uuid));
               console.log("doneSiblings.length: " + doneSiblings.length);
 
               // If DoneSib(s) exist, move item to top of DoneSib list
-              if (doneSiblings.length > 0) {       
+              if (doneSiblings.length > 0) {
                 const itemIdx = openedItems.findIndex(obj => obj.uuid == item.uuid);
-                const [movedItem] = openedItems.splice(itemIdx, 1);  
-                const firstDoneSiblingIdx = openedItems.findIndex(obj => obj.uuid == doneSiblings[0].uuid);           
+                const [movedItem] = openedItems.splice(itemIdx, 1);
+                const firstDoneSiblingIdx = openedItems.findIndex(obj => obj.uuid == doneSiblings[0].uuid);
                 openedItems.splice(firstDoneSiblingIdx, 0, movedItem);
               } else {
                 // Leave it where it is, should already be at bottom of list
               }
-  
+
               const uuidArray = openedItems.map((thing) => ({ uuid: thing.uuid }));
               saveItemOrder(uuidArray);
-  
+
               return openedItems;
             });
           }
@@ -490,7 +514,7 @@ export default function Index() {
           // Item is a parent -- move it and any of its children to the top of DA list
           setDootooItems((prevItems) => {
 
-            const openedList = prevItems.map(obj => (obj.uuid == item.uuid) ? { ...obj, is_done: false} : obj);
+            const openedList = prevItems.map(obj => (obj.uuid == item.uuid) ? { ...obj, is_done: false } : obj);
             const children = openedList.filter(obj => obj.parent_item_uuid == item.uuid);
             const doneAdults = openedList.filter(obj => !obj.parent_item_uuid && obj.is_done);
             const itemIdx = openedList.findIndex(obj => obj.uuid == item.uuid);
@@ -504,7 +528,7 @@ export default function Index() {
 
             const uuidArray = openedList.map((thing) => ({ uuid: thing.uuid }));
             saveItemOrder(uuidArray);
-            
+
             return openedList;
           });
         }
@@ -743,10 +767,10 @@ export default function Index() {
     return (
       <>
         <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
-            <Pressable
-                onPress={() => handleThingDeleteFunc(item)}>
-                <Image style={styles.swipeActionIcon_trash} source={require("@/assets/images/trash_icon_white.png")} />
-            </Pressable>
+          <Pressable
+            onPress={() => handleThingDeleteFunc(item)}>
+            <Image style={styles.swipeActionIcon_trash} source={require("@/assets/images/trash_icon_white.png")} />
+          </Pressable>
         </Reanimated.View>
         {item.parent_item_uuid ?
           <Reanimated.View style={[styles.itemSwipeAction]}>
