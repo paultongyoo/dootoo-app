@@ -1119,7 +1119,20 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             // If row had a height of 0 on render, assume it was just collapsed via a prior animation
             // and restore it to full height.
             if (rowHeight.value == 0) {
-                rowHeight.value = withTiming(fullRowHeight.current, { duration: 300 });
+
+                // If screen hasn't been initialized yet,
+                // this rendering is occurring as part of the app's
+                // launch -- We skip the animation here to not slow
+                // down the launch UX + avoid large amount of rows simulatneously animating
+                // in janky way
+                if (!screenInitialized) {
+                    rowHeight.value = fullRowHeight.current;
+                } else {
+
+                    // If screen has already been initialized, this rendering is occurring
+                    // due to a new entry from recording or keyboard; we therefore animate the room into view
+                    rowHeight.value = withTiming(fullRowHeight.current, { duration: 300 });
+                }
             }
 
             // If row had a text opacity of 0 on render, assume its text was just faded out and changed
