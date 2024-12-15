@@ -1211,27 +1211,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             }
         }, [item.text])
 
-        const isInitialRowHeightKnownMount = useRef(true);
-        useEffect(() => {
-            if (isInitialRowHeightKnownMount.current) {
-                isInitialRowHeightKnownMount.current = false;
-            } else {
-                //console.log("Index " + getIndex() + ": useEffect([rowHeightKnown]) - rowHeightKnown: " + rowHeightKnown + ", fullRowHeight: " + fullRowHeight.current);
-                
-                if (rowHeightKnown) {
-                    if (item.newKeyboardEntry) {
-                        rowHeight.value = withTiming(fullRowHeight.current, { duration: 300 });
-                    } else {
-                        // At this point, row will already be visible because it was previously set to -1
-                        // Setting rowHeight.value to its full row height after it is render will prevent
-                        // flickering when animating rowHeight on text field height adjustments (e.g.
-                        // when animating to 0 on deletion actions)
-                        rowHeight.value = fullRowHeight.current;
-                    }
-                }
-            }
-        }, [rowHeightKnown])
-
         const handleThingTextTap = (thing) => {
             //console.log(`handleItemTextTap for ${thing.text}`);
 
@@ -1344,7 +1323,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 //{ backgroundColor: 'red' },                                           // For Debugging: If seen, unexpected row height change/non-change likely
                 { transform: [{ translateX: rowPositionX }] },
                 animatedHeightStyle,                                                   // 1.3 Using AnimatedStyle for height
-                !rowHeightKnown && { position: 'absolute', opacity: 0 }
+                !rowHeightKnown && { position: 'absolute', opacity: 0 }                // 1.3 Opacity set to 0 until full row height determined below
             ]}
                 onLayout={(event) => {
 
@@ -1356,15 +1335,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     if (!rowHeightKnown) {
                         const layoutHeight = event.nativeEvent.layout.height;
                         fullRowHeight.current = layoutHeight;
-                        if (item.newKeyboardEntry) {
-                            rowHeight.value = withTiming(0, { duration: 1 }, (isFinished) => {
-                                if (isFinished) {
-                                    runOnJS(setRowHeightKnown)(true);
-                                }
-                            })
-                        } else {
-                            setRowHeightKnown(true);
-                        }                
+                        rowHeight.value = withTiming(0, { duration: 1 }, (isFinished) => {
+                            if (isFinished) {
+                                runOnJS(setRowHeightKnown)(true);
+                            }
+                        })            
                     }
                 }}
             >
