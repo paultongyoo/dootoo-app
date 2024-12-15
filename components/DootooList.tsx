@@ -1188,11 +1188,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                     ));
                             
                             // TODO: Move these two operations to the enrichment lambda
-                            const deepItemCopy = { ... item,
+                            const deepItemCopy = { ...item,
                                                     text: enrichmentResponse.text,
                                                     scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc }
                             updateItemText(deepItemCopy);
-                            updateItemSchedule(item, enrichmentResponse.scheduled_datetime_utc);
+                            updateItemSchedule(item.uuid, enrichmentResponse.scheduled_datetime_utc);
                         } else {
                             console.log("Enrichment response had no updates");
                         }
