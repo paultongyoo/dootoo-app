@@ -1159,7 +1159,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             //console.log("renderItem useEFfect([item.text]) - item.text: " + item.text);
             if (isInitialTextMount.current) {
                 isInitialTextMount.current = false;
-            } else if (thingName == THINGNAME_ITEM && item.text && (item.text.length > 0)) {
+            } else if ((thingName == THINGNAME_ITEM) && item.text && (item.text.length > 0)) {
                 const attemptToEnrichedItem = async (itemToEnrich) => {
                     try {
                         const enrichmentResponse = await fetchWithRetry(() => enrichItem(itemToEnrich));
