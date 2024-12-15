@@ -19,7 +19,8 @@ import * as Linking from 'expo-linking';
 import { areDateObjsEqual, calculateRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, isThingOverdue } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
-const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
+const THINGNAME_ITEM = "item";
+const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = (item, index) => { return <></> },
     renderRightActions = (item, index) => { return <></> },
     swipeableOpenFunc = (direction, thing, index) => { return; },
@@ -36,7 +37,6 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
     isThingDraggable,
     hideRecordButton = false,
     shouldInitialLoad = true }) => {
-
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, initializeLocalUser,
         fadeInListOnRender, listOpacity, listFadeInAnimation, listFadeOutAnimation,
@@ -111,6 +111,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
     }, []);
 
+
     useEffect(() => {
         //console.log(`useEffect[listArray] called: List length ${listArray.length}, initialLoad: ${initialLoad.current}`);
         //console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`); 
@@ -118,7 +119,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         if (initialLoad.current && !isInitialMount.current) {
 
             // Asyncronously update local cache with latest listArray update
-            if (thingName == 'item') {
+            if (thingName == THINGNAME_ITEM) {
                 updateItemsCache(listArray);
             } else {
                 updateTipsCache(selectedItem, listArray);
@@ -163,7 +164,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             // Immediately look for new counts on any list update
             restartPolling();
 
-            if (thingName == "item") {
+            if (thingName == THINGNAME_ITEM) {
                 syncItemCalendarUpdates();
             }
         } else if (isInitialMount.current) {
@@ -179,7 +180,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             ignore = true;
             console.log(`Polling for ${thingName} latest counts: ${new Date(Date.now()).toLocaleString()}`);
             if (listArray.length > 0) {
-                if (thingName == "item") {
+                if (thingName == THINGNAME_ITEM) {
                     const itemUUIDs = listArray.map(thing => thing.uuid);
                     if (itemUUIDs.length > 0) {
                         itemCountsMap.current = await loadItemsCounts(itemUUIDs);
@@ -216,7 +217,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 startPolling();
 
                 // Asynchronously check if updated any events in Calendar app
-                if (thingName == "item") {
+                if (thingName == THINGNAME_ITEM) {
                     syncItemCalendarUpdates();
                 }
             } else {
@@ -449,7 +450,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         if (!thing.parent_item_uuid && (thingSubtasks.length > 0)) {
 
             Alert.alert(
-                `${(thingName == "item") ? "Item" : "Tip"} Has ${thingSubtasks.length} Sub${thingName.toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''}`,
+                `${(thingName == THINGNAME_ITEM) ? "Item" : "Tip"} Has ${thingSubtasks.length} Sub${thingName.toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''}`,
                 `Deleting this ${thingName.toLowerCase()} will delete its sub${thingName.toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''} too.  Continue?`,
                 [
                     {
@@ -703,7 +704,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 }
                 : thing));
 
-        if (thingName == 'item') {
+        if (thingName == THINGNAME_ITEM) {
             updateItemEventId(thingToUpdateUUID, eventId);
         } else {
             console.log("Event Ids currently not supported on " + thingName + "s");
@@ -1158,7 +1159,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             //console.log("renderItem useEFfect([item.text]) - item.text: " + item.text);
             if (isInitialTextMount.current) {
                 isInitialTextMount.current = false;
-            } else if (item.text && (item.text.length > 0)) {
+            } else if (thingName == THINGNAME_ITEM && item.text && (item.text.length > 0)) {
                 const attemptToEnrichedItem = async (itemToEnrich) => {
                     try {
                         const enrichmentResponse = await fetchWithRetry(() => enrichItem(itemToEnrich));
@@ -1406,7 +1407,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 </Pressable> : <></>
                             }
                             <View style={styles.itemNameContainer}>
-                                {((thingName == 'item') && item.scheduled_datetime_utc) ?
+                                {((thingName == THINGNAME_ITEM) && item.scheduled_datetime_utc) ?
                                     <Reanimated.View style={[styles.timerIconContainer, timerContainerWidthAnimatedStyle]}>
                                         <Pressable hitSlop={10} onPress={() => handleTimerClick(item)}>
                                             <Reanimated.Image style={[styles.timerIcon, timerOpacityAnimatedStyle]} source={
