@@ -302,7 +302,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         try {
             const response = await callBackendTranscribeService(fileUri);
             const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
-            console.log("Number of scheduled items recorded: " + numScheduledItems);
+            //console.log("Number of scheduled items recorded: " + numScheduledItems);
             amplitude.track("Recording Processing Completed", {
                 anonymous_id: anonymousId.current,
                 flagged: (response == "flagged"),
@@ -339,7 +339,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 );
             } else {
                 //const response =  generateStubData(); 
-                console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
+                //console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
 
                 if (listArray && response && response.length > 0) {
                     lastRecordedCount.current = response.length;  // Set for future toast undo potential
