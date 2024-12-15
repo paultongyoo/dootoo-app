@@ -296,7 +296,7 @@ export const fetchWithRetry = async (backendServiceCall, maxRetries = 5, retryDe
         return response.body; // Or process the response as needed
       }
 
-      console.warn(`Attempt ${attempts + 1} failed. Retrying...`);
+      console.log(`Attempt ${attempts + 1} failed. Retrying...`);
     } catch (error) {
       console.error(`Attempt ${attempts + 1} encountered an error:`, error);
     }
