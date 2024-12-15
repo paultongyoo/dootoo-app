@@ -1301,9 +1301,16 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     // Set this so new item textinput automatically appears on re-render
                     currentlyTappedThing.current = newItem;
 
+                    // Make new keyboard entry a child of the current item IF:
+                    // 1) the current item is a child itself
+                    // 2) the current item is a parent with existing children
+                    const hasChild = updatedArray.some((updatedThing) => updatedThing.parent_item_uuid == thing.uuid);
                     if (thing.parent_item_uuid) {
                         newItem.parent_item_uuid = thing.parent_item_uuid;
+                    } else if (hasChild) {
+                        newItem.parent_item_uuid = thing.uuid;
                     }
+                    
                     const thingIdx = updatedArray.findIndex((prevThing) => prevThing.uuid == thing.uuid);
                     if (thingIdx < (updatedArray.length - 1)) {
                         const insertIdx = thingIdx + 1;
