@@ -1106,6 +1106,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         const timerOpacityAnimatedStyle = useAnimatedStyle(() => {
             return { opacity: timerOpacity.value }
         });
+        const textOpacity = useSharedValue(1);
+        const textOpacityAnimatedStyle = useAnimatedStyle(() => {
+            return { opacity: textOpacity.value }
+        });
 
         useEffect(() => {
             //console.log("renderItem.useEffect([]) " + item.text + " rowHeight: " + rowHeight.value);
@@ -1114,6 +1118,9 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             // and restore it to full height.
             if (rowHeight.value == 0) {
                 rowHeight.value = withTiming(fullRowHeight.current, { duration: 300 });
+            }
+            if (textOpacity.value == 0) {
+                textOpacity.value = withTiming(1, { duration: 300 });
             }
         });
 
@@ -1158,6 +1165,14 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                         if (enrichedItem) {
                             //console.log("Enriched Item Response: " + JSON.stringify(enrichedItem));
 
+                            await new Promise<void>((resolve) => {
+                                textOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+                                    if (isFinished) {
+                                        runOnJS(resolve)();
+                                    }
+                                })
+                            })
+                            
                             // Overwrite enriched data in DB and UI
                             listArraySetter((prevThings) => prevThings.map((thing) => 
                                 (thing.uuid == itemToEnrich.uuid) 
@@ -1444,7 +1459,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                             onLongPress={drag}
                                             disabled={isActive}
                                             onPress={() => handleThingTextTap(item)}>
-                                            <Text style={[styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
+                                            <Reanimated.Text style={[textOpacityAnimatedStyle, styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Reanimated.Text>
                                         </Pressable>
                                         : <View style={styles.tipNamePressable}>
                                             <Text style={[styles.taskTitle]}>{item.text}</Text>
