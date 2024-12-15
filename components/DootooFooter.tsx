@@ -478,7 +478,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         footerContainer: {
             backgroundColor: '#FAF3E0',
             alignItems: 'center',
-            height: (hideRecordButton) ? 139 : 153
+            height: (hideRecordButton) ? 159 : 173
         },
         bannerAdContainer: {
             borderTopWidth: 1,
@@ -486,9 +486,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             justifyContent: 'center',
             alignItems: 'center',
             backgroundColor: "#c0c0c0",
-            paddingTop: 10,
-            paddingBottom: 10,
-            marginBottom: insets.bottom
+            paddingTop: 15,
+            paddingBottom: (insets.bottom && insets.bottom > 0) ? insets.bottom : 10
         },
         footerButton: {
             height: 58,
