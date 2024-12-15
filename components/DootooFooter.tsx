@@ -12,6 +12,7 @@ import { ListItemEventEmitter } from "./EventEmitters";
 import { checkOpenAPIStatus } from "./BackendServices.js";
 import Animated from "react-native-reanimated";
 import { calculateAndroidButtonScale, generateNewKeyboardEntry } from './Helpers'
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
@@ -472,6 +473,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         listArraySetterFunc((prevItems) => [ newItem, ...prevItems]);
     }
 
+    const insets = useSafeAreaInsets();
     const styles = StyleSheet.create({
         footerContainer: {
             backgroundColor: '#FAF3E0',
@@ -479,13 +481,14 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             height: (hideRecordButton) ? 139 : 153
         },
         bannerAdContainer: {
-            position: 'absolute',
-            bottom: 40,
             borderTopWidth: 1,
-            borderColor: "#eee",
+            borderColor: "#00000066",
             justifyContent: 'center',
             alignItems: 'center',
-            backgroundColor: "#eee"
+            backgroundColor: "#c0c0c0",
+            paddingTop: 10,
+            paddingBottom: 10,
+            marginBottom: insets.bottom
         },
         footerButton: {
             height: 58,
