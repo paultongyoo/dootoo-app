@@ -10,13 +10,13 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
-import { loadItemsCounts, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
+import { enrichItem, loadItemsCounts, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
 import usePolling from './Polling';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { areDateObjsEqual, calculateRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, isThingOverdue } from './Helpers';
+import { areDateObjsEqual, calculateRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, isThingOverdue } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
@@ -1087,11 +1087,10 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
 
         const fullRowHeight = useRef(-1);
         const lastTextInputHeight = useRef(0);         // iOS-specific var used to keep track of last input height and
-        // only alter rowHeight.value if difference exceeds 5 px (i.e. new line is formed by text)
+                                                       // only alter rowHeight.value if difference exceeds 5 px (i.e. new line is formed by text)
 
         // 1.3 This boolean is used to only set rowHeight.value at explict times to prevent continuous layout changes/loops
         const [rowHeightKnown, setRowHeightKnown] = useState(false);
-        //const rowHeightKnown = useRef(false);
 
         // 1.3  Using AnimatedStyle for row height as access is needed to the rowHeight SV 
         //      in order to grow/shrink row height based on text input height changes
@@ -1108,6 +1107,47 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 rowHeight.value = withTiming(fullRowHeight.current, { duration: 300 });
             }
         });
+
+        const isInitialTextMount = useRef(true);
+        useEffect(() => {
+            //console.log("renderItem useEFfect([item.text]) - item.text: " + item.text);
+            if (isInitialTextMount.current) {
+                isInitialTextMount.current = false;
+            } else if (item.text && (item.text.length > 0)) {
+                const attemptToEnrichedItem = async (itemToEnrich) => {
+                    try {
+                        const enrichedItem = await fetchWithRetry(() => enrichItem(itemToEnrich));
+                        if (enrichedItem) {
+                            //console.log("Enriched Item Response: " + JSON.stringify(enrichedItem));
+
+                            // Overwrite enriched data in DB and UI
+                            listArraySetter((prevThings) => prevThings.map((thing) => 
+                                (thing.uuid == itemToEnrich.uuid) 
+                                    ? { ...thing,
+                                        text: enrichedItem.text,
+                                        scheduled_datetime_utc: enrichedItem.scheduled_datetime_utc }
+                                    : thing
+                                    ));
+                            
+                            const deepItemCopy = { ... item,
+                                                    text: enrichedItem.text,
+                                                    scheduled_datetime_utc: enrichedItem.scheduled_datetime_utc }
+                            updateItemText(deepItemCopy);
+                            updateItemSchedule(item, enrichedItem.scheduled_datetime_utc);
+                        } else {
+                            console.log("Empty enrichment received from backend");
+                        }
+                    } catch (error) {
+                        // Log a message to console and abandon updating UI
+                        console.warn("Enrichment calls were not successful, potential issue?", error);
+                    }
+                }
+                console.log("Calling attemptToEnrichedItem for changed text: " + item.text);
+                attemptToEnrichedItem(item);
+            } else {
+                console.log("Abandoning call for changed text: " + item.text);
+            }
+        }, [item.text])
 
         const isInitialRowHeightKnownMount = useRef(true);
         useEffect(() => {

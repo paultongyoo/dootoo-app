@@ -7,6 +7,8 @@ const kms = new AWS.KMS();
 
 export const handler = async (event) => {
 
+  console.log("Event object: " + JSON.stringify(event));
+  
   try {
     const user = await prisma.user.findUnique({
       where: { anonymous_id: event.anonymous_id }
@@ -39,10 +41,9 @@ export const handler = async (event) => {
 
     // Note: Lambda lowercases all header keys
     let currentDateStringPrompt = '';
-    const userLocalTime = event.headers['userlocaltime'];
-    const userTimeZone = event.headers['usertimezone'];
-    const utcDateTime = event.headers['utcdatetime'];
-    console.log("All Headers: " + JSON.stringify(event.headers));
+    const userLocalTime = event.userlocaltime;
+    const userTimeZone = event.usertimezone;
+    const utcDateTime = event.utcdatetime;
     if (userLocalTime && userTimeZone && utcDateTime) {
       currentDateStringPrompt = `The user's current local date and time is ${userLocalTime} (timezone: ${userTimeZone}). The current UTC time is ${utcDateTime}.`;
       console.log("Generated date/time string: " + currentDateStringPrompt);
@@ -71,7 +72,7 @@ export const handler = async (event) => {
         { "role": "user", "content": `User-provided input: ${decryptedText}` }
       ], 
       response_format: { "type": "json_object" },
-      user: event.headers['anonymous_id']
+      user: event.anonymous_id
     });
 
     const enrichedItem = JSON.parse(completion.choices[0].message.content);

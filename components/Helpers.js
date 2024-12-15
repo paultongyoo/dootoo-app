@@ -283,3 +283,55 @@ export const generateNewKeyboardEntry = () => {
 export const calculateRowHeight = (text_or_textInput_height) => {
       return text_or_textInput_height + 27;             // LAST UPDATED 12.13.24:  This height prevents the debug background red from appearing 
 }
+
+export const fetchWithRetry = async (backendServiceCall, maxRetries = 5, retryDelay = 5000) => {
+  let attempts = 0;
+
+  while (attempts < maxRetries) {
+    try {
+      const response = await backendServiceCall();
+
+      if (response.statusCode == 200) {
+        // Exit the retry loop on success
+        return response.body; // Or process the response as needed
+      }
+
+      console.warn(`Attempt ${attempts + 1} failed. Retrying...`);
+    } catch (error) {
+      console.error(`Attempt ${attempts + 1} encountered an error:`, error);
+    }
+
+    attempts += 1;
+
+    if (attempts < maxRetries) {
+      // Wait before retrying
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+    }
+  }
+
+  // If we exhaust retries, throw an error
+  throw new Error(`Failed to fetch after ${maxRetries} attempts`);
+};
+
+export const generateCurrentTimeAPIHeaders = () => {
+
+    // Generate user time info to pass to the API for handling of any scheduled tasks
+    const currentDate = new Date();
+    const userLocalTime = currentDate.toLocaleString(undefined, { 
+      weekday: 'long', // Include the weekday (e.g., "Monday")
+      year: 'numeric',
+      month: 'long', // Full month name (e.g., "December")
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short' // Include timezone abbreviation
+    });
+    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const utcDateTime = currentDate.toISOString();
+
+    return {
+      userlocaltime: userLocalTime,
+      usertimezone: userTimeZone,
+      utcdatetime: utcDateTime
+    };
+}

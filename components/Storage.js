@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import uuid from 'react-native-uuid';
 import { uniqueNamesGenerator, adjectives, animals, NumberDictionary } from 'unique-names-generator';
+import { generateCurrentTimeAPIHeaders } from './Helpers';
 
 // Local storage column keys
 const DONE_COUNT_KEY = "user_done_count";
@@ -300,13 +301,21 @@ export const enrichItem = async (item) => {
     }
     const localUser = JSON.parse(localUserSr);
     const localAnonId = localUser.anonymous_id;
+
+    const currentTimeAPIHeaders = generateCurrentTimeAPIHeaders();
+    console.log("Current Time Obj: " + JSON.stringify(currentTimeAPIHeaders));
+
     const response = await axios.post(ENRICHITEM_URL,
       {
         anonymous_id : localAnonId,
-        item_uuid: item.uuid
+        item_uuid: item.uuid,
+        userlocaltime : currentTimeAPIHeaders.userlocaltime,
+        usertimezone  : currentTimeAPIHeaders.usertimezone,
+        utcdatetime : currentTimeAPIHeaders.utcdatetime
       }
     );
     console.log("enrichItem Response Obj: " + JSON.stringify(response.data.body));
+    return response.data;
   } catch (error) {
     console.error('Error calling enrichItem API:', error);
   }
