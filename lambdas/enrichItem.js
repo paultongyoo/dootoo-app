@@ -65,6 +65,7 @@ export const handler = async (event) => {
                 Respond only in English.
                 Return your analysis in the following JSON format:
                 {
+                  "enriched: <true if task was modified, false otherwise>,
                   "text": "<modified task description if it contained date and/or time info, otherwise return unmodified task>", 
                   "scheduled_datetime_utc": <ISO 8601 formatted string in UTC timezone per rules above, or null if no date or time info provided>
                 }`

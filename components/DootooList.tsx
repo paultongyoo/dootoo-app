@@ -1161,8 +1161,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             } else if (item.text && (item.text.length > 0)) {
                 const attemptToEnrichedItem = async (itemToEnrich) => {
                     try {
-                        const enrichedItem = await fetchWithRetry(() => enrichItem(itemToEnrich));
-                        if (enrichedItem) {
+                        const enrichmentResponse = await fetchWithRetry(() => enrichItem(itemToEnrich));
+                        if (enrichmentResponse && enrichmentResponse.enriched) {
                             //console.log("Enriched Item Response: " + JSON.stringify(enrichedItem));
 
                             await new Promise<void>((resolve) => {
@@ -1177,19 +1177,19 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             listArraySetter((prevThings) => prevThings.map((thing) => 
                                 (thing.uuid == itemToEnrich.uuid) 
                                     ? { ...thing,
-                                        text: enrichedItem.text,
-                                        scheduled_datetime_utc: enrichedItem.scheduled_datetime_utc,
-                                        schedule_just_added: (enrichedItem.scheduled_datetime_utc) ? true : false }
+                                        text: enrichmentResponse.text,
+                                        scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc,
+                                        schedule_just_added: (enrichmentResponse.scheduled_datetime_utc) ? true : false }
                                     : thing
                                     ));
                             
                             const deepItemCopy = { ... item,
-                                                    text: enrichedItem.text,
-                                                    scheduled_datetime_utc: enrichedItem.scheduled_datetime_utc }
+                                                    text: enrichmentResponse.text,
+                                                    scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc }
                             updateItemText(deepItemCopy);
-                            updateItemSchedule(item, enrichedItem.scheduled_datetime_utc);
+                            updateItemSchedule(item, enrichmentResponse.scheduled_datetime_utc);
                         } else {
-                            console.log("Empty enrichment received from backend");
+                            console.log("Enrichment response had no updates");
                         }
                     } catch (error) {
                         // Log a message to console and abandon updating UI
@@ -1310,7 +1310,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                     } else if (hasChild) {
                         newItem.parent_item_uuid = thing.uuid;
                     }
-                    
+
                     const thingIdx = updatedArray.findIndex((prevThing) => prevThing.uuid == thing.uuid);
                     if (thingIdx < (updatedArray.length - 1)) {
                         const insertIdx = thingIdx + 1;
