@@ -303,7 +303,7 @@ export const enrichItem = async (item) => {
     const localAnonId = localUser.anonymous_id;
 
     const currentTimeAPIHeaders = generateCurrentTimeAPIHeaders();
-    console.log("Current Time Obj: " + JSON.stringify(currentTimeAPIHeaders));
+    //console.log("Current Time Obj: " + JSON.stringify(currentTimeAPIHeaders));
 
     const response = await axios.post(ENRICHITEM_URL,
       {
@@ -314,7 +314,7 @@ export const enrichItem = async (item) => {
         utcdatetime : currentTimeAPIHeaders.utcdatetime
       }
     );
-    console.log("enrichItem Response Obj: " + JSON.stringify(response.data.body));
+    //console.log("enrichItem Response Obj: " + JSON.stringify(response.data.body));
     return response.data;
   } catch (error) {
     console.error('Error calling enrichItem API:', error);

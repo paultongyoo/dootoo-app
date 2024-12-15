@@ -1098,6 +1098,15 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
             height: rowHeight.value
         }));
 
+        const timerContainerWidth = useSharedValue(0);
+        const timerContainerWidthAnimatedStyle = useAnimatedStyle(() => {
+            return { width: timerContainerWidth.value }
+        });
+        const timerOpacity = useSharedValue(0);
+        const timerOpacityAnimatedStyle = useAnimatedStyle(() => {
+            return { opacity: timerOpacity.value }
+        });
+
         useEffect(() => {
             //console.log("renderItem.useEffect([]) " + item.text + " rowHeight: " + rowHeight.value);
 
@@ -1107,6 +1116,35 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                 rowHeight.value = withTiming(fullRowHeight.current, { duration: 300 });
             }
         });
+
+        useEffect(() => {
+            if (item.scheduled_datetime_utc) {
+                const animateTimerWidth = async() => {
+                    await new Promise<void>((resolve) => {
+                        timerContainerWidth.value = withTiming(30, { duration: 300 }, (isFinished) => {
+                            if (isFinished) {
+                                runOnJS(resolve)();
+                            }
+                        })
+                    });
+                    await new Promise<void>((resolve) => {
+                        timerOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                            if (isFinished) {
+                                runOnJS(resolve)();
+                            }
+                        })
+                    });
+
+                    // Reset scheduled_just_added field after animation
+                    listArraySetter((prevThings) => 
+                        prevThings.map((prevThing) => 
+                            (prevThing.uuid == item.uuid)
+                                ? { ...prevThing, schedule_just_added: false }
+                                : prevThing));
+                };
+                animateTimerWidth();
+            }
+        }, [item.scheduled_datetime_utc]);
 
         const isInitialTextMount = useRef(true);
         useEffect(() => {
@@ -1125,7 +1163,8 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                                 (thing.uuid == itemToEnrich.uuid) 
                                     ? { ...thing,
                                         text: enrichedItem.text,
-                                        scheduled_datetime_utc: enrichedItem.scheduled_datetime_utc }
+                                        scheduled_datetime_utc: enrichedItem.scheduled_datetime_utc,
+                                        schedule_just_added: (enrichedItem.scheduled_datetime_utc) ? true : false }
                                     : thing
                                     ));
                             
@@ -1187,7 +1226,7 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
         }
 
         const handleBlur = (thing) => {
-            console.log(`Inside handleBlur for index ${getIndex()}`);
+            //console.log(`Inside handleBlur for index ${getIndex()}`);
 
             const textOnChange = onChangeInputValue.current;
             //console.log("textOnChange: " + textOnChange);
@@ -1346,14 +1385,15 @@ const DootooList = ({ thingName = 'item', loadingAnimMsg = null, listArray, list
                             }
                             <View style={styles.itemNameContainer}>
                                 {((thingName == 'item') && item.scheduled_datetime_utc) ?
-                                    <Pressable hitSlop={10} style={styles.timerIconContainer}
-                                        onPress={() => handleTimerClick(item)}>
-                                        <Image style={styles.timerIcon} source={
-                                            (isThingOverdue(item) && !item.is_done)
-                                                ? require("@/assets/images/timer_icon_FF0000.png")
-                                                : require("@/assets/images/timer_icon_556B2F.png")
-                                        } />
-                                    </Pressable>
+                                    <Reanimated.View style={[styles.timerIconContainer, timerContainerWidthAnimatedStyle]}>
+                                        <Pressable hitSlop={10} onPress={() => handleTimerClick(item)}>
+                                            <Reanimated.Image style={[styles.timerIcon, timerOpacityAnimatedStyle]} source={
+                                                (isThingOverdue(item) && !item.is_done)
+                                                    ? require("@/assets/images/timer_icon_FF0000.png")
+                                                    : require("@/assets/images/timer_icon_556B2F.png")
+                                            } />
+                                        </Pressable>
+                                    </Reanimated.View>
                                     : <></>}
                                 {(currentlyTappedThing.current && (currentlyTappedThing.current.uuid == item.uuid)) ?
                                     <TextInput
