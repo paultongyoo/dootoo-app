@@ -1187,7 +1187,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                     : thing
                                     ));
                             
-                            // TODO: Move these two operations to the enrichment lambda
+                            // 1.3 Intentionally NOT implementing the below functions in the enrichment lambda
+                            //     to minimize time required to return enrichment back to client
                             const deepItemCopy = { ...item,
                                                     text: enrichmentResponse.text,
                                                     scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc }
