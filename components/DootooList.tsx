@@ -1085,6 +1085,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         thingRowPositionXs.current[item.uuid] = rowPositionX;       // Pass shared values to global map so they can be animated
         thingRowHeights.current[item.uuid] = rowHeight;             // via user actions such as handleThingDelete
         const [refreshKey, setRefreshKey] = useState(1);
+        const lastEnrichedText = useRef('');
 
         const fullRowHeight = useRef(-1);
         const lastTextInputHeight = useRef(0);         // iOS-specific var used to keep track of last input height and
@@ -1120,14 +1121,21 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             if (rowHeight.value == 0) {
                 rowHeight.value = withTiming(fullRowHeight.current, { duration: 300 });
             }
+
+            // If row had a text opacity of 0 on render, assume its text was just faded out and changed
+            // to be faded in again to display its new value
             if (textOpacity.value == 0) {
                 textOpacity.value = withTiming(1, { duration: 300 });
             }
         });
 
         useEffect(() => {
-            if (item.scheduled_datetime_utc) {
-                const animateTimerWidth = async() => {
+
+            // If item has a schedule but the timer container width is zero
+            // ASSume the schedule was added to an existing item through enrichment
+            // and thus fade in the timer
+            if (item.scheduled_datetime_utc && (timerContainerWidth.value == 0)) {
+                const animateTimerAppearance = async() => {
                     await new Promise<void>((resolve) => {
                         timerContainerWidth.value = withTiming(30, { duration: 300 }, (isFinished) => {
                             if (isFinished) {
@@ -1142,15 +1150,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             }
                         })
                     });
-
-                    // Reset scheduled_just_added field after animation
-                    listArraySetter((prevThings) => 
-                        prevThings.map((prevThing) => 
-                            (prevThing.uuid == item.uuid)
-                                ? { ...prevThing, schedule_just_added: false }
-                                : prevThing));
                 };
-                animateTimerWidth();
+                animateTimerAppearance();
             }
         }, [item.scheduled_datetime_utc]);
 
@@ -1159,12 +1160,14 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             //console.log("renderItem useEFfect([item.text]) - item.text: " + item.text);
             if (isInitialTextMount.current) {
                 isInitialTextMount.current = false;
-            } else if ((thingName == THINGNAME_ITEM) && item.text && (item.text.length > 0) && !item.schedule_just_added) {
+            } else if ((thingName == THINGNAME_ITEM) && item.text && (item.text.length > 0) && (item.text != lastEnrichedText.current)) {
                 const attemptToEnrichedItem = async (itemToEnrich) => {
                     try {
                         const enrichmentResponse = await fetchWithRetry(() => enrichItem(itemToEnrich));
                         if (enrichmentResponse && enrichmentResponse.enriched) {
                             //console.log("Enriched Item Response: " + JSON.stringify(enrichedItem));
+
+                            lastEnrichedText.current = enrichmentResponse.text;
 
                             await new Promise<void>((resolve) => {
                                 textOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
@@ -1179,8 +1182,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 (thing.uuid == itemToEnrich.uuid) 
                                     ? { ...thing,
                                         text: enrichmentResponse.text,
-                                        scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc,
-                                        schedule_just_added: (enrichmentResponse.scheduled_datetime_utc) ? true : false }
+                                        scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc
+                                        }
                                     : thing
                                     ));
                             
@@ -1200,8 +1203,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 }
                 console.log("Calling attemptToEnrichedItem for changed text: " + item.text);
                 attemptToEnrichedItem(item);
+            } else if (item.text == lastEnrichedText.current) {
+                console.log("Discarding enrichment call as item text equals last enrichment text: " + item.text);
             } else {
-                console.log("Abandoning call for changed text: " + item.text);
+                console.log("Discarding enrichment call for blanked text");
             }
         }, [item.text])
 
