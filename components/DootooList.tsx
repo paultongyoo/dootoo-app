@@ -1,6 +1,6 @@
 import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, TouchableWithoutFeedback, AppState, StyleSheet, Platform, Alert } from 'react-native';
 import { useState, useRef, useContext, useEffect } from 'react';
-import Reanimated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Reanimated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { AppContext } from './AppContext';
@@ -39,7 +39,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     shouldInitialLoad = true }) => {
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, initializeLocalUser,
-        fadeInListOnRender, listOpacity, listFadeInAnimation, listFadeOutAnimation,
         thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap, selectedItem,
         currentlyTappedThing
     } = useContext(AppContext);
@@ -105,7 +104,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }
     }, []);
 
-
     useEffect(() => {
         //console.log(`useEffect[listArray] called: List length ${listArray.length}, initialLoad: ${initialLoad.current}`);
         //console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`); 
@@ -118,13 +116,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             } else {
                 updateTipsCache(selectedItem, listArray);
             }
-
-            // 1.3 Deactivated fade in render to prevent flicker
-            // if (fadeInListOnRender.current) {
-            //     listFadeInAnimation.start(() => {
-            //         fadeInListOnRender.current = false;
-            //     });
-            // }
 
             if (lastRecordedCount.current > 0) {
                 // If we're inside here, we were called after recording new things
@@ -1549,7 +1540,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         <ActivityIndicator size={"large"} color="#3E3723" />
                     </Reanimated.View>
                     :
-                    <Animated.View style={[styles.taskContainer, fadeInListOnRender.current && { opacity: listOpacity }]}>
+                    <View style={[styles.taskContainer]}>
                         {listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0 ?
                             <DraggableFlatList
                                 data={listArray.filter(item => !item.is_deleted)}
@@ -1595,7 +1586,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             : <View style={styles.errorTextContainer}>
                                 <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
                             </View>}
-                    </Animated.View>
+                    </View>
                 }
                 <DootooFooter hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveAllThingsFunc={saveAllThings} />
                 <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>

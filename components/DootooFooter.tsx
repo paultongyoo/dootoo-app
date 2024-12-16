@@ -365,12 +365,6 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                             //If list is initially empty, fade in the new list
                             listArraySetterFunc((prevThings) => response.concat(prevThings));
 
-                            // fadeInListOnRender.current = true;
-                            // listFadeInAnimation.start(() => {
-                            //     fadeInListOnRender.current = false;
-                            //     listFadeInAnimation.reset();
-                            // });
-
                             emptyListCTAFadeOutAnimation.reset();
                         });
                     } else {
