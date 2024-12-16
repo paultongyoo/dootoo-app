@@ -64,6 +64,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const blurredOnSubmit = useRef(false);
 
     const initialLoadFadeInOpacity = useSharedValue(0);
+    const listOpacity = useSharedValue(0);
 
     /* 1.2 Note: DEACTIVATING PAGINATION for now to prevent accidental 
     //           orphaning as well as testing UX of maintaining local/cached list
@@ -126,17 +127,22 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                 // Display Toast
                 Toast.show({
-                    type: 'undoableToast',
+                    type: 'msgOpenWidth',
                     text1: `Added ${lastRecordedCount.current} ${thingName}${(lastRecordedCount.current > 1) ? 's' : ''}.`,
                     position: 'bottom',
                     bottomOffset: 220,
                     visibilityTime: 8000,
                     props: {
-                        onUndoPress: () => {
+                        
+                        // 1.3 TODO Revise undo logic with upcoming speaking into subtasks
+                        //      (items can no longer be assumed to have been just appended to top of list);
+                        //
+                        // numItemsRecorded: lastRecordedCount.current,
+                        // onUndoPress: (numItemsToUndo) => {
 
-                            // TODO: This doesn't delete in DB, check if there's a bug?
-                            listArraySetter((prevItems) => prevItems.slice(lastRecordedCount.current)); // This should update UI only and not invoke any syncronous backend operations            
-                        }
+                        //     // TODO: This doesn't delete in DB, FIX
+                        //     listArraySetter((prevItems) => prevItems.slice(numItemsToUndo)); // This should update UI only and not invoke any syncronous backend operations            
+                        // }
                     }
                 });
                 lastRecordedCount.current = 0;
@@ -280,7 +286,12 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         //const loadResponse = await loadAllThings(isPullDown, page);
         const loadResponse = await loadAllThings(isPullDown);
 
-        const things = loadResponse.things || [];
+        let things = loadResponse.things || [];
+
+        // 1.3 Distinguish things as being loaded from DB so that they
+        //     can be rendered more quickly to users
+        things = things.map((thing) => ({ ...thing, loadedFromDB: true }));
+
         const hasMore = loadResponse.hasMore;
 
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
@@ -1089,7 +1100,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         // 1.3  Using AnimatedStyle for row height as access is needed to the rowHeight SV 
         //      in order to grow/shrink row height based on text input height changes
         const animatedHeightStyle = useAnimatedStyle(() => ({
-            height: rowHeight.value
+            height: (item.loadedFromDB) ? undefined : rowHeight.value
         }));
 
         const timerContainerWidth = useSharedValue(0);
@@ -1118,6 +1129,13 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             // to be faded in again to display its new value
             if (textOpacity.value == 0) {
                 textOpacity.value = withTiming(1, { duration: 300 });
+            }
+
+            if (getIndex() == (listArray.length - 1)) {
+                if ((listArray.length > 0) && listOpacity.value == 0) {
+                    console.log("Calling code to reveal list");
+                    listOpacity.value = withTiming(1, { duration: 300 });
+                }
             }
         });
 
@@ -1315,7 +1333,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 //{ backgroundColor: 'red' },                                           // For Debugging: If seen, unexpected row height change/non-change likely
                 { transform: [{ translateX: rowPositionX }] },
                 animatedHeightStyle,                                                   // 1.3 Using AnimatedStyle for height
-                !rowHeightKnown && { position: 'absolute', opacity: 0 }                // 1.3 Opacity set to 0 until full row height determined below
+                !item.loadedFromDB && !rowHeightKnown && { position: 'absolute', opacity: 0 }                // 1.3 Opacity set to 0 until full row height determined below
             ]}
                 onLayout={(event) => {
 
@@ -1540,7 +1558,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         <ActivityIndicator size={"large"} color="#3E3723" />
                     </Reanimated.View>
                     :
-                    <View style={[styles.taskContainer]}>
+                    <Reanimated.View style={[styles.taskContainer, { opacity: listOpacity }]}>
                         {listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0 ?
                             <DraggableFlatList
                                 data={listArray.filter(item => !item.is_deleted)}
@@ -1586,7 +1604,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             : <View style={styles.errorTextContainer}>
                                 <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
                             </View>}
-                    </View>
+                    </Reanimated.View>
                 }
                 <DootooFooter hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveAllThingsFunc={saveAllThings} />
                 <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
