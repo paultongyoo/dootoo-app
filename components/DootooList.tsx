@@ -1749,6 +1749,10 @@ export const listStyles = StyleSheet.create({
         flexDirection: 'row',
         backgroundColor: '#FAF3E0'
     },
+    swipeActionIcon: {
+        height: 25,
+        width: 25
+      },
 })
 
 export default DootooList;

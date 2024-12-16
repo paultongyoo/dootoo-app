@@ -659,14 +659,6 @@ export default function Index() {
     },
     swipeableContainer: {
       backgroundColor: '#DCC7AA'
-    },
-    swipeActionIcon_trash: {
-      height: 25,
-      width: 25
-    },
-    swipeActionIcon_ident: {
-      height: 25,
-      width: 25
     }
   });
 
@@ -688,14 +680,14 @@ export default function Index() {
         <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
           <Pressable
             onPress={() => handleThingDeleteFunc(item)}>
-            <Image style={styles.swipeActionIcon_trash} source={require("@/assets/images/trash_icon_white.png")} />
+            <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/trash_icon_white.png")} />
           </Pressable>
         </Reanimated.View>
         {item.parent_item_uuid ?
           <Reanimated.View style={[listStyles.itemSwipeAction]}>
             <Pressable
               onPress={() => handleMakeParent(item)}>
-              <Image style={styles.swipeActionIcon_ident} source={require("@/assets/images/left_outdent_3E2723.png")} />
+              <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/left_outdent_3E2723.png")} />
             </Pressable>
           </Reanimated.View>
           : <></>
@@ -711,7 +703,7 @@ export default function Index() {
           <Reanimated.View style={[listStyles.itemSwipeAction]}>
             <Pressable
               onPress={() => handleMakeChild(item, index)}>
-              <Image style={styles.swipeActionIcon_ident} source={require("@/assets/images/left_indent_3E2723.png")} />
+              <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/left_indent_3E2723.png")} />
             </Pressable>
           </Reanimated.View>
           : <></>

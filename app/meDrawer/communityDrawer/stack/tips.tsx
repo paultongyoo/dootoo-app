@@ -214,7 +214,7 @@ export default function ItemTips() {
           <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
             <Pressable
               onPress={() => handleThingDeleteFunc(tip)}>
-              <Image style={styles.swipeActionIcon_trash} source={require("@/assets/images/trash_icon_white.png")} />
+              <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/trash_icon_white.png")} />
             </Pressable>
           </Reanimated.View>
           :
@@ -234,7 +234,7 @@ export default function ItemTips() {
             <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Flag]}>
               <Pressable
                 onPress={() => { handleTipFlag(tip) }}>
-                <Image style={styles.swipeActionIcon_flag} source={require("@/assets/images/flag_white.png")} />
+                <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/flag_white.png")} />
               </Pressable>
             </Reanimated.View>
           </>
@@ -345,14 +345,6 @@ export default function ItemTips() {
     voteThumbIcon: {
       width: 30,
       height: 30
-    },
-    swipeActionIcon_trash: {
-      height: 30,
-      width: 30
-    },
-    swipeActionIcon_flag: {
-      height: 30,
-      width: 30
     },
     voteIconContainer: {
       //opacity: 0.6
