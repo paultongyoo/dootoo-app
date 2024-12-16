@@ -1137,7 +1137,12 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         });
 
         const revealListIfLastRowRendered = () => {
-            if (getIndex() == (listArray.length - 1)) {
+
+            // Reveal the list if we've rendered the last of the 
+            // user's items or the 15th item, whichever index is lesser
+            // (we choose 15 because all visible items on user's list will have been rendered;
+            //  we can afford janky animations the user won't be able to see)
+            if (getIndex() == Math.min(15, listArray.length - 1)) {
                 if ((listArray.length > 0) && listOpacity.value == 0) {
                     console.log("Calling code to reveal list");
                     listOpacity.value = withTiming(1, { duration: 300 });
