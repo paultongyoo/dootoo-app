@@ -63,6 +63,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const selectedTimerThing = useRef(null);
     const blurredOnSubmit = useRef(false);
 
+    const firstListRendered = useSharedValue(false);
     const initialLoadFadeInOpacity = useSharedValue(0);
     const listOpacity = useSharedValue(0);
 
@@ -1094,8 +1095,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
         // 1.3  Using AnimatedStyle for row height as access is needed to the rowHeight SV 
         //      in order to grow/shrink row height based on text input height changes
+        //      -- We only activate rowHeight after the first list on the screen
+        //         has been rendered to minimize first list wait time for user
         const animatedHeightStyle = useAnimatedStyle(() => ({
-            height: rowHeight.value
+            height: (firstListRendered.value) ? rowHeight.value : undefined
         }));
 
         const timerContainerWidth = useSharedValue(0);
@@ -1114,9 +1117,16 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         useEffect(() => {
             //console.log("renderItem.useEffect([]) " + item.text + " rowHeight: " + rowHeight.value);
 
+            // If we've started rendering items for the first time on this list
+            // and the list is hidden, reveal it
+            if (listOpacity.value == 0) {
+                listOpacity.value = withTiming(1, { duration: 300 });
+            }
+            
             // If row had a height of 0 on render, assume it was just collapsed via a prior animation
             // and restore it to full height.  See special case for first reveal of list in the isFinished clause
             if (rowHeight.value == 0) {
+                //console.log("Expanding row " + getIndex() + " to full height, firstListRendered.value: " + firstListRendered.value);
                 rowHeight.value = withTiming(fullRowHeight.current, { duration: 300 }, (isFinished) => {
                     if (isFinished) {
 
@@ -1142,11 +1152,9 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             // user's items or the 15th item, whichever index is lesser
             // (we choose 15 because all visible items on user's list will have been rendered;
             //  we can afford janky animations the user won't be able to see)
-            if (getIndex() == Math.min(15, listArray.length - 1)) {
-                if ((listArray.length > 0) && listOpacity.value == 0) {
-                    console.log("Calling code to reveal list");
-                    listOpacity.value = withTiming(1, { duration: 300 });
-                }
+            if (getIndex() == (listArray.length - 1)) {
+                console.log("Setting boolean indicating first list has been rendered");
+                firstListRendered.value = true;
             }
         }
 
@@ -1344,7 +1352,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 //{ backgroundColor: 'red' },                                           // For Debugging: If seen, unexpected row height change/non-change likely
                 { transform: [{ translateX: rowPositionX }] },
                 animatedHeightStyle,                                                   // 1.3 Using AnimatedStyle for height
-                !rowHeightKnown && { position: 'absolute', opacity: 0 }                // 1.3 Opacity set to 0 until full row height determined below
+                firstListRendered.value && !rowHeightKnown && { position: 'absolute', opacity: 0 }                // 1.3 Opacity set to 0 until full row height determined below
             ]}
                 onLayout={(event) => {
 
