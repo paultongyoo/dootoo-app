@@ -685,7 +685,6 @@ export default function Index() {
     itemContainer: {
       flexDirection: 'row', // Lays out children horizontally
       alignItems: 'center', // Aligns children vertically (centered in this case),
-      paddingTop: 5,
       paddingBottom: 5
     },
     itemCircleOpen: {
@@ -730,7 +729,8 @@ export default function Index() {
       justifyContent: 'center',
       alignItems: 'center',
       flexDirection: 'row',
-      backgroundColor: '#FAF3E0'
+      backgroundColor: '#FAF3E0',
+      marginBottom: 5
     },
     action_Delete: {
       backgroundColor: 'red',
