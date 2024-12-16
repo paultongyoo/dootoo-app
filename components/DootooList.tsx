@@ -52,11 +52,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
     // References:  Changing these should intentionally NOT cause this list to re-render
     //const itemFlatList = useRef(null);              // TODO: Consider deprecate
-    const isInitialMount = useRef(true);
     const onChangeInputValue = useRef('');
-    const isPageLoading = useRef(false);
     const hasMoreThings = useRef(true);
-    const initialLoad = useRef(true);
     const editableCalendars = useRef<Calendar.Calendar[]>([]);
     const selectedCalendar = useRef();
     const selectedTimerThing = useRef(null);
@@ -76,6 +73,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     call should be less heavy and less frequent given app
                     will only call on pull down to refresh actions with this release.             
                  -- All operations to sync backend DB updated to also update local cache
+
+    const isPageLoading = useRef(false);
     */
 
     // 1.2 Page state var will remain and stay at its value of (1)
@@ -87,7 +86,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             //console.log("initializeLocalUser callback method");
             if (shouldInitialLoad) {
                 if (!isNew) {
-                    initialLoad.current = false;
                     initialLoadFadeInOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
                         if (isFinished) {
                             runOnJS(resetListWithFirstPageLoad)();
@@ -106,74 +104,67 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     }, []);
 
     useEffect(() => {
-        //console.log(`useEffect[listArray] called: List length ${listArray.length}, initialLoad: ${initialLoad.current}`);
-        //console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`); 
+        // console.log(`useEffect[listArray] called: List length ${listArray.length}`);
+        // console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
 
-        if (initialLoad.current && !isInitialMount.current) {
-
-            // Asyncronously update local cache with latest listArray update
-            if (thingName == THINGNAME_ITEM) {
-                updateItemsCache(listArray);
-            } else {
-                updateTipsCache(selectedItem, listArray);
-            }
-
-            if (lastRecordedCount.current > 0) {
-                // If we're inside here, we were called after recording new things
-
-                if (thingName == 'tip') {
-                    ProfileCountEventEmitter.emit('incr_tips', { count: lastRecordedCount.current });
-                }
-
-                // Display Toast
-                Toast.show({
-                    type: 'msgOpenWidth',
-                    text1: `Added ${lastRecordedCount.current} ${thingName}${(lastRecordedCount.current > 1) ? 's' : ''}.`,
-                    position: 'bottom',
-                    bottomOffset: 220,
-                    visibilityTime: 8000,
-                    props: {
-
-                        // 1.3 TODO Revise undo logic with upcoming speaking into subtasks
-                        //      (items can no longer be assumed to have been just appended to top of list);
-                        //
-                        // numItemsRecorded: lastRecordedCount.current,
-                        // onUndoPress: (numItemsToUndo) => {
-
-                        //     // TODO: This doesn't delete in DB, FIX
-                        //     listArraySetter((prevItems) => prevItems.slice(numItemsToUndo)); // This should update UI only and not invoke any syncronous backend operations            
-                        // }
-                    }
-                });
-                lastRecordedCount.current = 0;
-            } else {
-
-                // This call has to be in this "main UI thread" in order to work
-                Toast.hide();
-            }
-
-            // Immediately look for new counts on any list update
-            restartPolling();
-
-            if (thingName == THINGNAME_ITEM) {
-                syncItemCalendarUpdates();
-            }
-
-            if (!screenInitialized) {
-                initialLoadFadeInOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
-                    if (isFinished) {
-                        runOnJS(setScreenInitialized)(true);
-                    }
-                });
-            }
-
-            // Check for count updates since user just made an action
-            pollThingCounts();
-        } else if (isInitialMount.current) {
-
-            console.log("Bypassing useEffect(listArray) logic on initial mount");
-            isInitialMount.current = false;
+        // Asyncronously update local cache with latest listArray update
+        if (thingName == THINGNAME_ITEM) {
+            updateItemsCache(listArray);
+        } else {
+            updateTipsCache(selectedItem, listArray);
         }
+
+        if (lastRecordedCount.current > 0) {
+            // If we're inside here, we were called after recording new things
+
+            if (thingName == 'tip') {
+                ProfileCountEventEmitter.emit('incr_tips', { count: lastRecordedCount.current });
+            }
+
+            // Display Toast
+            Toast.show({
+                type: 'msgOpenWidth',
+                text1: `Added ${lastRecordedCount.current} ${thingName}${(lastRecordedCount.current > 1) ? 's' : ''}.`,
+                position: 'bottom',
+                bottomOffset: 220,
+                visibilityTime: 8000,
+                props: {
+
+                    // 1.3 TODO Revise undo logic with upcoming speaking into subtasks
+                    //      (items can no longer be assumed to have been just appended to top of list);
+                    //
+                    // numItemsRecorded: lastRecordedCount.current,
+                    // onUndoPress: (numItemsToUndo) => {
+
+                    //     // TODO: This doesn't delete in DB, FIX
+                    //     listArraySetter((prevItems) => prevItems.slice(numItemsToUndo)); // This should update UI only and not invoke any syncronous backend operations            
+                    // }
+                }
+            });
+            lastRecordedCount.current = 0;
+        } else {
+
+            // This call has to be in this "main UI thread" in order to work
+            Toast.hide();
+        }
+
+        // Immediately look for new counts on any list update
+        restartPolling();
+
+        if (thingName == THINGNAME_ITEM) {
+            syncItemCalendarUpdates();
+        }
+
+        if (!screenInitialized) {
+            initialLoadFadeInOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+                if (isFinished) {
+                    runOnJS(setScreenInitialized)(true);
+                }
+            });
+        }
+
+        // Check for count updates since user just made an action
+        pollThingCounts();
     }, [listArray]);
 
     const pollThingCounts = async () => {
@@ -295,8 +286,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
         hasMoreThings.current = hasMore;
 
-        initialLoad.current = true;
-        isPageLoading.current = false;
+        //isPageLoading.current = false;
         setRefreshing(false);
 
         // If we're loading the first page, assume we want to reset the displays list to only the first page
@@ -1380,10 +1370,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                     // 1.3 NOTE OnLayout does NOT fire when TextInput grows because we've given the containing view the fixed SharedValue height.
                     //          rowHeight.value must be explicitly reset in TextInput onContentSizeChange handler
-/*                     console.log("Index " + getIndex() + ": onLayout fired with height: " + event.nativeEvent.layout.height +
-                        ", rowHeightKnown: " + rowHeightKnown +
-                        ", rowHeight: " + rowHeight.value +
-                        ", firstListRendered: " + firstListRendered.value); */
+                    /*                     console.log("Index " + getIndex() + ": onLayout fired with height: " + event.nativeEvent.layout.height +
+                                            ", rowHeightKnown: " + rowHeightKnown +
+                                            ", rowHeight: " + rowHeight.value +
+                                            ", firstListRendered: " + firstListRendered.value); */
                     if (!rowHeightKnown) {
                         const layoutHeight = event.nativeEvent.layout.height;
                         fullRowHeight.current = layoutHeight;
@@ -1482,17 +1472,17 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         onBlur={() => handleBlur(item)}
                                     />
                                     : (
-                                            (isThingPressable(item)) ?
-                                                <Pressable
-                                                    style={listStyles.itemNamePressable}
-                                                    onLongPress={drag}
-                                                    disabled={isActive}
-                                                    onPress={() => handleThingTextTap(item)}>
-                                                    <Reanimated.Text style={[textOpacityAnimatedStyle, listStyles.taskTitle, item.is_done && listStyles.taskTitle_isDone]}>{item.text}</Reanimated.Text>
-                                                </Pressable>
-                                                : <View style={styles.tipNamePressable}>
-                                                    <Text style={[listStyles.taskTitle]}>{item.text}</Text>
-                                                </View>
+                                        (isThingPressable(item)) ?
+                                            <Pressable
+                                                style={listStyles.itemNamePressable}
+                                                onLongPress={drag}
+                                                disabled={isActive}
+                                                onPress={() => handleThingTextTap(item)}>
+                                                <Reanimated.Text style={[textOpacityAnimatedStyle, listStyles.taskTitle, item.is_done && listStyles.taskTitle_isDone]}>{item.text}</Reanimated.Text>
+                                            </Pressable>
+                                            : <View style={styles.tipNamePressable}>
+                                                <Text style={[listStyles.taskTitle]}>{item.text}</Text>
+                                            </View>
                                     )}
                                 <ListThingSidebar thing={item} styles={styles} />
                             </View>
@@ -1620,7 +1610,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                                 ListFooterComponent={
                                     <View style={{ paddingTop: 10 }}>
-                                        {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />}
+                                        {/* {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />} */}
                                         <View style={{ height: 50 }} />
                                     </View>}
                             />
