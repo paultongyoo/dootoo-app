@@ -1591,9 +1591,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         <Text style={styles.initialLoadMsg}>{loadingAnimMsg}</Text>
                         <ActivityIndicator size={"large"} color="#3E3723" />
                     </Reanimated.View>
-                    :
-                    <Reanimated.View style={[styles.taskContainer, { opacity: listOpacity }]}>
-                        {listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0 ?
+                    : (listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0) ?
+                        <Reanimated.View style={[styles.taskContainer, { opacity: listOpacity }]}>
                             <DraggableFlatList
                                 data={listArray.filter(item => !item.is_deleted)}
                                 onDragEnd={({ data, from, to }) => {
@@ -1629,16 +1628,9 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />}
                                         <View style={{ height: 50 }} />
                                     </View>}
-                            /> : <EmptyThingUX styles={styles} />
-                        }
-                        {(errorMsg) ?
-                            <View style={styles.errorTextContainer}>
-                                <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
-                            </View>
-                            : <View style={styles.errorTextContainer}>
-                                <Text style={styles.errorText}>{JSON.stringify(errorMsg)}</Text>
-                            </View>}
-                    </Reanimated.View>
+                            /> 
+                        </Reanimated.View>
+                        : <EmptyThingUX styles={styles} />
                 }
                 <DootooFooter hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveAllThingsFunc={saveAllThings} />
                 <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>

@@ -464,7 +464,17 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const handleKeyboardButtonPress = () => {
         const newItem = generateNewKeyboardEntry();
         currentlyTappedThing.current = newItem;
-        listArraySetterFunc((prevItems) => [ newItem, ...prevItems]);
+        
+        if (listArray.length == 0) {
+
+            // If the list is empty, we ASSume the empty list CTA is visible.  Fade it out first before
+            // adding the first item
+            emptyListCTAFadeOutAnimation.start(() => {
+                listArraySetterFunc((prevItems) => [ newItem, ...prevItems]);
+            })
+        } else {
+            listArraySetterFunc((prevItems) => [ newItem, ...prevItems]);
+        }      
     }
 
     const insets = useSafeAreaInsets();

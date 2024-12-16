@@ -671,16 +671,7 @@ export default function Index() {
     },
     taskContainer: {
       flex: 1,
-      paddingTop: 4
-    },
-    taskTitle: {
-      fontSize: 16,
-      textAlign: 'left',
-      paddingRight: 5
-    },
-    taskTitle_isDone: {
-      color: '#556B2F',
-      textDecorationLine: 'line-through'
+      paddingTop: 8
     },
     itemContainer: {
       flexDirection: 'row', // Lays out children horizontally
@@ -717,12 +708,27 @@ export default function Index() {
       flex: 1,
       width: '100%',
       paddingRight: 5,
-      justifyContent: 'center',
+      justifyContent: 'center'
+    },
+    taskTitle: {
+      fontSize: 16,
+      textAlign: 'left',
+      paddingRight: 5,
+      height: 25,
+      position: 'relative',
+      top: 5,
+      //backgroundColor: 'blue',
+      
+    },
+    taskTitle_isDone: {
+      color: '#556B2F',
+      textDecorationLine: 'line-through'
     },
     itemTextInput: {
       fontSize: 16,
       paddingRight: 10,
-      flex: 1
+      flex: 1,
+      //backgroundColor: 'red'
     },
     itemSwipeAction: {
       width: 70,
@@ -800,12 +806,12 @@ export default function Index() {
       marginLeft: 8
     },
     swipeActionIcon_trash: {
-      height: 30,
-      width: 30
+      height: 25,
+      width: 25
     },
     swipeActionIcon_ident: {
-      height: 30,
-      width: 30
+      height: 25,
+      width: 25
     },
     giveTipContainer: {
       justifyContent: 'center',
