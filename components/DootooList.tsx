@@ -1440,9 +1440,9 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             }
                             <View style={listStyles.itemNameContainer}>
                                 {((thingName == THINGNAME_ITEM) && item.scheduled_datetime_utc) ?
-                                    <Reanimated.View style={[styles.timerIconContainer, timerContainerWidthAnimatedStyle]}>
+                                    <Reanimated.View style={[listStyles.timerIconContainer, timerContainerWidthAnimatedStyle]}>
                                         <Pressable hitSlop={10} onPress={() => handleTimerClick(item)}>
-                                            <Reanimated.Image style={[styles.timerIcon, timerOpacityAnimatedStyle]} source={
+                                            <Reanimated.Image style={[listStyles.timerIcon, timerOpacityAnimatedStyle]} source={
                                                 (isThingOverdue(item) && !item.is_done)
                                                     ? require("@/assets/images/timer_icon_FF0000.png")
                                                     : require("@/assets/images/timer_icon_556B2F.png")
@@ -1739,6 +1739,14 @@ export const listStyles = StyleSheet.create({
     swipeActionIcon: {
         height: 25,
         width: 25
+    },
+    timerIconContainer: {
+        justifyContent: 'center',
+        paddingRight: 10
+    },
+    timerIcon: {
+        height: 16,
+        width: 16
     },
 })
 
