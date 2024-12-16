@@ -670,13 +670,12 @@ export default function Index() {
       transform: [{ rotate: '9deg' }]
     },
     taskContainer: {
-      flex: 1,
-      paddingTop: 8
+      flex: 1
     },
     itemContainer: {
       flexDirection: 'row', // Lays out children horizontally
       alignItems: 'center', // Aligns children vertically (centered in this case),
-      paddingBottom: 5
+      paddingTop: 5
     },
     itemCircleOpen: {
       width: 26,
@@ -735,8 +734,7 @@ export default function Index() {
       justifyContent: 'center',
       alignItems: 'center',
       flexDirection: 'row',
-      backgroundColor: '#FAF3E0',
-      marginBottom: 5
+      backgroundColor: '#FAF3E0'
     },
     action_Delete: {
       backgroundColor: 'red',

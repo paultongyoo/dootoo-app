@@ -167,6 +167,9 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     }
                 });
             }
+
+            // Check for count updates since user just made an action
+            pollThingCounts();
         } else if (isInitialMount.current) {
 
             console.log("Bypassing useEffect(listArray) logic on initial mount");
