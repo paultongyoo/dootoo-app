@@ -209,7 +209,7 @@ export default function ItemTips() {
     return (
       <>
         {(selectedItem.is_done) ?
-          <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
+          <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
               <Pressable
                   onPress={() => handleThingDeleteFunc(tip)}>
                   <Image style={styles.swipeActionIcon_trash} source={require("@/assets/images/trash_icon_white.png")} />
@@ -217,19 +217,19 @@ export default function ItemTips() {
           </Reanimated.View>
           :
           <>
-            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Upvote, (tip.user_vote_value == 1) && styles.action_vote_selected]}>
+            <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Upvote, (tip.user_vote_value == 1) && styles.action_vote_selected]}>
               <Pressable
                 onPress={() => { handleTipVote(tip, 1) }}>
                 <Image style={styles.voteThumbIcon} source={require("@/assets/images/thumbs_up_white.png")} />
               </Pressable>
             </Reanimated.View>
-            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Downvote, (tip.user_vote_value == -1) && styles.action_vote_selected]}>
+            <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Downvote, (tip.user_vote_value == -1) && styles.action_vote_selected]}>
               <Pressable
                 onPress={() => { handleTipVote(tip, -1) }}>
                 <Image style={styles.voteThumbIcon} source={require("@/assets/images/thumbs_down_white.png")} />
               </Pressable>
             </Reanimated.View>
-            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Flag]}>
+            <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Flag]}>
               <Pressable
                 onPress={() => { handleTipFlag(tip) }}>
                 <Image style={styles.swipeActionIcon_flag} source={require("@/assets/images/flag_white.png")} />
@@ -282,9 +282,9 @@ export default function ItemTips() {
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333',
       paddingTop: 4
-    },
-    itemContainer: {
-      marginLeft: 14
+    },  
+    itemContainer: {            // Appends to listStyle.itemContainer
+      marginLeft: 14        
     },
     swipeableContainer: {
       backgroundColor: '#EBDDC5'
@@ -318,27 +318,9 @@ export default function ItemTips() {
       flex: 1,
       flexDirection: 'row'
     },
-    itemNamePressable: {
-      flex: 1,
-      width: '100%',
-      paddingRight: 10
-    },
     tipNamePressable: {
       flex: 1,
       width: '100%'
-    },
-    itemTextInput: {
-      fontSize: 16,
-      padding: 5,
-      paddingRight: 25,
-      flex: 1
-    },
-    itemSwipeAction: {
-      width: 70,
-      justifyContent: 'center',
-      alignItems: 'center',
-      flexDirection: 'row',
-      backgroundColor: '#FAF3E0'
     },
     action_Upvote: {
       backgroundColor: '#556B2F'
@@ -349,19 +331,6 @@ export default function ItemTips() {
     action_vote_selected: {
       borderWidth: 2,
       borderColor: 'white'
-    },
-    itemLeftSwipeActions: {
-      width: 50,
-      backgroundColor: 'green',
-      justifyContent: 'center',
-      alignItems: 'center'
-    },
-    errorTextContainer: {
-      padding: 20
-    },
-    errorText: {
-      color: 'red',
-      fontSize: 10
     },
     similarCountContainer: {
       justifyContent: 'center',
@@ -539,7 +508,7 @@ export default function ItemTips() {
           <View style={styles.headerItemContainer}>
             <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick()}></Pressable>
             <View style={styles.headerItemNameContainer}>
-              <View style={styles.itemNamePressable}>
+              <View style={listStyles.itemNamePressable}>
                 <Text style={[listStyles.taskTitle, selectedItem.is_done && listStyles.taskTitle_isDone]}>{selectedItem.text}</Text>
               </View>
               <DootooItemSidebar thing={selectedItem} styles={styles} />

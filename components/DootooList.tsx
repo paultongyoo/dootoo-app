@@ -1455,7 +1455,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         ref={textInputRef}
                                         blurOnSubmit={true}
                                         multiline={true}
-                                        style={styles.itemTextInput}
+                                        style={listStyles.itemTextInput}
                                         defaultValue={item.text}
                                         autoFocus={true}
                                         onContentSizeChange={(event) => {
@@ -1495,7 +1495,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                     :
                                     (isThingPressable(item)) ?
                                         <Pressable
-                                            style={styles.itemNamePressable}
+                                            style={listStyles.itemNamePressable}
                                             onLongPress={drag}
                                             disabled={isActive}
                                             onPress={() => handleThingTextTap(item)}>
@@ -1726,6 +1726,25 @@ export const listStyles = StyleSheet.create({
         borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
         flex: 1,
         flexDirection: 'row'
+    },
+    itemNamePressable: {
+        flex: 1,
+        width: '100%',
+        paddingRight: 5
+    },
+    itemTextInput: {
+        fontSize: 16,
+        paddingRight: 10,
+        flex: 1,
+        //paddingRight: 25              // Tips had this, necessary?
+        //backgroundColor: 'red'    
+    },
+    itemSwipeAction: {
+        width: 70,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row',
+        backgroundColor: '#FAF3E0'
     },
 })
 

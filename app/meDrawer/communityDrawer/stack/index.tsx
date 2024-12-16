@@ -3,7 +3,7 @@ import { usePathname } from 'expo-router';
 import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
-import DootooList from "@/components/DootooList";
+import DootooList, { listStyles } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import * as amplitude from '@amplitude/analytics-react-native';
@@ -629,53 +629,9 @@ export default function Index() {
 
   const styles = StyleSheet.create({
     listContainer: {
-      //padding: 10,
       flex: 1,
-      //justifyContent: "center",
       backgroundColor: "#DCC7AA",
       paddingTop: (Platform.OS == 'ios') ? 100 : 90
-      //alignItems: "center"
-    },
-    link: {
-      fontWeight: 'bold',
-      fontSize: 20,
-      color: 'blue'
-    },
-    initialLoadAnimContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center'
-    },
-    initialLoadMsg: {
-      paddingBottom: 15,
-      fontSize: 20
-    },
-    emptyListContainer: {
-      flex: 1,
-      //flexDirection: 'row',
-      //backgroundColor: 'yellow',
-      justifyContent: 'center',
-      paddingLeft: 30
-    },
-    emptyListContainer_words: {
-      fontSize: 40
-    },
-    emptyListContainer_arrow: {
-      position: 'absolute',
-      bottom: (Platform.OS == 'ios') ? -190 : -190,
-      right: 100,
-      height: 200,
-      width: 80,
-      opacity: 0.4,
-      transform: [{ rotate: '9deg' }]
-    },
-    taskContainer: {
-      flex: 1
-    },
-    itemContainer: {
-      flexDirection: 'row', // Lays out children horizontally
-      alignItems: 'center', // Aligns children vertically (centered in this case),
-      paddingTop: 5
     },
     itemCircleOpen: {
       width: 26,
@@ -693,49 +649,6 @@ export default function Index() {
     childItemSpacer: {
       width: 20
     },
-    itemNameContainer: {
-      marginLeft: 15,
-      paddingBottom: 10,
-      paddingTop: 10,
-      paddingRight: 20,
-      borderBottomWidth: 1,
-      borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
-      flex: 1,
-      flexDirection: 'row'
-    },
-    itemNamePressable: {
-      flex: 1,
-      width: '100%',
-      paddingRight: 5,
-      justifyContent: 'center'
-    },
-    taskTitle: {
-      fontSize: 16,
-      textAlign: 'left',
-      paddingRight: 5,
-      height: 25,
-      position: 'relative',
-      top: 5,
-      //backgroundColor: 'blue',
-      
-    },
-    taskTitle_isDone: {
-      color: '#556B2F',
-      textDecorationLine: 'line-through'
-    },
-    itemTextInput: {
-      fontSize: 16,
-      paddingRight: 10,
-      flex: 1,
-      //backgroundColor: 'red'
-    },
-    itemSwipeAction: {
-      width: 70,
-      justifyContent: 'center',
-      alignItems: 'center',
-      flexDirection: 'row',
-      backgroundColor: '#FAF3E0'
-    },
     action_Delete: {
       backgroundColor: 'red',
       borderBottomWidth: 1,
@@ -746,21 +659,8 @@ export default function Index() {
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333' //#322723 with approx 20% alpha
     },
-    itemLeftSwipeActions: {
-      width: 50,
-      backgroundColor: 'green',
-      justifyContent: 'center',
-      alignItems: 'center'
-    },
     swipeableContainer: {
       backgroundColor: '#DCC7AA'
-    },
-    errorTextContainer: {
-      padding: 20
-    },
-    errorText: {
-      color: 'red',
-      fontSize: 10
     },
     itemNameSpaceFiller: {
       flex: 1
@@ -859,14 +759,14 @@ export default function Index() {
   const renderRightActions = (item, handleThingDeleteFunc) => {
     return (
       <>
-        <Reanimated.View style={[styles.itemSwipeAction, styles.action_Delete]}>
+        <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
           <Pressable
             onPress={() => handleThingDeleteFunc(item)}>
             <Image style={styles.swipeActionIcon_trash} source={require("@/assets/images/trash_icon_white.png")} />
           </Pressable>
         </Reanimated.View>
         {item.parent_item_uuid ?
-          <Reanimated.View style={[styles.itemSwipeAction]}>
+          <Reanimated.View style={[listStyles.itemSwipeAction]}>
             <Pressable
               onPress={() => handleMakeParent(item)}>
               <Image style={styles.swipeActionIcon_ident} source={require("@/assets/images/left_outdent_3E2723.png")} />
@@ -882,7 +782,7 @@ export default function Index() {
     return (
       <>
         {(!item.parent_item_uuid && (index != 0)) ?
-          <Reanimated.View style={[styles.itemSwipeAction]}>
+          <Reanimated.View style={[listStyles.itemSwipeAction]}>
             <Pressable
               onPress={() => handleMakeChild(item, index)}>
               <Image style={styles.swipeActionIcon_ident} source={require("@/assets/images/left_indent_3E2723.png")} />
