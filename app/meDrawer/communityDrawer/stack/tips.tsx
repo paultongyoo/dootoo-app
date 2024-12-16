@@ -222,13 +222,13 @@ export default function ItemTips() {
             <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Upvote, (tip.user_vote_value == 1) && styles.action_vote_selected]}>
               <Pressable
                 onPress={() => { handleTipVote(tip, 1) }}>
-                <Image style={styles.voteThumbIcon} source={require("@/assets/images/thumbs_up_white.png")} />
+                <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/thumbs_up_white.png")} />
               </Pressable>
             </Reanimated.View>
             <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Downvote, (tip.user_vote_value == -1) && styles.action_vote_selected]}>
               <Pressable
                 onPress={() => { handleTipVote(tip, -1) }}>
-                <Image style={styles.voteThumbIcon} source={require("@/assets/images/thumbs_down_white.png")} />
+                <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/thumbs_down_white.png")} />
               </Pressable>
             </Reanimated.View>
             <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Flag]}>
