@@ -280,8 +280,8 @@ export const generateNewKeyboardEntry = () => {
   return newItem;
 }
 
-export const calculateRowHeight = (text_or_textInput_height) => {
-      return text_or_textInput_height + 27;             // LAST UPDATED 12.13.24:  This height prevents the debug background red from appearing 
+export const calculateTextInputRowHeight = (text_or_textInput_height) => {
+      return text_or_textInput_height + 31;             // LAST UPDATED 12.13.24:  This height prevents the debug background red from appearing 
 }
 
 export const fetchWithRetry = async (backendServiceCall, maxRetries = 5, retryDelay = 5000) => {

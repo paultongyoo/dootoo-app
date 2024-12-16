@@ -16,7 +16,7 @@ import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { areDateObjsEqual, calculateRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, isThingOverdue } from './Helpers';
+import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, isThingOverdue } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 const THINGNAME_ITEM = "item";
@@ -43,7 +43,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         currentlyTappedThing
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
-    const [errorMsg, setErrorMsg] = useState();
     const [isRefreshing, setRefreshing] = useState(false);
     const [showCalendarSelectionDialog, setShowCalendarSelectionDialog] = useState(false);
     const [calendarSelectionInvalid, setCalendarSelectionInvalid] = useState(false);
@@ -1100,7 +1099,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         //      in order to grow/shrink row height based on text input height changes
         //      -- We only activate rowHeight after the first list on the screen
         //         has been rendered to minimize first list wait time for user
-        const animatedHeightStyle = useAnimatedStyle(() => ({
+        const rowHeightAnimatedStyle = useAnimatedStyle(() => ({
             height: (firstListRendered.value) ? rowHeight.value : undefined
         }));
 
@@ -1373,16 +1372,17 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 //{ backgroundColor: 'red' },                                           // For Debugging: If seen, unexpected row height change/non-change likely
                 isActive && { opacity: 0.6 },
                 { transform: [{ translateX: rowPositionX }] },
-                animatedHeightStyle,                                                   // 1.3 Using AnimatedStyle for height
+                rowHeightAnimatedStyle,                                                   // 1.3 Using AnimatedStyle for height
                 firstListRendered.value && !rowHeightKnown && { position: 'absolute', opacity: 0 }                // 1.3 Opacity set to 0 until full row height determined below
             ]}
                 onLayout={(event) => {
 
                     // 1.3 NOTE OnLayout does NOT fire when TextInput grows because we've given the containing view the fixed SharedValue height.
                     //          rowHeight.value must be explicitly reset in TextInput onContentSizeChange handler
-                    //console.log("Index " + getIndex() + ": onLayout fired with height: " + event.nativeEvent.layout.height +
-                    // ", rowHeightKnown: " + rowHeightKnown +
-                    // ", rowHeight: " + rowHeight.value);
+                    console.log("Index " + getIndex() + ": onLayout fired with height: " + event.nativeEvent.layout.height +
+                        ", rowHeightKnown: " + rowHeightKnown +
+                        ", rowHeight: " + rowHeight.value +
+                        ", firstListRendered: " + firstListRendered.value);
                     if (!rowHeightKnown) {
                         const layoutHeight = event.nativeEvent.layout.height;
                         fullRowHeight.current = layoutHeight;
@@ -1459,22 +1459,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         defaultValue={item.text}
                                         autoFocus={true}
                                         onContentSizeChange={(event) => {
-
-                                            if (Platform.OS == 'android') {
-
-                                                // On Android, this event only fires when number of lines changes in text input
-                                                rowHeight.value = withTiming(calculateRowHeight(event.nativeEvent.contentSize.height), { duration: 150 });
-                                            } else {
-                                                // 1.3 TODO: REVISIT iOS Handling Below                                           
-                                                // 1.3 IOS NOTE: This event fires on every keypress on iOS, therefore requiring 
-                                                //               threshold variable to only apply animation updates if height changes more
-                                                //               than 5 px (assumes this mostly only occurs when new lines are formed and not when single 
-                                                //               character changes are made)
-                                                // if (Math.abs(lastTextInputHeight.current - event.nativeEvent.contentSize.height) > 5) {
-                                                //     console.log("Text field change exceeded threshold, animating row to new height (" + event.nativeEvent.contentSize.height + ")");
-                                                //     lastTextInputHeight.current = event.nativeEvent.contentSize.height
-                                                //     rowHeight.value = withTiming(calculateRowHeight(event.nativeEvent.contentSize.height), { duration: 150 });
-                                                // }
+                                            const newHeight = event.nativeEvent.contentSize.height;
+                                            if (Platform.OS === 'android' || Math.abs(lastTextInputHeight.current - newHeight) > 5) {
+                                                rowHeight.value = withTiming(calculateTextInputRowHeight(newHeight), { duration: 150 });
+                                                lastTextInputHeight.current = newHeight;
                                             }
                                         }}
                                         onKeyPress={({ nativeEvent }) => {
@@ -1492,19 +1480,19 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         contextMenuHidden={true}
                                         onBlur={() => handleBlur(item)}
                                     />
-                                    :
-                                    (isThingPressable(item)) ?
-                                        <Pressable
-                                            style={listStyles.itemNamePressable}
-                                            onLongPress={drag}
-                                            disabled={isActive}
-                                            onPress={() => handleThingTextTap(item)}>
-                                            <Reanimated.Text style={[textOpacityAnimatedStyle, listStyles.taskTitle, item.is_done && listStyles.taskTitle_isDone]}>{item.text}</Reanimated.Text>
-                                        </Pressable>
-                                        : <View style={styles.tipNamePressable}>
-                                            <Text style={[listStyles.taskTitle]}>{item.text}</Text>
-                                        </View>
-                                }
+                                    : (
+                                            (isThingPressable(item)) ?
+                                                <Pressable
+                                                    style={listStyles.itemNamePressable}
+                                                    onLongPress={drag}
+                                                    disabled={isActive}
+                                                    onPress={() => handleThingTextTap(item)}>
+                                                    <Reanimated.Text style={[textOpacityAnimatedStyle, listStyles.taskTitle, item.is_done && listStyles.taskTitle_isDone]}>{item.text}</Reanimated.Text>
+                                                </Pressable>
+                                                : <View style={styles.tipNamePressable}>
+                                                    <Text style={[listStyles.taskTitle]}>{item.text}</Text>
+                                                </View>
+                                    )}
                                 <ListThingSidebar thing={item} styles={styles} />
                             </View>
                         </View>
@@ -1703,23 +1691,6 @@ export const listStyles = StyleSheet.create({
         alignItems: 'center',
         paddingTop: 5
     },
-    taskTitle: {
-        fontSize: 16,
-        textAlign: 'left',
-        paddingRight: 5,
-        height: 25,
-        position: 'relative',
-        top: 5,
-        //backgroundColor: 'blue',    
-    },
-    taskTitle_isDone: {
-        color: '#556B2F',
-        textDecorationLine: 'line-through'
-    },
-    initialLoadMsg: {
-        fontSize: 20,
-        paddingBottom: 15
-    },
     itemNameContainer: {
         marginLeft: 15,                 // Tips had marginLeft 17 - necessary?
         paddingBottom: 10,
@@ -1742,6 +1713,22 @@ export const listStyles = StyleSheet.create({
         //paddingRight: 25              // Tips had this, necessary?
         //backgroundColor: 'red'    
     },
+    taskTitle: {
+        fontSize: 16,
+        textAlign: 'left',
+        paddingRight: 5,
+        paddingTop: 3,                  // 1.3 DO NOT ADJUST TaskTitle padding Top/Bottom without accounting for row height affect
+        paddingBottom: 2                //     when items lose focus!!!!                         
+        //backgroundColor: 'blue',    
+    },
+    taskTitle_isDone: {
+        color: '#556B2F',
+        textDecorationLine: 'line-through'
+    },
+    initialLoadMsg: {
+        fontSize: 20,
+        paddingBottom: 15
+    },
     itemSwipeAction: {
         width: 50,
         justifyContent: 'center',
@@ -1752,7 +1739,7 @@ export const listStyles = StyleSheet.create({
     swipeActionIcon: {
         height: 25,
         width: 25
-      },
+    },
 })
 
 export default DootooList;
