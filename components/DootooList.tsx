@@ -287,11 +287,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         const loadResponse = await loadAllThings(isPullDown);
 
         let things = loadResponse.things || [];
-
-        // 1.3 Distinguish things as being loaded from DB so that they
-        //     can be rendered more quickly to users
-        things = things.map((thing) => ({ ...thing, loadedFromDB: true }));
-
         const hasMore = loadResponse.hasMore;
 
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
@@ -305,7 +300,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         // (e.g. on a pull-down-to-refresh action).  If page > 1, assume we want to append the page to what's currently
         // displayed.
         if (page == 1) {
-            console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
+            //console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
 
             // 1.3 Deactivated fade in animation to prevent flicker on launch
             // if (isPullDown) {
@@ -1100,7 +1095,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         // 1.3  Using AnimatedStyle for row height as access is needed to the rowHeight SV 
         //      in order to grow/shrink row height based on text input height changes
         const animatedHeightStyle = useAnimatedStyle(() => ({
-            height: (item.loadedFromDB) ? undefined : rowHeight.value
+            height: rowHeight.value
         }));
 
         const timerContainerWidth = useSharedValue(0);
@@ -1120,9 +1115,18 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             //console.log("renderItem.useEffect([]) " + item.text + " rowHeight: " + rowHeight.value);
 
             // If row had a height of 0 on render, assume it was just collapsed via a prior animation
-            // and restore it to full height.
+            // and restore it to full height.  See special case for first reveal of list in the isFinished clause
             if (rowHeight.value == 0) {
-                rowHeight.value = withTiming(fullRowHeight.current, { duration: 300 });
+                rowHeight.value = withTiming(fullRowHeight.current, { duration: 300 }, (isFinished) => {
+                    if (isFinished) {
+
+                        // When users launch the app with items already in their
+                        // DB, we don't want to show each item animate individually.
+                        // Instead we've hid the list on launch and perform the following
+                        // check to see whether we're ready to reveal the list as a whole
+                        runOnJS(revealListIfLastRowRendered)();
+                    }
+                });
             }
 
             // If row had a text opacity of 0 on render, assume its text was just faded out and changed
@@ -1130,14 +1134,16 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             if (textOpacity.value == 0) {
                 textOpacity.value = withTiming(1, { duration: 300 });
             }
+        });
 
+        const revealListIfLastRowRendered = () => {
             if (getIndex() == (listArray.length - 1)) {
                 if ((listArray.length > 0) && listOpacity.value == 0) {
                     console.log("Calling code to reveal list");
                     listOpacity.value = withTiming(1, { duration: 300 });
                 }
             }
-        });
+        }
 
         useEffect(() => {
 
@@ -1333,7 +1339,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 //{ backgroundColor: 'red' },                                           // For Debugging: If seen, unexpected row height change/non-change likely
                 { transform: [{ translateX: rowPositionX }] },
                 animatedHeightStyle,                                                   // 1.3 Using AnimatedStyle for height
-                !item.loadedFromDB && !rowHeightKnown && { position: 'absolute', opacity: 0 }                // 1.3 Opacity set to 0 until full row height determined below
+                !rowHeightKnown && { position: 'absolute', opacity: 0 }                // 1.3 Opacity set to 0 until full row height determined below
             ]}
                 onLayout={(event) => {
 
