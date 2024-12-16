@@ -64,13 +64,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const selectedTimerThing = useRef(null);
     const blurredOnSubmit = useRef(false);
 
-    const initialLoadFadeInOpacity = useRef(new Animated.Value(0)).current;
-    const initialLoadFadeInAnimation = Animated.timing(initialLoadFadeInOpacity, {
-        toValue: 1,
-        duration: 300,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true
-    });
+    const initialLoadFadeInOpacity = useSharedValue(0);
 
     /* 1.2 Note: DEACTIVATING PAGINATION for now to prevent accidental 
     //           orphaning as well as testing UX of maintaining local/cached list
@@ -94,18 +88,18 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             if (shouldInitialLoad) {
                 if (!isNew) {
                     initialLoad.current = false;
-                    initialLoadFadeInAnimation.start();
-
-                    resetListWithFirstPageLoad();
+                    initialLoadFadeInOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                        if (isFinished) {
+                            runOnJS(resetListWithFirstPageLoad)();
+                        }
+                    });
                 } else {
                     //console.log("Skipping loading things for user as they are brand new.");
                 }
             } else {
                 //console.log("Skipping initial load for user per shouldInitialLoad == false.");
             }
-            setScreenInitialized(true);
         });
-
         return () => {
             //console.log("DootooList.useEffect([]) component unmounted " + new Date(Date.now()).toLocaleString());
         }
@@ -166,6 +160,14 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
             if (thingName == THINGNAME_ITEM) {
                 syncItemCalendarUpdates();
+            }
+
+            if (!screenInitialized) {
+                initialLoadFadeInOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+                    if (isFinished) {
+                        runOnJS(setScreenInitialized)(true);
+                    }
+                });
             }
         } else if (isInitialMount.current) {
 
@@ -295,7 +297,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
         initialLoad.current = true;
         isPageLoading.current = false;
-        initialLoadFadeInAnimation.reset();
         setRefreshing(false);
 
         // If we're loading the first page, assume we want to reset the displays list to only the first page
@@ -1081,7 +1082,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const renderThing = ({ item, getIndex, drag, isActive }) => {
         const textInputRef = useRef(null);
         const rowPositionX = useSharedValue(0);
-        const rowHeight = useSharedValue(-1);                       // Setting to -1 forces initial calculation of actual row height and onLayout call
+        const rowHeight = useSharedValue(undefined);                // Setting to -1 forces initial calculation of actual row height and onLayout call
         thingRowPositionXs.current[item.uuid] = rowPositionX;       // Pass shared values to global map so they can be animated
         thingRowHeights.current[item.uuid] = rowHeight;             // via user actions such as handleThingDelete
         const [refreshKey, setRefreshKey] = useState(1);
@@ -1119,20 +1120,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             // If row had a height of 0 on render, assume it was just collapsed via a prior animation
             // and restore it to full height.
             if (rowHeight.value == 0) {
-
-                // If screen hasn't been initialized yet,
-                // this rendering is occurring as part of the app's
-                // launch -- We skip the animation here to not slow
-                // down the launch UX + avoid large amount of rows simulatneously animating
-                // in janky way
-                if (!screenInitialized) {
-                    rowHeight.value = fullRowHeight.current;
-                } else {
-
-                    // If screen has already been initialized, this rendering is occurring
-                    // due to a new entry from recording or keyboard; we therefore animate the room into view
-                    rowHeight.value = withTiming(fullRowHeight.current, { duration: 300 });
-                }
+                rowHeight.value = withTiming(fullRowHeight.current, { duration: 300 });
             }
 
             // If row had a text opacity of 0 on render, assume its text was just faded out and changed
@@ -1555,11 +1543,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             }
         }} >
             <View style={styles.listContainer}>
-                {(initialLoad.current == false) ?
-                    <Animated.View style={[styles.initialLoadAnimContainer, { opacity: initialLoadFadeInOpacity }]}>
+                {(!screenInitialized) ?
+                    <Reanimated.View style={[styles.initialLoadAnimContainer, { opacity: initialLoadFadeInOpacity }]}>
                         <Text style={styles.initialLoadMsg}>{loadingAnimMsg}</Text>
                         <ActivityIndicator size={"large"} color="#3E3723" />
-                    </Animated.View>
+                    </Reanimated.View>
                     :
                     <Animated.View style={[styles.taskContainer, fadeInListOnRender.current && { opacity: listOpacity }]}>
                         {listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0 ?
@@ -1598,7 +1586,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />}
                                         <View style={{ height: 50 }} />
                                     </View>}
-                            /> : (initialLoad.current == true) ? <EmptyThingUX styles={styles} /> : <></>
+                            /> : <EmptyThingUX styles={styles} />
                         }
                         {(errorMsg) ?
                             <View style={styles.errorTextContainer}>
