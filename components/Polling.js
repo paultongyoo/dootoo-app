@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 // Poll every 5 minutes by default
-const usePolling = (pollingFn, interval = (5 * 60 * 1000)) => {
+const usePolling = (pollingFn, interval = (60 * 1000)) => {
   const timeoutRef = useRef(null);
   const isPolling = useRef(false);
 
