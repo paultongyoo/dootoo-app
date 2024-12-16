@@ -1,4 +1,4 @@
-import { Animated, Text, Image, View, ActivityIndicator } from 'react-native';
+import { Animated, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRef, useCallback, useState, useContext } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { generateTipCTA } from './BackendServices';
@@ -48,8 +48,8 @@ const DootooTipEmptyUX = ({ selectedItem, tipArray }) => {
           paddingRight: 60          
         },
         emptyListContainer_words: {
-          fontSize: 40,
-          lineHeight: 48            
+          fontSize: 30,
+          lineHeight: 38            
         },
         initialLoadAnimContainer: {     // TODO: Remove this redundant loading animation
             flex: 1,
