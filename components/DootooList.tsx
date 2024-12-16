@@ -1154,7 +1154,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             // user's items or the 15th item, whichever index is lesser
             // (we choose 15 because all visible items on user's list will have been rendered;
             //  we can afford janky animations the user won't be able to see)
-            if (getIndex() == (listArray.length - 1)) {
+            // 1.3 Needed to include Math.min op to "ensure" boolean was set for long lists
+            if (getIndex() == Math.min(15, listArray.length - 1)) {
                 console.log("Setting boolean indicating first list has been rendered");
                 firstListRendered.value = true;
             }
@@ -1379,10 +1380,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                     // 1.3 NOTE OnLayout does NOT fire when TextInput grows because we've given the containing view the fixed SharedValue height.
                     //          rowHeight.value must be explicitly reset in TextInput onContentSizeChange handler
-                    console.log("Index " + getIndex() + ": onLayout fired with height: " + event.nativeEvent.layout.height +
+/*                     console.log("Index " + getIndex() + ": onLayout fired with height: " + event.nativeEvent.layout.height +
                         ", rowHeightKnown: " + rowHeightKnown +
                         ", rowHeight: " + rowHeight.value +
-                        ", firstListRendered: " + firstListRendered.value);
+                        ", firstListRendered: " + firstListRendered.value); */
                     if (!rowHeightKnown) {
                         const layoutHeight = event.nativeEvent.layout.height;
                         fullRowHeight.current = layoutHeight;
