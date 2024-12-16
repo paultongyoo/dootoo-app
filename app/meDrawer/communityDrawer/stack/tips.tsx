@@ -97,14 +97,15 @@ export default function ItemTips() {
       // updatedTips[index].user_vote_value = 0; // Drives UI logic indicating which direction user voted, if any
 
       // Clear their vote if they tap the same direction again
-      setTips((prevTips) => 
+      setTips((prevTips) =>
         prevTips.map((prevTip) =>
           (prevTip.uuid == tip.uuid)
-              ? { ...prevTip, 
-                  upvote_count: prevTip.upvote_count + (tip.user_vote_value * -1),
-                  user_vote_value: 0
-                }
-              : prevTip));
+            ? {
+              ...prevTip,
+              upvote_count: prevTip.upvote_count + (tip.user_vote_value * -1),
+              user_vote_value: 0
+            }
+            : prevTip));
 
       // Asynchronously send tip vote to backend 
       tipVote(tip.uuid, 0);
@@ -115,14 +116,15 @@ export default function ItemTips() {
       // updatedTips[index].user_vote_value = voteValue;
 
       // If user is voting in the opposite direction of their current vote, cancel their current vote first before adding the new vote
-      setTips((prevTips) => 
+      setTips((prevTips) =>
         prevTips.map((prevTip) =>
           (prevTip.uuid == tip.uuid)
-              ? { ...prevTip, 
-                  upvote_count: prevTip.upvote_count + ((tip.user_vote_value == (voteValue * -1)) ? (tip.user_vote_value * -1) + voteValue : voteValue),
-                  user_vote_value: voteValue
-                }
-              : prevTip));
+            ? {
+              ...prevTip,
+              upvote_count: prevTip.upvote_count + ((tip.user_vote_value == (voteValue * -1)) ? (tip.user_vote_value * -1) + voteValue : voteValue),
+              user_vote_value: voteValue
+            }
+            : prevTip));
 
       // Asynchronously send tip vote to backend 
       tipVote(tip.uuid, voteValue);
@@ -175,9 +177,9 @@ export default function ItemTips() {
     flagTip(tip.uuid);
 
     setTips((prevTips) => prevTips.map((obj) =>
-         (obj.uuid == tip.uuid)
-              ? { ...obj, is_flagged: true}
-              : obj));
+      (obj.uuid == tip.uuid)
+        ? { ...obj, is_flagged: true }
+        : obj));
 
     Alert.alert(
       'Abuse Reported', // Title of the alert
@@ -210,10 +212,10 @@ export default function ItemTips() {
       <>
         {(selectedItem.is_done) ?
           <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
-              <Pressable
-                  onPress={() => handleThingDeleteFunc(tip)}>
-                  <Image style={styles.swipeActionIcon_trash} source={require("@/assets/images/trash_icon_white.png")} />
-              </Pressable>
+            <Pressable
+              onPress={() => handleThingDeleteFunc(tip)}>
+              <Image style={styles.swipeActionIcon_trash} source={require("@/assets/images/trash_icon_white.png")} />
+            </Pressable>
           </Reanimated.View>
           :
           <>
@@ -265,26 +267,19 @@ export default function ItemTips() {
   };
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: "center",
-      backgroundColor: "#DCC7AA",
-      paddingTop: (Platform.OS == 'ios') ? 100 : 90
-    },
-    listContainer: {
-      flex: 1,
-      justifyContent: "center",
+    listContainer: {                  // Appends to listStyles.listContainer
       backgroundColor: '#EBDDC5'
     },
     headerItemContainer: {
+      backgroundColor: "#DCC7AA",
       flexDirection: 'row',
       alignItems: 'center',
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333',
-      paddingTop: 4
-    },  
-    itemContainer: {            // Appends to listStyle.itemContainer
-      marginLeft: 14        
+      paddingTop: 4,
+    },
+    itemContainer: {                 // Appends to listStyle.itemContainer
+      marginLeft: 14
     },
     swipeableContainer: {
       backgroundColor: '#EBDDC5'
@@ -445,48 +440,46 @@ export default function ItemTips() {
   } else {
 
     return (
-      <View style={styles.container}>
-        <View style={listStyles.taskContainer}>
-          <View style={styles.headerItemContainer}>
-            <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick()}></Pressable>
-            <View style={styles.headerItemNameContainer}>
-              <View style={listStyles.itemNamePressable}>
-                <Text style={[listStyles.taskTitle, selectedItem.is_done && listStyles.taskTitle_isDone]}>{selectedItem.text}</Text>
-              </View>
-              <DootooItemSidebar thing={selectedItem} styles={styles} />
+      <>
+        <View style={styles.headerItemContainer}>
+          <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick()}></Pressable>
+          <View style={styles.headerItemNameContainer}>
+            <View style={listStyles.itemNamePressable}>
+              <Text style={[listStyles.taskTitle, selectedItem.is_done && listStyles.taskTitle_isDone]}>{selectedItem.text}</Text>
             </View>
+            <DootooItemSidebar thing={selectedItem} styles={styles} />
           </View>
-          <DootooList
-            thingName="tip"
-            loadingAnimMsg={(selectedItem.is_done) ? "Loading your tips to the community" : "Loading tips from the community"}
-            listArray={tips}
-            listArraySetter={setTips}
-            styles={styles}
-            isDoneable={false}
-            renderRightActions={renderRightActions}
-            renderLeftActions={renderLeftActions}
-            saveAllThings={saveAllTips}
-            saveTextUpdateFunc={saveTextUpdate}
-            saveThingOrderFunc={saveTipOrder}
-            loadAllThings={(isPullDown) => loadTips(isPullDown, selectedItem.uuid)}
-            deleteThing={(tip_uuid) => {
-              deleteTip(tip_uuid);
-
-              // Update tip count in displayed header
-              setSelectedItem((prevItem) => ({ ...prevItem, tip_count: prevItem.tipCount - 1}));
-
-              ProfileCountEventEmitter.emit('decr_tips');
-            }}
-            saveNewThing={(tip, latest_tip_uuids) => saveNewTip(tip, selectedItem.uuid, latest_tip_uuids)}
-            transcribeAudioToThings={transcribeAudioToTips}
-            ListThingSidebar={DootooTipSidebar}
-            EmptyThingUX={() => <DootooTipEmptyUX selectedItem={selectedItem} tipArray={tips} />}
-            isThingPressable={() => { return selectedItem.is_done; }}
-            isThingDraggable={selectedItem.is_done}
-            hideRecordButton={!selectedItem.is_done}
-            shouldInitialLoad={selectedItem.tip_count && (Number(selectedItem.tip_count) > 0)} />
         </View>
-      </View>
+        <DootooList
+          thingName="tip"
+          loadingAnimMsg={(selectedItem.is_done) ? "Loading your tips to the community" : "Loading tips from the community"}
+          listArray={tips}
+          listArraySetter={setTips}
+          styles={styles}
+          isDoneable={false}
+          renderRightActions={renderRightActions}
+          renderLeftActions={renderLeftActions}
+          saveAllThings={saveAllTips}
+          saveTextUpdateFunc={saveTextUpdate}
+          saveThingOrderFunc={saveTipOrder}
+          loadAllThings={(isPullDown) => loadTips(isPullDown, selectedItem.uuid)}
+          deleteThing={(tip_uuid) => {
+            deleteTip(tip_uuid);
+
+            // Update tip count in displayed header
+            setSelectedItem((prevItem) => ({ ...prevItem, tip_count: prevItem.tipCount - 1 }));
+
+            ProfileCountEventEmitter.emit('decr_tips');
+          }}
+          saveNewThing={(tip, latest_tip_uuids) => saveNewTip(tip, selectedItem.uuid, latest_tip_uuids)}
+          transcribeAudioToThings={transcribeAudioToTips}
+          ListThingSidebar={DootooTipSidebar}
+          EmptyThingUX={() => <DootooTipEmptyUX selectedItem={selectedItem} tipArray={tips} />}
+          isThingPressable={() => { return selectedItem.is_done; }}
+          isThingDraggable={selectedItem.is_done}
+          hideRecordButton={!selectedItem.is_done}
+          shouldInitialLoad={selectedItem.tip_count && (Number(selectedItem.tip_count) > 0)} />
+      </>
     );
   }
 }

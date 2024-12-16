@@ -629,9 +629,7 @@ export default function Index() {
 
   const styles = StyleSheet.create({
     listContainer: {
-      flex: 1,
-      backgroundColor: "#DCC7AA",
-      paddingTop: (Platform.OS == 'ios') ? 100 : 90
+      backgroundColor: "#DCC7AA"
     },
     itemCircleOpen: {
       width: 26,

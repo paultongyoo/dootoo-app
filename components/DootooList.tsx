@@ -1591,7 +1591,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 //handleBlur(currentlyTappedThing);
             }
         }} >
-            <View style={styles.listContainer}>
+            <View style={[listStyles.listContainer, styles.listContainer]}>
                 {(!screenInitialized) ?
                     <Reanimated.View style={[listStyles.initialLoadAnimContainer, { opacity: initialLoadFadeInOpacity }]}>
                         <Text style={listStyles.initialLoadMsg}>{loadingAnimMsg}</Text>
@@ -1691,6 +1691,9 @@ export const listStyles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center'
+    },
+    listContainer: {
+        flex: 1
     },
     taskContainer: {
         flex: 1

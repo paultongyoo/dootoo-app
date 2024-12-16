@@ -25,7 +25,7 @@ const DootooHeader = ({ meDrawerNavigation }) => {
             shadowOffset: { width: 0, height: 1 }, 
             shadowOpacity: 0.2, 
             shadowRadius: 2,
-            elevation: 2, // Elevation for Android       
+            elevation: 2 // Elevation for Android      
         },
         headerLeftContainer: {
             position: 'absolute',

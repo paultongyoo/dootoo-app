@@ -12,7 +12,6 @@ export default function CommunityDrawerLayout() {
                     {
                         swipeEnabled: false,
                         drawerPosition: 'left',
-                        headerTransparent: true,
                         header: ({ navigation, route }) => <DootooHeader meDrawerNavigation={meDrawerNavigation} />
                     }}>
                 <Drawer.Screen name="stack" />

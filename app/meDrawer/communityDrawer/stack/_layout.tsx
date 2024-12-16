@@ -1,4 +1,3 @@
-import DootooHeader from '@/components/DootooHeader';
 import { Stack } from 'expo-router';
 
 export default function StackLayout() {
