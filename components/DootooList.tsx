@@ -1223,6 +1223,21 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                                     scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc }
                             updateItemText(deepItemCopy);
                             updateItemSchedule(item.uuid, enrichmentResponse.scheduled_datetime_utc);
+
+                            const eventIdToUpdate = item.event_id;
+                            if (eventIdToUpdate) {
+                                const updatedTimerThing = { ...selectedTimerThing.current, scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc };
+                                const updatedDate = getLocalDateObj(updatedTimerThing);
+                                const alertMinutesOffset = deriveAlertMinutesOffset(updatedTimerThing);
+                                //console.log("Updated alertMinutesOffset: " + alertMinutesOffset);
+                                Calendar.updateEventAsync(eventIdToUpdate, {
+                                    title: enrichmentResponse.text,
+                                    alarms: [{ relativeOffset: alertMinutesOffset, method: Calendar.AlarmMethod.ALERT }],
+                                    startDate: updatedDate,
+                                    endDate: updatedDate
+                                });
+                                //console.log("Calendar Event Updated Asyncronously: " + eventIdToUpdate);
+                            }
                         } else {
                             console.log("Enrichment response had no updates");
                         }
