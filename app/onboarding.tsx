@@ -315,43 +315,6 @@ const Step3 = () => {
             flex: 1,
             width: '100%'
         },
-        similarCountContainer: {
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'row',
-            paddingLeft: 15
-        },
-        similarCountText: {
-            fontSize: 15
-        },
-        similarCountIcon: {
-            width: 16,
-            height: 16,
-            opacity: 0.45,
-            marginLeft: 10
-        },
-        tipCountContainer: {
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'row'
-        },
-        tipCountText: {
-            fontSize: 15
-        },
-        tipCountIcon: {
-            width: 16,
-            height: 16,
-            borderRadius: 8, // Half of the width and height for a perfect circle
-            borderColor: '#3E2723',
-            backgroundColor: '#556B2F60',
-            marginLeft: 10
-        },
-        tipCountImageIcon: {
-            height: 16,
-            width: 16,
-            opacity: 0.5,
-            marginLeft: 8
-        },
         countDisclaimer: {
             fontSize: 14,
             fontStyle: 'italic',
@@ -495,42 +458,10 @@ const Step4 = () => {
             flex: 1,
             width: '100%'
         },
-        similarCountContainer: {
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'row',
-            paddingLeft: 15
-        },
-        similarCountText: {
-            fontSize: 15
-        },
-        similarCountIcon: {
-            width: 16,
-            height: 16,
-            opacity: 0.45,
-            marginLeft: 10
-        },
         tipCountContainer: {
             justifyContent: 'center',
             alignItems: 'center',
             flexDirection: 'row'
-        },
-        tipCountText: {
-            fontSize: 15
-        },
-        tipCountIcon: {
-            width: 16,
-            height: 16,
-            borderRadius: 8, // Half of the width and height for a perfect circle
-            borderColor: '#3E2723',
-            backgroundColor: '#556B2F60',
-            marginLeft: 10
-        },
-        tipCountImageIcon: {
-            height: 16,
-            width: 16,
-            opacity: 0.5,
-            marginLeft: 8
         },
         tipsContainer: {
             backgroundColor: '#EBDDC5',

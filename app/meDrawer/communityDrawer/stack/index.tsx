@@ -662,47 +662,6 @@ export default function Index() {
     swipeableContainer: {
       backgroundColor: '#DCC7AA'
     },
-    itemNameSpaceFiller: {
-      flex: 1
-    },
-    similarCountContainer: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      flexDirection: 'row',
-      paddingLeft: 15
-    },
-    similarCountText: {
-      fontSize: 15
-    },
-    similarCountIcon: {
-      width: 16,
-      height: 16,
-      opacity: 0.45,
-      marginLeft: 10
-    },
-    tipCountContainer: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      flexDirection: 'row'
-    },
-    tipCountText: {
-      fontSize: 15
-    },
-    tipCountIcon: {
-      width: 16,
-      height: 16,
-      borderRadius: 8, // Half of the width and height for a perfect circle
-      //borderWidth: 1,
-      borderColor: '#3E2723',
-      backgroundColor: '#556B2F60',
-      marginLeft: 10
-    },
-    tipCountImageIcon: {
-      height: 16,
-      width: 16,
-      opacity: 0.5,
-      marginLeft: 8
-    },
     swipeActionIcon_trash: {
       height: 25,
       width: 25
@@ -710,37 +669,6 @@ export default function Index() {
     swipeActionIcon_ident: {
       height: 25,
       width: 25
-    },
-    giveTipContainer: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingRight: 15,
-      flexDirection: 'row'
-    },
-    giveTipIcon: {
-      height: 30,
-      width: 50
-    },
-    simliarTipsIcon: {
-      height: 16,
-      width: 16,
-      borderRadius: 8,
-      backgroundColor: 'white'
-    },
-    receiveTipIcon: {
-      height: 40,
-      width: 45
-    },
-    itemCountsRefreshingAnimContainer: {
-      justifyContent: 'center'
-    },
-    timerIconContainer: {
-      justifyContent: 'center',
-      paddingRight: 10
-    },
-    timerIcon: {
-      height: 16,
-      width: 16
     }
   });
 
