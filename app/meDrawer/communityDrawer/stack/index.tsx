@@ -670,13 +670,12 @@ export default function Index() {
       transform: [{ rotate: '9deg' }]
     },
     taskContainer: {
-      flex: 1
+      flex: 1,
+      paddingTop: 4
     },
     taskTitle: {
       fontSize: 16,
       textAlign: 'left',
-      paddingTop: 5,
-      paddingBottom: 5,
       paddingRight: 5
     },
     taskTitle_isDone: {
@@ -685,10 +684,9 @@ export default function Index() {
     },
     itemContainer: {
       flexDirection: 'row', // Lays out children horizontally
-      alignItems: 'center' // Aligns children vertically (centered in this case)
-    },
-    itemContainer_firstItem: {
-      paddingTop: 4
+      alignItems: 'center', // Aligns children vertically (centered in this case),
+      paddingTop: 5,
+      paddingBottom: 5
     },
     itemCircleOpen: {
       width: 26,
@@ -719,12 +717,11 @@ export default function Index() {
     itemNamePressable: {
       flex: 1,
       width: '100%',
-      paddingRight: 5
+      paddingRight: 5,
+      justifyContent: 'center',
     },
     itemTextInput: {
       fontSize: 16,
-      paddingTop: 5,
-      paddingBottom: 5,
       paddingRight: 10,
       flex: 1
     },

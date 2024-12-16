@@ -1370,8 +1370,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             }
                         })            
                     }
-                }}
-            >
+                }}>
                 <Swipeable
                     key={Math.random()}
                     ref={(ref) => {
@@ -1399,7 +1398,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(item, getIndex()) } else { return <></> } }}
                     renderRightActions={(progress, dragX) => { if (renderRightActions) { return renderRightActions(item, handleThingDelete) } else { return <></> } }}>
                     <ScaleDecorator>
-                        <View style={[styles.itemContainer, (getIndex() == 0) && styles.itemContainer_firstItem]}>
+                        <View style={[styles.itemContainer]}>
                             {(item.parent_item_uuid) ?
                                 <View style={styles.childItemSpacer}></View>
                                 : <></>
