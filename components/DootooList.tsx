@@ -1743,7 +1743,7 @@ export const listStyles = StyleSheet.create({
         //backgroundColor: 'red'    
     },
     itemSwipeAction: {
-        width: 70,
+        width: 50,
         justifyContent: 'center',
         alignItems: 'center',
         flexDirection: 'row',
