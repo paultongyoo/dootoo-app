@@ -52,7 +52,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         const handleAppStateChange = (nextAppState) => {
             if (nextAppState === "active") {
                 checkOpenAPIHealth();
-            } 
+            }
         };
         const subscription = AppState.addEventListener("change", handleAppStateChange);
 
@@ -145,7 +145,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 const status = await recording.getStatusAsync();
                 if (status.isRecording) {
                     //console.log("Unmodified sound level: " + status.metering);
-                    meteringLevel.value = 
+                    meteringLevel.value =
                         (Platform.OS == 'ios')
                             ? withTiming(1 + Math.max(0, 1 + (status.metering / 30)), { duration: 100 })
                             : withTiming(calculateAndroidButtonScale(status.metering), { duration: 100 });
@@ -464,17 +464,17 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const handleKeyboardButtonPress = () => {
         const newItem = generateNewKeyboardEntry();
         currentlyTappedThing.current = newItem;
-        
+
         if (listArray.length == 0) {
 
             // If the list is empty, we ASSume the empty list CTA is visible.  Fade it out first before
             // adding the first item
             emptyListCTAFadeOutAnimation.start(() => {
-                listArraySetterFunc((prevItems) => [ newItem, ...prevItems]);
-            })
+                listArraySetterFunc((prevItems) => [newItem, ...prevItems]);
+            });
         } else {
-            listArraySetterFunc((prevItems) => [ newItem, ...prevItems]);
-        }      
+            listArraySetterFunc((prevItems) => [newItem, ...prevItems]);
+        }
     }
 
     const insets = useSafeAreaInsets();
@@ -482,7 +482,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         footerContainer: {
             backgroundColor: '#FAF3E0',
             alignItems: 'center',
-            height: (hideRecordButton) ? 159 : 173
+            height: 50
         },
         bannerAdContainer: {
             borderTopWidth: 1,
@@ -490,6 +490,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             justifyContent: 'center',
             alignItems: 'center',
             backgroundColor: "#c0c0c0",
+            height: 120,
             paddingTop: 15,
             paddingBottom: (insets.bottom && insets.bottom > 0) ? insets.bottom : 10
         },
@@ -499,14 +500,14 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             borderRadius: 29,
             borderColor: '#3E2723',
             borderWidth: 1,
-           // position: 'absolute',
-           // bottom: 120,
+            // position: 'absolute',
+            // bottom: 120,
             flex: 1,
             alignItems: 'center',
             justifyContent: 'center',
-            shadowColor: '#000', 
-            shadowOffset: { width: 0, height: 4 }, 
-            shadowOpacity: 0.2, 
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
             shadowRadius: 5,
             elevation: 5, // Elevation for Android        
         },
@@ -586,7 +587,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             height: 22
         },
         keyboardButtonContainer: {
-            
+
         },
         footerButtonsContainer: {
             //backgroundColor: 'orange',
@@ -638,51 +639,53 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
     if (!hideRecordButton) {
         return (
-            <Animated.View style={[(pathname == ITEMS_PATHNAME) && { opacity }, styles.footerContainer]}>
-                {/* <Pressable
+            <>
+                <Animated.View style={[(pathname == ITEMS_PATHNAME) && { opacity }, styles.footerContainer]}>
+                    {/* <Pressable
                     style={[styles.footerButton, styles.cancelButton]}
                     onPress={makeTestData}>
                     <Text>Test Data</Text>
                 </Pressable> */}
-                <View style={styles.footerButtonsContainer}>
-                    <View style={styles.footerButtonContainer}>
-                        <View style={styles.footerButton_Underlay}></View>
-                        <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || isRecordingProcessing) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
-                            <Pressable
-                                disabled={isRecordingProcessing}
-                                onPress={() => {
-                                    if (isRecordingProcessing) {
-                                        cancelRecordingProcessing();       // 1.2: Made this scenario unreachable for now to prevent user from accidentally cancelling working process
-                                    } else if (recording) {
-                                        processRecording();
-                                    } else {
-                                        startRecording();
-                                    }
-                                }}
-                                onPressIn={recordButton_handlePressIn}
-                                onPressOut={recordButton_handlePressOut}>
-                                {(isRecordingProcessing) ?
-                                    <View style={styles.loadingAnim}>
-                                        <ActivityIndicator size={"small"} color="white" />
-                                    </View>
-                                    : (recording) ?
-                                        <View style={styles.footerButtonIcon_Stop}></View>
-                                        : <Image style={styles.footerButtonImage_Record} source={require("@/assets/images/microphone_white.png")} />}
-                            </Pressable>
-                        </Reanimated.View>
+                    <View style={styles.footerButtonsContainer}>
+                        <View style={styles.footerButtonContainer}>
+                            <View style={styles.footerButton_Underlay}></View>
+                            <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || isRecordingProcessing) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
+                                <Pressable
+                                    disabled={isRecordingProcessing}
+                                    onPress={() => {
+                                        if (isRecordingProcessing) {
+                                            cancelRecordingProcessing();       // 1.2: Made this scenario unreachable for now to prevent user from accidentally cancelling working process
+                                        } else if (recording) {
+                                            processRecording();
+                                        } else {
+                                            startRecording();
+                                        }
+                                    }}
+                                    onPressIn={recordButton_handlePressIn}
+                                    onPressOut={recordButton_handlePressOut}>
+                                    {(isRecordingProcessing) ?
+                                        <View style={styles.loadingAnim}>
+                                            <ActivityIndicator size={"small"} color="white" />
+                                        </View>
+                                        : (recording) ?
+                                            <View style={styles.footerButtonIcon_Stop}></View>
+                                            : <Image style={styles.footerButtonImage_Record} source={require("@/assets/images/microphone_white.png")} />}
+                                </Pressable>
+                            </Reanimated.View>
+                        </View>
+                        <View style={styles.footerButtonContainer}>
+                            <View style={styles.footerButton_Underlay}></View>
+                            <Reanimated.View style={[styles.footerButton, styles.keyboardButton, keyboardButtonOpacityAnimatedStyle]}>
+                                <Pressable
+                                    onPress={handleKeyboardButtonPress}
+                                    onPressIn={keyboardButton_handlePressIn}
+                                    onPressOut={keyboardButton_handlePressOut}>
+                                    <Image style={styles.keyboardIcon} source={require("@/assets/images/keyboard_white.png")} />
+                                </Pressable>
+                            </Reanimated.View>
+                        </View>
                     </View>
-                    <View style={styles.footerButtonContainer}>
-                        <View style={styles.footerButton_Underlay}></View>
-                        <Reanimated.View style={[styles.footerButton, styles.keyboardButton, keyboardButtonOpacityAnimatedStyle]}>
-                            <Pressable
-                                onPress={handleKeyboardButtonPress}
-                                onPressIn={keyboardButton_handlePressIn}
-                                onPressOut={keyboardButton_handlePressOut}>
-                                <Image style={styles.keyboardIcon} source={require("@/assets/images/keyboard_white.png")} />
-                            </Pressable>
-                        </Reanimated.View>
-                    </View>
-                </View>
+                </Animated.View>
                 <View style={styles.bannerAdContainer}>
                     <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
                         onPaid={() => amplitude.track("Banner Ad Paid")}
@@ -690,11 +693,12 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                         onAdOpened={() => amplitude.track("Banner Ad Opened")}
                         onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
                 </View>
-            </Animated.View>
+            </>
         );
     } else {
         return (
-            <View style={styles.footerContainer}>
+            <>
+                <View style={styles.footerContainer}></View>
                 <View style={styles.bannerAdContainer}>
                     <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
                         onPaid={() => amplitude.track("Banner Ad Paid")}
@@ -702,7 +706,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                         onAdOpened={() => amplitude.track("Banner Ad Opened")}
                         onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
                 </View>
-            </View>
+            </>
         );
     }
 };
