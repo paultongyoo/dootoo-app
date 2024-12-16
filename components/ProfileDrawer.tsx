@@ -42,7 +42,7 @@ const ProfileDrawer = ({ navigation }) => {
     //console.log("Inside Profile Drawer useEffect");
 
     if (isInitialMount.current) {
-      console.log("ProfileDrawer skipping useEffect(username) on initial mount.");
+      //console.log("ProfileDrawer skipping useEffect(username) on initial mount.");
       isInitialMount.current = false;
     } else {
       let ignore = false;

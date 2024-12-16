@@ -705,13 +705,13 @@ export const deleteTip = async(tip_uuid) => {
 
 export const loadUsername = async(name) => {
   try {
-    console.log("Entering loadUsername, uuid: " + name);
+    //console.log("Entering loadUsername, uuid: " + name);
     const response = await axios.post(LOADUSER_URL,
       {
         name: name
       }
     );
-    console.log("loadUsername Response Obj: " + JSON.stringify(response.data.body));
+    //console.log("loadUsername Response Obj: " + JSON.stringify(response.data.body));
     return response.data.body
   } catch (error) {
     console.error('Error calling loadUsername API:', error);
