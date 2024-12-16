@@ -13,7 +13,7 @@ import { transcribeAudioToTips } from '@/components/BackendServices';
 import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText, updateTipOrder, saveNewTip } from '@/components/Storage';
 import DootooTipSidebar from "@/components/DootooTipSidebar";
 import DootooTipEmptyUX from "@/components/DootooTipEmptyUX";
-import DootooList from "@/components/DootooList";
+import DootooList, { listStyles } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
@@ -271,43 +271,10 @@ export default function ItemTips() {
       backgroundColor: "#DCC7AA",
       paddingTop: (Platform.OS == 'ios') ? 100 : 90
     },
-    initialLoadAnimContainer: {
+    listContainer: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center'
-    },
-    emptyListContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      paddingLeft: 30,
-      paddingRight: 60
-    },
-    emptyListContainer_words: {
-      fontSize: 40,
-      lineHeight: 48
-    },
-    emptyListContainer_arrow: {
-      position: 'absolute',
-      bottom: -50,
-      right: 90,
-      height: 175,
-      width: 50,
-      opacity: 0.4,
-      transform: [{ rotate: '20deg' }]
-    },
-    taskContainer: {
-      flex: 1
-    },
-    taskTitle: {
-      fontSize: 16,
-      textAlign: 'left',
-      paddingTop: 5,
-      paddingBottom: 5,
-      paddingRight: 5
-    },
-    taskTitle_isDone: {
-      color: '#556B2F',
-      textDecorationLine: 'line-through'
+      justifyContent: "center",
+      backgroundColor: '#EBDDC5'
     },
     headerItemContainer: {
       flexDirection: 'row',
@@ -317,16 +284,7 @@ export default function ItemTips() {
       paddingTop: 4
     },
     itemContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      // borderBottomWidth: 1,
-      // borderBottomColor: '#3E272333',
       marginLeft: 14
-    },
-    listContainer: {
-      flex: 1,
-      justifyContent: "center",
-      backgroundColor: '#EBDDC5'
     },
     swipeableContainer: {
       backgroundColor: '#EBDDC5'
@@ -343,16 +301,6 @@ export default function ItemTips() {
     itemCircleOpen_isDone: {
       backgroundColor: '#556B2F50',
       borderWidth: 0
-    },
-    itemNameContainer: {
-      paddingBottom: 10,
-      paddingTop: 10,
-      paddingRight: 20,
-      marginLeft: 17,
-      flex: 1,
-      flexDirection: 'row',
-      borderBottomWidth: 1,
-      borderBottomColor: '#3E272333'
     },
     headerItemNameContainer: {
       paddingLeft: 18,
@@ -497,10 +445,6 @@ export default function ItemTips() {
       opacity: 0.5,
       marginLeft: 8
     },
-    initialLoadMsg: {
-      fontSize: 20,
-      paddingBottom: 15
-    },
     voteIconContainer: {
       //opacity: 0.6
     },
@@ -591,12 +535,12 @@ export default function ItemTips() {
 
     return (
       <View style={styles.container}>
-        <View style={styles.taskContainer}>
+        <View style={listStyles.taskContainer}>
           <View style={styles.headerItemContainer}>
             <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick()}></Pressable>
             <View style={styles.headerItemNameContainer}>
               <View style={styles.itemNamePressable}>
-                <Text style={[styles.taskTitle, selectedItem.is_done && styles.taskTitle_isDone]}>{selectedItem.text}</Text>
+                <Text style={[listStyles.taskTitle, selectedItem.is_done && listStyles.taskTitle_isDone]}>{selectedItem.text}</Text>
               </View>
               <DootooItemSidebar thing={selectedItem} styles={styles} />
             </View>
@@ -625,7 +569,7 @@ export default function ItemTips() {
             saveNewThing={(tip, latest_tip_uuids) => saveNewTip(tip, selectedItem.uuid, latest_tip_uuids)}
             transcribeAudioToThings={transcribeAudioToTips}
             ListThingSidebar={DootooTipSidebar}
-            EmptyThingUX={() => <DootooTipEmptyUX styles={styles} selectedItem={selectedItem} tipArray={tips} />}
+            EmptyThingUX={() => <DootooTipEmptyUX selectedItem={selectedItem} tipArray={tips} />}
             isThingPressable={() => { return selectedItem.is_done; }}
             isThingDraggable={selectedItem.is_done}
             hideRecordButton={!selectedItem.is_done}

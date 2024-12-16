@@ -134,7 +134,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     bottomOffset: 220,
                     visibilityTime: 8000,
                     props: {
-                        
+
                         // 1.3 TODO Revise undo logic with upcoming speaking into subtasks
                         //      (items can no longer be assumed to have been just appended to top of list);
                         //
@@ -513,7 +513,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 delete thingRowPositionXs.current[subtask.uuid];
                                 delete thingRowHeights.current[subtask.uuid]
                             }
-                           
+
                             listArraySetter((prevThings) => {
                                 const subtaskUUIDSet = new Set(thingSubtasks.map(obj => obj.uuid));
                                 return prevThings.filter((obj) => (obj.uuid != thing.uuid) && !subtaskUUIDSet.has(obj.uuid))
@@ -1091,7 +1091,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
         const fullRowHeight = useRef(-1);
         const lastTextInputHeight = useRef(0);         // iOS-specific var used to keep track of last input height and
-                                                       // only alter rowHeight.value if difference exceeds 5 px (i.e. new line is formed by text)
+        // only alter rowHeight.value if difference exceeds 5 px (i.e. new line is formed by text)
 
         // 1.3 This boolean is used to only set rowHeight.value at explict times to prevent continuous layout changes/loops
         const [rowHeightKnown, setRowHeightKnown] = useState(false);
@@ -1125,7 +1125,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             if (listOpacity.value == 0) {
                 listOpacity.value = withTiming(1, { duration: 300 });
             }
-            
+
             // If row had a height of 0 on render, assume it was just collapsed via a prior animation
             // and restore it to full height.  See special case for first reveal of list in the isFinished clause
             if (rowHeight.value == 0) {
@@ -1167,7 +1167,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             // ASSume the schedule was added to an existing item through enrichment
             // and thus fade in the timer
             if (item.scheduled_datetime_utc && (timerContainerWidth.value == 0)) {
-                const animateTimerAppearance = async() => {
+                const animateTimerAppearance = async () => {
                     await new Promise<void>((resolve) => {
                         timerContainerWidth.value = withTiming(30, { duration: 300 }, (isFinished) => {
                             if (isFinished) {
@@ -1208,22 +1208,25 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                     }
                                 })
                             })
-                            
+
                             // Overwrite enriched data in DB and UI
-                            listArraySetter((prevThings) => prevThings.map((thing) => 
-                                (thing.uuid == itemToEnrich.uuid) 
-                                    ? { ...thing,
+                            listArraySetter((prevThings) => prevThings.map((thing) =>
+                                (thing.uuid == itemToEnrich.uuid)
+                                    ? {
+                                        ...thing,
                                         text: enrichmentResponse.text,
                                         scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc
-                                        }
+                                    }
                                     : thing
-                                    ));
-                            
+                            ));
+
                             // 1.3 Intentionally NOT implementing the below functions in the enrichment lambda
                             //     to minimize time required to return enrichment back to client
-                            const deepItemCopy = { ...item,
-                                                    text: enrichmentResponse.text,
-                                                    scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc }
+                            const deepItemCopy = {
+                                ...item,
+                                text: enrichmentResponse.text,
+                                scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc
+                            }
                             updateItemText(deepItemCopy);
                             updateItemSchedule(item.uuid, enrichmentResponse.scheduled_datetime_utc);
 
@@ -1387,7 +1390,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             if (isFinished) {
                                 runOnJS(setRowHeightKnown)(true);
                             }
-                        })            
+                        })
                     }
                 }}>
                 <Swipeable
@@ -1417,7 +1420,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(item, getIndex()) } else { return <></> } }}
                     renderRightActions={(progress, dragX) => { if (renderRightActions) { return renderRightActions(item, handleThingDelete) } else { return <></> } }}>
                     <ScaleDecorator>
-                        <View style={[styles.itemContainer]}>
+                        <View style={[listStyles.itemContainer, styles.itemContainer]}>
                             {(item.parent_item_uuid) ?
                                 <View style={styles.childItemSpacer}></View>
                                 : <></>
@@ -1435,7 +1438,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                     <Image style={styles.tipListIcon} source={require("@/assets/images/light_bulb_blackyellow.png")} />
                                 </Pressable> : <></>
                             }
-                            <View style={styles.itemNameContainer}>
+                            <View style={listStyles.itemNameContainer}>
                                 {((thingName == THINGNAME_ITEM) && item.scheduled_datetime_utc) ?
                                     <Reanimated.View style={[styles.timerIconContainer, timerContainerWidthAnimatedStyle]}>
                                         <Pressable hitSlop={10} onPress={() => handleTimerClick(item)}>
@@ -1496,10 +1499,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                             onLongPress={drag}
                                             disabled={isActive}
                                             onPress={() => handleThingTextTap(item)}>
-                                            <Reanimated.Text style={[textOpacityAnimatedStyle, styles.taskTitle, item.is_done && styles.taskTitle_isDone]}>{item.text}</Reanimated.Text>
+                                            <Reanimated.Text style={[textOpacityAnimatedStyle, listStyles.taskTitle, item.is_done && listStyles.taskTitle_isDone]}>{item.text}</Reanimated.Text>
                                         </Pressable>
                                         : <View style={styles.tipNamePressable}>
-                                            <Text style={[styles.taskTitle]}>{item.text}</Text>
+                                            <Text style={[listStyles.taskTitle]}>{item.text}</Text>
                                         </View>
                                 }
                                 <ListThingSidebar thing={item} styles={styles} />
@@ -1590,12 +1593,12 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }} >
             <View style={styles.listContainer}>
                 {(!screenInitialized) ?
-                    <Reanimated.View style={[styles.initialLoadAnimContainer, { opacity: initialLoadFadeInOpacity }]}>
-                        <Text style={styles.initialLoadMsg}>{loadingAnimMsg}</Text>
+                    <Reanimated.View style={[listStyles.initialLoadAnimContainer, { opacity: initialLoadFadeInOpacity }]}>
+                        <Text style={listStyles.initialLoadMsg}>{loadingAnimMsg}</Text>
                         <ActivityIndicator size={"large"} color="#3E3723" />
                     </Reanimated.View>
                     : (listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0) ?
-                        <Reanimated.View style={[styles.taskContainer, { opacity: listOpacity }]}>
+                        <Reanimated.View style={[listStyles.taskContainer, { opacity: listOpacity }]}>
                             <DraggableFlatList
                                 data={listArray.filter(item => !item.is_deleted)}
                                 onDragEnd={({ data, from, to }) => {
@@ -1631,9 +1634,9 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />}
                                         <View style={{ height: 50 }} />
                                     </View>}
-                            /> 
+                            />
                         </Reanimated.View>
-                        : <EmptyThingUX styles={styles} />
+                        : <EmptyThingUX />
                 }
                 <DootooFooter hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveAllThingsFunc={saveAllThings} />
                 <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
@@ -1681,5 +1684,49 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     );
 
 };
+
+// Used by Tips screen as well
+export const listStyles = StyleSheet.create({
+    initialLoadAnimContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    taskContainer: {
+        flex: 1
+    },
+    itemContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingTop: 5
+    },
+    taskTitle: {
+        fontSize: 16,
+        textAlign: 'left',
+        paddingRight: 5,
+        height: 25,
+        position: 'relative',
+        top: 5,
+        //backgroundColor: 'blue',    
+    },
+    taskTitle_isDone: {
+        color: '#556B2F',
+        textDecorationLine: 'line-through'
+    },
+    initialLoadMsg: {
+        fontSize: 20,
+        paddingBottom: 15
+    },
+    itemNameContainer: {
+        marginLeft: 15,                 // Tips had marginLeft 17 - necessary?
+        paddingBottom: 10,
+        paddingTop: 10,
+        paddingRight: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
+        flex: 1,
+        flexDirection: 'row'
+    },
+})
 
 export default DootooList;
