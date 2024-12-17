@@ -34,7 +34,8 @@ const styles = StyleSheet.create({
     paddingRight: 10
   },
   toastText: {
-    fontSize: 16
+    fontSize: 16,
+    textAlign: 'center'
   },
   toastLink: {
     fontWeight: 'bold',

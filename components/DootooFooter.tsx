@@ -231,12 +231,13 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         }, 100);
     }
 
-    const stopRecording = async (localRecordingObject = null, isAutoStop = false): Promise<string> => {
+    const stopRecording = async (localRecordingObject = null, isAutoStop = false) => {
         const recordingDurationEnd = performance.now();
+        const recordingDuration = (recordingDurationEnd - recordingTimeStart.current) / 1000;
         amplitude.track("Recording Stopped", {
             anonymous_id: anonymousId.current,
             pathname: pathname,
-            durationSeconds: (recordingDurationEnd - recordingTimeStart.current) / 1000,
+            durationSeconds: recordingDuration,
             stop_type: (isAutoStop) ? 'auto' : 'manual'
         });
         //console.log('Stopping recording..');
@@ -261,7 +262,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         meteringLevel.value = withTiming(1); // reset scale when stopped
 
         //console.log('Recording stopped and stored at', uri);
-        return uri;
+        return { fileUri: uri, duration: recordingDuration }
     }
 
     // if button was pressed while recording was already processed,
@@ -270,14 +271,15 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const cancelRecordingProcessing = async () => {
         //console.log("Cancelling recording...");
         if (recording) {
-            const fileUri = await stopRecording();
+            const { fileUri, duration } = await stopRecording();
             deleteFile(fileUri);
         }
         setIsRecordingProcessing(false);
         //console.log("Recording cancelled...");
         amplitude.track("Recording Processing Cancelled", {
             anonymous_id: anonymousId.current,
-            pathname: pathname
+            pathname: pathname,
+            durationSeconds: duration
         });
     }
 
@@ -290,107 +292,119 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             return;
         }
 
-        recorderProcessLocked.current = true;
-
-        amplitude.track("Recording Processing Started", {
-            anonymous_id: anonymousId.current,
-            pathname: pathname,
-            stop_type: (isAutoStop) ? 'auto' : 'manual'
-        });
-        setIsRecordingProcessing(true);
-        const fileUri = await stopRecording(localRecordingObject, isAutoStop);
+        const { fileUri, duration } = await stopRecording(localRecordingObject, isAutoStop);
         try {
-            const response = await callBackendTranscribeService(fileUri);
-            const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
-            //console.log("Number of scheduled items recorded: " + numScheduledItems);
-            amplitude.track("Recording Processing Completed", {
-                anonymous_id: anonymousId.current,
-                flagged: (response == "flagged"),
-                thing_count: (response && response.length >= 0) ? response.length : -1,
-                numScheduledItems: numScheduledItems,
-                pathname: pathname
-            });
 
-            if (response == "flagged") {
-                //console.log(`Audio flagged, displaying alert prompt`);
-                amplitude.track("Recording Flagged", {
+            if (hasBreachedThreshold.current) {
+                recorderProcessLocked.current = true;
+
+                amplitude.track("Recording Processing Started", {
                     anonymous_id: anonymousId.current,
+                    pathname: pathname,
+                    stop_type: (isAutoStop) ? 'auto' : 'manual'
+                });
+                setIsRecordingProcessing(true);
+
+                const response = await callBackendTranscribeService(fileUri);
+                const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
+                //console.log("Number of scheduled items recorded: " + numScheduledItems);
+                amplitude.track("Recording Processing Completed", {
+                    anonymous_id: anonymousId.current,
+                    flagged: (response == "flagged"),
+                    thing_count: (response && response.length >= 0) ? response.length : -1,
+                    numScheduledItems: numScheduledItems,
                     pathname: pathname
                 });
-                amplitude.track("Recording Flagged Prompt Displayed", {
-                    anonymous_id: anonymousId.current,
-                    pathname: pathname
-                });
-                Alert.alert(
-                    'Content Advisory', // Title of the alert
-                    'Our app detected language that may not align with our guidelines for a safe and supportive experience. Please consider using positive, constructive expressions.', // Message of the alert
-                    [
-                        {
-                            text: 'I Understand',
-                            onPress: () => {
-                                //console.log('Audio Content Advisory Acknowledgement button Pressed');
-                                amplitude.track("Recording Flagged Prompt Dismissed", {
-                                    anonymous_id: anonymousId.current,
-                                    pathname: pathname
-                                });
-                            },
-                        },
-                    ]
-                );
-            } else {
-                //const response =  generateStubData(); 
-                //console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
 
-                if (listArray && response && response.length > 0) {
-                    lastRecordedCount.current = response.length;  // Set for future toast undo potential
-
-                    // Set UI flag to inform user that counts may change after async backend save complete
-                    // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
-                    // for (var i = 0; i < response.length; i++) {
-                    //     response[i].counts_updating = true; 
-                    // }
-
-
-                    if (listArray.length == 0) {
-
-                        // Assume the empty list CTA is visible, so fade it out first
-                        //("Attempting to fade out empty CTA animation...");
-                        // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
-                        // emptyListCTAFadeOutAnimation.reset();
-                        // emptyListCTAOpacity.current = 1;
-                        // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
-
-                        emptyListCTAFadeOutAnimation.start(() => {
-
-                            //If list is initially empty, fade in the new list
-                            listArraySetterFunc((prevThings) => response.concat(prevThings));
-
-                            emptyListCTAFadeOutAnimation.reset();
-                        });
-                    } else {
-
-                        // TODO:  When appending, move current list down and to insert new items
-                        listArraySetterFunc((prevThings) => response.concat(prevThings));
-                    }
-
-                    // Make sure this function is asynchronous!!!
-                    var updatedItems = response.concat(listArray);
-                    saveAllThingsFunc(updatedItems, () => {
-                        ListItemEventEmitter.emit("items_saved");
-                    });
-                } else {
-                    //console.log("Did not call setter with updated list, attempting to show toast.");
-                    amplitude.track("Empty Recording Toast Displayed", {
+                if (response == "flagged") {
+                    //console.log(`Audio flagged, displaying alert prompt`);
+                    amplitude.track("Recording Flagged", {
                         anonymous_id: anonymousId.current,
                         pathname: pathname
                     });
-                    Toast.show({
-                        type: 'msgOpenWidth',
-                        text1: `We couldn't transcribe your voice into items.  Please try again.`,
-                        position: 'bottom',
-                        bottomOffset: 220
+                    amplitude.track("Recording Flagged Prompt Displayed", {
+                        anonymous_id: anonymousId.current,
+                        pathname: pathname
                     });
+                    Alert.alert(
+                        'Content Advisory', // Title of the alert
+                        'Our app detected language that may not align with our guidelines for a safe and supportive experience. Please consider using positive, constructive expressions.', // Message of the alert
+                        [
+                            {
+                                text: 'I Understand',
+                                onPress: () => {
+                                    //console.log('Audio Content Advisory Acknowledgement button Pressed');
+                                    amplitude.track("Recording Flagged Prompt Dismissed", {
+                                        anonymous_id: anonymousId.current,
+                                        pathname: pathname
+                                    });
+                                },
+                            },
+                        ]
+                    );
+                } else {
+                    //const response =  generateStubData(); 
+                    //console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
+
+                    if (listArray && response && response.length > 0) {
+                        lastRecordedCount.current = response.length;  // Set for future toast undo potential
+
+                        // Set UI flag to inform user that counts may change after async backend save complete
+                        // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
+                        // for (var i = 0; i < response.length; i++) {
+                        //     response[i].counts_updating = true; 
+                        // }
+
+
+                        if (listArray.length == 0) {
+
+                            // Assume the empty list CTA is visible, so fade it out first
+                            //("Attempting to fade out empty CTA animation...");
+                            // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
+                            // emptyListCTAFadeOutAnimation.reset();
+                            // emptyListCTAOpacity.current = 1;
+                            // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
+
+                            emptyListCTAFadeOutAnimation.start(() => {
+
+                                //If list is initially empty, fade in the new list
+                                listArraySetterFunc((prevThings) => response.concat(prevThings));
+
+                                emptyListCTAFadeOutAnimation.reset();
+                            });
+                        } else {
+
+                            // TODO:  When appending, move current list down and to insert new items
+                            listArraySetterFunc((prevThings) => response.concat(prevThings));
+                        }
+
+                        // Make sure this function is asynchronous!!!
+                        var updatedItems = response.concat(listArray);
+                        saveAllThingsFunc(updatedItems, () => {
+                            ListItemEventEmitter.emit("items_saved");
+                        });
+                    } else {
+                        //console.log("Did not call setter with updated list, attempting to show toast.");
+                        amplitude.track("Empty Recording Toast Displayed", {
+                            anonymous_id: anonymousId.current,
+                            pathname: pathname
+                        });
+                        Toast.show({
+                            type: 'msgOpenWidth',
+                            text1: `We couldn't transcribe your voice.\n\nPlease try again.`,
+                            position: 'bottom',
+                            bottomOffset: 220
+                        });
+                    }
                 }
+            } else {
+                //console.log("Abandoning audio processing as threshold was not breached; proceeding to file cleanup.");
+                Toast.show({
+                    type: 'msgOpenWidth',
+                    text1: `We couldn't distinguish your voice from the background noise.\n\nPlease try again.`,
+                    position: 'bottom',
+                    bottomOffset: 220
+                });
             }
         } catch (error) {
             console.error("Unexpected error occurred during recording processing!!", error);
