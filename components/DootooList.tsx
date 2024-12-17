@@ -1121,6 +1121,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         });
 
         useEffect(() => {
+            //console.log("renderItem.useEffect([]) " + item.text + " rowHeight: " + rowHeight.value + ", renderTappedField: " + renderTappedField.current);
 
             // If we've started rendering items for the first time on this list
             // and the list is hidden, reveal it
