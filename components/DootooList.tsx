@@ -156,6 +156,14 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             }
     
             if (!screenInitialized) {
+                
+                // if we have an empty list array when we reach this logic,
+                // explicitly set fullListRendered boolean as it will not
+                // have been set in the renderItem logic (reminder: this boolean is for enabling rowHeight animations)
+                if (listArray.length == 0) {
+                    firstListRendered.value = true;
+                }
+
                 initialLoadFadeInOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
                     if (isFinished) {
                         runOnJS(setScreenInitialized)(true);
@@ -1134,6 +1142,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         runOnJS(revealListIfLastRowRendered)();
                     }
                 });
+            } else {
+                console.log("Row Height not zero: " + rowHeight.value);
             }
 
             // If row had a text opacity of 0 on render, assume its text was just faded out and changed
