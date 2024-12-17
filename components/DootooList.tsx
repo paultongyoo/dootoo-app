@@ -81,7 +81,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const [page, setPage] = useState(1);
 
     useEffect(() => {
-        //console.log(`DootooList.useEffect([]) ${Date.now()}`);
         initializeLocalUser((isNew: boolean) => {
             //console.log("initializeLocalUser callback method");
             if (shouldInitialLoad) {
@@ -103,68 +102,73 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }
     }, []);
 
+    const initialListArrayMount = useRef(true);
     useEffect(() => {
-        // console.log(`useEffect[listArray] called: List length ${listArray.length}`);
-        // console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
-
-        // Asyncronously update local cache with latest listArray update
-        if (thingName == THINGNAME_ITEM) {
-            updateItemsCache(listArray);
+        if (initialListArrayMount.current) {
+            initialListArrayMount.current = false;
         } else {
-            updateTipsCache(selectedItem, listArray);
-        }
-
-        if (lastRecordedCount.current > 0) {
-            // If we're inside here, we were called after recording new things
-
-            if (thingName == 'tip') {
-                ProfileCountEventEmitter.emit('incr_tips', { count: lastRecordedCount.current });
+            // console.log(`useEffect[listArray] called: List length ${listArray.length}`);
+            // console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
+    
+            // Asyncronously update local cache with latest listArray update
+            if (thingName == THINGNAME_ITEM) {
+                updateItemsCache(listArray);
+            } else {
+                updateTipsCache(selectedItem, listArray);
             }
-
-            // Display Toast
-            Toast.show({
-                type: 'msgOpenWidth',
-                text1: `Added ${lastRecordedCount.current} ${thingName}${(lastRecordedCount.current > 1) ? 's' : ''}.`,
-                position: 'bottom',
-                bottomOffset: 220,
-                visibilityTime: 8000,
-                props: {
-
-                    // 1.3 TODO Revise undo logic with upcoming speaking into subtasks
-                    //      (items can no longer be assumed to have been just appended to top of list);
-                    //
-                    // numItemsRecorded: lastRecordedCount.current,
-                    // onUndoPress: (numItemsToUndo) => {
-
-                    //     // TODO: This doesn't delete in DB, FIX
-                    //     listArraySetter((prevItems) => prevItems.slice(numItemsToUndo)); // This should update UI only and not invoke any syncronous backend operations            
-                    // }
+    
+            if (lastRecordedCount.current > 0) {
+                // If we're inside here, we were called after recording new things
+    
+                if (thingName == 'tip') {
+                    ProfileCountEventEmitter.emit('incr_tips', { count: lastRecordedCount.current });
                 }
-            });
-            lastRecordedCount.current = 0;
-        } else {
-
-            // This call has to be in this "main UI thread" in order to work
-            Toast.hide();
+    
+                // Display Toast
+                Toast.show({
+                    type: 'msgOpenWidth',
+                    text1: `Added ${lastRecordedCount.current} ${thingName}${(lastRecordedCount.current > 1) ? 's' : ''}.`,
+                    position: 'bottom',
+                    bottomOffset: 220,
+                    visibilityTime: 8000,
+                    props: {
+    
+                        // 1.3 TODO Revise undo logic with upcoming speaking into subtasks
+                        //      (items can no longer be assumed to have been just appended to top of list);
+                        //
+                        // numItemsRecorded: lastRecordedCount.current,
+                        // onUndoPress: (numItemsToUndo) => {
+    
+                        //     // TODO: This doesn't delete in DB, FIX
+                        //     listArraySetter((prevItems) => prevItems.slice(numItemsToUndo)); // This should update UI only and not invoke any syncronous backend operations            
+                        // }
+                    }
+                });
+                lastRecordedCount.current = 0;
+            } else {
+    
+                // This call has to be in this "main UI thread" in order to work
+                Toast.hide();
+            }
+    
+            // Immediately look for new counts on any list update
+            restartPolling();
+    
+            if (thingName == THINGNAME_ITEM) {
+                syncItemCalendarUpdates();
+            }
+    
+            if (!screenInitialized) {
+                initialLoadFadeInOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+                    if (isFinished) {
+                        runOnJS(setScreenInitialized)(true);
+                    }
+                });
+            }
+    
+            // Check for count updates since user just made an action
+            pollThingCounts();
         }
-
-        // Immediately look for new counts on any list update
-        restartPolling();
-
-        if (thingName == THINGNAME_ITEM) {
-            syncItemCalendarUpdates();
-        }
-
-        if (!screenInitialized) {
-            initialLoadFadeInOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
-                if (isFinished) {
-                    runOnJS(setScreenInitialized)(true);
-                }
-            });
-        }
-
-        // Check for count updates since user just made an action
-        pollThingCounts();
     }, [listArray]);
 
     const pollThingCounts = async () => {
