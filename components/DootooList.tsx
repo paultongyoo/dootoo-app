@@ -558,6 +558,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
         if (!thing.newKeyboardEntry) deleteThing(thing.uuid);
 
+        if (thingName == 'tip') {
+            ProfileCountEventEmitter.emit('decr_tips');
+        }
+
         // Remove item from displayed and thingRowPositionXs lists
         listArrayCopy.splice(index, 1);
         delete thingRowPositionXs.current[thing.uuid];
@@ -1292,6 +1296,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 if (thing.newKeyboardEntry) {
                     const latestUuidOrder = listArray.map((thing) => ({ uuid: thing.uuid }));
                     saveNewThing(updatedThing, latestUuidOrder);
+
+                    if (thingName == 'tip') {
+                        ProfileCountEventEmitter.emit('incr_tips', { count: 1 });
+                    }
                 } else {
                     // Asynchronously sync new item text to DB
                     saveTextUpdateFunc(updatedThing);
