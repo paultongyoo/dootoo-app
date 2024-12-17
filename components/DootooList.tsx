@@ -82,17 +82,13 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
     useEffect(() => {
         initializeLocalUser((isNew: boolean) => {
-            //console.log("initializeLocalUser callback method");
+            //console.log("initializeLocalUser callback method: " + shouldInitialLoad);
             if (shouldInitialLoad) {
-                if (!isNew) {
-                    initialLoadFadeInOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
-                        if (isFinished) {
-                            runOnJS(resetListWithFirstPageLoad)();
-                        }
-                    });
-                } else {
-                    //console.log("Skipping loading things for user as they are brand new.");
-                }
+                initialLoadFadeInOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                    if (isFinished) {
+                        runOnJS(resetListWithFirstPageLoad)();
+                    }
+                });
             } else {
                 //console.log("Skipping initial load for user per shouldInitialLoad == false.");
             }
@@ -105,10 +101,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const initialListArrayMount = useRef(true);
     useEffect(() => {
         if (initialListArrayMount.current) {
+            //console.log("useEffect([listArray]) discarding call on initial mount");
             initialListArrayMount.current = false;
         } else {
-            // console.log(`useEffect[listArray] called: List length ${listArray.length}`);
-            // console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
+             //console.log(`useEffect[listArray] called: List length ${listArray.length}`);
+             //console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
     
             // Asyncronously update local cache with latest listArray update
             if (thingName == THINGNAME_ITEM) {
@@ -159,6 +156,14 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             }
     
             if (!screenInitialized) {
+                
+                // if we have an empty list array when we reach this logic,
+                // explicitly set fullListRendered boolean as it will not
+                // have been set in the renderItem logic (reminder: this boolean is for enabling rowHeight animations)
+                if (listArray.length == 0) {
+                    firstListRendered.value = true;
+                }
+
                 initialLoadFadeInOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
                     if (isFinished) {
                         runOnJS(setScreenInitialized)(true);
@@ -176,7 +181,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         if (!ignore) {
             ignore = true;
             console.log(`Polling for ${thingName} latest counts: ${new Date(Date.now()).toLocaleString()}`);
-            if (listArray.length > 0) {
+            if (listArray.filter(thing => !thing.newKeyboardEntry).length > 0) {
                 if (thingName == THINGNAME_ITEM) {
                     const itemUUIDs = listArray.map(thing => thing.uuid);
                     if (itemUUIDs.length > 0) {
@@ -1085,6 +1090,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         thingRowHeights.current[item.uuid] = rowHeight;             // via user actions such as handleThingDelete
         const [refreshKey, setRefreshKey] = useState(1);
         const lastEnrichedText = useRef('');
+        const renderTappedField = useRef(false);                    // Used to delay rendering of TextInput field to after animation reveal
 
         const fullRowHeight = useRef(-1);
         const lastTextInputHeight = useRef(0);         // iOS-specific var used to keep track of last input height and
@@ -1115,7 +1121,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         });
 
         useEffect(() => {
-            //console.log("renderItem.useEffect([]) " + item.text + " rowHeight: " + rowHeight.value);
+            //console.log("renderItem.useEffect([]) " + item.text + " rowHeight: " + rowHeight.value + ", renderTappedField: " + renderTappedField.current);
 
             // If we've started rendering items for the first time on this list
             // and the list is hidden, reveal it
@@ -1126,7 +1132,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             // If row had a height of 0 on render, assume it was just collapsed via a prior animation
             // and restore it to full height.  See special case for first reveal of list in the isFinished clause
             if (rowHeight.value == 0) {
-                //console.log("Expanding row " + getIndex() + " to full height, firstListRendered.value: " + firstListRendered.value);
+                console.log("Expanding row " + getIndex() + " to full height, firstListRendered.value: " + firstListRendered.value);
                 rowHeight.value = withTiming(fullRowHeight.current, { duration: 300 }, (isFinished) => {
                     if (isFinished) {
 
@@ -1147,6 +1153,12 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         });
 
         const revealListIfLastRowRendered = () => {
+
+            if (currentlyTappedThing.current && currentlyTappedThing.current.uuid == item.uuid) {
+                console.log("Attempting to display text input of animated row: " + item.text);
+                renderTappedField.current = true;
+                setRefreshKey(prev => prev + 1);
+            }
 
             // Reveal the list if we've rendered the last of the 
             // user's items or the 15th item, whichever index is lesser
@@ -1266,11 +1278,16 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }, [item.text])
 
         const handleThingTextTap = (thing) => {
-            //console.log(`handleItemTextTap for ${thing.text}`);
+            console.log(`handleItemTextTap for ${thing.text}, renderTappedField: ${renderTappedField}`);
 
             // Update currently tapped thing to cause
             // list to re-render and display text field for currently tapped thing
             currentlyTappedThing.current = thing;
+
+            // Set this boolean to true as we don't need to
+            // delay the rendering of the TextInput since the
+            // row isn't animating into view
+            renderTappedField.current = true;
 
             // Remember/baseline future handleBlur comparision with original value
             // We use a ref instead of state var to not invoke state change / re-render
@@ -1395,13 +1412,14 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                     // 1.3 NOTE OnLayout does NOT fire when TextInput grows because we've given the containing view the fixed SharedValue height.
                     //          rowHeight.value must be explicitly reset in TextInput onContentSizeChange handler
-                    /*                     console.log("Index " + getIndex() + ": onLayout fired with height: " + event.nativeEvent.layout.height +
-                                            ", rowHeightKnown: " + rowHeightKnown +
-                                            ", rowHeight: " + rowHeight.value +
-                                            ", firstListRendered: " + firstListRendered.value); */
+                    // console.log("Index " + getIndex() + ": onLayout fired with height: " + event.nativeEvent.layout.height +
+                    //                         ", rowHeightKnown: " + rowHeightKnown +
+                    //                         ", rowHeight: " + rowHeight.value +
+                    //                         ", firstListRendered: " + firstListRendered.value); 
                     if (!rowHeightKnown) {
                         const layoutHeight = event.nativeEvent.layout.height;
                         fullRowHeight.current = layoutHeight;
+                        //console.log("Setting rowHeight.value withTiming(0)");
                         rowHeight.value = withTiming(0, { duration: 1 }, (isFinished) => {
                             if (isFinished) {
                                 runOnJS(setRowHeightKnown)(true);
@@ -1466,7 +1484,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         </Pressable>
                                     </Reanimated.View>
                                     : <></>}
-                                {(currentlyTappedThing.current && (currentlyTappedThing.current.uuid == item.uuid)) ?
+                                {(currentlyTappedThing.current && (currentlyTappedThing.current.uuid == item.uuid) && renderTappedField.current) ?
                                     <TextInput
                                         ref={textInputRef}
                                         blurOnSubmit={true}
@@ -1499,6 +1517,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                     : (
                                         (isThingPressable(item)) ?
                                             <Pressable
+                                                hitSlop={10}
                                                 style={listStyles.itemNamePressable}
                                                 onLongPress={drag}
                                                 disabled={isActive}
@@ -1611,6 +1630,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                     }
                                 }}
                                 nestedScrollEnabled={true}
+                                keyboardShouldPersistTaps="handled"
                                 keyExtractor={(item, index) => item.uuid}
                                 ListHeaderComponent={<View style={{ height: 0 }} />}
                                 refreshControl={
