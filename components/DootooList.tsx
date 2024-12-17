@@ -82,17 +82,13 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
     useEffect(() => {
         initializeLocalUser((isNew: boolean) => {
-            //console.log("initializeLocalUser callback method");
+            //console.log("initializeLocalUser callback method: " + shouldInitialLoad);
             if (shouldInitialLoad) {
-                if (!isNew) {
-                    initialLoadFadeInOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
-                        if (isFinished) {
-                            runOnJS(resetListWithFirstPageLoad)();
-                        }
-                    });
-                } else {
-                    //console.log("Skipping loading things for user as they are brand new.");
-                }
+                initialLoadFadeInOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                    if (isFinished) {
+                        runOnJS(resetListWithFirstPageLoad)();
+                    }
+                });
             } else {
                 //console.log("Skipping initial load for user per shouldInitialLoad == false.");
             }
@@ -105,10 +101,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const initialListArrayMount = useRef(true);
     useEffect(() => {
         if (initialListArrayMount.current) {
+            //console.log("useEffect([listArray]) discarding call on initial mount");
             initialListArrayMount.current = false;
         } else {
-            // console.log(`useEffect[listArray] called: List length ${listArray.length}`);
-            // console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
+             //console.log(`useEffect[listArray] called: List length ${listArray.length}`);
+             //console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
     
             // Asyncronously update local cache with latest listArray update
             if (thingName == THINGNAME_ITEM) {
