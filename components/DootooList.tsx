@@ -1207,6 +1207,12 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 })
                             })
 
+                            amplitude.track("Item Enriched", {
+                                anonymous_id: anonymousId.current,
+                                pathname: pathname,
+                                uuid: item.uuid
+                            });
+
                             // Overwrite enriched data in DB and UI
                             listArraySetter((prevThings) => prevThings.map((thing) =>
                                 (thing.uuid == itemToEnrich.uuid)
@@ -1294,6 +1300,13 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 updatedThing.text = textOnChange;
 
                 if (thing.newKeyboardEntry) {
+
+                    amplitude.track("Keyboard Entry Completed", {
+                        anonymous_id: anonymousId.current,
+                        pathname: pathname,
+                        uuid: thing.uuid
+                    });
+
                     const latestUuidOrder = listArray.map((thing) => ({ uuid: thing.uuid }));
                     saveNewThing(updatedThing, latestUuidOrder);
 
