@@ -305,7 +305,16 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 });
                 setIsRecordingProcessing(true);
 
-                const response = await callBackendTranscribeService(fileUri);
+                // 1.4 Passing abridged list of open items along with audio file
+                //     to backend service for processing
+                const abridgedItems = listArray.map((thing) =>
+                ({
+                    uuid: thing.uuid,
+                    parent_item_uuid: thing.parent_item_uuid,
+                    text: thing.text,
+                    scheduled_datetime_utc: thing.scheduled_datetime_utc
+                }));
+                const response = await callBackendTranscribeService(fileUri, abridgedItems);
                 const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
                 //console.log("Number of scheduled items recorded: " + numScheduledItems);
                 amplitude.track("Recording Processing Completed", {
@@ -420,8 +429,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         }
     }
 
-    const callBackendTranscribeService = async (fileUri: string) => {
-        return await transcribeFunction(fileUri, anonymousId.current);
+    const callBackendTranscribeService = async (fileUri: string, abridgedItems = []) => {
+        return await transcribeFunction(fileUri, anonymousId.current, abridgedItems);
     }
 
     const cancelRecording = async () => {
@@ -478,6 +487,12 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const handleKeyboardButtonPress = () => {
         const newItem = generateNewKeyboardEntry();
         currentlyTappedThing.current = newItem;
+
+        amplitude.track("Keyboard Entry Started", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            uuid: newItem.uuid
+        });
 
         if (listArray.length == 0) {
 
