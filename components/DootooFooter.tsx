@@ -4,18 +4,19 @@ import RNFS from 'react-native-fs';
 import { AppContext } from './AppContext.js';
 import { useState, useContext, useRef, useEffect } from "react";
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
-import Reanimated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Reanimated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import Toast from "react-native-toast-message";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { ListItemEventEmitter } from "./EventEmitters";
 import { checkOpenAPIStatus } from "./BackendServices.js";
 import Animated from "react-native-reanimated";
-import { calculateAndroidButtonScale } from './Helpers'
+import { calculateAndroidButtonScale, generateNewKeyboardEntry } from './Helpers'
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
-    const { anonymousId, listFadeInAnimation, fadeInListOnRender,
+    const { anonymousId, listFadeInAnimation, fadeInListOnRender, currentlyTappedThing,
         lastRecordedCount, emptyListCTAOpacity, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
     const recorderProcessLocked = useRef(false);
@@ -23,6 +24,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const [permissionResponse, requestPermission] = Audio.usePermissions();
     const meteringLevel = useSharedValue(1); // shared value for animated scale
     const recordButtonOpacity = useSharedValue(1);
+    const keyboardButtonOpacity = useSharedValue(1);
     const recordingTimeStart = useRef(null);        // Var used for calculating time
 
     // Auto stop threshold feature
@@ -50,7 +52,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         const handleAppStateChange = (nextAppState) => {
             if (nextAppState === "active") {
                 checkOpenAPIHealth();
-            } 
+            }
         };
         const subscription = AppState.addEventListener("change", handleAppStateChange);
 
@@ -143,7 +145,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 const status = await recording.getStatusAsync();
                 if (status.isRecording) {
                     //console.log("Unmodified sound level: " + status.metering);
-                    meteringLevel.value = 
+                    meteringLevel.value =
                         (Platform.OS == 'ios')
                             ? withTiming(1 + Math.max(0, 1 + (status.metering / 30)), { duration: 100 })
                             : withTiming(calculateAndroidButtonScale(status.metering), { duration: 100 });
@@ -229,12 +231,13 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         }, 100);
     }
 
-    const stopRecording = async (localRecordingObject = null, isAutoStop = false): Promise<string> => {
+    const stopRecording = async (localRecordingObject = null, isAutoStop = false) => {
         const recordingDurationEnd = performance.now();
+        const recordingDuration = (recordingDurationEnd - recordingTimeStart.current) / 1000;
         amplitude.track("Recording Stopped", {
             anonymous_id: anonymousId.current,
             pathname: pathname,
-            durationSeconds: (recordingDurationEnd - recordingTimeStart.current) / 1000,
+            durationSeconds: recordingDuration,
             stop_type: (isAutoStop) ? 'auto' : 'manual'
         });
         //console.log('Stopping recording..');
@@ -259,7 +262,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         meteringLevel.value = withTiming(1); // reset scale when stopped
 
         //console.log('Recording stopped and stored at', uri);
-        return uri;
+        return { fileUri: uri, duration: recordingDuration }
     }
 
     // if button was pressed while recording was already processed,
@@ -268,14 +271,15 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const cancelRecordingProcessing = async () => {
         //console.log("Cancelling recording...");
         if (recording) {
-            const fileUri = await stopRecording();
+            const { fileUri, duration } = await stopRecording();
             deleteFile(fileUri);
         }
         setIsRecordingProcessing(false);
         //console.log("Recording cancelled...");
         amplitude.track("Recording Processing Cancelled", {
             anonymous_id: anonymousId.current,
-            pathname: pathname
+            pathname: pathname,
+            durationSeconds: duration
         });
     }
 
@@ -288,113 +292,119 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             return;
         }
 
-        recorderProcessLocked.current = true;
-
-        amplitude.track("Recording Processing Started", {
-            anonymous_id: anonymousId.current,
-            pathname: pathname,
-            stop_type: (isAutoStop) ? 'auto' : 'manual'
-        });
-        setIsRecordingProcessing(true);
-        const fileUri = await stopRecording(localRecordingObject, isAutoStop);
+        const { fileUri, duration } = await stopRecording(localRecordingObject, isAutoStop);
         try {
-            const response = await callBackendTranscribeService(fileUri);
-            const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
-            console.log("Number of scheduled items recorded: " + numScheduledItems);
-            amplitude.track("Recording Processing Completed", {
-                anonymous_id: anonymousId.current,
-                flagged: (response == "flagged"),
-                thing_count: (response && response.length >= 0) ? response.length : -1,
-                numScheduledItems: numScheduledItems,
-                pathname: pathname
-            });
 
-            if (response == "flagged") {
-                //console.log(`Audio flagged, displaying alert prompt`);
-                amplitude.track("Recording Flagged", {
+            if (hasBreachedThreshold.current) {
+                recorderProcessLocked.current = true;
+
+                amplitude.track("Recording Processing Started", {
                     anonymous_id: anonymousId.current,
+                    pathname: pathname,
+                    stop_type: (isAutoStop) ? 'auto' : 'manual'
+                });
+                setIsRecordingProcessing(true);
+
+                const response = await callBackendTranscribeService(fileUri);
+                const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
+                //console.log("Number of scheduled items recorded: " + numScheduledItems);
+                amplitude.track("Recording Processing Completed", {
+                    anonymous_id: anonymousId.current,
+                    flagged: (response == "flagged"),
+                    thing_count: (response && response.length >= 0) ? response.length : -1,
+                    numScheduledItems: numScheduledItems,
                     pathname: pathname
                 });
-                amplitude.track("Recording Flagged Prompt Displayed", {
-                    anonymous_id: anonymousId.current,
-                    pathname: pathname
-                });
-                Alert.alert(
-                    'Content Advisory', // Title of the alert
-                    'Our app detected language that may not align with our guidelines for a safe and supportive experience. Please consider using positive, constructive expressions.', // Message of the alert
-                    [
-                        {
-                            text: 'I Understand',
-                            onPress: () => {
-                                //console.log('Audio Content Advisory Acknowledgement button Pressed');
-                                amplitude.track("Recording Flagged Prompt Dismissed", {
-                                    anonymous_id: anonymousId.current,
-                                    pathname: pathname
-                                });
-                            },
-                        },
-                    ]
-                );
-            } else {
-                //const response =  generateStubData(); 
-                console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
 
-                if (listArray && response && response.length > 0) {
-                    lastRecordedCount.current = response.length;  // Set for future toast undo potential
-
-                    // Set UI flag to inform user that counts may change after async backend save complete
-                    // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
-                    // for (var i = 0; i < response.length; i++) {
-                    //     response[i].counts_updating = true; 
-                    // }
-
-
-                    if (listArray.length == 0) {
-
-                        // Assume the empty list CTA is visible, so fade it out first
-                        //("Attempting to fade out empty CTA animation...");
-                        // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
-                        // emptyListCTAFadeOutAnimation.reset();
-                        // emptyListCTAOpacity.current = 1;
-                        // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
-
-                        emptyListCTAFadeOutAnimation.start(() => {
-
-                            //If list is initially empty, fade in the new list
-                            listArraySetterFunc((prevThings) => response.concat(prevThings));
-
-                            // fadeInListOnRender.current = true;
-                            // listFadeInAnimation.start(() => {
-                            //     fadeInListOnRender.current = false;
-                            //     listFadeInAnimation.reset();
-                            // });
-
-                            emptyListCTAFadeOutAnimation.reset();
-                        });
-                    } else {
-
-                        // TODO:  When appending, move current list down and to insert new items
-                        listArraySetterFunc((prevThings) => response.concat(prevThings));
-                    }
-
-                    // Make sure this function is asynchronous!!!
-                    var updatedItems = response.concat(listArray);
-                    saveAllThingsFunc(updatedItems, () => {
-                        ListItemEventEmitter.emit("items_saved");
-                    });
-                } else {
-                    //console.log("Did not call setter with updated list, attempting to show toast.");
-                    amplitude.track("Empty Recording Toast Displayed", {
+                if (response == "flagged") {
+                    //console.log(`Audio flagged, displaying alert prompt`);
+                    amplitude.track("Recording Flagged", {
                         anonymous_id: anonymousId.current,
                         pathname: pathname
                     });
-                    Toast.show({
-                        type: 'msgOpenWidth',
-                        text1: `We couldn't transcribe your voice into items.  Please try again.`,
-                        position: 'bottom',
-                        bottomOffset: 220
+                    amplitude.track("Recording Flagged Prompt Displayed", {
+                        anonymous_id: anonymousId.current,
+                        pathname: pathname
                     });
+                    Alert.alert(
+                        'Content Advisory', // Title of the alert
+                        'Our app detected language that may not align with our guidelines for a safe and supportive experience. Please consider using positive, constructive expressions.', // Message of the alert
+                        [
+                            {
+                                text: 'I Understand',
+                                onPress: () => {
+                                    //console.log('Audio Content Advisory Acknowledgement button Pressed');
+                                    amplitude.track("Recording Flagged Prompt Dismissed", {
+                                        anonymous_id: anonymousId.current,
+                                        pathname: pathname
+                                    });
+                                },
+                            },
+                        ]
+                    );
+                } else {
+                    //const response =  generateStubData(); 
+                    //console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
+
+                    if (listArray && response && response.length > 0) {
+                        lastRecordedCount.current = response.length;  // Set for future toast undo potential
+
+                        // Set UI flag to inform user that counts may change after async backend save complete
+                        // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
+                        // for (var i = 0; i < response.length; i++) {
+                        //     response[i].counts_updating = true; 
+                        // }
+
+
+                        if (listArray.length == 0) {
+
+                            // Assume the empty list CTA is visible, so fade it out first
+                            //("Attempting to fade out empty CTA animation...");
+                            // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
+                            // emptyListCTAFadeOutAnimation.reset();
+                            // emptyListCTAOpacity.current = 1;
+                            // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
+
+                            emptyListCTAFadeOutAnimation.start(() => {
+
+                                //If list is initially empty, fade in the new list
+                                listArraySetterFunc((prevThings) => response.concat(prevThings));
+
+                                emptyListCTAFadeOutAnimation.reset();
+                            });
+                        } else {
+
+                            // TODO:  When appending, move current list down and to insert new items
+                            listArraySetterFunc((prevThings) => response.concat(prevThings));
+                        }
+
+                        // Make sure this function is asynchronous!!!
+                        var updatedItems = response.concat(listArray);
+                        saveAllThingsFunc(updatedItems, () => {
+                            ListItemEventEmitter.emit("items_saved");
+                        });
+                    } else {
+                        //console.log("Did not call setter with updated list, attempting to show toast.");
+                        amplitude.track("Empty Recording Toast Displayed", {
+                            anonymous_id: anonymousId.current,
+                            pathname: pathname
+                        });
+                        Toast.show({
+                            type: 'msgOpenWidth',
+                            text1: `We couldn't transcribe your voice.\n\nPlease try again.`,
+                            position: 'bottom',
+                            bottomOffset: 220
+                        });
+                    }
                 }
+            } else {
+                //console.log("Abandoning audio processing as threshold was not breached; proceeding to file cleanup.");
+                Toast.show({
+                    type: 'msgOpenWidth',
+                    text1: `We couldn't distinguish your voice from the background noise.\n\nPlease try again.`,
+                    position: 'bottom',
+                    bottomOffset: 220
+                });
             }
         } catch (error) {
             console.error("Unexpected error occurred during recording processing!!", error);
@@ -443,6 +453,11 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             opacity: recordButtonOpacity.value,
         };
     });
+    const keyboardButtonOpacityAnimatedStyle = useAnimatedStyle(() => {
+        return {
+            opacity: keyboardButtonOpacity.value,
+        };
+    });
 
     const recordButton_handlePressIn = () => {
         recordButtonOpacity.value = withTiming(0.7, { duration: 150 }); // Dim button on press
@@ -452,47 +467,83 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         recordButtonOpacity.value = withTiming(1, { duration: 150 }); // Return to full opacity
     };
 
+    const keyboardButton_handlePressIn = () => {
+        keyboardButtonOpacity.value = withTiming(0.7, { duration: 150 }); // Dim button on press
+    };
+
+    const keyboardButton_handlePressOut = () => {
+        keyboardButtonOpacity.value = withTiming(1, { duration: 150 }); // Return to full opacity
+    };
+
+    const handleKeyboardButtonPress = () => {
+        const newItem = generateNewKeyboardEntry();
+        currentlyTappedThing.current = newItem;
+
+        if (listArray.length == 0) {
+
+            // If the list is empty, we ASSume the empty list CTA is visible.  Fade it out first before
+            // adding the first item
+            emptyListCTAFadeOutAnimation.start(() => {
+                listArraySetterFunc((prevItems) => [newItem, ...prevItems]);
+            });
+        } else {
+            listArraySetterFunc((prevItems) => [newItem, ...prevItems]);
+        }
+    }
+
+    const insets = useSafeAreaInsets();
     const styles = StyleSheet.create({
         footerContainer: {
             backgroundColor: '#FAF3E0',
             alignItems: 'center',
-            height: (hideRecordButton) ? 142 : 158
+            height: 50
         },
         bannerAdContainer: {
-            position: 'absolute',
-            bottom: 40
+            borderTopWidth: 1,
+            borderColor: "#00000066",
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: "#c0c0c0",
+            height: 120,
+            paddingTop: 15,
+            paddingBottom: (insets.bottom && insets.bottom > 0) ? insets.bottom : 10
         },
         footerButton: {
-            height: 76,
-            width: 76,
-            borderRadius: 38,
+            height: 58,
+            width: 58,
+            borderRadius: 29,
             borderColor: '#3E2723',
             borderWidth: 1,
-            position: 'absolute',
-            bottom: 120,
+            // position: 'absolute',
+            // bottom: 120,
             flex: 1,
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 5,
+            elevation: 5, // Elevation for Android        
         },
         footerButton_Underlay: {
-            height: 76,
-            width: 76,
-            borderRadius: 38,
+            height: 58,
+            width: 58,
+            borderRadius: 29,
             position: 'absolute',
-            bottom: 120,
+            top: 0,
             backgroundColor: 'black'
         },
         footerButtonImage_Record: {
-            height: 43,
-            width: 43
+            height: 38,
+            width: 38
         },
         footerButtonImage_Restart: {
-            height: 43,
-            width: 43
+            height: 38,
+            width: 38
         },
         footerButtonImage_Cancel: {
-            height: 43,
-            width: 43
+            height: 38,
+            width: 38
         },
         footerButtonTitle: {
             fontWeight: 'bold',
@@ -504,10 +555,15 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             left: 34
         },
         recordButton: {
+            backgroundColor: '#556B2F',
+            marginRight: 60
+        },
+        keyboardButton: {
             backgroundColor: '#556B2F'
         },
         stopRecordButton: {
-            backgroundColor: '#A23E48'
+            backgroundColor: '#A23E48',
+            marginRight: 60
         },
         clearButton: {
             backgroundColor: '#FAF3E0',
@@ -519,9 +575,43 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             left: 1
         },
         footerButtonIcon_Stop: {
-            width: 25,
-            height: 25,
+            width: 21,
+            height: 21,
             backgroundColor: 'white'
+        },
+        keyboardFooterButton: {
+            backgroundColor: '#556B2F',
+            height: 58,
+            width: 58,
+            borderRadius: 29,
+            borderColor: '#3E2723',
+            borderWidth: 1,
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center'
+        },
+        keyboardFooterButton_Underlay: {
+            height: 58,
+            width: 58,
+            borderRadius: 29,
+            backgroundColor: 'black'
+        },
+        keyboardIcon: {
+            width: 31,
+            height: 22
+        },
+        keyboardButtonContainer: {
+
+        },
+        footerButtonsContainer: {
+            //backgroundColor: 'orange',
+            flexDirection: 'row',
+            flex: 1,
+            position: 'relative',
+            top: -30
+        },
+        footerButtonContainer: {
+            height: 58
         }
     });
 
@@ -563,36 +653,53 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
     if (!hideRecordButton) {
         return (
-            <Animated.View style={[(pathname == ITEMS_PATHNAME) && { opacity }, styles.footerContainer]}>
-                {/* <Pressable
+            <>
+                <Animated.View style={[(pathname == ITEMS_PATHNAME) && { opacity }, styles.footerContainer]}>
+                    {/* <Pressable
                     style={[styles.footerButton, styles.cancelButton]}
                     onPress={makeTestData}>
                     <Text>Test Data</Text>
                 </Pressable> */}
-                <View style={styles.footerButton_Underlay}></View>
-                <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || isRecordingProcessing) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
-                    <Pressable
-                        disabled={isRecordingProcessing}
-                        onPress={() => {
-                            if (isRecordingProcessing) {
-                                cancelRecordingProcessing();       // 1.2: Made this scenario unreachable for now to prevent user from accidentally cancelling working process
-                            } else if (recording) {
-                                processRecording();
-                            } else {
-                                startRecording();
-                            }
-                        }}
-                        onPressIn={recordButton_handlePressIn}
-                        onPressOut={recordButton_handlePressOut}>
-                        {(isRecordingProcessing) ?
-                            <View style={styles.loadingAnim}>
-                                <ActivityIndicator size={"large"} color="white" />
-                            </View>
-                            : (recording) ?
-                                <View style={styles.footerButtonIcon_Stop}></View>
-                                : <Image style={styles.footerButtonImage_Record} source={require("@/assets/images/microphone_white.png")} />}
-                    </Pressable>
-                </Reanimated.View>
+                    <View style={styles.footerButtonsContainer}>
+                        <View style={styles.footerButtonContainer}>
+                            <View style={styles.footerButton_Underlay}></View>
+                            <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || isRecordingProcessing) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
+                                <Pressable
+                                    disabled={isRecordingProcessing}
+                                    onPress={() => {
+                                        if (isRecordingProcessing) {
+                                            cancelRecordingProcessing();       // 1.2: Made this scenario unreachable for now to prevent user from accidentally cancelling working process
+                                        } else if (recording) {
+                                            processRecording();
+                                        } else {
+                                            startRecording();
+                                        }
+                                    }}
+                                    onPressIn={recordButton_handlePressIn}
+                                    onPressOut={recordButton_handlePressOut}>
+                                    {(isRecordingProcessing) ?
+                                        <View style={styles.loadingAnim}>
+                                            <ActivityIndicator size={"small"} color="white" />
+                                        </View>
+                                        : (recording) ?
+                                            <View style={styles.footerButtonIcon_Stop}></View>
+                                            : <Image style={styles.footerButtonImage_Record} source={require("@/assets/images/microphone_white.png")} />}
+                                </Pressable>
+                            </Reanimated.View>
+                        </View>
+                        <View style={styles.footerButtonContainer}>
+                            <View style={styles.footerButton_Underlay}></View>
+                            <Reanimated.View style={[styles.footerButton, styles.keyboardButton, keyboardButtonOpacityAnimatedStyle]}>
+                                <Pressable
+                                    onPress={handleKeyboardButtonPress}
+                                    onPressIn={keyboardButton_handlePressIn}
+                                    onPressOut={keyboardButton_handlePressOut}>
+                                    <Image style={styles.keyboardIcon} source={require("@/assets/images/keyboard_white.png")} />
+                                </Pressable>
+                            </Reanimated.View>
+                        </View>
+                    </View>
+                </Animated.View>
                 <View style={styles.bannerAdContainer}>
                     <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
                         onPaid={() => amplitude.track("Banner Ad Paid")}
@@ -600,11 +707,12 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                         onAdOpened={() => amplitude.track("Banner Ad Opened")}
                         onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
                 </View>
-            </Animated.View>
+            </>
         );
     } else {
         return (
-            <View style={styles.footerContainer}>
+            <>
+                <View style={styles.footerContainer}></View>
                 <View style={styles.bannerAdContainer}>
                     <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
                         onPaid={() => amplitude.track("Banner Ad Paid")}
@@ -612,7 +720,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                         onAdOpened={() => amplitude.track("Banner Ad Opened")}
                         onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
                 </View>
-            </View>
+            </>
         );
     }
 };

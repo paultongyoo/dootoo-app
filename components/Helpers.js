@@ -1,6 +1,7 @@
 import { Alert, Platform } from "react-native";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { DateTime } from 'luxon';
+import uuid from 'react-native-uuid';
 
 export const formatNumber = (num) => {
   if (!num) return null;
@@ -215,16 +216,14 @@ export const generateEventCreatedMessage = (calendarName, scheduledUtcIsoString,
   } else if (absoluteAlertMinutes < 1440) {
     const hours = Math.floor(absoluteAlertMinutes / 60);
     const minutes = absoluteAlertMinutes % 60;
-    alertTime = `${hours} ${hours === 1 ? 'hour' : 'hours'}${
-      minutes > 0 ? ` and ${minutes} minutes` : ''
-    }`;
+    alertTime = `${hours} ${hours === 1 ? 'hour' : 'hours'}${minutes > 0 ? ` and ${minutes} minutes` : ''
+      }`;
   } else {
     const days = Math.floor(absoluteAlertMinutes / 1440);
     const remainingMinutes = absoluteAlertMinutes % 1440;
     const hours = Math.floor(remainingMinutes / 60);
-    alertTime = `${days} ${days === 1 ? 'day' : 'days'}${
-      hours > 0 ? ` and ${hours} ${hours === 1 ? 'hour' : 'hours'}` : ''
-    }`;
+    alertTime = `${days} ${days === 1 ? 'day' : 'days'}${hours > 0 ? ` and ${hours} ${hours === 1 ? 'hour' : 'hours'}` : ''
+      }`;
   }
 
   // Construct and return the statement
@@ -268,4 +267,71 @@ export const calculateAndroidButtonScale = (audioLevel) => {
   const scale = minScale + (clampedAudioLevel - minAudioLevel) / (maxAudioLevel - minAudioLevel) * (maxScale - minScale);
 
   return scale;
+}
+
+export const generateNewKeyboardEntry = () => {
+  const newItem = {
+    uuid: uuid.v4(),
+    text: null,
+    parent_item_uuid: null,
+    scheduled_datetime_utc: null,
+    newKeyboardEntry: true
+  };
+  return newItem;
+}
+
+export const calculateTextInputRowHeight = (text_or_textInput_height) => {
+      return text_or_textInput_height + 31;             // LAST UPDATED 12.13.24:  This height prevents the debug background red from appearing 
+}
+
+export const fetchWithRetry = async (backendServiceCall, maxRetries = 5, retryDelay = 5000) => {
+  let attempts = 0;
+
+  while (attempts < maxRetries) {
+    try {
+      const response = await backendServiceCall();
+
+      if (response.statusCode == 200) {
+        // Exit the retry loop on success
+        return response.body; // Or process the response as needed
+      }
+
+      console.log(`Attempt ${attempts + 1} failed. Retrying...`);
+    } catch (error) {
+      console.error(`Attempt ${attempts + 1} encountered an error:`, error);
+    }
+
+    attempts += 1;
+
+    if (attempts < maxRetries) {
+      // Wait before retrying
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+    }
+  }
+
+  // If we exhaust retries, throw an error
+  throw new Error(`Failed to fetch after ${maxRetries} attempts`);
+};
+
+export const generateCurrentTimeAPIHeaders = () => {
+
+    // Generate user time info to pass to the API for handling of any scheduled tasks
+    const currentDate = new Date();
+    const userLocalTime = currentDate.toLocaleString(undefined, { 
+      weekday: 'long', // Include the weekday (e.g., "Monday")
+      year: 'numeric',
+      month: 'long', // Full month name (e.g., "December")
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short' // Include timezone abbreviation
+    });
+    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const utcDateTime = currentDate.toISOString();
+
+    return {
+      userlocaltime: userLocalTime,
+      usertimezone: userTimeZone,
+      utcdatetime: utcDateTime
+    };
 }

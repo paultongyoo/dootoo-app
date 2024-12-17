@@ -31,7 +31,7 @@ const CommunityDrawer = ({ navigation }) => {
     //console.log("Checking selectedItem context: " + JSON.stringify(selectedItem));
 
     if (isInitialMount.current) {
-      console.log("CommunityDrawer skipping useEffect(selectedProfile) on initial mount.");
+      //console.log("CommunityDrawer skipping useEffect(selectedProfile) on initial mount.");
       isInitialMount.current = false;
     } else {
       animatedOpacity.value = 0;

@@ -1,9 +1,9 @@
-import { Animated, Text, Image, Easing } from 'react-native';
+import { Animated, Text, StyleSheet, Easing } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useRef, useCallback, useContext } from 'react';
 import { AppContext } from './AppContext';
 
-const DootooItemEmptyUX = ({ styles }) => {
+const DootooItemEmptyUX = () => {
   const { emptyListCTAOpacity, emptyListCTAFadeInAnimation } = useContext(AppContext);
 
   const fadeAnimGoals = useRef(new Animated.Value(0.1)).current;
@@ -30,12 +30,12 @@ const DootooItemEmptyUX = ({ styles }) => {
       easing: Easing.inOut(Easing.ease),
       useNativeDriver: true
     }),
-    Animated.timing(fadeAnimArrow, {
-      toValue: 1,
-      duration: 800,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true
-    }),
+    // Animated.timing(fadeAnimArrow, {
+    //   toValue: 1,
+    //   duration: 800,
+    //   easing: Easing.inOut(Easing.ease),
+    //   useNativeDriver: true
+    // }),
   ]);
 
   useFocusEffect(
@@ -50,23 +50,36 @@ const DootooItemEmptyUX = ({ styles }) => {
     }, [])
   );
 
-  return <Animated.View style={[styles.emptyListContainer, { opacity: emptyListCTAOpacity }]}>
-    <Text style={styles.emptyListContainer_words}>what are your</Text>
+  const emptyStyles = StyleSheet.create({
+    emptyListContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingLeft: 30,
+      paddingRight: 60        // Tips specific
+    },
+    emptyListContainer_words: {
+      fontSize: 40,
+      lineHeight: 48          // Tips specific
+    },
+  })
+
+  return <Animated.View style={[emptyStyles.emptyListContainer, { opacity: emptyListCTAOpacity }]}>
+    <Text style={emptyStyles.emptyListContainer_words}>what are your</Text>
     <Animated.View>
-      <Text style={[styles.emptyListContainer_words, { color: '#556B2F' }]}>tasks?</Text>
+      <Text style={[emptyStyles.emptyListContainer_words, { color: '#556B2F' }]}>tasks?</Text>
     </Animated.View>
     <Animated.View style={[{ opacity: fadeAnimGoals }]}>
-      <Text style={[styles.emptyListContainer_words, { color: '#556B2F' }]}>goals?</Text>
+      <Text style={[emptyStyles.emptyListContainer_words, { color: '#556B2F' }]}>goals?</Text>
     </Animated.View>
     <Animated.View style={[{ opacity: fadeAnimDreams }]}>
-      <Text style={[styles.emptyListContainer_words, { color: '#556B2F' }]}>dreams?</Text>
+      <Text style={[emptyStyles.emptyListContainer_words, { color: '#556B2F' }]}>dreams?</Text>
     </Animated.View>
     <Animated.View style={[{ opacity: fadeAnimChallenges }]}>
-      <Text style={[styles.emptyListContainer_words, { color: '#556B2F' }]}>challenges?</Text>
+      <Text style={[emptyStyles.emptyListContainer_words, { color: '#556B2F' }]}>challenges?</Text>
     </Animated.View>
-    <Animated.View style={{ opacity: fadeAnimArrow }}>
+    {/* <Animated.View style={{ opacity: fadeAnimArrow }}>
       <Image style={styles.emptyListContainer_arrow} source={require("@/assets/images/sketch_arrow_556B2F.png")} />
-    </Animated.View>
+    </Animated.View> */}
   </Animated.View>;
 };
 

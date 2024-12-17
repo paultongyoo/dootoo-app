@@ -16,13 +16,13 @@ export const AppProvider = ({ children }) => {
     
     // Reference variables:  Changing these should intentionally NOT cause components to re-render
     const swipeableRefs = useRef({});
-    const fadeInListOnRender = useRef(false);
     const thingRowPositionXs = useRef({});
     const thingRowHeights = useRef({});
     const lastRecordedCount = useRef(0);
     const username = useRef();
     const anonymousId = useRef();
     const itemCountsMap = useRef(new Map());
+    const currentlyTappedThing = useRef(null);
     
 
     // Animation related
@@ -34,20 +34,6 @@ export const AppProvider = ({ children }) => {
         useNativeDriver: true
     });
     const emptyListCTAFadeOutAnimation = Animated.timing(emptyListCTAOpacity, {
-        toValue: 0,
-        duration: 300,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true
-    });
-
-    const listOpacity = useRef(new Animated.Value(0)).current;
-    const listFadeInAnimation = Animated.timing(listOpacity, {
-        toValue: 1,
-        duration: 500,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true
-    });
-    const listFadeOutAnimation = Animated.timing(listOpacity, {
         toValue: 0,
         duration: 300,
         easing: Easing.inOut(Easing.ease),
@@ -81,10 +67,6 @@ export const AppProvider = ({ children }) => {
             resetUserContext,
             initializeLocalUser,
             selectedItem, setSelectedItem,
-            fadeInListOnRender,
-            listOpacity,
-            listFadeInAnimation,
-            listFadeOutAnimation,
             emptyListCTAOpacity,
             emptyListCTAFadeInAnimation,
             emptyListCTAFadeOutAnimation,
@@ -92,7 +74,8 @@ export const AppProvider = ({ children }) => {
             thingRowHeights,
             selectedProfile, setSelectedProfile,
             swipeableRefs,
-            itemCountsMap
+            itemCountsMap,
+            currentlyTappedThing
              }}>
           {children}
         </AppContext.Provider>

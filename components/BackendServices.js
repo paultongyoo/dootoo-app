@@ -1,6 +1,7 @@
 import axios from 'axios';
 import RNFS from 'react-native-fs';
 import { Buffer } from 'buffer';
+import { generateCurrentTimeAPIHeaders } from './Helpers';
 
 const BACKEND_TRANSCRIPTION_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/transcribeAudioToTasks_Dev'
                                             : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/transcribeAudioToTasks';
@@ -29,18 +30,7 @@ export const transcribeAudioToTasks = async (fileUri, anonymous_id) => {
 
 
   // Generate user time info to pass to the API for handling of any scheduled tasks
-  const currentDate = new Date();
-  const userLocalTime = currentDate.toLocaleString(undefined, { 
-    weekday: 'long', // Include the weekday (e.g., "Monday")
-    year: 'numeric',
-    month: 'long', // Full month name (e.g., "December")
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZoneName: 'short' // Include timezone abbreviation
-  });
-  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const utcDateTime = currentDate.toISOString();
+  const currentTimeAPIHeaders = generateCurrentTimeAPIHeaders();
 
   // 1.2:  Intentionally allowing exceptions to bubble up the stack so UI can catch error and inform user.
   // try {
@@ -52,9 +42,9 @@ export const transcribeAudioToTasks = async (fileUri, anonymous_id) => {
       {
         headers: {
           'anonymous_id': anonymous_id,
-          'userlocaltime' : userLocalTime,
-          'usertimezone'  : userTimeZone,
-          'utcdatetime': utcDateTime,
+          'userlocaltime' : currentTimeAPIHeaders.userlocaltime,
+          'usertimezone'  : currentTimeAPIHeaders.usertimezone,
+          'utcdatetime': currentTimeAPIHeaders.utcdatetime,
           'Content-Type': `audio/${fileExtension}`
         },
       }

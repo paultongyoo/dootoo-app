@@ -1,4 +1,4 @@
-import { View, Text, Image, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, Image, ActivityIndicator, Pressable, StyleSheet } from 'react-native';
 import { formatNumber } from './Helpers';
 import Toast from 'react-native-toast-message';
 import { useContext, useEffect, useState } from 'react';
@@ -91,10 +91,45 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
         router.push(TIPS_PATHNAME);
     }
 
+    const sidebarStyles = StyleSheet.create({
+        itemCountsRefreshingAnimContainer: {
+            justifyContent: 'center'
+        },
+        similarCountContainer: {
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexDirection: 'row',
+            paddingLeft: 15
+          },
+          similarCountText: {
+            fontSize: 15
+          },
+          similarCountIcon: {
+            width: 16,
+            height: 16,
+            opacity: 0.45,
+            marginLeft: 10
+          },
+          tipCountImageIcon: {
+            height: 16,
+            width: 16,
+            opacity: 0.5,
+            marginLeft: 8
+          },
+          tipCountText: {
+            fontSize: 15
+          },
+          tipCountContainer: {
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexDirection: 'row'
+          },
+    })
+
     // Update v1.1.1:  Experimenting with not displaying loading anim on item level now that race condition is solved
     if (loading) {
         return (
-            <View style={styles.itemCountsRefreshingAnimContainer}>
+            <View style={sidebarStyles.itemCountsRefreshingAnimContainer}>
                 <ActivityIndicator size={"small"} color="#3E3723" />
             </View>
         );
@@ -104,19 +139,18 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
                 {(tipCount || thing.is_done) ?
                     <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
                         disabled={disabled || (pathname == TIPS_PATHNAME)}
-                        style={styles.tipCountContainer}
+                        style={sidebarStyles.tipCountContainer}
                         onPress={() => handleTipCountTap()}>
-                        <Text style={styles.tipCountText}>{formatNumber(tipCount) || '0'}</Text>
-                        <Image style={styles.tipCountImageIcon} source={require("@/assets/images/light_bulb_556B2F.png")} />
-                        {/* <View style={styles.tipCountIcon}></View> */}
+                        <Text style={sidebarStyles.tipCountText}>{formatNumber(tipCount) || '0'}</Text>
+                        <Image style={sidebarStyles.tipCountImageIcon} source={require("@/assets/images/light_bulb_556B2F.png")} />
                     </Pressable> : <></>}
                 {(similarCount) ?
                     <Pressable hitSlop={{ top: 10, bottom: 10, right: 10 }}
                         disabled={disabled}
-                        style={styles.similarCountContainer}
+                        style={sidebarStyles.similarCountContainer}
                         onPress={() => handleSimilarCountTap()}>
-                        <Text style={styles.similarCountText}>{formatNumber(similarCount)}</Text>
-                        <Image style={styles.similarCountIcon} source={require("@/assets/images/person_icon_556B2F.png")} />
+                        <Text style={sidebarStyles.similarCountText}>{formatNumber(similarCount)}</Text>
+                        <Image style={sidebarStyles.similarCountIcon} source={require("@/assets/images/person_icon_556B2F.png")} />
                     </Pressable> : <></>}
             </Animated.View>
         );

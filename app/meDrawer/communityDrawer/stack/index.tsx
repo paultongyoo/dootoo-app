@@ -1,35 +1,31 @@
 import { useContext } from "react";
-import { router, usePathname } from 'expo-router';
-import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState } from '@/components/Storage';
+import { usePathname } from 'expo-router';
+import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
-import DootooList from "@/components/DootooList";
+import DootooList, { listStyles } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
-import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
 import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import * as amplitude from '@amplitude/analytics-react-native';
-import * as Calendar from 'expo-calendar';
 
 import {
   Image, StyleSheet, Pressable,
-  Animated,
-  Easing,
   Platform,
   Alert
 } from "react-native";
 import { AppContext } from '@/components/AppContext';
 import Reanimated, {
-  SharedValue,
   configureReanimatedLogger,
+  Easing,
   ReanimatedLogLevel,
+  runOnJS,
+  withTiming,
 } from 'react-native-reanimated';
-import Toast from "react-native-toast-message";
 
 export default function Index() {
   const pathname = usePathname();
-  const { anonymousId, setSelectedItem, dootooItems, setDootooItems,
+  const { anonymousId, dootooItems, setDootooItems,
     thingRowHeights, thingRowPositionXs } = useContext(AppContext);
-  const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
@@ -82,6 +78,7 @@ export default function Index() {
     // Asyncronously update item hierarhcy in DB
     updateItemHierarchy(item.uuid, null);
 
+    console.log("Setting new parent into list");
     setDootooItems((prevItems) => {
 
       var newListToReturn = prevItems.map((obj) =>
@@ -115,12 +112,7 @@ export default function Index() {
 
   const handleMakeChild = (item, index) => {
 
-    amplitude.track("Item Made Into Child", {
-      anonymous_id: anonymousId.current,
-      item_uuid: item.uuid,
-      parent_item_uuid: nearestParentUUID
-    });
-
+    // Get UUID of nearest parent above item to be made into child
     let nearestParentUUID = '';
     for (var i = index - 1; i >= 0; i--) {
       const currItem = dootooItems[i];
@@ -131,19 +123,45 @@ export default function Index() {
       }
     }
 
-    // Asyncronously update item hierarhcy in DB
+    amplitude.track("Item Made Into Child", {
+      anonymous_id: anonymousId.current,
+      item_uuid: item.uuid,
+      parent_item_uuid: nearestParentUUID
+    });
+
+    // Make thing child of nearest parent
     updateItemHierarchy(item.uuid, nearestParentUUID);
 
-    setDootooItems((prevItems) => prevItems.map((obj) =>
-      (obj.uuid == item.uuid)
-        ? {
-          ...obj,
-          parent_item_uuid: nearestParentUUID
-        }
-        : obj)); // This should update UI only and not invoke any syncronous backend operations
+    // If item had children, make those children children of nearest parent too
+    const childrenOfItem = dootooItems.filter((prevItem) => prevItem.parent_item_uuid == item.uuid);
+    childrenOfItem.forEach((child) => updateItemHierarchy(child.uuid, nearestParentUUID));
+
+    console.log("Setting new child into list");
+    setDootooItems((prevItems) => {
+
+      // Make selected item child of nearest parent
+      const listWithUpdatedItem = prevItems.map((obj) =>
+        (obj.uuid == item.uuid)
+          ? {
+            ...obj,
+            parent_item_uuid: nearestParentUUID
+          }
+          : obj);
+
+      // Make any children of selected item children of nearest parent
+      const listWithUpdatedItemKids = listWithUpdatedItem.map((obj) =>
+        (obj.parent_item_uuid == item.uuid)
+          ? {
+            ...obj,
+            parent_item_uuid: nearestParentUUID
+          }
+          : obj);
+
+      return listWithUpdatedItemKids
+    });
   }
 
-  const handleDoneClick = (item) => {
+  const handleDoneClick = async (item) => {
 
     /*
     Rules as of v1.1.1 in priority order:
@@ -177,11 +195,25 @@ export default function Index() {
         item_type: (item.parent_item_uuid) ? 'child' : 'adult'
       });
 
+      // Check if item has open kids
+      const openChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
+      const doneChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && child.is_done);
+
       // 1) If attempting to set item TO done
       if (!item.is_done) {
 
         // 1.3 If item being doned is a child...
         if (item.parent_item_uuid) {
+
+          // Collapse single done item
+          await new Promise<void>((resolve) => {
+            thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 },
+              (isFinished) => {
+                if (isFinished) {
+                  runOnJS(resolve)()
+                }
+              })
+          });
 
           setDootooItems((prevItems) => {
 
@@ -237,9 +269,6 @@ export default function Index() {
           // Item has kids....
           if (children.length > 0) {
 
-            // Check if item has open kids
-            const openChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
-
             // item has open children, prompt user how to handle them
             if (openChildren.length > 0) {
               amplitude.track("Doneify With Kids Prompt Displayed", {
@@ -265,7 +294,7 @@ export default function Index() {
                   },
                   {
                     text: 'Delete Them',
-                    onPress: () => {
+                    onPress: async () => {
                       amplitude.track("Doneify With Kids Prompt: Delete Chosen", {
                         anonymous_id: anonymousId.current,
                         pathname: pathname,
@@ -273,79 +302,107 @@ export default function Index() {
                       });
 
                       // Delete item's kids
-                      var slideAnimationArray = [];
-                      var heightAnimationArray = [];
+                      // var slideAnimationArray = [];
+                      // var heightAnimationArray = [];
+
+                      // Execute animations to slide/collapse the item off the screen  
+                      const deleteAnimationPromises = [];
                       openChildren.forEach((child) => {
 
                         // Call asyncronous delete to mark item as deleted in backend to sync database
                         deleteItem(child.uuid);
 
-                        // Add the animations to slide/collapse the item off the screen
-                        slideAnimationArray.push(
-                          Animated.timing(thingRowPositionXs.current[child.uuid], {
-                            toValue: -600,
+                        deleteAnimationPromises.push(
+                          new Promise<void>((resolve) => thingRowPositionXs.current[child.uuid].value = withTiming(-600, {
                             duration: 300,
-                            easing: Easing.in(Easing.quad),
-                            useNativeDriver: false
-                          })
-                        );
-                        heightAnimationArray.push(
-                          Animated.timing(thingRowHeights.current[child.uuid], {
-                            toValue: 0,
+                            easing: Easing.in(Easing.quad)
+                          }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                          ));
+                        deleteAnimationPromises.push(
+                          new Promise<void>((resolve) => thingRowHeights.current[child.uuid].value = withTiming(0, {
                             duration: 300,
-                            easing: Easing.in(Easing.quad),
-                            useNativeDriver: false
+                            easing: Easing.in(Easing.quad)
+                          }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                          ));
+                      });
+
+                      await Promise.all(deleteAnimationPromises);
+
+                      openChildren.forEach((child) => {
+                        delete thingRowPositionXs.current[child.uuid];
+                        delete thingRowHeights.current[child.uuid]
+                      });
+
+                      // Asyncronously updated DB with item set done state
+                      item.is_done = true;
+                      updateItemDoneState(item, () => {
+                        ProfileCountEventEmitter.emit("incr_done");
+                        ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
+                      });
+
+                      // Collapse the doned item and of its done children
+                      const uuidsToCollapse = [item.uuid];
+                      uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
+                      const collapseAnimationPromises = [];
+                      uuidsToCollapse.forEach((uuid) => {
+                        collapseAnimationPromises.push(
+                          new Promise<void>((resolve) => {
+                              thingRowHeights.current[uuid].value =
+                                withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
                           })
                         );
                       });
-                      Animated.parallel(slideAnimationArray).start(() => {
-                        Animated.parallel(heightAnimationArray).start(() => {
+                      await Promise.all(collapseAnimationPromises);
 
-                          openChildren.forEach((child) => {
-                            delete thingRowPositionXs.current[child.uuid];
-                            delete thingRowHeights.current[child.uuid]
-                          });
+                      // Update latest list by:
+                      // 1) filtering out the deleted children
+                      // 2) Setting the item to done
+                      // 3) Moving doned item plus any of its done children to top of done adults
+                      const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
+                      setDootooItems((prevItems) => {
 
-                          // Asyncronously updated DB with item set done state
-                          item.is_done = true;
-                          updateItemDoneState(item, () => {
-                            ProfileCountEventEmitter.emit("incr_done");
-                            ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
-                          });
+                        // First filter out deleted items and set clicked item to done
+                        var filteredAndDonedList = prevItems.filter((obj) => !subtaskUUIDSet.has(obj.uuid))
+                          .map((obj) =>
+                            (obj.uuid == item.uuid)
+                              ? { ...obj, is_done: true }
+                              : obj);
 
-                          // Update latest list by filtering out the deleted children PLUS setting the item to done
-                          const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
-                          setDootooItems((prevItems) => {
+                        // Move done item and any of its kids to top of DAWNKs
+                        const dawnkedList = moveItemFamilyToTopOfDoneAdults(filteredAndDonedList, item.uuid);
 
-                            // First filter out deleted items and set clicked item to done
-                            var filteredAndDonedList = prevItems.filter((obj) => !subtaskUUIDSet.has(obj.uuid))
-                              .map((obj) =>
-                                (obj.uuid == item.uuid)
-                                  ? { ...obj, is_done: true }
-                                  : obj);
+                        // Update order in backend
+                        const uuidArray = dawnkedList.map((thing) => ({ uuid: thing.uuid }));
+                        saveItemOrder(uuidArray);
 
-                            // Move done item to top of DAWNKs
-                            const dawnkedList = moveItemToTopOfDoneAdults(filteredAndDonedList, item.uuid);
-
-                            // Update order in backend
-                            const uuidArray = dawnkedList.map((thing) => ({ uuid: thing.uuid }));
-                            saveItemOrder(uuidArray);
-
-                            // Return updated list to state setter
-                            return dawnkedList;
-                          });
-                        })
+                        // Return updated list to state setter
+                        return dawnkedList;
                       });
                     }
                   },
                   {
                     text: 'Complete Them',
-                    onPress: () => {
+                    onPress: async () => {
                       amplitude.track("Doneify With Kids Prompt: Complete Chosen", {
                         anonymous_id: anonymousId.current,
                         pathname: pathname,
                         num_open_children: openChildren.length
                       });
+
+                      // Collapse the doned item and of ALL of its children
+                      const uuidsToCollapse = [item.uuid];
+                      uuidsToCollapse.push(...openChildren.map((child) => child.uuid));
+                      uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
+                      const collapseAnimationPromises = [];
+                      uuidsToCollapse.forEach((uuid) => {
+                        collapseAnimationPromises.push(
+                          new Promise<void>((resolve) => {
+                              thingRowHeights.current[uuid].value =
+                                withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                          })
+                        );
+                      });
+                      await Promise.all(collapseAnimationPromises);
 
                       // Set each OPEN child as done in backend and incr Profile counter
                       openChildren.forEach((child) => {
@@ -371,8 +428,22 @@ export default function Index() {
               );
             } else {
 
+              // Collapse the doned item and of all its done children
+              const uuidsToCollapse = [item.uuid];
+              uuidsToCollapse.push(...openChildren.map((child) => child.uuid));
+              uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
+              const collapseAnimationPromises = [];
+              uuidsToCollapse.forEach((uuid) => {
+                collapseAnimationPromises.push(
+                  new Promise<void>((resolve) => {
+                      thingRowHeights.current[uuid].value =
+                        withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                  })
+                );
+              });
+              await Promise.all(collapseAnimationPromises);
+
               // All the item's kids must be done
-              const doneChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && child.is_done);
               if (doneChildren.length > 0) {
 
                 // Item is a DAWNK with only done kids; set it to done and move it and its kids to Top of DAWNKs
@@ -391,6 +462,16 @@ export default function Index() {
             }
           } else {
 
+            // Collapse single done item
+            await new Promise<void>((resolve) => {
+              thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 },
+                (isFinished) => {
+                  if (isFinished) {
+                    runOnJS(resolve)()
+                  }
+                })
+            });
+
             // Item doesn't have any kids, simply set it to done and move it to top of doneAdults
             item.is_done = true;
             updateItemDoneState(item, () => {
@@ -402,7 +483,7 @@ export default function Index() {
             setDootooItems((prevItems) => {
 
               const donedList = prevItems.map((obj) => (obj.uuid == item.uuid) ? { ...obj, is_done: true } : obj);
-              const doneAdults = moveItemToTopOfDoneAdults(donedList, item.uuid);
+              const doneAdults = moveItemFamilyToTopOfDoneAdults(donedList, item.uuid);
 
               const uuidArray = doneAdults.map((thing) => ({ uuid: thing.uuid }));
               saveItemOrder(uuidArray);
@@ -422,7 +503,17 @@ export default function Index() {
 
         // if item is a child
         if (item.parent_item_uuid) {
-   
+
+          // Collapse single undone item
+          await new Promise<void>((resolve) => {
+            thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 },
+              (isFinished) => {
+                if (isFinished) {
+                  runOnJS(resolve)()
+                }
+              })
+          });
+
           const [parent] = dootooItems.filter(obj => obj.uuid == item.parent_item_uuid);
 
           // If Item's parent is done, convert item to adult and move it above the parent
@@ -431,28 +522,30 @@ export default function Index() {
 
             setDootooItems((prevItems) => {
 
-              const openedItems = prevItems.map(obj => 
-                (obj.uuid == item.uuid) 
-                  ? { ...obj, 
+              const openedItems = prevItems.map(obj =>
+                (obj.uuid == item.uuid)
+                  ? {
+                    ...obj,
                     parent_item_uuid: null,
-                    is_done: false } 
+                    is_done: false
+                  }
                   : obj);
-  
+
               const doneAdults = openedItems.filter((obj) => obj.is_done && !obj.parent_item_uuid && (obj.uuid != item.uuid));
-  
+
               // If DA(s) exist, move item to top of DA list
               const itemIdx = openedItems.findIndex(obj => obj.uuid == item.uuid);
               const [movedItem] = openedItems.splice(itemIdx, 1);
-              if (doneAdults.length > 0) {          
-                const firstDoneAdultIdx = openedItems.findIndex(obj => obj.uuid == doneAdults[0].uuid);           
+              if (doneAdults.length > 0) {
+                const firstDoneAdultIdx = openedItems.findIndex(obj => obj.uuid == doneAdults[0].uuid);
                 openedItems.splice(firstDoneAdultIdx, 0, movedItem);
               } else {
                 openedItems.push(movedItem);
               }
-  
+
               const uuidArray = openedItems.map((thing) => ({ uuid: thing.uuid }));
               saveItemOrder(uuidArray);
-  
+
               return openedItems;
             });
           } else {
@@ -460,29 +553,31 @@ export default function Index() {
 
             setDootooItems((prevItems) => {
 
-              const openedItems = prevItems.map(obj => 
-                (obj.uuid == item.uuid) 
-                  ? { ...obj, 
-                    is_done: false } 
+              const openedItems = prevItems.map(obj =>
+                (obj.uuid == item.uuid)
+                  ? {
+                    ...obj,
+                    is_done: false
+                  }
                   : obj);
-  
-              const doneSiblings = openedItems.filter((obj) => 
+
+              const doneSiblings = openedItems.filter((obj) =>
                 obj.is_done && (obj.parent_item_uuid == item.parent_item_uuid) && (obj.uuid != item.uuid));
               console.log("doneSiblings.length: " + doneSiblings.length);
 
               // If DoneSib(s) exist, move item to top of DoneSib list
-              if (doneSiblings.length > 0) {       
+              if (doneSiblings.length > 0) {
                 const itemIdx = openedItems.findIndex(obj => obj.uuid == item.uuid);
-                const [movedItem] = openedItems.splice(itemIdx, 1);  
-                const firstDoneSiblingIdx = openedItems.findIndex(obj => obj.uuid == doneSiblings[0].uuid);           
+                const [movedItem] = openedItems.splice(itemIdx, 1);
+                const firstDoneSiblingIdx = openedItems.findIndex(obj => obj.uuid == doneSiblings[0].uuid);
                 openedItems.splice(firstDoneSiblingIdx, 0, movedItem);
               } else {
                 // Leave it where it is, should already be at bottom of list
               }
-  
+
               const uuidArray = openedItems.map((thing) => ({ uuid: thing.uuid }));
               saveItemOrder(uuidArray);
-  
+
               return openedItems;
             });
           }
@@ -490,10 +585,25 @@ export default function Index() {
 
         } else {
 
+          // Collapse opened item and all of its children
+          const uuidsToCollapse = [item.uuid];
+          uuidsToCollapse.push(...openChildren.map((child) => child.uuid));
+          uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
+          const collapseAnimationPromises = [];
+          uuidsToCollapse.forEach((uuid) => {
+            collapseAnimationPromises.push(
+              new Promise<void>((resolve) => {
+                  thingRowHeights.current[uuid].value =
+                    withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+              })
+            );
+          });
+          await Promise.all(collapseAnimationPromises);
+
           // Item is a parent -- move it and any of its children to the top of DA list
           setDootooItems((prevItems) => {
 
-            const openedList = prevItems.map(obj => (obj.uuid == item.uuid) ? { ...obj, is_done: false} : obj);
+            const openedList = prevItems.map(obj => (obj.uuid == item.uuid) ? { ...obj, is_done: false } : obj);
             const children = openedList.filter(obj => obj.parent_item_uuid == item.uuid);
             const doneAdults = openedList.filter(obj => !obj.parent_item_uuid && obj.is_done);
             const itemIdx = openedList.findIndex(obj => obj.uuid == item.uuid);
@@ -507,7 +617,7 @@ export default function Index() {
 
             const uuidArray = openedList.map((thing) => ({ uuid: thing.uuid }));
             saveItemOrder(uuidArray);
-            
+
             return openedList;
           });
         }
@@ -519,66 +629,7 @@ export default function Index() {
 
   const styles = StyleSheet.create({
     listContainer: {
-      //padding: 10,
-      flex: 1,
-      //justifyContent: "center",
-      backgroundColor: "#DCC7AA",
-      paddingTop: (Platform.OS == 'ios') ? 100 : 90
-      //alignItems: "center"
-    },
-    link: {
-      fontWeight: 'bold',
-      fontSize: 20,
-      color: 'blue'
-    },
-    initialLoadAnimContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center'
-    },
-    initialLoadMsg: {
-      paddingBottom: 15,
-      fontSize: 20
-    },
-    emptyListContainer: {
-      flex: 1,
-      //flexDirection: 'row',
-      //backgroundColor: 'yellow',
-      justifyContent: 'center',
-      paddingLeft: 30
-    },
-    emptyListContainer_words: {
-      fontSize: 40
-    },
-    emptyListContainer_arrow: {
-      position: 'absolute',
-      bottom: (Platform.OS == 'ios') ? -190 : -190,
-      right: 100,
-      height: 200,
-      width: 80,
-      opacity: 0.4,
-      transform: [{ rotate: '9deg' }]
-    },
-    taskContainer: {
-      flex: 1
-    },
-    taskTitle: {
-      fontSize: 16,
-      textAlign: 'left',
-      paddingTop: 5,
-      paddingBottom: 5,
-      paddingRight: 5
-    },
-    taskTitle_isDone: {
-      color: '#556B2F',
-      textDecorationLine: 'line-through'
-    },
-    itemContainer: {
-      flexDirection: 'row', // Lays out children horizontally
-      alignItems: 'center' // Aligns children vertically (centered in this case)
-    },
-    itemContainer_firstItem: {
-      paddingTop: 4
+      backgroundColor: "#DCC7AA"
     },
     itemCircleOpen: {
       width: 26,
@@ -596,35 +647,6 @@ export default function Index() {
     childItemSpacer: {
       width: 20
     },
-    itemNameContainer: {
-      marginLeft: 15,
-      paddingBottom: 10,
-      paddingTop: 10,
-      paddingRight: 20,
-      borderBottomWidth: 1,
-      borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
-      flex: 1,
-      flexDirection: 'row'
-    },
-    itemNamePressable: {
-      flex: 1,
-      width: '100%',
-      paddingRight: 5
-    },
-    itemTextInput: {
-      fontSize: 16,
-      paddingTop: 5,
-      paddingBottom: 5,
-      paddingRight: 10,
-      flex: 1
-    },
-    itemSwipeAction: {
-      width: 70,
-      justifyContent: 'center',
-      alignItems: 'center',
-      flexDirection: 'row',
-      backgroundColor: '#FAF3E0'
-    },
     action_Delete: {
       backgroundColor: 'red',
       borderBottomWidth: 1,
@@ -635,118 +657,37 @@ export default function Index() {
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333' //#322723 with approx 20% alpha
     },
-    itemLeftSwipeActions: {
-      width: 50,
-      backgroundColor: 'green',
-      justifyContent: 'center',
-      alignItems: 'center'
-    },
     swipeableContainer: {
       backgroundColor: '#DCC7AA'
-    },
-    errorTextContainer: {
-      padding: 20
-    },
-    errorText: {
-      color: 'red',
-      fontSize: 10
-    },
-    itemNameSpaceFiller: {
-      flex: 1
-    },
-    similarCountContainer: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      flexDirection: 'row',
-      paddingLeft: 15
-    },
-    similarCountText: {
-      fontSize: 15
-    },
-    similarCountIcon: {
-      width: 16,
-      height: 16,
-      opacity: 0.45,
-      marginLeft: 10
-    },
-    tipCountContainer: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      flexDirection: 'row'
-    },
-    tipCountText: {
-      fontSize: 15
-    },
-    tipCountIcon: {
-      width: 16,
-      height: 16,
-      borderRadius: 8, // Half of the width and height for a perfect circle
-      //borderWidth: 1,
-      borderColor: '#3E2723',
-      backgroundColor: '#556B2F60',
-      marginLeft: 10
-    },
-    tipCountImageIcon: {
-      height: 16,
-      width: 16,
-      opacity: 0.5,
-      marginLeft: 8
-    },
-    swipeActionIcon_trash: {
-      height: 30,
-      width: 30
-    },
-    swipeActionIcon_ident: {
-      height: 30,
-      width: 30
-    },
-    giveTipContainer: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingRight: 15,
-      flexDirection: 'row'
-    },
-    giveTipIcon: {
-      height: 30,
-      width: 50
-    },
-    simliarTipsIcon: {
-      height: 16,
-      width: 16,
-      borderRadius: 8,
-      backgroundColor: 'white'
-    },
-    receiveTipIcon: {
-      height: 40,
-      width: 45
-    },
-    itemCountsRefreshingAnimContainer: {
-      justifyContent: 'center'
-    },
-    timerIconContainer: {
-      justifyContent: 'center',
-      paddingRight: 10
-    },
-    timerIcon: {
-      height: 16,
-      width: 16
     }
   });
 
+  const onSwipeableOpen = (direction, item, index) => {
+    //console.log("opSwipeableOpen: " + direction + " " + item.text + " " + index);
+    if (!item.parent_item_uuid && (direction == "left")) {
+      handleMakeChild(item, index);
+    } else if (item.parent_item_uuid && (direction == "right")) {
 
-  const renderRightActions = (item, index) => {
+      // Don't automatically do parent because the Delete swipe action is available too.
+      // TODO:  Implement snapping(?) to only make parent if fully open
+      // handleMakeParent(item);   
+    }   
+  }
+
+  const renderRightActions = (item, handleThingDeleteFunc) => {
     return (
       <>
-        <DootooSwipeAction_Delete
-          styles={styles}
-          listArray={dootooItems} listArraySetter={setDootooItems}
-          listThing={item}
-          deleteThing={deleteItem} />
+        <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
+          <Pressable
+            onPress={() => handleThingDeleteFunc(item)}>
+            <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/trash_icon_white.png")} />
+          </Pressable>
+        </Reanimated.View>
         {item.parent_item_uuid ?
-          <Reanimated.View style={[styles.itemSwipeAction]}>
+          <Reanimated.View style={[listStyles.itemSwipeAction]}>
             <Pressable
               onPress={() => handleMakeParent(item)}>
-              <Image style={styles.swipeActionIcon_ident} source={require("@/assets/images/left_outdent_3E2723.png")} />
+              <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/left_outdent_3E2723.png")} />
             </Pressable>
           </Reanimated.View>
           : <></>
@@ -759,10 +700,10 @@ export default function Index() {
     return (
       <>
         {(!item.parent_item_uuid && (index != 0)) ?
-          <Reanimated.View style={[styles.itemSwipeAction]}>
+          <Reanimated.View style={[listStyles.itemSwipeAction]}>
             <Pressable
               onPress={() => handleMakeChild(item, index)}>
-              <Image style={styles.swipeActionIcon_ident} source={require("@/assets/images/left_indent_3E2723.png")} />
+              <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/left_indent_3E2723.png")} />
             </Pressable>
           </Reanimated.View>
           : <></>
@@ -777,11 +718,14 @@ export default function Index() {
       styles={styles}
       renderLeftActions={renderLeftActions}
       renderRightActions={renderRightActions}
+      swipeableOpenFunc={onSwipeableOpen}
       handleDoneClick={handleDoneClick}
       saveAllThings={saveAllItems}
       saveTextUpdateFunc={saveTextUpdate}
       saveThingOrderFunc={saveItemOrder}
       loadAllThings={loadItems}
+      deleteThing={deleteItem}
+      saveNewThing={saveNewItem}
       transcribeAudioToThings={transcribeAudioToTasks}
       ListThingSidebar={DootooItemSidebar}
       EmptyThingUX={DootooItemEmptyUX}
@@ -791,19 +735,28 @@ export default function Index() {
 
 }
 
-function moveItemToTopOfDoneAdults(itemList, item_uuid) {
+// 1.3 Modified to include family and then noticed function right after it is named to do same thing
+//     Consolidate at some point?
+function moveItemFamilyToTopOfDoneAdults(itemList, item_uuid) {
+
+  // Check if item has any kids
+  const itemChildren = itemList.filter((obj) => obj.parent_item_uuid == item_uuid);
   const itemIdx = itemList.findIndex((obj) => obj.uuid == item_uuid);
-  const [movedItem] = itemList.splice(itemIdx, 1);
+
+  // Extract the item and any of its kids, we ASSume they're listed immediately after it!!!  TODO Dehack this!
+  const movedItems = itemList.splice(itemIdx, 1 + itemChildren.length);
+
   const doneAdults = itemList.filter((obj) => obj.is_done && !obj.parent_item_uuid);
   if (doneAdults.length == 0) {
-    return itemList.concat(movedItem);
+    return itemList.concat(movedItems);
   } else {
     const firstDoneAdultIdx = itemList.findIndex((obj) => obj.uuid == doneAdults[0].uuid);
-    itemList.splice(firstDoneAdultIdx, 0, movedItem);
+    itemList.splice(firstDoneAdultIdx, 0, ...movedItems);
     return itemList;
   }
 }
 
+// 1.3  See potentially redundant function above!
 function
   doneItemAndMoveFamilyToTopOfDoneAdults(setDootooItems: any, item: any, saveItemOrder: (uuidArray: any) => Promise<void>) {
   setDootooItems((prevItems) => {

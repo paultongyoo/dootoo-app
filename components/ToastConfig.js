@@ -34,7 +34,8 @@ const styles = StyleSheet.create({
     paddingRight: 10
   },
   toastText: {
-    fontSize: 16
+    fontSize: 16,
+    textAlign: 'center'
   },
   toastLink: {
     fontWeight: 'bold',
@@ -79,7 +80,7 @@ const toastConfig = {
   undoableToast: ({ text1 = '', props }) => (
     <View style={[styles.baseToast, styles.undoableToast]}>
       <Text onPress={() => Toast.hide()} style={styles.toastText}>{text1}     </Text>
-      <Pressable hitSLop={10} onPress={props.onUndoPress}>
+      <Pressable hitSLop={10} onPress={() => props.onUndoPress(props.numItemsRecorded)}>
         <Text style={styles.toastLink}>undo</Text>
       </Pressable>
     </View>

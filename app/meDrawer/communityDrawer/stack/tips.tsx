@@ -10,11 +10,10 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { AppContext } from '@/components/AppContext';
 import { transcribeAudioToTips } from '@/components/BackendServices';
-import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText, updateTipOrder } from '@/components/Storage';
+import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText, updateTipOrder, saveNewTip } from '@/components/Storage';
 import DootooTipSidebar from "@/components/DootooTipSidebar";
 import DootooTipEmptyUX from "@/components/DootooTipEmptyUX";
-import DootooList from "@/components/DootooList";
-import DootooSwipeAction_Delete from "@/components/DootooSwipeAction_Delete";
+import DootooList, { listStyles } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
@@ -98,14 +97,15 @@ export default function ItemTips() {
       // updatedTips[index].user_vote_value = 0; // Drives UI logic indicating which direction user voted, if any
 
       // Clear their vote if they tap the same direction again
-      setTips((prevTips) => 
+      setTips((prevTips) =>
         prevTips.map((prevTip) =>
           (prevTip.uuid == tip.uuid)
-              ? { ...prevTip, 
-                  upvote_count: prevTip.upvote_count + (tip.user_vote_value * -1),
-                  user_vote_value: 0
-                }
-              : prevTip));
+            ? {
+              ...prevTip,
+              upvote_count: prevTip.upvote_count + (tip.user_vote_value * -1),
+              user_vote_value: 0
+            }
+            : prevTip));
 
       // Asynchronously send tip vote to backend 
       tipVote(tip.uuid, 0);
@@ -116,14 +116,15 @@ export default function ItemTips() {
       // updatedTips[index].user_vote_value = voteValue;
 
       // If user is voting in the opposite direction of their current vote, cancel their current vote first before adding the new vote
-      setTips((prevTips) => 
+      setTips((prevTips) =>
         prevTips.map((prevTip) =>
           (prevTip.uuid == tip.uuid)
-              ? { ...prevTip, 
-                  upvote_count: prevTip.upvote_count + ((tip.user_vote_value == (voteValue * -1)) ? (tip.user_vote_value * -1) + voteValue : voteValue),
-                  user_vote_value: voteValue
-                }
-              : prevTip));
+            ? {
+              ...prevTip,
+              upvote_count: prevTip.upvote_count + ((tip.user_vote_value == (voteValue * -1)) ? (tip.user_vote_value * -1) + voteValue : voteValue),
+              user_vote_value: voteValue
+            }
+            : prevTip));
 
       // Asynchronously send tip vote to backend 
       tipVote(tip.uuid, voteValue);
@@ -176,9 +177,9 @@ export default function ItemTips() {
     flagTip(tip.uuid);
 
     setTips((prevTips) => prevTips.map((obj) =>
-         (obj.uuid == tip.uuid)
-              ? { ...obj, is_flagged: true}
-              : obj));
+      (obj.uuid == tip.uuid)
+        ? { ...obj, is_flagged: true }
+        : obj));
 
     Alert.alert(
       'Abuse Reported', // Title of the alert
@@ -206,41 +207,34 @@ export default function ItemTips() {
 
   }
 
-  const renderRightActions = (tip, index) => {
+  const renderRightActions = (tip, handleThingDeleteFunc) => {
     return (
       <>
         {(selectedItem.is_done) ?
-          <DootooSwipeAction_Delete
-            thingNameStr="Tip"
-            styles={styles}
-            listArray={tips} listArraySetter={setTips}
-            listThing={tip}
-            deleteThing={(tip_uuid) => {
-              deleteTip(tip_uuid);
-
-              // Update tip count in displayed header
-              setSelectedItem((prevItem) => ({ ...prevItem, tip_count: prevItem.tipCount - 1}));
-
-              ProfileCountEventEmitter.emit('decr_tips');
-            }} />
+          <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
+            <Pressable
+              onPress={() => handleThingDeleteFunc(tip)}>
+              <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/trash_icon_white.png")} />
+            </Pressable>
+          </Reanimated.View>
           :
           <>
-            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Upvote, (tip.user_vote_value == 1) && styles.action_vote_selected]}>
+            <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Upvote, (tip.user_vote_value == 1) && styles.action_vote_selected]}>
               <Pressable
                 onPress={() => { handleTipVote(tip, 1) }}>
-                <Image style={styles.voteThumbIcon} source={require("@/assets/images/thumbs_up_white.png")} />
+                <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/thumbs_up_white.png")} />
               </Pressable>
             </Reanimated.View>
-            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Downvote, (tip.user_vote_value == -1) && styles.action_vote_selected]}>
+            <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Downvote, (tip.user_vote_value == -1) && styles.action_vote_selected]}>
               <Pressable
                 onPress={() => { handleTipVote(tip, -1) }}>
-                <Image style={styles.voteThumbIcon} source={require("@/assets/images/thumbs_down_white.png")} />
+                <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/thumbs_down_white.png")} />
               </Pressable>
             </Reanimated.View>
-            <Reanimated.View style={[styles.itemSwipeAction, styles.action_Flag]}>
+            <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Flag]}>
               <Pressable
                 onPress={() => { handleTipFlag(tip) }}>
-                <Image style={styles.swipeActionIcon_flag} source={require("@/assets/images/flag_white.png")} />
+                <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/flag_white.png")} />
               </Pressable>
             </Reanimated.View>
           </>
@@ -273,68 +267,19 @@ export default function ItemTips() {
   };
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: "center",
-      backgroundColor: "#DCC7AA",
-      paddingTop: (Platform.OS == 'ios') ? 100 : 90
-    },
-    initialLoadAnimContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center'
-    },
-    emptyListContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      paddingLeft: 30,
-      paddingRight: 60
-    },
-    emptyListContainer_words: {
-      fontSize: 40,
-      lineHeight: 48
-    },
-    emptyListContainer_arrow: {
-      position: 'absolute',
-      bottom: -50,
-      right: 90,
-      height: 175,
-      width: 50,
-      opacity: 0.4,
-      transform: [{ rotate: '20deg' }]
-    },
-    taskContainer: {
-      flex: 1
-    },
-    taskTitle: {
-      fontSize: 16,
-      textAlign: 'left',
-      paddingTop: 5,
-      paddingBottom: 5,
-      paddingRight: 5
-    },
-    taskTitle_isDone: {
-      color: '#556B2F',
-      textDecorationLine: 'line-through'
+    listContainer: {                  // Appends to listStyles.listContainer
+      backgroundColor: '#EBDDC5'
     },
     headerItemContainer: {
+      backgroundColor: "#DCC7AA",
       flexDirection: 'row',
       alignItems: 'center',
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333',
-      paddingTop: 4
+      paddingTop: 4,
     },
-    itemContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      // borderBottomWidth: 1,
-      // borderBottomColor: '#3E272333',
+    itemContainer: {                 // Appends to listStyle.itemContainer
       marginLeft: 14
-    },
-    listContainer: {
-      flex: 1,
-      justifyContent: "center",
-      backgroundColor: '#EBDDC5'
     },
     swipeableContainer: {
       backgroundColor: '#EBDDC5'
@@ -352,16 +297,6 @@ export default function ItemTips() {
       backgroundColor: '#556B2F50',
       borderWidth: 0
     },
-    itemNameContainer: {
-      paddingBottom: 10,
-      paddingTop: 10,
-      paddingRight: 20,
-      marginLeft: 17,
-      flex: 1,
-      flexDirection: 'row',
-      borderBottomWidth: 1,
-      borderBottomColor: '#3E272333'
-    },
     headerItemNameContainer: {
       paddingLeft: 18,
       paddingBottom: 10,
@@ -378,27 +313,9 @@ export default function ItemTips() {
       flex: 1,
       flexDirection: 'row'
     },
-    itemNamePressable: {
-      flex: 1,
-      width: '100%',
-      paddingRight: 10
-    },
     tipNamePressable: {
       flex: 1,
       width: '100%'
-    },
-    itemTextInput: {
-      fontSize: 16,
-      padding: 5,
-      paddingRight: 25,
-      flex: 1
-    },
-    itemSwipeAction: {
-      width: 70,
-      justifyContent: 'center',
-      alignItems: 'center',
-      flexDirection: 'row',
-      backgroundColor: '#FAF3E0'
     },
     action_Upvote: {
       backgroundColor: '#556B2F'
@@ -409,34 +326,6 @@ export default function ItemTips() {
     action_vote_selected: {
       borderWidth: 2,
       borderColor: 'white'
-    },
-    itemLeftSwipeActions: {
-      width: 50,
-      backgroundColor: 'green',
-      justifyContent: 'center',
-      alignItems: 'center'
-    },
-    errorTextContainer: {
-      padding: 20
-    },
-    errorText: {
-      color: 'red',
-      fontSize: 10
-    },
-    similarCountContainer: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      flexDirection: 'row',
-      paddingLeft: 15
-    },
-    similarCountText: {
-      fontSize: 15
-    },
-    similarCountIcon: {
-      width: 16,
-      height: 16,
-      opacity: 0.45,
-      marginLeft: 10
     },
     scoreContainer: {
       justifyContent: 'flex-end',
@@ -456,58 +345,6 @@ export default function ItemTips() {
     voteThumbIcon: {
       width: 30,
       height: 30
-    },
-    swipeActionIcon_trash: {
-      height: 30,
-      width: 30
-    },
-    swipeActionIcon_flag: {
-      height: 30,
-      width: 30
-    },
-    swipeActionIcon_ident: {
-      height: 30,
-      width: 30
-    },
-    giveTipContainer: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingRight: 15,
-      flexDirection: 'row'
-    },
-    giveTipIcon: {
-      height: 30,
-      width: 50
-    },
-    giveTipText: {
-      fontSize: 15,
-      paddingRight: 10
-    },
-    tipCountContainer: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      flexDirection: 'row'
-    },
-    tipCountText: {
-      fontSize: 15
-    },
-    tipCountIcon: {
-      width: 16,
-      height: 16,
-      borderRadius: 8, // Half of the width and height for a perfect circle
-      borderColor: '#3E2723',
-      backgroundColor: '#556B2F60',
-      marginLeft: 10
-    },
-    tipCountImageIcon: {
-      height: 16,
-      width: 16,
-      opacity: 0.5,
-      marginLeft: 8
-    },
-    initialLoadMsg: {
-      fontSize: 20,
-      paddingBottom: 15
     },
     voteIconContainer: {
       //opacity: 0.6
@@ -553,9 +390,6 @@ export default function ItemTips() {
       width: 20,
       opacity: 0.8
     },
-    itemCountsRefreshingAnimContainer: {
-      justifyContent: 'center'
-    },
     itemSwipeArea: {
       position: 'relative'
     },
@@ -598,39 +432,46 @@ export default function ItemTips() {
   } else {
 
     return (
-      <View style={styles.container}>
-        <View style={styles.taskContainer}>
-          <View style={styles.headerItemContainer}>
-            <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick()}></Pressable>
-            <View style={styles.headerItemNameContainer}>
-              <View style={styles.itemNamePressable}>
-                <Text style={[styles.taskTitle, selectedItem.is_done && styles.taskTitle_isDone]}>{selectedItem.text}</Text>
-              </View>
-              <DootooItemSidebar thing={selectedItem} styles={styles} />
+      <>
+        <View style={styles.headerItemContainer}>
+          <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick()}></Pressable>
+          <View style={styles.headerItemNameContainer}>
+            <View style={listStyles.itemNamePressable}>
+              <Text style={[listStyles.taskTitle, selectedItem.is_done && listStyles.taskTitle_isDone]}>{selectedItem.text}</Text>
             </View>
+            <DootooItemSidebar thing={selectedItem} styles={styles} />
           </View>
-          <DootooList
-            thingName="tip"
-            loadingAnimMsg={(selectedItem.is_done) ? "Loading your tips to the community" : "Loading tips from the community"}
-            listArray={tips}
-            listArraySetter={setTips}
-            styles={styles}
-            isDoneable={false}
-            renderRightActions={renderRightActions}
-            renderLeftActions={renderLeftActions}
-            saveAllThings={saveAllTips}
-            saveTextUpdateFunc={saveTextUpdate}
-            saveThingOrderFunc={saveTipOrder}
-            loadAllThings={(isPullDown) => loadTips(isPullDown, selectedItem.uuid)}
-            transcribeAudioToThings={transcribeAudioToTips}
-            ListThingSidebar={DootooTipSidebar}
-            EmptyThingUX={() => <DootooTipEmptyUX styles={styles} selectedItem={selectedItem} tipArray={tips} />}
-            isThingPressable={() => { return selectedItem.is_done; }}
-            isThingDraggable={selectedItem.is_done}
-            hideRecordButton={!selectedItem.is_done}
-            shouldInitialLoad={selectedItem.tip_count && (Number(selectedItem.tip_count) > 0)} />
         </View>
-      </View>
+        <DootooList
+          thingName="tip"
+          loadingAnimMsg={(selectedItem.is_done) ? "Loading your tips to the community" : "Loading tips from the community"}
+          listArray={tips}
+          listArraySetter={setTips}
+          styles={styles}
+          isDoneable={false}
+          renderRightActions={renderRightActions}
+          renderLeftActions={renderLeftActions}
+          saveAllThings={saveAllTips}
+          saveTextUpdateFunc={saveTextUpdate}
+          saveThingOrderFunc={saveTipOrder}
+          loadAllThings={(isPullDown) => loadTips(isPullDown, selectedItem.uuid)}
+          deleteThing={(tip_uuid) => {
+            deleteTip(tip_uuid);
+
+            // Update tip count in displayed header
+            setSelectedItem((prevItem) => ({ ...prevItem, tip_count: prevItem.tipCount - 1 }));
+
+            ProfileCountEventEmitter.emit('decr_tips');
+          }}
+          saveNewThing={(tip, latest_tip_uuids) => saveNewTip(tip, selectedItem.uuid, latest_tip_uuids)}
+          transcribeAudioToThings={transcribeAudioToTips}
+          ListThingSidebar={DootooTipSidebar}
+          EmptyThingUX={() => <DootooTipEmptyUX selectedItem={selectedItem} tipArray={tips} />}
+          isThingPressable={() => { return selectedItem.is_done; }}
+          isThingDraggable={selectedItem.is_done}
+          hideRecordButton={!selectedItem.is_done}
+          shouldInitialLoad={selectedItem.tip_count && (Number(selectedItem.tip_count) > 0)} />
+      </>
     );
   }
 }

@@ -2,7 +2,7 @@
   "expo": {
     "name": "dootoo",
     "slug": "dootoo",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "dootoo",
@@ -13,6 +13,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#DCC7AA"
     },
+    "jsEngine": "hermes",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.thoughtswork.dootoo",
@@ -27,6 +28,7 @@
       }
     },
     "android": {
+      "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#DCC7AA"
@@ -36,7 +38,7 @@
         "READ_CALENDAR", "WRITE_CALENDAR"
       ],
       "package": "com.thoughtswork.dootoo",
-      "versionCode": 18,
+      "versionCode": 25,
       "manifest": {
         "supportsScreens": {
           "small": false,
