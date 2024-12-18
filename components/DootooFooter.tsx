@@ -13,6 +13,8 @@ import { checkOpenAPIStatus } from "./BackendServices.js";
 import Animated from "react-native-reanimated";
 import { calculateAndroidButtonScale, generateNewKeyboardEntry } from './Helpers'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Microphone } from "./svg/microphone";
+import { Keyboard } from "./svg/keyboard";
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
@@ -698,7 +700,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                                         </View>
                                         : (recording) ?
                                             <View style={styles.footerButtonIcon_Stop}></View>
-                                            : <Image style={styles.footerButtonImage_Record} source={require("@/assets/images/microphone_white.png")} />}
+                                            : <Microphone />}
                                 </Pressable>
                             </Reanimated.View>
                         </View>
@@ -709,7 +711,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                                     onPress={handleKeyboardButtonPress}
                                     onPressIn={keyboardButton_handlePressIn}
                                     onPressOut={keyboardButton_handlePressOut}>
-                                    <Image style={styles.keyboardIcon} source={require("@/assets/images/keyboard_white.png")} />
+                                    < Keyboard />
                                 </Pressable>
                             </Reanimated.View>
                         </View>
