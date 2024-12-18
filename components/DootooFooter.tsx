@@ -283,14 +283,14 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         if (recording) {
             const { fileUri, duration } = await stopRecording();
             deleteFile(fileUri);
+            //console.log("Recording cancelled...");
+            amplitude.track("Recording Processing Cancelled", {
+                anonymous_id: anonymousId.current,
+                pathname: pathname,
+                durationSeconds: duration
+            });
         }
         setIsRecordingProcessing(false);
-        //console.log("Recording cancelled...");
-        amplitude.track("Recording Processing Cancelled", {
-            anonymous_id: anonymousId.current,
-            pathname: pathname,
-            durationSeconds: duration
-        });
     }
 
     const processRecording = async (localRecordingObject = null, isAutoStop = false) => {
@@ -311,6 +311,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 amplitude.track("Recording Processing Started", {
                     anonymous_id: anonymousId.current,
                     pathname: pathname,
+                    durationSeconds: duration,
                     stop_type: (isAutoStop) ? 'auto' : 'manual'
                 });
                 setIsRecordingProcessing(true);
@@ -324,7 +325,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                     text: thing.text,
                     scheduled_datetime_utc: thing.scheduled_datetime_utc
                 }));
-                const response = await callBackendTranscribeService(fileUri, abridgedItems);
+                const response = await callBackendTranscribeService(fileUri, duration, abridgedItems);
                 const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
                 //console.log("Number of scheduled items recorded: " + numScheduledItems);
                 amplitude.track("Recording Processing Completed", {
@@ -430,6 +431,10 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             }
         } catch (error) {
             console.error("Unexpected error occurred during recording processing!!", error);
+            console.error("Error details:", {
+                message: error.message,
+                stack: error.stack,
+              });
             Alert.alert(
                 "An Unexpected Error Occurred",
                 "Your voice recording may have been too long or we were unable to transcribe it into items.  Please try again."
@@ -442,8 +447,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         }
     }
 
-    const callBackendTranscribeService = async (fileUri: string, abridgedItems = []) => {
-        return await transcribeFunction(fileUri, anonymousId.current, abridgedItems);
+    const callBackendTranscribeService = async (fileUri: string, durationSeconds:number, abridgedItems = []) => {
+        return await transcribeFunction(fileUri, durationSeconds, anonymousId.current, abridgedItems);
     }
 
     const cancelRecording = async () => {
