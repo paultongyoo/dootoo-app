@@ -700,7 +700,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                                         </View>
                                         : (recording) ?
                                             <View style={styles.footerButtonIcon_Stop}></View>
-                                            : <Microphone />}
+                                            : <Microphone wxh={38} />}
                                 </Pressable>
                             </Reanimated.View>
                         </View>
@@ -711,7 +711,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                                     onPress={handleKeyboardButtonPress}
                                     onPressIn={keyboardButton_handlePressIn}
                                     onPressOut={keyboardButton_handlePressOut}>
-                                    < Keyboard />
+                                    < Keyboard wxh={38} />
                                 </Pressable>
                             </Reanimated.View>
                         </View>

@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import DootooItemSidebar from '@/components/DootooItemSidebar';
 import { generateUsername } from '@/components/Storage';
 import { AppContext } from '@/components/AppContext';
+import { Microphone } from '@/components/svg/microphone';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -227,7 +228,7 @@ const Step2 = () => {
             <Text style={styles.centerCopy}>start by <Text style={styles.green}>naturally speaking</Text> what you have to do.</Text>
             <View style={styles.micAndVoice}>
                 <View style={styles.micContainer}>
-                    <Image style={styles.micImage} source={require('@/assets/images/microphone_white.png')} />
+                    <Microphone wxh={201} />
                 </View>
                 <View style={styles.voiceContainer}>
                     <Text style={styles.voiceCopy}>"alright...first I gotta <Text style={styles.green}>drop off my kid at school</Text>...and then I'm
