@@ -49,7 +49,7 @@ export const handler = async (event) => {
     }
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         {
           "role": "system",
@@ -65,6 +65,29 @@ export const handler = async (event) => {
 
     var object_from_chat = JSON.parse(completion.choices[0].message.content);
     var tip_array = object_from_chat.tips;
+
+    let audioCost = 0;
+    let durationSeconds = event.headers['durationseconds'];
+    if (durationSeconds) {
+      durationSeconds = Number(durationSeconds);
+      audioCost = (durationSeconds / 60) * 0.006;
+      console.log("Audio Cost: " + audioCost);
+    } else {
+      console.log("Audio transcription costs not included yet.");
+    }
+
+    const usage = completion.usage;
+    const inputTokens = usage.prompt_tokens;
+    const inputCost = inputTokens * (0.15 / 1000000);
+    const outputTokens = usage.completion_tokens;
+    const outputCost = outputTokens * (0.60 / 1000000);
+    const chatCost = inputCost + outputCost;
+    console.log("Chat Input Tokens: " + inputTokens);
+    console.log("Chat Output Tokens: " + outputTokens);
+    console.log("Chat Usage cost: $" + chatCost);
+
+    console.log("Total AI Cost: " + audioCost + chatCost);
+
 
     // Retrieve user id to append to task
     var response = null;
