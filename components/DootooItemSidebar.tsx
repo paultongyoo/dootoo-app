@@ -8,6 +8,8 @@ import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter } from
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { flushTipsCache } from './Storage';
 import * as amplitude from '@amplitude/analytics-react-native';
+import { Bulb } from './svg/bulb';
+import { UserRound } from './svg/user-round';
 
 
 const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
@@ -102,28 +104,22 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
             paddingLeft: 15
           },
           similarCountText: {
-            fontSize: 15
-          },
-          similarCountIcon: {
-            width: 16,
-            height: 16,
-            opacity: 0.45,
-            marginLeft: 10
-          },
-          tipCountImageIcon: {
-            height: 16,
-            width: 16,
-            opacity: 0.5,
-            marginLeft: 8
+            fontSize: 15,
+            marginRight: 10
           },
           tipCountText: {
-            fontSize: 15
+            fontSize: 15,
+            marginRight: 8
           },
           tipCountContainer: {
             justifyContent: 'center',
             alignItems: 'center',
             flexDirection: 'row'
           },
+          tipIconContainer: {
+            position: 'relative',
+            top: -2
+          }
     })
 
     // Update v1.1.1:  Experimenting with not displaying loading anim on item level now that race condition is solved
@@ -142,7 +138,9 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
                         style={sidebarStyles.tipCountContainer}
                         onPress={() => handleTipCountTap()}>
                         <Text style={sidebarStyles.tipCountText}>{formatNumber(tipCount) || '0'}</Text>
-                        <Image style={sidebarStyles.tipCountImageIcon} source={require("@/assets/images/light_bulb_556B2F.png")} />
+                        <View style={sidebarStyles.tipIconContainer}>
+                            <Bulb wxh="20" opacity="0.8" color="#556B2F" />
+                        </View>
                     </Pressable> : <></>}
                 {(similarCount) ?
                     <Pressable hitSlop={{ top: 10, bottom: 10, right: 10 }}
@@ -150,7 +148,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
                         style={sidebarStyles.similarCountContainer}
                         onPress={() => handleSimilarCountTap()}>
                         <Text style={sidebarStyles.similarCountText}>{formatNumber(similarCount)}</Text>
-                        <Image style={sidebarStyles.similarCountIcon} source={require("@/assets/images/person_icon_556B2F.png")} />
+                        <UserRound wxh="18" opacity="0.8" color="#556B2F" />
                     </Pressable> : <></>}
             </Animated.View>
         );

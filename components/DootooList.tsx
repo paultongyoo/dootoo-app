@@ -18,6 +18,7 @@ import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
 import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, isThingOverdue } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import { Bulb } from './svg/bulb';
 
 const THINGNAME_ITEM = "item";
 const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
@@ -1219,6 +1220,12 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 })
                             })
 
+                            amplitude.track("Item Enriched", {
+                                anonymous_id: anonymousId.current,
+                                pathname: pathname,
+                                uuid: item.uuid
+                            });
+
                             // Overwrite enriched data in DB and UI
                             listArraySetter((prevThings) => prevThings.map((thing) =>
                                 (thing.uuid == itemToEnrich.uuid)
@@ -1311,6 +1318,13 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 updatedThing.text = textOnChange;
 
                 if (thing.newKeyboardEntry) {
+
+                    amplitude.track("Keyboard Entry Completed", {
+                        anonymous_id: anonymousId.current,
+                        pathname: pathname,
+                        uuid: thing.uuid
+                    });
+
                     const latestUuidOrder = listArray.map((thing) => ({ uuid: thing.uuid }));
                     saveNewThing(updatedThing, latestUuidOrder);
 
@@ -1456,7 +1470,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         console.log("Tapping bulb");
                                         swipeableRefs.current[item.uuid].openLeft()
                                     }}>
-                                    <Image style={styles.tipListIcon} source={require("@/assets/images/light_bulb_blackyellow.png")} />
+                                    <Bulb wxh="28" opacity="0.8" color="#556B2F" strokeWidth='1.5' />
                                 </Pressable> : <></>
                             }
                             <View style={listStyles.itemNameContainer}>

@@ -7,6 +7,10 @@ import { formatNumber, showComingSoonAlert } from './Helpers';
 import { loadUsername, overrideUserAnonId, saveUserLocally, updateUsername } from "./Storage";
 import { ProfileCountEventEmitter } from "./EventEmitters";
 import Dialog from "react-native-dialog";
+import { Bulb } from "./svg/bulb";
+import { CloseX } from "./svg/close-x";
+import { Edit } from "./svg/edit";
+import { CircleUserRound } from "./svg/circle-user-round";
 
 
 const ProfileDrawer = ({ navigation }) => {
@@ -228,8 +232,8 @@ const ProfileDrawer = ({ navigation }) => {
       width: 26,
       height: 26,
       borderRadius: 13, // Half of the width and height for a perfect circle
-      borderColor: 'black',
-      borderWidth: 2,
+      // borderColor: 'black',
+      // borderWidth: 2,
       backgroundColor: 'white'
     },
     statIconTask_Done: {
@@ -250,7 +254,7 @@ const ProfileDrawer = ({ navigation }) => {
       paddingTop: 5
     },
     refreshNameContainer: {
-      paddingTop: 10
+      paddingTop: 5
     },
     refreshNameIcon: {
       width: 21,
@@ -379,10 +383,10 @@ const ProfileDrawer = ({ navigation }) => {
           });
           navigation.closeDrawer();
         }}>
-        <Image style={styles.profileDrawerCloseIcon} source={require('@/assets/images/cancel_icon_black.png')} />
+        <CloseX wxh="32" opacity="0.6" color="#3E3723" />
       </Pressable>
       <View style={styles.profileDrawerProfileIconContainer}>
-        <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_green.png')} />
+        <Image source={require("@/assets/images/profile_icon_green.png")}/>
         <View style={styles.profileDrawerProfileNameContainer}>
           {(!username || username.length == 0) ?
             <ActivityIndicator size={"large"} color="#3E3723" />
@@ -390,12 +394,12 @@ const ProfileDrawer = ({ navigation }) => {
             <Text style={styles.profileDrawerProfileNameText}>{username}</Text>
           }
         </View>
-        <Pressable style={styles.refreshNameContainer}
+        <Pressable hitSlop={10} style={styles.refreshNameContainer}
           disabled={loadingNewUsername}
           onPress={handleEditUsername}>
           {(loadingNewUsername)
             ? <ActivityIndicator size={"small"} color="#3E3723" />
-            : <Image style={styles.refreshNameIcon} source={require('@/assets/images/edit_icon_556B2F.png')} />
+            : <Edit wxh="21" color="#556B2F" opacity="0.6" />
           }
         </Pressable>
       </View>
@@ -411,7 +415,7 @@ const ProfileDrawer = ({ navigation }) => {
         <Pressable style={styles.statContainer}
           onPress={() => showComingSoonAlert(anonymousId.current, "'Tips'", pathname)}>
           <View style={styles.statIconContainer}>
-            <Image style={styles.statIcon_Tips} source={require('@/assets/images/light_bulb_blackyellow.png')} />
+            <Bulb wxh="40" color="#556B2F" strokeWidth="1.5" />
           </View>
           <Text style={styles.statNumber}>{formatNumber(tipCount) || '0'}</Text>
           <Text style={styles.statName}>Tips</Text>
