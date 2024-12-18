@@ -8,6 +8,7 @@ import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 
 import { blockUser, loadUsername } from "./Storage";
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
+import { Ban } from "./svg/ban";
 
 
 const CommunityDrawer = ({ navigation }) => {
@@ -294,7 +295,7 @@ const CommunityDrawer = ({ navigation }) => {
                 });
                 handleBlockProfileTap();
               }}>
-              <Image style={styles.profileBlockIcon} source={require('@/assets/images/block_icon_3E2723.png')} />
+              <Ban wxh="30" color="#3E2723" strokeWidth="2" opacity="0.6" />
             </Pressable>
             <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_red.png')} />
             <View style={styles.profileDrawerProfileNameContainer}>
