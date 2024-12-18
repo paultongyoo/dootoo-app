@@ -100,7 +100,7 @@ const DootooHeader = ({ meDrawerNavigation }) => {
                         });
                         meDrawerNavigation.openDrawer()
                     }}>
-                    <UserCircle wxh={30} color={"#556B2F"} />
+                    <UserCircle wxh={30} color="#556B2F" />
                 </Pressable>
             </View>
         </Animated.View>

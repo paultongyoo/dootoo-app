@@ -18,6 +18,7 @@ import DootooItemSidebar from "@/components/DootooItemSidebar";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import { Flag } from "@/components/svg/flag";
+import { Trash } from "@/components/svg/trash";
 
 
 export default function ItemTips() {
@@ -215,7 +216,7 @@ export default function ItemTips() {
           <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
             <Pressable
               onPress={() => handleThingDeleteFunc(tip)}>
-              <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/trash_icon_white.png")} />
+              <Trash wxh="25" color="white" />
             </Pressable>
           </Reanimated.View>
           :
