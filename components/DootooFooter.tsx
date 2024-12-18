@@ -15,6 +15,8 @@ import { calculateAndroidButtonScale, generateNewKeyboardEntry } from './Helpers
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Microphone } from "./svg/microphone";
 import { Keyboard } from "./svg/keyboard";
+import { Undo } from "./svg/undo";
+import { Redo } from "./svg/redo";
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
@@ -27,6 +29,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const meteringLevel = useSharedValue(1); // shared value for animated scale
     const recordButtonOpacity = useSharedValue(1);
     const keyboardButtonOpacity = useSharedValue(1);
+    const redoButtonOpacity = useSharedValue(0.3);
+    const undoButtonOpacity = useSharedValue(0.3);
     const recordingTimeStart = useRef(null);        // Var used for calculating time
 
     // Auto stop threshold feature
@@ -464,11 +468,6 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             opacity: recordButtonOpacity.value,
         };
     });
-    const keyboardButtonOpacityAnimatedStyle = useAnimatedStyle(() => {
-        return {
-            opacity: keyboardButtonOpacity.value,
-        };
-    });
 
     const recordButton_handlePressIn = () => {
         recordButtonOpacity.value = withTiming(0.7, { duration: 150 }); // Dim button on press
@@ -476,14 +475,6 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
     const recordButton_handlePressOut = () => {
         recordButtonOpacity.value = withTiming(1, { duration: 150 }); // Return to full opacity
-    };
-
-    const keyboardButton_handlePressIn = () => {
-        keyboardButtonOpacity.value = withTiming(0.7, { duration: 150 }); // Dim button on press
-    };
-
-    const keyboardButton_handlePressOut = () => {
-        keyboardButtonOpacity.value = withTiming(1, { duration: 150 }); // Return to full opacity
     };
 
     const handleKeyboardButtonPress = () => {
@@ -506,6 +497,14 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         } else {
             listArraySetterFunc((prevItems) => [newItem, ...prevItems]);
         }
+    }
+
+    const handleUndoButtonPress = () => {
+        Alert.alert("Implement undo!");
+    }
+
+    const handleRedoButtonPress = () => {
+        Alert.alert("Implement redo!");
     }
 
     const insets = useSafeAreaInsets();
@@ -531,8 +530,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             borderRadius: 29,
             borderColor: '#3E2723',
             borderWidth: 1,
-            // position: 'absolute',
-            // bottom: 120,
+            marginRight: 20,
+            marginLeft: 20,
             flex: 1,
             alignItems: 'center',
             justifyContent: 'center',
@@ -546,6 +545,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             height: 58,
             width: 58,
             borderRadius: 29,
+            marginRight: 20,
+            marginLeft: 20,
             position: 'absolute',
             top: 0,
             backgroundColor: 'black'
@@ -573,14 +574,15 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         },
         recordButton: {
             backgroundColor: '#556B2F',
-            marginRight: 60
         },
         keyboardButton: {
             backgroundColor: '#556B2F'
         },
+        undoRedoButton: {
+            backgroundColor: '#FAF3E0'
+        },
         stopRecordButton: {
             backgroundColor: '#A23E48',
-            marginRight: 60
         },
         clearButton: {
             backgroundColor: '#FAF3E0',
@@ -625,10 +627,24 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             flexDirection: 'row',
             flex: 1,
             position: 'relative',
-            top: -30
+            top: -27,
+            alignItems: 'center'
         },
         footerButtonContainer: {
             height: 58
+        },
+        undoRedoFooterButtonContainer: {
+            height: 40
+        },
+        undoRedoFooterButton: {
+            height: 40,
+            width: 40,
+            borderRadius: 20
+        },
+        undoRedofooterButton_Underlay: {
+            height: 40,
+            width: 40,
+            borderRadius: 20   
         }
     });
 
@@ -706,12 +722,34 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                         </View>
                         <View style={styles.footerButtonContainer}>
                             <View style={styles.footerButton_Underlay}></View>
-                            <Reanimated.View style={[styles.footerButton, styles.keyboardButton, keyboardButtonOpacityAnimatedStyle]}>
+                            <Reanimated.View style={[styles.footerButton, styles.keyboardButton, { opacity: keyboardButtonOpacity }]}>
                                 <Pressable
                                     onPress={handleKeyboardButtonPress}
-                                    onPressIn={keyboardButton_handlePressIn}
-                                    onPressOut={keyboardButton_handlePressOut}>
+                                    onPressIn={() => keyboardButtonOpacity.value = withTiming(0.7, { duration: 150 })}
+                                    onPressOut={() => keyboardButtonOpacity.value = withTiming(1, { duration: 150 })}>
                                     < Keyboard wxh={38} />
+                                </Pressable>
+                            </Reanimated.View>
+                        </View>
+                        <View style={styles.undoRedoFooterButtonContainer}>
+                            <Reanimated.View style={[styles.footerButton_Underlay, styles.undoRedofooterButton_Underlay]}></Reanimated.View>
+                            <Reanimated.View style={[styles.footerButton, styles.undoRedoFooterButton, styles.undoRedoButton, { opacity: undoButtonOpacity }]}>
+                                <Pressable
+                                    onPress={handleUndoButtonPress}
+                                    onPressIn={() =>  undoButtonOpacity.value = withTiming(0.7, { duration: 150 })}
+                                    onPressOut={() =>  undoButtonOpacity.value = withTiming(1, { duration: 150 })}>
+                                    < Undo wxh={20} color="#3E2723" />
+                                </Pressable>
+                            </Reanimated.View>
+                        </View>
+                        <View style={styles.undoRedoFooterButtonContainer}>
+                            <Reanimated.View style={[styles.footerButton_Underlay, styles.undoRedofooterButton_Underlay]}></Reanimated.View>
+                            <Reanimated.View style={[styles.footerButton, styles.undoRedoFooterButton, styles.undoRedoButton, { opacity: redoButtonOpacity }]}>
+                                <Pressable
+                                    onPress={handleRedoButtonPress}
+                                    onPressIn={() =>  redoButtonOpacity.value = withTiming(0.7, { duration: 150 })}
+                                    onPressOut={() =>  redoButtonOpacity.value = withTiming(1, { duration: 150 })}>
+                                    < Redo wxh={20} color="#3E2723" />
                                 </Pressable>
                             </Reanimated.View>
                         </View>
