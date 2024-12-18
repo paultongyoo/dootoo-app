@@ -94,10 +94,13 @@ export const handler = async (event) => {
     var object_from_chat = JSON.parse(completion.choices[0].message.content);
     var item_array = object_from_chat.tasks;
 
-    durationSeconds = Number(durationSeconds);
-    const audioCost = (durationSeconds / 60) * 0.006;
-    console.log("Audio Cost: " + audioCost);
-
+    let audioCost = 0;
+    if (durationSeconds) {
+      durationSeconds = Number(durationSeconds);
+      audioCost = (durationSeconds / 60) * 0.006;
+      console.log("Audio Cost: " + audioCost);
+    }
+    
     const usage = completion.usage;
     const inputTokens = usage.prompt_tokens;
     const inputCost = inputTokens * (0.15 / 1000000);
