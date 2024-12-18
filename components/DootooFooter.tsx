@@ -387,7 +387,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                             // TODO: Port animation to Reanimated 3
                             emptyListCTAFadeOutAnimation.start(() => {
                                 listArraySetterFunc((prevThings) => {
-                                    undoRedoCache.push(prevThings);
+                                    undoRedoCache.current.push(prevThings);
                                     return response.concat(prevThings)
                                 });
                                 emptyListCTAFadeOutAnimation.reset();
@@ -395,7 +395,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                         } else {
 
                             listArraySetterFunc((prevThings) => {
-                                undoRedoCache.push(prevThings);
+                                undoRedoCache.current.push(prevThings);
                                 return response.concat(prevThings)
                             });
                         }
@@ -537,8 +537,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             borderRadius: 29,
             borderColor: '#3E2723',
             borderWidth: 1,
-            marginRight: 20,
-            marginLeft: 20,
+            marginRight: 30,
+            marginLeft: 30,
             flex: 1,
             alignItems: 'center',
             justifyContent: 'center',
@@ -552,8 +552,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             height: 58,
             width: 58,
             borderRadius: 29,
-            marginRight: 20,
-            marginLeft: 20,
+            marginRight: 30,
+            marginLeft: 30,
             position: 'absolute',
             top: 0,
             backgroundColor: 'black'
@@ -738,7 +738,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                                 </Pressable>
                             </Reanimated.View>
                         </View>
-                        <View style={styles.undoRedoFooterButtonContainer}>
+                        { /*<View style={styles.undoRedoFooterButtonContainer}>
                             <Reanimated.View style={[styles.footerButton_Underlay, styles.undoRedofooterButton_Underlay]}></Reanimated.View>
                             <Reanimated.View style={[styles.footerButton, styles.undoRedoFooterButton, styles.undoRedoButton, { opacity: undoButtonOpacity }]}>
                                 <Pressable
@@ -758,8 +758,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                                     onPressOut={() =>  redoButtonOpacity.value = withTiming(1, { duration: 150 })}>
                                     < Redo wxh={20} color="#3E2723" />
                                 </Pressable>
-                            </Reanimated.View>
-                        </View>
+                            </Reanimated.View> 
+                        </View> */ }
                     </View>
                 </Animated.View>
                 <View style={styles.bannerAdContainer}>
