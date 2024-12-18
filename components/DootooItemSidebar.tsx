@@ -116,6 +116,10 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
             alignItems: 'center',
             flexDirection: 'row'
           },
+          tipIconContainer: {
+            position: 'relative',
+            top: -2
+          }
     })
 
     // Update v1.1.1:  Experimenting with not displaying loading anim on item level now that race condition is solved
@@ -134,7 +138,9 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
                         style={sidebarStyles.tipCountContainer}
                         onPress={() => handleTipCountTap()}>
                         <Text style={sidebarStyles.tipCountText}>{formatNumber(tipCount) || '0'}</Text>
-                        <Bulb wxh="20" opacity="0.8" color="#556B2F" />
+                        <View style={sidebarStyles.tipIconContainer}>
+                            <Bulb wxh="20" opacity="0.8" color="#556B2F" />
+                        </View>
                     </Pressable> : <></>}
                 {(similarCount) ?
                     <Pressable hitSlop={{ top: 10, bottom: 10, right: 10 }}
