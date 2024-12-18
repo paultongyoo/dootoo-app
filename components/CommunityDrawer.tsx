@@ -158,8 +158,8 @@ const CommunityDrawer = ({ navigation }) => {
       width: 26,
       height: 26,
       borderRadius: 13, // Half of the width and height for a perfect circle
-      borderColor: 'black',
-      borderWidth: 2,
+      // borderColor: 'black',
+      // borderWidth: 2,
       backgroundColor: 'white'
     },
     statIconTask_Done: {
