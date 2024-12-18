@@ -99,8 +99,10 @@ export const handler = async (event) => {
       durationSeconds = Number(durationSeconds);
       audioCost = (durationSeconds / 60) * 0.006;
       console.log("Audio Cost: " + audioCost);
+    } else {
+      console.log("Audio transcription costs not included yet.");
     }
-    
+
     const usage = completion.usage;
     const inputTokens = usage.prompt_tokens;
     const inputCost = inputTokens * (0.15 / 1000000);
