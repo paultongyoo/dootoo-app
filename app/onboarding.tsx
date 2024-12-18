@@ -9,6 +9,8 @@ import DootooItemSidebar from '@/components/DootooItemSidebar';
 import { generateUsername } from '@/components/Storage';
 import { AppContext } from '@/components/AppContext';
 import { Microphone } from '@/components/svg/microphone';
+import { ChevronLeft } from '@/components/svg/chevron-left';
+import { ArrowLeft } from '@/components/svg/arrow-left';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -708,8 +710,8 @@ const OnboardingHeader = ({ swipeRight }) => {
         <Animated.View style={[styles.onboardingHeaderContainer, {opacity: fadeIn}]}>
             <Pressable style={styles.backButtonContainer} onPress={swipeRight}>
                 {(Platform.OS == 'ios') ?
-                    <Image style={styles.backButtonIcon} source={require('@/assets/images/back_arrow_FAF3E0_ios.png')} />
-                    : <Image style={styles.backButtonIcon} source={require('@/assets/images/back_arrow_FAF3E0_android.png')} />
+                    <ChevronLeft wxh={40} strokeWidth="2" color="#FAF3E0" />
+                    : <ArrowLeft wxh={40} strokeWidth="2" color="#FAF3E0" />
                 }
             </Pressable>
         </Animated.View>
