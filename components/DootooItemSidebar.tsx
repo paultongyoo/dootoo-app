@@ -9,6 +9,7 @@ import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 
 import { flushTipsCache } from './Storage';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { Bulb } from './svg/bulb';
+import { UserRound } from './svg/user-round';
 
 
 const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
@@ -103,13 +104,13 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
             paddingLeft: 15
           },
           similarCountText: {
-            fontSize: 15
+            fontSize: 15,
+            marginRight: 10
           },
           similarCountIcon: {
             width: 16,
             height: 16,
-            opacity: 0.45,
-            marginLeft: 10
+            opacity: 0.45
           },
           tipCountImageIcon: {
             height: 16,
@@ -151,7 +152,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
                         style={sidebarStyles.similarCountContainer}
                         onPress={() => handleSimilarCountTap()}>
                         <Text style={sidebarStyles.similarCountText}>{formatNumber(similarCount)}</Text>
-                        <Image style={sidebarStyles.similarCountIcon} source={require("@/assets/images/person_icon_556B2F.png")} />
+                        <UserRound wxh="18" opacity="0.6" color="#556B2F" />
                     </Pressable> : <></>}
             </Animated.View>
         );
