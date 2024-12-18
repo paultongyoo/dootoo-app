@@ -521,7 +521,7 @@ const Step4 = () => {
                 <View style={styles.tipsContainer}>
                     <View style={styles.itemContainer}>
                         <View style={styles.tipListIconContainer}>
-                            <Bulb wxh="28" color="#556B2F" />
+                            <Bulb wxh="28" opacity="0.8" color="#556B2F" strokeWidth='1.5' />
                         </View> 
                         <View style={styles.headerTipNameContainer}>
                             <View style={styles.itemNamePressable}>
@@ -529,13 +529,13 @@ const Step4 = () => {
                             </View>
                             <View style={styles.scoreContainer}>
                                 <Text style={styles.scoreText}>173</Text>
-                                <ThumbUp wxh="16" opacity="0.5" color="#556B2F" />
+                                <ThumbUp wxh="20" opacity="0.8" color="#556B2F" />
                             </View>
                         </View>
                     </View>
                     <View style={styles.itemContainer}>
                         <View style={styles.tipListIconContainer}>
-                            <Bulb wxh="28" color="#556B2F" />
+                            <Bulb wxh="28" opacity="0.8" color="#556B2F" strokeWidth='1.5' />
                         </View> 
                         <View style={styles.headerTipNameContainer}>
                             <View style={styles.itemNamePressable}>
@@ -543,13 +543,13 @@ const Step4 = () => {
                             </View>
                             <View style={styles.scoreContainer}>
                                 <Text style={styles.scoreText}>75</Text>
-                                <ThumbUp wxh="16" opacity="0.5" color="#556B2F" />
+                                <ThumbUp wxh="20" opacity="0.8" color="#556B2F" />
                             </View>
                         </View>
                     </View>
                     <View style={styles.itemContainer}>
                         <View style={styles.tipListIconContainer}>
-                            <Bulb wxh="28" color="#556B2F" />
+                            <Bulb wxh="28" opacity="0.8" color="#556B2F" strokeWidth='1.5' />
                         </View> 
                         <View style={styles.headerTipNameContainer}>
                             <View style={styles.itemNamePressable}>
@@ -557,7 +557,7 @@ const Step4 = () => {
                             </View>
                             <View style={styles.scoreContainer}>
                                 <Text style={styles.scoreText}>66</Text>
-                                <ThumbUp wxh="16" opacity="0.5" color="#556B2F" />
+                                <ThumbUp wxh="20" opacity="0.8" color="#556B2F" />
                             </View>
                         </View>
                     </View>
