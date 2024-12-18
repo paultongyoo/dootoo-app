@@ -1,5 +1,7 @@
 import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
 import { momentFromNow, isThingOverdue } from './Helpers';
+import { Calendar } from './svg/calendar';
+import { CalendarAdd } from './svg/calendar-add';
 import Toast from 'react-native-toast-message';
 
 
@@ -120,10 +122,9 @@ const toastConfig = {
         </Pressable>  
         <Pressable hitSLop={10} style={({ pressed }) => [styles.calendarIconContainer/*, pressed && { backgroundColor: '#000' }*/]}
                      onPress={props.onCalendarIconClick}>
-              <Image style={styles.calendarIcon} source={(!props.thing.event_id) 
-                                                    ? require("@/assets/images/calendar_A23E48.png")    // TODO Create better image
-                                                    : require("@/assets/images/calendar_A23E48.png")
-                                                    } />
+              {(!props.thing.event_id) ? <CalendarAdd wxh="20" color="#A23E38"/>    // TODO Create better image
+                                       : <Calendar wxh="20" color="#A23E38"/>
+               } 
         </Pressable>                                    
     </View>
   )
