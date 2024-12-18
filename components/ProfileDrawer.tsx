@@ -9,6 +9,7 @@ import { ProfileCountEventEmitter } from "./EventEmitters";
 import Dialog from "react-native-dialog";
 import { Bulb } from "./svg/bulb";
 import { CloseX } from "./svg/close-x";
+import { Edit } from "./svg/edit";
 
 
 const ProfileDrawer = ({ navigation }) => {
@@ -252,7 +253,7 @@ const ProfileDrawer = ({ navigation }) => {
       paddingTop: 5
     },
     refreshNameContainer: {
-      paddingTop: 10
+      paddingTop: 5
     },
     refreshNameIcon: {
       width: 21,
@@ -392,12 +393,12 @@ const ProfileDrawer = ({ navigation }) => {
             <Text style={styles.profileDrawerProfileNameText}>{username}</Text>
           }
         </View>
-        <Pressable style={styles.refreshNameContainer}
+        <Pressable hitSlop={10} style={styles.refreshNameContainer}
           disabled={loadingNewUsername}
           onPress={handleEditUsername}>
           {(loadingNewUsername)
             ? <ActivityIndicator size={"small"} color="#3E3723" />
-            : <Image style={styles.refreshNameIcon} source={require('@/assets/images/edit_icon_556B2F.png')} />
+            : <Edit wxh="21" color="#556B2F" opacity="0.6" />
           }
         </Pressable>
       </View>

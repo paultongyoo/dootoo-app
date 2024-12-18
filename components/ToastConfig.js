@@ -2,6 +2,7 @@ import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
 import { momentFromNow, isThingOverdue } from './Helpers';
 import { Calendar } from './svg/calendar';
 import { CalendarAdd } from './svg/calendar-add';
+import { Edit } from './svg/edit';
 import Toast from 'react-native-toast-message';
 
 
@@ -15,9 +16,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flex: 1
   },
-  undoableToast: { 
-    height: 50, 
-    width: 230 
+  undoableToast: {
+    height: 50,
+    width: 230
   },
   msgWithLink: {
     height: 50,
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
   timerEditIconContainer: {
     justifyContent: 'center',
     paddingRight: 10,
-    paddingTop:10,
+    paddingTop: 10,
     paddingBottom: 10,
     paddingLeft: 20
   },
@@ -89,7 +90,7 @@ const toastConfig = {
   ),
   msgWithLink: ({ text1 = '', props }) => (
     <View style={[
-      styles.baseToast, 
+      styles.baseToast,
       styles.msgWithLink,
       { width: (props.width) ? props.width : 190 }]}>
       <Text onPress={() => Toast.hide()} style={styles.toastText}>{text1}</Text>
@@ -102,7 +103,7 @@ const toastConfig = {
   ),
   msgOpenWidth: ({ text1 = '' }) => (
     <View style={[
-      styles.baseToast, 
+      styles.baseToast,
       styles.msgOpenWidth]}>
       <Text onPress={() => Toast.hide()} style={styles.toastText}>{text1}</Text>
     </View>
@@ -110,22 +111,22 @@ const toastConfig = {
   timerInfo: ({ props }) => (
     <View style={[styles.baseToast, styles.timerInfo]}>
       <View style={styles.timerIconContainer}>
-        <Image style={styles.timerIcon} source={(isThingOverdue(props.thing) && !props.thing.is_done) 
-                                                  ? require("@/assets/images/timer_icon_FF0000.png") 
-                                                  : require("@/assets/images/timer_icon_556B2F.png")
-                                                  } />
+        <Image style={styles.timerIcon} source={(isThingOverdue(props.thing) && !props.thing.is_done)
+          ? require("@/assets/images/timer_icon_FF0000.png")
+          : require("@/assets/images/timer_icon_556B2F.png")
+        } />
       </View>
       <Text onPress={() => Toast.hide()} style={[styles.toastText, isThingOverdue(props.thing) && !props.thing.is_done && styles.timerText_overdue]}>{momentFromNow(props.thing)}</Text>
-        <Pressable hitSLop={10} style={({ pressed }) => [styles.timerEditIconContainer/*, pressed && { backgroundColor: '#000' }*/]}
-                     onPress={props.onEditIconClick}>
-            <Image style={styles.timerEditIcon} source={require("@/assets/images/edit_icon_A23E48.png")} />
-        </Pressable>  
-        <Pressable hitSLop={10} style={({ pressed }) => [styles.calendarIconContainer/*, pressed && { backgroundColor: '#000' }*/]}
-                     onPress={props.onCalendarIconClick}>
-              {(!props.thing.event_id) ? <CalendarAdd wxh="20" color="#A23E38"/>    // TODO Create better image
-                                       : <Calendar wxh="20" color="#A23E38"/>
-               } 
-        </Pressable>                                    
+      <Pressable hitSLop={10} style={({ pressed }) => [styles.timerEditIconContainer/*, pressed && { backgroundColor: '#000' }*/]}
+        onPress={props.onEditIconClick}>
+        <Edit wxh="20" color="#A23E38" />
+      </Pressable>
+      <Pressable hitSLop={10} style={({ pressed }) => [styles.calendarIconContainer/*, pressed && { backgroundColor: '#000' }*/]}
+        onPress={props.onCalendarIconClick}>
+        {(!props.thing.event_id) ? <CalendarAdd wxh="20" color="#A23E38" />    // TODO Create better image
+          : <Calendar wxh="20" color="#A23E38" />
+        }
+      </Pressable>
     </View>
   )
 };
