@@ -17,7 +17,8 @@ const BACKEND_GENERATETIPCTA_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.u
 
 const OPENAI_STATUS_COMPONENTS_URL = 'https://status.openai.com/api/v2/components.json';
 
-export const transcribeAudioToTasks = async (fileUri, anonymous_id, abridgedTasks = []) => {
+export const transcribeAudioToTasks = async (fileUri, durationSeconds, anonymous_id) => {
+
  //console.log("Entering transcribeAudiToTasks with anonymous Id: " + anonymous_id);
 
   // Read the file as a binary base64 string
@@ -48,6 +49,7 @@ export const transcribeAudioToTasks = async (fileUri, anonymous_id, abridgedTask
           'userlocaltime' : currentTimeAPIHeaders.userlocaltime,
           'usertimezone'  : currentTimeAPIHeaders.usertimezone,
           'utcdatetime': currentTimeAPIHeaders.utcdatetime,
+          'durationseconds'  : durationSeconds,
           'Content-Type': `audio/${fileExtension}`
         },
       }
@@ -60,7 +62,8 @@ export const transcribeAudioToTasks = async (fileUri, anonymous_id, abridgedTask
   // }
 };
 
-export const transcribeAudioToTips = async (fileUri, anonymous_id, abridgedTasks = []) => {
+export const transcribeAudioToTips = async (fileUri, durationSeconds, anonymous_id) => {
+
   //console.log("Entering transcribeAudioToTips with anonymous Id: " + anonymous_id);
 
   // Read the file as a binary base64 string
@@ -83,6 +86,7 @@ export const transcribeAudioToTips = async (fileUri, anonymous_id, abridgedTasks
       {
         headers: {
           'anonymous_id': anonymous_id,
+          'durationseconds': durationSeconds,
           'Content-Type': `audio/${fileExtension}`
         },
       }
