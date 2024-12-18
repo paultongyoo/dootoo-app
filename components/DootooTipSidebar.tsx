@@ -2,6 +2,7 @@ import { useContext, useEffect } from 'react';
 import { View, Image, Text, Pressable, Alert, Linking } from 'react-native';
 import { AppContext } from './AppContext';
 import { formatNumber } from './Helpers';
+import { Flag } from './svg/flag';
 
 
 const DootooTipSidebar = ({ thing, styles }) => {
@@ -67,7 +68,7 @@ const DootooTipSidebar = ({ thing, styles }) => {
                             style={styles.flaggedContainer}
                             onPress={() => handleTipFlagContest()}>
                             <Text style={styles.flaggedText}>Flagged</Text>
-                            <Image style={styles.flaggedIcon} source={require("@/assets/images/flag_A23E48.png")} />
+                            <Flag wxh={20} opacity="0.8" color="#A23E48" />
                         </Pressable>
                         : <View style={styles.scoreContainer}></View>
             }

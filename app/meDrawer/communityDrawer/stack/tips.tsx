@@ -17,6 +17,7 @@ import DootooList, { listStyles } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
+import { Flag } from "@/components/svg/flag";
 
 
 export default function ItemTips() {
@@ -234,7 +235,7 @@ export default function ItemTips() {
             <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Flag]}>
               <Pressable
                 onPress={() => { handleTipFlag(tip) }}>
-                <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/flag_white.png")} />
+                  <Flag wxh="25" color="white" />
               </Pressable>
             </Reanimated.View>
           </>
