@@ -8,6 +8,7 @@ import { loadUsername, overrideUserAnonId, saveUserLocally, updateUsername } fro
 import { ProfileCountEventEmitter } from "./EventEmitters";
 import Dialog from "react-native-dialog";
 import { Bulb } from "./svg/bulb";
+import { CloseX } from "./svg/close-x";
 
 
 const ProfileDrawer = ({ navigation }) => {
@@ -380,7 +381,7 @@ const ProfileDrawer = ({ navigation }) => {
           });
           navigation.closeDrawer();
         }}>
-        <Image style={styles.profileDrawerCloseIcon} source={require('@/assets/images/cancel_icon_black.png')} />
+        <CloseX wxh="32" opacity="0.6" color="#3E3723" />
       </Pressable>
       <View style={styles.profileDrawerProfileIconContainer}>
         <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_green.png')} />
