@@ -23,6 +23,7 @@ export const AppProvider = ({ children }) => {
     const anonymousId = useRef();
     const itemCountsMap = useRef(new Map());
     const currentlyTappedThing = useRef(null);
+    const undoRedoCache = useRef([]);
     
 
     // Animation related
@@ -75,7 +76,8 @@ export const AppProvider = ({ children }) => {
             selectedProfile, setSelectedProfile,
             swipeableRefs,
             itemCountsMap,
-            currentlyTappedThing
+            currentlyTappedThing,
+            undoRedoCache
              }}>
           {children}
         </AppContext.Provider>

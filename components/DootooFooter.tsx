@@ -20,7 +20,7 @@ import { Redo } from "./svg/redo";
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
-    const { anonymousId, listFadeInAnimation, fadeInListOnRender, currentlyTappedThing,
+    const { anonymousId, currentlyTappedThing, undoRedoCache,
         lastRecordedCount, emptyListCTAOpacity, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
     const recorderProcessLocked = useRef(false);
@@ -66,6 +66,10 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             subscription.remove();
         }
     }, []);
+
+    useEffect(() => {
+
+    }, [listArray]);
 
     const checkOpenAPIHealth = async () => {
         const status = await checkOpenAPIStatus();
@@ -380,17 +384,20 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                             // emptyListCTAOpacity.current = 1;
                             // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
 
+                            // TODO: Port animation to Reanimated 3
                             emptyListCTAFadeOutAnimation.start(() => {
-
-                                //If list is initially empty, fade in the new list
-                                listArraySetterFunc((prevThings) => response.concat(prevThings));
-
+                                listArraySetterFunc((prevThings) => {
+                                    undoRedoCache.push(prevThings);
+                                    return response.concat(prevThings)
+                                });
                                 emptyListCTAFadeOutAnimation.reset();
                             });
                         } else {
 
-                            // TODO:  When appending, move current list down and to insert new items
-                            listArraySetterFunc((prevThings) => response.concat(prevThings));
+                            listArraySetterFunc((prevThings) => {
+                                undoRedoCache.push(prevThings);
+                                return response.concat(prevThings)
+                            });
                         }
 
                         // Make sure this function is asynchronous!!!
