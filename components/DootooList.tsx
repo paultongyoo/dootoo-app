@@ -1132,7 +1132,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             // If row had a height of 0 on render, assume it was just collapsed via a prior animation
             // and restore it to full height.  See special case for first reveal of list in the isFinished clause
             if (rowHeight.value == 0) {
-                console.log("Expanding row " + getIndex() + " to full height, firstListRendered.value: " + firstListRendered.value);
+                //console.log("Expanding row " + getIndex() + " to full height, firstListRendered.value: " + firstListRendered.value);
                 rowHeight.value = withTiming(fullRowHeight.current, { duration: 300 }, (isFinished) => {
                     if (isFinished) {
 
