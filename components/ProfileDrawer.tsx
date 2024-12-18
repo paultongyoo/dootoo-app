@@ -413,7 +413,7 @@ const ProfileDrawer = ({ navigation }) => {
         <Pressable style={styles.statContainer}
           onPress={() => showComingSoonAlert(anonymousId.current, "'Tips'", pathname)}>
           <View style={styles.statIconContainer}>
-            <Bulb wxh="40" color="#556B2F" />
+            <Bulb wxh="40" color="#556B2F" strokeWidth="1.5" />
           </View>
           <Text style={styles.statNumber}>{formatNumber(tipCount) || '0'}</Text>
           <Text style={styles.statName}>Tips</Text>
