@@ -2,7 +2,6 @@
 import { Svg, Path } from 'react-native-svg';
 
 // Source: https://heroicons.com
-
 export const Microphone = ({wxh}) => (
     <Svg viewBox="0 0 24 24" fill="none" width={wxh} height={wxh}>
         <Path fill="white" d="M8.25 4.5a3.75 3.75 0 1 1 7.5 0v8.25a3.75 3.75 0 1 1-7.5 0V4.5Z" />
