@@ -51,6 +51,7 @@ export const handler = async (event) => {
     const userLocalTime = event.headers['userlocaltime'];
     const userTimeZone = event.headers['usertimezone'];
     const utcDateTime = event.headers['utcdatetime'];
+    let durationSeconds = event.headers['durationseconds'];
     console.log("All Headers: " + JSON.stringify(event.headers));
     if (userLocalTime && userTimeZone && utcDateTime) {
       currentDateStringPrompt = `The user's current local date and time is ${userLocalTime} (timezone: ${userTimeZone}). The current UTC time is ${utcDateTime}.`;
@@ -66,13 +67,12 @@ export const handler = async (event) => {
           "role": "system",
           "content": `
                 ${currentDateStringPrompt}
-                The user is speaking a list of items.
-                Your role is to identify the main tasks and sub-tasks described in their input, ordering each sub-task immediately after its corresponding main task.
+                Your role is to identify the main tasks and sub-tasks described in the user's input.
                 Only consider a task as a sub-task if it is described as part of another task.
-                If the user cites date and/or time information within a task, remove referral to the date/time from the task and cite it in the scheduled_datetime_utc field below.
-                If they only mention a time in their task, assume the scheduled date is the current date in the user's timezone.
-                If they only mention a date in their task, assume the scheduled time is 12:00AM in the user's timezone.
-                "Do NOT guess additional items beyond what the user stays in their input.
+                If user cites date and/or time information within a task, remove the date/time info from the task and cite it in the scheduled_datetime_utc field below.
+                If only time mentioned in the task, assume scheduled date is the current date in the user's timezone.
+                If only date mentioned in the task, assume scheduled time is 12:00AM in the user's timezone.
+                Do NOT guess tasks beyond what the user stays in their input.
                 Respond only in English.
                 Return your analysis in the following JSON format:
                 {
@@ -80,7 +80,6 @@ export const handler = async (event) => {
                     {
                       "uuid": "<RFC-compliant UUID>",
                       "text": "<task name>", 
-                      "is_child": <false if main task, true otherwise>},
                       "parent_item_uuid": <UUID of parent task if this is a subtask>,
                       "scheduled_datetime_utc": <ISO 8601 formatted string in UTC timezone per rules above, or null if no date or time info provided>
                   ]
@@ -95,6 +94,10 @@ export const handler = async (event) => {
     var object_from_chat = JSON.parse(completion.choices[0].message.content);
     var item_array = object_from_chat.tasks;
 
+    durationSeconds = Number(durationSeconds);
+    const audioCost = (durationSeconds / 60) * 0.006;
+    console.log("Audio Cost: " + audioCost);
+
     const usage = completion.usage;
     const inputTokens = usage.prompt_tokens;
     const inputCost = inputTokens * (0.15 / 1000000);
@@ -105,7 +108,7 @@ export const handler = async (event) => {
     console.log("Chat Output Tokens: " + outputTokens);
     console.log("Chat Usage cost: $" + chatCost);
 
-    console.log("Total Chat Cost: " + chatCost);
+    console.log("Total AI Cost: " + audioCost + chatCost);
 
     //console.log("Final Output: ", item_array);        DO NOT TRANSCRIBE ITEMS TO LOGS TO RESPECT USER PRIVACY
 
@@ -115,7 +118,10 @@ export const handler = async (event) => {
     };
     return response;
   } catch (error) {
-    console.log("Unexpected error occurred: " + JSON.stringify(error));
+    console.error("Unexpected error occurred: " + JSON.stringify(error));
+    console.error("Error message:", error.message); // Basic error message
+    console.error("Error stack trace:", error.stack); // Full stack trace
+    console.error("Full error object:", error); // Log the complete error object
     return {
       statusCode: 500,
       body: "Unexpected error occurred: " + JSON.stringify(error)

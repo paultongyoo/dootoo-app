@@ -305,7 +305,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 });
                 setIsRecordingProcessing(true);
 
-                const response = await callBackendTranscribeService(fileUri);
+                const response = await callBackendTranscribeService(fileUri, duration);
                 const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
                 //console.log("Number of scheduled items recorded: " + numScheduledItems);
                 amplitude.track("Recording Processing Completed", {
@@ -420,16 +420,16 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         }
     }
 
-    const callBackendTranscribeService = async (fileUri: string) => {
-        return await transcribeFunction(fileUri, anonymousId.current);
+    const callBackendTranscribeService = async (fileUri: string, durationSeconds: number) => {
+        return await transcribeFunction(fileUri, durationSeconds, anonymousId.current);
     }
 
-    const cancelRecording = async () => {
-        //console.log("Cancelling recording...");
-        const fileUri = await stopRecording();
-        //console.log("Deleting file..");
-        deleteFile(fileUri);
-    }
+    // const cancelRecording = async () => {
+    //     //console.log("Cancelling recording...");
+    //     const fileUri = await stopRecording();
+    //     //console.log("Deleting file..");
+    //     deleteFile(fileUri);
+    // }
 
     const deleteFile = async (fileUri: string) => {
         try {
