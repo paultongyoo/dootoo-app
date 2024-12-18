@@ -169,6 +169,10 @@ function formatLocalizedTime(utcISOString) {
   // Format based on proximity
   if (daysDifference === 0) {
     // Same day
+    if (scheduledTime.hour >= 19) {
+      // 7 PM or later
+      return `Tonight ${formatTime(scheduledTime)}`;
+    }
     return `Today ${formatTime(scheduledTime)}`;
   } else if (daysDifference === 1) {
     // Tomorrow

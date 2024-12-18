@@ -13,10 +13,14 @@ import { checkOpenAPIStatus } from "./BackendServices.js";
 import Animated from "react-native-reanimated";
 import { calculateAndroidButtonScale, generateNewKeyboardEntry } from './Helpers'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Microphone } from "./svg/microphone";
+import { Keyboard } from "./svg/keyboard";
+import { Undo } from "./svg/undo";
+import { Redo } from "./svg/redo";
 
 const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
     const pathname = usePathname();
-    const { anonymousId, listFadeInAnimation, fadeInListOnRender, currentlyTappedThing,
+    const { anonymousId, currentlyTappedThing, undoRedoCache,
         lastRecordedCount, emptyListCTAOpacity, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
     const recorderProcessLocked = useRef(false);
@@ -25,6 +29,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const meteringLevel = useSharedValue(1); // shared value for animated scale
     const recordButtonOpacity = useSharedValue(1);
     const keyboardButtonOpacity = useSharedValue(1);
+    const redoButtonOpacity = useSharedValue(0.3);
+    const undoButtonOpacity = useSharedValue(0.3);
     const recordingTimeStart = useRef(null);        // Var used for calculating time
 
     // Auto stop threshold feature
@@ -60,6 +66,10 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             subscription.remove();
         }
     }, []);
+
+    useEffect(() => {
+
+    }, [listArray]);
 
     const checkOpenAPIHealth = async () => {
         const status = await checkOpenAPIStatus();
@@ -305,7 +315,16 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 });
                 setIsRecordingProcessing(true);
 
-                const response = await callBackendTranscribeService(fileUri);
+                // 1.4 Passing abridged list of open items along with audio file
+                //     to backend service for processing
+                const abridgedItems = listArray.map((thing) =>
+                ({
+                    uuid: thing.uuid,
+                    parent_item_uuid: thing.parent_item_uuid,
+                    text: thing.text,
+                    scheduled_datetime_utc: thing.scheduled_datetime_utc
+                }));
+                const response = await callBackendTranscribeService(fileUri, abridgedItems);
                 const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
                 //console.log("Number of scheduled items recorded: " + numScheduledItems);
                 amplitude.track("Recording Processing Completed", {
@@ -365,17 +384,20 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                             // emptyListCTAOpacity.current = 1;
                             // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
 
+                            // TODO: Port animation to Reanimated 3
                             emptyListCTAFadeOutAnimation.start(() => {
-
-                                //If list is initially empty, fade in the new list
-                                listArraySetterFunc((prevThings) => response.concat(prevThings));
-
+                                listArraySetterFunc((prevThings) => {
+                                    undoRedoCache.current.push(prevThings);
+                                    return response.concat(prevThings)
+                                });
                                 emptyListCTAFadeOutAnimation.reset();
                             });
                         } else {
 
-                            // TODO:  When appending, move current list down and to insert new items
-                            listArraySetterFunc((prevThings) => response.concat(prevThings));
+                            listArraySetterFunc((prevThings) => {
+                                undoRedoCache.current.push(prevThings);
+                                return response.concat(prevThings)
+                            });
                         }
 
                         // Make sure this function is asynchronous!!!
@@ -420,8 +442,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         }
     }
 
-    const callBackendTranscribeService = async (fileUri: string) => {
-        return await transcribeFunction(fileUri, anonymousId.current);
+    const callBackendTranscribeService = async (fileUri: string, abridgedItems = []) => {
+        return await transcribeFunction(fileUri, anonymousId.current, abridgedItems);
     }
 
     const cancelRecording = async () => {
@@ -453,11 +475,6 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             opacity: recordButtonOpacity.value,
         };
     });
-    const keyboardButtonOpacityAnimatedStyle = useAnimatedStyle(() => {
-        return {
-            opacity: keyboardButtonOpacity.value,
-        };
-    });
 
     const recordButton_handlePressIn = () => {
         recordButtonOpacity.value = withTiming(0.7, { duration: 150 }); // Dim button on press
@@ -467,17 +484,15 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         recordButtonOpacity.value = withTiming(1, { duration: 150 }); // Return to full opacity
     };
 
-    const keyboardButton_handlePressIn = () => {
-        keyboardButtonOpacity.value = withTiming(0.7, { duration: 150 }); // Dim button on press
-    };
-
-    const keyboardButton_handlePressOut = () => {
-        keyboardButtonOpacity.value = withTiming(1, { duration: 150 }); // Return to full opacity
-    };
-
     const handleKeyboardButtonPress = () => {
         const newItem = generateNewKeyboardEntry();
         currentlyTappedThing.current = newItem;
+
+        amplitude.track("Keyboard Entry Started", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            uuid: newItem.uuid
+        });
 
         if (listArray.length == 0) {
 
@@ -489,6 +504,14 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         } else {
             listArraySetterFunc((prevItems) => [newItem, ...prevItems]);
         }
+    }
+
+    const handleUndoButtonPress = () => {
+        Alert.alert("Implement undo!");
+    }
+
+    const handleRedoButtonPress = () => {
+        Alert.alert("Implement redo!");
     }
 
     const insets = useSafeAreaInsets();
@@ -514,8 +537,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             borderRadius: 29,
             borderColor: '#3E2723',
             borderWidth: 1,
-            // position: 'absolute',
-            // bottom: 120,
+            marginRight: 30,
+            marginLeft: 30,
             flex: 1,
             alignItems: 'center',
             justifyContent: 'center',
@@ -529,6 +552,8 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             height: 58,
             width: 58,
             borderRadius: 29,
+            marginRight: 30,
+            marginLeft: 30,
             position: 'absolute',
             top: 0,
             backgroundColor: 'black'
@@ -556,14 +581,15 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         },
         recordButton: {
             backgroundColor: '#556B2F',
-            marginRight: 60
         },
         keyboardButton: {
             backgroundColor: '#556B2F'
         },
+        undoRedoButton: {
+            backgroundColor: '#FAF3E0'
+        },
         stopRecordButton: {
             backgroundColor: '#A23E48',
-            marginRight: 60
         },
         clearButton: {
             backgroundColor: '#FAF3E0',
@@ -608,10 +634,24 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             flexDirection: 'row',
             flex: 1,
             position: 'relative',
-            top: -30
+            top: -27,
+            alignItems: 'center'
         },
         footerButtonContainer: {
             height: 58
+        },
+        undoRedoFooterButtonContainer: {
+            height: 40
+        },
+        undoRedoFooterButton: {
+            height: 40,
+            width: 40,
+            borderRadius: 20
+        },
+        undoRedofooterButton_Underlay: {
+            height: 40,
+            width: 40,
+            borderRadius: 20   
         }
     });
 
@@ -683,21 +723,43 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                                         </View>
                                         : (recording) ?
                                             <View style={styles.footerButtonIcon_Stop}></View>
-                                            : <Image style={styles.footerButtonImage_Record} source={require("@/assets/images/microphone_white.png")} />}
+                                            : <Microphone wxh={38} />}
                                 </Pressable>
                             </Reanimated.View>
                         </View>
                         <View style={styles.footerButtonContainer}>
                             <View style={styles.footerButton_Underlay}></View>
-                            <Reanimated.View style={[styles.footerButton, styles.keyboardButton, keyboardButtonOpacityAnimatedStyle]}>
+                            <Reanimated.View style={[styles.footerButton, styles.keyboardButton, { opacity: keyboardButtonOpacity }]}>
                                 <Pressable
                                     onPress={handleKeyboardButtonPress}
-                                    onPressIn={keyboardButton_handlePressIn}
-                                    onPressOut={keyboardButton_handlePressOut}>
-                                    <Image style={styles.keyboardIcon} source={require("@/assets/images/keyboard_white.png")} />
+                                    onPressIn={() => keyboardButtonOpacity.value = withTiming(0.7, { duration: 150 })}
+                                    onPressOut={() => keyboardButtonOpacity.value = withTiming(1, { duration: 150 })}>
+                                    < Keyboard wxh={38} />
                                 </Pressable>
                             </Reanimated.View>
                         </View>
+                        { /*<View style={styles.undoRedoFooterButtonContainer}>
+                            <Reanimated.View style={[styles.footerButton_Underlay, styles.undoRedofooterButton_Underlay]}></Reanimated.View>
+                            <Reanimated.View style={[styles.footerButton, styles.undoRedoFooterButton, styles.undoRedoButton, { opacity: undoButtonOpacity }]}>
+                                <Pressable
+                                    onPress={handleUndoButtonPress}
+                                    onPressIn={() =>  undoButtonOpacity.value = withTiming(0.7, { duration: 150 })}
+                                    onPressOut={() =>  undoButtonOpacity.value = withTiming(1, { duration: 150 })}>
+                                    < Undo wxh={20} color="#3E2723" />
+                                </Pressable>
+                            </Reanimated.View>
+                        </View>
+                        <View style={styles.undoRedoFooterButtonContainer}>
+                            <Reanimated.View style={[styles.footerButton_Underlay, styles.undoRedofooterButton_Underlay]}></Reanimated.View>
+                            <Reanimated.View style={[styles.footerButton, styles.undoRedoFooterButton, styles.undoRedoButton, { opacity: redoButtonOpacity }]}>
+                                <Pressable
+                                    onPress={handleRedoButtonPress}
+                                    onPressIn={() =>  redoButtonOpacity.value = withTiming(0.7, { duration: 150 })}
+                                    onPressOut={() =>  redoButtonOpacity.value = withTiming(1, { duration: 150 })}>
+                                    < Redo wxh={20} color="#3E2723" />
+                                </Pressable>
+                            </Reanimated.View> 
+                        </View> */ }
                     </View>
                 </Animated.View>
                 <View style={styles.bannerAdContainer}>

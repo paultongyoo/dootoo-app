@@ -8,6 +8,8 @@ import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 
 import { blockUser, loadUsername } from "./Storage";
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
+import { Ban } from "./svg/ban";
+import { Bulb } from "./svg/bulb";
 
 
 const CommunityDrawer = ({ navigation }) => {
@@ -156,8 +158,8 @@ const CommunityDrawer = ({ navigation }) => {
       width: 26,
       height: 26,
       borderRadius: 13, // Half of the width and height for a perfect circle
-      borderColor: 'black',
-      borderWidth: 2,
+      // borderColor: 'black',
+      // borderWidth: 2,
       backgroundColor: 'white'
     },
     statIconTask_Done: {
@@ -294,7 +296,7 @@ const CommunityDrawer = ({ navigation }) => {
                 });
                 handleBlockProfileTap();
               }}>
-              <Image style={styles.profileBlockIcon} source={require('@/assets/images/block_icon_3E2723.png')} />
+              <Ban wxh="30" color="#3E2723" strokeWidth="2" opacity="0.6" />
             </Pressable>
             <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_red.png')} />
             <View style={styles.profileDrawerProfileNameContainer}>
@@ -313,7 +315,7 @@ const CommunityDrawer = ({ navigation }) => {
             <Pressable style={styles.statContainer}
               onPress={() => showComingSoonAlert(anonymousId.current, "'Tips'", pathname)}>
               <View style={styles.statIconContainer}>
-                <Image style={styles.statIcon_Tips} source={require('@/assets/images/light_bulb_blackyellow.png')} />
+                <Bulb wxh="40" color="#556B2F" strokeWidth="1.5" />
               </View>
               <Text style={styles.statNumber}>{formatNumber(selectedProfile.tipCount) || '0'}</Text>
               <Text style={styles.statName}>Tips</Text>

@@ -8,6 +8,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import DootooItemSidebar from '@/components/DootooItemSidebar';
 import { generateUsername } from '@/components/Storage';
 import { AppContext } from '@/components/AppContext';
+import { Microphone } from '@/components/svg/microphone';
+import { ChevronLeft } from '@/components/svg/chevron-left';
+import { ArrowLeft } from '@/components/svg/arrow-left';
+import { Bulb } from '@/components/svg/bulb';
+import { ChevronRight } from '@/components/svg/chevron-right';
+import { ArrowRight } from '@/components/svg/arrow-right';
+import { ThumbUp } from '@/components/svg/thumb-up';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -227,7 +234,7 @@ const Step2 = () => {
             <Text style={styles.centerCopy}>start by <Text style={styles.green}>naturally speaking</Text> what you have to do.</Text>
             <View style={styles.micAndVoice}>
                 <View style={styles.micContainer}>
-                    <Image style={styles.micImage} source={require('@/assets/images/microphone_white.png')} />
+                    <Microphone wxh={201} />
                 </View>
                 <View style={styles.voiceContainer}>
                     <Text style={styles.voiceCopy}>"alright...first I gotta <Text style={styles.green}>drop off my kid at school</Text>...and then I'm
@@ -477,11 +484,6 @@ const Step4 = () => {
             fontSize: 16,
             paddingRight: 10
         },
-        scoreIcon: {
-            width: 16,
-            height: 16,
-            opacity: 0.5
-        },
         tipListIconContainer: {
             marginLeft: 15
         },
@@ -519,7 +521,7 @@ const Step4 = () => {
                 <View style={styles.tipsContainer}>
                     <View style={styles.itemContainer}>
                         <View style={styles.tipListIconContainer}>
-                            <Image style={styles.tipListIcon} source={require("@/assets/images/light_bulb_blackyellow.png")} />
+                            <Bulb wxh="28" opacity="0.8" color="#556B2F" strokeWidth='1.5' />
                         </View> 
                         <View style={styles.headerTipNameContainer}>
                             <View style={styles.itemNamePressable}>
@@ -527,13 +529,13 @@ const Step4 = () => {
                             </View>
                             <View style={styles.scoreContainer}>
                                 <Text style={styles.scoreText}>173</Text>
-                                <Image style={styles.scoreIcon} source={require("@/assets/images/thumbs_up_556B2F.png")} />
+                                <ThumbUp wxh="20" opacity="0.8" color="#556B2F" />
                             </View>
                         </View>
                     </View>
                     <View style={styles.itemContainer}>
                         <View style={styles.tipListIconContainer}>
-                            <Image style={styles.tipListIcon} source={require("@/assets/images/light_bulb_blackyellow.png")} />
+                            <Bulb wxh="28" opacity="0.8" color="#556B2F" strokeWidth='1.5' />
                         </View> 
                         <View style={styles.headerTipNameContainer}>
                             <View style={styles.itemNamePressable}>
@@ -541,13 +543,13 @@ const Step4 = () => {
                             </View>
                             <View style={styles.scoreContainer}>
                                 <Text style={styles.scoreText}>75</Text>
-                                <Image style={styles.scoreIcon} source={require("@/assets/images/thumbs_up_556B2F.png")} />
+                                <ThumbUp wxh="20" opacity="0.8" color="#556B2F" />
                             </View>
                         </View>
                     </View>
                     <View style={styles.itemContainer}>
                         <View style={styles.tipListIconContainer}>
-                            <Image style={styles.tipListIcon} source={require("@/assets/images/light_bulb_blackyellow.png")} />
+                            <Bulb wxh="28" opacity="0.8" color="#556B2F" strokeWidth='1.5' />
                         </View> 
                         <View style={styles.headerTipNameContainer}>
                             <View style={styles.itemNamePressable}>
@@ -555,7 +557,7 @@ const Step4 = () => {
                             </View>
                             <View style={styles.scoreContainer}>
                                 <Text style={styles.scoreText}>66</Text>
-                                <Image style={styles.scoreIcon} source={require("@/assets/images/thumbs_up_556B2F.png")} />
+                                <ThumbUp wxh="20" opacity="0.8" color="#556B2F" />
                             </View>
                         </View>
                     </View>
@@ -707,8 +709,8 @@ const OnboardingHeader = ({ swipeRight }) => {
         <Animated.View style={[styles.onboardingHeaderContainer, {opacity: fadeIn}]}>
             <Pressable style={styles.backButtonContainer} onPress={swipeRight}>
                 {(Platform.OS == 'ios') ?
-                    <Image style={styles.backButtonIcon} source={require('@/assets/images/back_arrow_FAF3E0_ios.png')} />
-                    : <Image style={styles.backButtonIcon} source={require('@/assets/images/back_arrow_FAF3E0_android.png')} />
+                    <ChevronLeft wxh={40} strokeWidth="2" color="#FAF3E0" />
+                    : <ArrowLeft wxh={40} strokeWidth="2" color="#FAF3E0" />
                 }
             </Pressable>
         </Animated.View>
@@ -780,9 +782,8 @@ const OnboardingFooter = ({ step = 1, onForwardButtonPress = () => { return; } }
                     ]}></Animated.View>
             </View>
             <Pressable style={styles.forwardButtonContainer} onPress={onForwardButtonPress}>
-                {(Platform.OS == 'ios') ?
-                    <Image style={styles.forwardButtonIcon} source={require('@/assets/images/forward_arrow_556B2F_ios.png')} />
-                    : <Image style={styles.forwardButtonIcon} source={require('@/assets/images/forward_arrow_556B2F_android.png')} />
+                {(Platform.OS == 'ios') ? <ChevronRight wxh="40" color="#556B2F" />
+                                        : <ArrowRight wxh="40" color="#556B2F" />
                 }
             </Pressable>
         </View>

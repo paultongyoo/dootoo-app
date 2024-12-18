@@ -21,6 +21,9 @@ import Reanimated, {
   runOnJS,
   withTiming,
 } from 'react-native-reanimated';
+import { IndentIncrease } from "@/components/svg/indent-increase";
+import { IndentDecrease } from "@/components/svg/indent-decrease";
+import { Trash } from "@/components/svg/trash";
 
 export default function Index() {
   const pathname = usePathname();
@@ -347,8 +350,8 @@ export default function Index() {
                       uuidsToCollapse.forEach((uuid) => {
                         collapseAnimationPromises.push(
                           new Promise<void>((resolve) => {
-                              thingRowHeights.current[uuid].value =
-                                withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                            thingRowHeights.current[uuid].value =
+                              withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
                           })
                         );
                       });
@@ -397,8 +400,8 @@ export default function Index() {
                       uuidsToCollapse.forEach((uuid) => {
                         collapseAnimationPromises.push(
                           new Promise<void>((resolve) => {
-                              thingRowHeights.current[uuid].value =
-                                withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                            thingRowHeights.current[uuid].value =
+                              withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
                           })
                         );
                       });
@@ -436,8 +439,8 @@ export default function Index() {
               uuidsToCollapse.forEach((uuid) => {
                 collapseAnimationPromises.push(
                   new Promise<void>((resolve) => {
-                      thingRowHeights.current[uuid].value =
-                        withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                    thingRowHeights.current[uuid].value =
+                      withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
                   })
                 );
               });
@@ -593,8 +596,8 @@ export default function Index() {
           uuidsToCollapse.forEach((uuid) => {
             collapseAnimationPromises.push(
               new Promise<void>((resolve) => {
-                  thingRowHeights.current[uuid].value =
-                    withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                thingRowHeights.current[uuid].value =
+                  withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
               })
             );
           });
@@ -671,7 +674,7 @@ export default function Index() {
       // Don't automatically do parent because the Delete swipe action is available too.
       // TODO:  Implement snapping(?) to only make parent if fully open
       // handleMakeParent(item);   
-    }   
+    }
   }
 
   const renderRightActions = (item, handleThingDeleteFunc) => {
@@ -680,14 +683,14 @@ export default function Index() {
         <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
           <Pressable
             onPress={() => handleThingDeleteFunc(item)}>
-            <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/trash_icon_white.png")} />
+            <Trash wxh="25" color="white" />
           </Pressable>
         </Reanimated.View>
         {item.parent_item_uuid ?
           <Reanimated.View style={[listStyles.itemSwipeAction]}>
             <Pressable
               onPress={() => handleMakeParent(item)}>
-              <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/left_outdent_3E2723.png")} />
+              <IndentDecrease wxh="25" color="#3E2723" />
             </Pressable>
           </Reanimated.View>
           : <></>
@@ -703,7 +706,7 @@ export default function Index() {
           <Reanimated.View style={[listStyles.itemSwipeAction]}>
             <Pressable
               onPress={() => handleMakeChild(item, index)}>
-              <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/left_indent_3E2723.png")} />
+              <IndentIncrease wxh="25" color="#3E2723" />
             </Pressable>
           </Reanimated.View>
           : <></>
