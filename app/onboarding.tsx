@@ -12,6 +12,8 @@ import { Microphone } from '@/components/svg/microphone';
 import { ChevronLeft } from '@/components/svg/chevron-left';
 import { ArrowLeft } from '@/components/svg/arrow-left';
 import { Bulb } from '@/components/svg/bulb';
+import { ChevronRight } from '@/components/svg/chevron-right';
+import { ArrowRight } from '@/components/svg/arrow-right';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -784,9 +786,8 @@ const OnboardingFooter = ({ step = 1, onForwardButtonPress = () => { return; } }
                     ]}></Animated.View>
             </View>
             <Pressable style={styles.forwardButtonContainer} onPress={onForwardButtonPress}>
-                {(Platform.OS == 'ios') ?
-                    <Image style={styles.forwardButtonIcon} source={require('@/assets/images/forward_arrow_556B2F_ios.png')} />
-                    : <Image style={styles.forwardButtonIcon} source={require('@/assets/images/forward_arrow_556B2F_android.png')} />
+                {(Platform.OS == 'ios') ? <ChevronRight wxh="40" color="#556B2F" />
+                                        : <ArrowRight wxh="40" color="#556B2F" />
                 }
             </Pressable>
         </View>
