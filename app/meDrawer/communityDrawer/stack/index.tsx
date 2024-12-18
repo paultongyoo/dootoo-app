@@ -21,6 +21,8 @@ import Reanimated, {
   runOnJS,
   withTiming,
 } from 'react-native-reanimated';
+import { IndentIncrease } from "@/components/svg/indent-increase";
+import { IndentDecrease } from "@/components/svg/indent-decrease";
 
 export default function Index() {
   const pathname = usePathname();
@@ -687,7 +689,7 @@ export default function Index() {
           <Reanimated.View style={[listStyles.itemSwipeAction]}>
             <Pressable
               onPress={() => handleMakeParent(item)}>
-              <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/left_outdent_3E2723.png")} />
+              <IndentDecrease wxh="25" color="#3E2723" />
             </Pressable>
           </Reanimated.View>
           : <></>
@@ -703,7 +705,7 @@ export default function Index() {
           <Reanimated.View style={[listStyles.itemSwipeAction]}>
             <Pressable
               onPress={() => handleMakeChild(item, index)}>
-              <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/left_indent_3E2723.png")} />
+                <IndentIncrease wxh="25" color="#3E2723" />
             </Pressable>
           </Reanimated.View>
           : <></>
