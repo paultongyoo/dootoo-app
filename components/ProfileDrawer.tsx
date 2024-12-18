@@ -10,6 +10,7 @@ import Dialog from "react-native-dialog";
 import { Bulb } from "./svg/bulb";
 import { CloseX } from "./svg/close-x";
 import { Edit } from "./svg/edit";
+import { CircleUserRound } from "./svg/circle-user-round";
 
 
 const ProfileDrawer = ({ navigation }) => {
@@ -385,7 +386,7 @@ const ProfileDrawer = ({ navigation }) => {
         <CloseX wxh="32" opacity="0.6" color="#3E3723" />
       </Pressable>
       <View style={styles.profileDrawerProfileIconContainer}>
-        <Image style={styles.profileDrawerProfileIcon} source={require('@/assets/images/profile_icon_green.png')} />
+        <Image source={require("@/assets/images/profile_icon_green.png")}/>
         <View style={styles.profileDrawerProfileNameContainer}>
           {(!username || username.length == 0) ?
             <ActivityIndicator size={"large"} color="#3E3723" />

@@ -6,6 +6,7 @@ import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { ArrowLeft } from "./svg/arrow-left";
 import { ChevronLeft } from "./svg/chevron-left";
 import { UserCircle } from "./svg/user-circle";
+import { CircleUserRound } from "./svg/circle-user-round";
 
 const DootooHeader = ({ meDrawerNavigation }) => {
     const router = useRouter();
@@ -100,7 +101,7 @@ const DootooHeader = ({ meDrawerNavigation }) => {
                         });
                         meDrawerNavigation.openDrawer()
                     }}>
-                    <UserCircle wxh={30} color="#556B2F" />
+                    <Image style={styles.profileIcon} source={require("@/assets/images/profile_icon_green.png")}/>
                 </Pressable>
             </View>
         </Animated.View>

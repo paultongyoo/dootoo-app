@@ -144,7 +144,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
                         style={sidebarStyles.tipCountContainer}
                         onPress={() => handleTipCountTap()}>
                         <Text style={sidebarStyles.tipCountText}>{formatNumber(tipCount) || '0'}</Text>
-                        <Bulb wxh="20" opacity="0.6" color="#556B2F" />
+                        <Bulb wxh="20" opacity="0.8" color="#556B2F" />
                     </Pressable> : <></>}
                 {(similarCount) ?
                     <Pressable hitSlop={{ top: 10, bottom: 10, right: 10 }}
@@ -152,7 +152,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
                         style={sidebarStyles.similarCountContainer}
                         onPress={() => handleSimilarCountTap()}>
                         <Text style={sidebarStyles.similarCountText}>{formatNumber(similarCount)}</Text>
-                        <UserRound wxh="18" opacity="0.6" color="#556B2F" />
+                        <UserRound wxh="18" opacity="0.8" color="#556B2F" />
                     </Pressable> : <></>}
             </Animated.View>
         );
