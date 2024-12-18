@@ -7,6 +7,7 @@ import { formatNumber, showComingSoonAlert } from './Helpers';
 import { loadUsername, overrideUserAnonId, saveUserLocally, updateUsername } from "./Storage";
 import { ProfileCountEventEmitter } from "./EventEmitters";
 import Dialog from "react-native-dialog";
+import { Bulb } from "./svg/bulb";
 
 
 const ProfileDrawer = ({ navigation }) => {
@@ -411,7 +412,7 @@ const ProfileDrawer = ({ navigation }) => {
         <Pressable style={styles.statContainer}
           onPress={() => showComingSoonAlert(anonymousId.current, "'Tips'", pathname)}>
           <View style={styles.statIconContainer}>
-            <Image style={styles.statIcon_Tips} source={require('@/assets/images/light_bulb_blackyellow.png')} />
+            <Bulb wxh="40" color="#556B2F" />
           </View>
           <Text style={styles.statNumber}>{formatNumber(tipCount) || '0'}</Text>
           <Text style={styles.statName}>Tips</Text>

@@ -18,6 +18,7 @@ import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
 import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, isThingOverdue } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import { Bulb } from './svg/bulb';
 
 const THINGNAME_ITEM = "item";
 const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
@@ -1469,7 +1470,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         console.log("Tapping bulb");
                                         swipeableRefs.current[item.uuid].openLeft()
                                     }}>
-                                    <Image style={styles.tipListIcon} source={require("@/assets/images/light_bulb_blackyellow.png")} />
+                                    <Bulb wxh="28" color="#556B2F" />
                                 </Pressable> : <></>
                             }
                             <View style={listStyles.itemNameContainer}>

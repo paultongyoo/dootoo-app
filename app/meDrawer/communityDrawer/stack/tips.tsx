@@ -417,7 +417,7 @@ export default function ItemTips() {
 
     },
     tipListIconContainer: {
-
+      paddingLeft: 5
     },
     tipListIcon: {
       width: 28,

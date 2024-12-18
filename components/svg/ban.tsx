@@ -1,6 +1,6 @@
 import Svg, { Circle, Path } from "react-native-svg";
 
-// Source: https://lucide.dev/icons/ban
+// https://lucide.dev/icons/ban
 export const Ban = ({ wxh, color, strokeWidth = "3", opacity = "1.0" }) => (
     <Svg width={wxh} height={wxh} viewBox="0 0 24 24" 
          opacity={opacity} stroke={color} 

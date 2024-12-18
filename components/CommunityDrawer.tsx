@@ -9,6 +9,7 @@ import { blockUser, loadUsername } from "./Storage";
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import { Ban } from "./svg/ban";
+import { Bulb } from "./svg/bulb";
 
 
 const CommunityDrawer = ({ navigation }) => {
@@ -314,7 +315,7 @@ const CommunityDrawer = ({ navigation }) => {
             <Pressable style={styles.statContainer}
               onPress={() => showComingSoonAlert(anonymousId.current, "'Tips'", pathname)}>
               <View style={styles.statIconContainer}>
-                <Image style={styles.statIcon_Tips} source={require('@/assets/images/light_bulb_blackyellow.png')} />
+                <Bulb wxh="40" color="#556B2F" />
               </View>
               <Text style={styles.statNumber}>{formatNumber(selectedProfile.tipCount) || '0'}</Text>
               <Text style={styles.statName}>Tips</Text>

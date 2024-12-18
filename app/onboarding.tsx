@@ -11,6 +11,7 @@ import { AppContext } from '@/components/AppContext';
 import { Microphone } from '@/components/svg/microphone';
 import { ChevronLeft } from '@/components/svg/chevron-left';
 import { ArrowLeft } from '@/components/svg/arrow-left';
+import { Bulb } from '@/components/svg/bulb';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -522,7 +523,7 @@ const Step4 = () => {
                 <View style={styles.tipsContainer}>
                     <View style={styles.itemContainer}>
                         <View style={styles.tipListIconContainer}>
-                            <Image style={styles.tipListIcon} source={require("@/assets/images/light_bulb_blackyellow.png")} />
+                            <Bulb wxh="28" color="#556B2F" />
                         </View> 
                         <View style={styles.headerTipNameContainer}>
                             <View style={styles.itemNamePressable}>
@@ -536,7 +537,7 @@ const Step4 = () => {
                     </View>
                     <View style={styles.itemContainer}>
                         <View style={styles.tipListIconContainer}>
-                            <Image style={styles.tipListIcon} source={require("@/assets/images/light_bulb_blackyellow.png")} />
+                            <Bulb wxh="28" color="#556B2F" />
                         </View> 
                         <View style={styles.headerTipNameContainer}>
                             <View style={styles.itemNamePressable}>
@@ -550,7 +551,7 @@ const Step4 = () => {
                     </View>
                     <View style={styles.itemContainer}>
                         <View style={styles.tipListIconContainer}>
-                            <Image style={styles.tipListIcon} source={require("@/assets/images/light_bulb_blackyellow.png")} />
+                            <Bulb wxh="28" color="#556B2F" />
                         </View> 
                         <View style={styles.headerTipNameContainer}>
                             <View style={styles.itemNamePressable}>
