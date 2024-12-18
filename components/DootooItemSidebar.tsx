@@ -107,16 +107,6 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
             fontSize: 15,
             marginRight: 10
           },
-          similarCountIcon: {
-            width: 16,
-            height: 16,
-            opacity: 0.45
-          },
-          tipCountImageIcon: {
-            height: 16,
-            width: 16,
-            opacity: 0.5
-          },
           tipCountText: {
             fontSize: 15,
             marginRight: 8
