@@ -20,14 +20,6 @@ const OPENAI_STATUS_COMPONENTS_URL = 'https://status.openai.com/api/v2/component
 export const transcribeAudioToTasks = async (fileUri, durationSeconds, anonymous_id, abridgedTasks = []) => {
   //console.log("Entering transcribeAudiToTasks with anonymous Id: " + anonymous_id);
 
-  // // Read the file as a binary base64 string
-  // const fileData = await RNFS.readFile(fileUri, 'base64');
-
-  // // Convert base64 string to binary Buffer
-  // const binaryData = Buffer.from(fileData, 'base64');
-
-  //console.log("Created BinaryData object with length: " + fileData.length);
-
   const fileExtension = fileUri.split('.').pop();
   //console.log("Audio File Extension: " + fileExtension);
 
@@ -62,18 +54,12 @@ export const transcribeAudioToTasks = async (fileUri, durationSeconds, anonymous
       },
     }
   );
-  const chatReponse = response.data;
-  const wereListsMerged = chatReponse.wereListsMerged;
-  const items = chatReponse.tasks;
+  const chatResponse = response.data;
+  // const wereListsMerged = chatResponse.wereListsMerged;
+  // const items = chatResponse.tasks;
   // console.log("wereListsMerged: " + wereListsMerged);
   // console.log("items: " + JSON.stringify(items));
-  if (!wereListsMerged) {
-    console.log("Lists weren't merged, returning transcribed items");
-    return items;
-  } else {
-    console.log("Lists were merged, returning transcribed items");
-    return [];  // TODO handle
-  }
+  return chatResponse;
 };
 
 export const transcribeAudioToTips = async (fileUri, anonymous_id, abridgedTasks = []) => {

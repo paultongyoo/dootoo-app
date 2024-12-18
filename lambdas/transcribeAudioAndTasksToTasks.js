@@ -150,7 +150,7 @@ export const handler = async (event) => {
                 Return your analysis in the following JSON format:
                 {
                   "wereListsMerged: <true if new and pre-existing lists were merged, false otherwise>,
-                  "tasks": [
+                  "things": [
                     {
                       "uuid": "<RFC-compliant UUID>",
                       "text": "<task name>", 
@@ -178,6 +178,8 @@ export const handler = async (event) => {
     const outputTokens = usage.completion_tokens;
     const outputCost = outputTokens * (0.60 / 1000000);
     const chatCost = inputCost + outputCost;
+    console.log("Chat Input Tokens: " + inputTokens);
+    console.log("Chat Output Tokens: " + outputTokens);
     console.log("Chat Usage cost: $" + chatCost);
 
     console.log("Total AI Cost: " + audioCost + chatCost);

@@ -339,3 +339,42 @@ export const generateCurrentTimeAPIHeaders = () => {
       utcdatetime: utcDateTime
     };
 }
+
+export function mergeLists(existingList, mergedList) {
+  const existingTasks = [...existingList]; // Copy existing tasks
+  const mergedTasks = mergedList;
+
+  // Create a map of existing tasks by UUID for quick lookup
+  const existingTaskMap = new Map(existingTasks.map(task => [task.uuid, task]));
+
+  // Initialize the final task list
+  const finalTasks = [...existingTasks];
+
+  // Iterate over merged tasks
+  mergedTasks.forEach(mergedTask => {
+      if (!existingTaskMap.has(mergedTask.uuid)) {
+          if (mergedTask.parent_item_uuid) {
+              // Task has a parent: Insert as the first child of the parent
+              const parentIndex = finalTasks.findIndex(task => task.uuid === mergedTask.parent_item_uuid);
+              if (parentIndex !== -1) {
+                  // Find where to insert the child task
+                  let insertIndex = parentIndex + 1;
+                  while (
+                      insertIndex < finalTasks.length &&
+                      finalTasks[insertIndex].parent_item_uuid === mergedTask.parent_item_uuid
+                  ) {
+                      insertIndex++;
+                  }
+                  finalTasks.splice(insertIndex, 0, mergedTask);
+              } else {
+                  console.warn(`Parent UUID ${mergedTask.parent_item_uuid} not found for task.`);
+              }
+          } else {
+              // Task is a new top-level task: Add to the top
+              finalTasks.unshift(mergedTask);
+          }
+      }
+  });
+
+  return finalTasks;
+}

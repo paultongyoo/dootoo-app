@@ -11,7 +11,7 @@ import { usePathname } from 'expo-router';
 import { ListItemEventEmitter } from "./EventEmitters";
 import { checkOpenAPIStatus } from "./BackendServices.js";
 import Animated from "react-native-reanimated";
-import { calculateAndroidButtonScale, generateNewKeyboardEntry } from './Helpers'
+import { calculateAndroidButtonScale, generateNewKeyboardEntry, mergeLists } from './Helpers'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Microphone } from "./svg/microphone";
 import { Keyboard } from "./svg/keyboard";
@@ -316,26 +316,20 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                 });
                 setIsRecordingProcessing(true);
 
-                // 1.4 Passing abridged list of open items along with audio file
-                //     to backend service for processing
-                const abridgedItems = listArray.map((thing) =>
+                //  1.4 Passing abridged list of OPEN things (and subthings if these are items)
+                //  along with audio file to backend service for processing
+                const abridgedItems = listArray.filter(thing => !thing.is_done).map((thing) =>
                 ({
                     uuid: thing.uuid,
                     parent_item_uuid: thing.parent_item_uuid,
                     text: thing.text,
                     scheduled_datetime_utc: thing.scheduled_datetime_utc
                 }));
-                const response = await callBackendTranscribeService(fileUri, duration, abridgedItems);
-                const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
-                //console.log("Number of scheduled items recorded: " + numScheduledItems);
-                amplitude.track("Recording Processing Completed", {
-                    anonymous_id: anonymousId.current,
-                    flagged: (response == "flagged"),
-                    thing_count: (response && response.length >= 0) ? response.length : -1,
-                    numScheduledItems: numScheduledItems,
-                    pathname: pathname
-                });
 
+                const response = await callBackendTranscribeService(fileUri, duration, abridgedItems);
+
+                let thingCount = -1;
+                let scheduledThingCount = -1;
                 if (response == "flagged") {
                     //console.log(`Audio flagged, displaying alert prompt`);
                     amplitude.track("Recording Flagged", {
@@ -362,50 +356,58 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                             },
                         ]
                     );
-                } else {
-                    //const response =  generateStubData(); 
-                    //console.log(`Transcribed audio into ${response.length} items: ${JSON.stringify(response)}`);
+                } else if (response && response.things) {
 
-                    if (listArray && response && response.length > 0) {
-                        lastRecordedCount.current = response.length;  // Set for future toast undo potential
+                    const wereListsMerged = response.wereListsMerged;
+                    const recordedThings = response.things;
 
-                        // Set UI flag to inform user that counts may change after async backend save complete
-                        // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
-                        // for (var i = 0; i < response.length; i++) {
-                        //     response[i].counts_updating = true; 
-                        // }
+                    thingCount = recordedThings.length;
+                    scheduledThingCount = recordedThings.filter((thing) => thing.scheduled_datetime_utc).length;
 
+                    if (listArray && recordedThings.length > 0) {
+                        lastRecordedCount.current = thingCount;  // Set for future toast undo potential
 
+                        // Two ASSumptions made here:
+                        //
+                        // 1) If the user's current list is empty, ASSume the empty list CTA is visible
+                        //    so fade it out first before showing them populated list
+                        //
+                        // 2) Since they're starting from empty list, there's no need for merged list
+                        //    checks and logic
                         if (listArray.length == 0) {
-
-                            // Assume the empty list CTA is visible, so fade it out first
-                            //("Attempting to fade out empty CTA animation...");
-                            // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
-                            // emptyListCTAFadeOutAnimation.reset();
-                            // emptyListCTAOpacity.current = 1;
-                            // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
 
                             // TODO: Port animation to Reanimated 3
                             emptyListCTAFadeOutAnimation.start(() => {
-                                listArraySetterFunc((prevThings) => {
-                                    undoRedoCache.current.push(prevThings);
-                                    return response.concat(prevThings)
+                                listArraySetterFunc((prevThings) => {    
+                                    saveAllThingsFunc(recordedThings, () => {
+                                        ListItemEventEmitter.emit("items_saved");
+                                    });                          
+                                    return recordedThings;      // prevThings list ASSumed empty
                                 });
                                 emptyListCTAFadeOutAnimation.reset();
                             });
+                        } else if (wereListsMerged) {
+                            
+                            // Merge lists using helper function that accounts for pre-existing children
+                            listArraySetterFunc(prevThings => {
+                                const finalList = mergeLists(prevThings, recordedThings);
+                                saveAllThingsFunc(finalList, () => {
+                                    ListItemEventEmitter.emit("items_saved");
+                                });
+                                return finalList;
+                            });
                         } else {
 
+                            // Recorded items did not warrant merging with pre-existing list;
+                            // simply prepend the new items with the previous and return
                             listArraySetterFunc((prevThings) => {
-                                undoRedoCache.current.push(prevThings);
-                                return response.concat(prevThings)
+                                const finalList = recordedThings.concat(prevThings);
+                                saveAllThingsFunc(finalList, () => {
+                                    ListItemEventEmitter.emit("items_saved");
+                                });
+                                return finalList
                             });
                         }
-
-                        // Make sure this function is asynchronous!!!
-                        var updatedItems = response.concat(listArray);
-                        saveAllThingsFunc(updatedItems, () => {
-                            ListItemEventEmitter.emit("items_saved");
-                        });
                     } else {
                         //console.log("Did not call setter with updated list, attempting to show toast.");
                         amplitude.track("Empty Recording Toast Displayed", {
@@ -419,7 +421,17 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                             bottomOffset: 220
                         });
                     }
+                } else {
+                    console.error("Non-flagged response did not contain a things array!");
                 }
+
+                amplitude.track("Recording Processing Completed", {
+                    anonymous_id: anonymousId.current,
+                    pathname: pathname,
+                    flagged: (response == "flagged"),
+                    thing_count: (response && response.length >= 0) ? response.length : -1,
+                    numScheduledItems: scheduledThingCount
+                });
             } else {
                 //console.log("Abandoning audio processing as threshold was not breached; proceeding to file cleanup.");
                 Toast.show({
