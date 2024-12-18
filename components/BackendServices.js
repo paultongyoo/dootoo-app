@@ -55,10 +55,10 @@ export const transcribeAudioToTasks = async (fileUri, durationSeconds, anonymous
     }
   );
   const chatResponse = response.data;
-  // const wereListsMerged = chatResponse.wereListsMerged;
-  // const items = chatResponse.tasks;
-  // console.log("wereListsMerged: " + wereListsMerged);
-  // console.log("items: " + JSON.stringify(items));
+  const wereListsMerged = chatResponse.wereListsMerged;
+  const things = chatResponse.things;
+  console.log("wereListsMerged: " + wereListsMerged);
+  console.log("things: " + JSON.stringify(things));
   return chatResponse;
 };
 

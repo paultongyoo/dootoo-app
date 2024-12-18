@@ -378,3 +378,25 @@ export function mergeLists(existingList, mergedList) {
 
   return finalTasks;
 }
+
+/*
+  Transforms the input array of task objects as described. 
+  It replaces the uuid values with their respective index in the 
+  array and updates the parent_item_uuid values to the 
+  corresponding parent index.
+*/
+export function reindexTasks(tasks) {
+  // Create a map of the original UUIDs to their respective indices
+  const uuidToIndexMap = new Map(tasks.map((task, index) => [task.uuid, index]));
+
+  // Map over the tasks and update the UUID and parent_item_uuid fields
+  return tasks.map((task, index) => {
+      return {
+          ...task,
+          uuid: index, // Replace uuid with the current index
+          parent_item_uuid: task.parent_item_uuid !== null
+              ? uuidToIndexMap.get(task.parent_item_uuid) ?? null // Update to parent's index or null
+              : null,
+      };
+  });
+}

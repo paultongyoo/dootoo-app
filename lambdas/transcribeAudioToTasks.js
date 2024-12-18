@@ -60,7 +60,7 @@ export const handler = async (event) => {
     }
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         {
           "role": "system",
@@ -94,6 +94,18 @@ export const handler = async (event) => {
 
     var object_from_chat = JSON.parse(completion.choices[0].message.content);
     var item_array = object_from_chat.tasks;
+
+    const usage = completion.usage;
+    const inputTokens = usage.prompt_tokens;
+    const inputCost = inputTokens * (0.15 / 1000000);
+    const outputTokens = usage.completion_tokens;
+    const outputCost = outputTokens * (0.60 / 1000000);
+    const chatCost = inputCost + outputCost;
+    console.log("Chat Input Tokens: " + inputTokens);
+    console.log("Chat Output Tokens: " + outputTokens);
+    console.log("Chat Usage cost: $" + chatCost);
+
+    console.log("Total Chat Cost: " + chatCost);
 
     //console.log("Final Output: ", item_array);        DO NOT TRANSCRIBE ITEMS TO LOGS TO RESPECT USER PRIVACY
 

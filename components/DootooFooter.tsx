@@ -11,7 +11,7 @@ import { usePathname } from 'expo-router';
 import { ListItemEventEmitter } from "./EventEmitters";
 import { checkOpenAPIStatus } from "./BackendServices.js";
 import Animated from "react-native-reanimated";
-import { calculateAndroidButtonScale, generateNewKeyboardEntry, mergeLists } from './Helpers'
+import { calculateAndroidButtonScale, generateNewKeyboardEntry, mergeLists, reindexTasks } from './Helpers'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Microphone } from "./svg/microphone";
 import { Keyboard } from "./svg/keyboard";
@@ -318,13 +318,19 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
 
                 //  1.4 Passing abridged list of OPEN things (and subthings if these are items)
                 //  along with audio file to backend service for processing
-                const abridgedItems = listArray.filter(thing => !thing.is_done).map((thing) =>
+                const abridgedItems = listArray.filter(thing => !thing.is_done).map((thing, index) =>
                 ({
                     uuid: thing.uuid,
                     parent_item_uuid: thing.parent_item_uuid,
-                    text: thing.text,
-                    scheduled_datetime_utc: thing.scheduled_datetime_utc
+                    text: thing.text
                 }));
+
+                // **** 12.18.24 Learning:  COST PROHIBITIVE Paused development on this feature as learned it is too costly to pass
+                //                          existing subitems into AI -- tokens expanded from 400 per prompt
+                //                          to +1500 (increases as user lists gets large).  Committing changes in branch for now.
+                //                          Will reconsider visiting if can generate user engagement that offsets costs.        
+                //
+                //const reindexedAbridgedItems = reindexTasks(abridgedItems);
 
                 const response = await callBackendTranscribeService(fileUri, duration, abridgedItems);
 
