@@ -3,6 +3,8 @@ import { View, Image, Text, Pressable, Alert, Linking } from 'react-native';
 import { AppContext } from './AppContext';
 import { formatNumber } from './Helpers';
 import { Flag } from './svg/flag';
+import { ThumbUp } from './svg/thumb-up';
+import { ThumbDown } from './svg/thumb-down';
 
 
 const DootooTipSidebar = ({ thing, styles }) => {
@@ -55,12 +57,12 @@ const DootooTipSidebar = ({ thing, styles }) => {
             {
                 (!thing.is_flagged && thing.upvote_count && thing.upvote_count != 0) ?
                     <Pressable hitSlop={10}
-                               style={styles.scoreContainer}
-                               onPress={() => handleVoteThumbTap(thing.uuid)}>
+                        style={styles.scoreContainer}
+                        onPress={() => handleVoteThumbTap(thing.uuid)}>
                         <Text style={styles.scoreText}>{formatNumber(thing.upvote_count)}</Text>
                         {(thing.upvote_count > 0) ?
-                            <Image style={styles.scoreIcon} source={require("@/assets/images/thumbs_up_556B2F.png")} />
-                            : <Image style={styles.scoreIcon} source={require("@/assets/images/thumbs_down_A23E48.png")} />
+                            <ThumbUp wxh="20" opacity="0.8" color="#556B2F" />
+                            : <ThumbDown wxh="20" opacity="0.8" color="#A23E48" />
                         }
                     </Pressable> : (thing.is_flagged) ?
                         <Pressable hitSlop={10}

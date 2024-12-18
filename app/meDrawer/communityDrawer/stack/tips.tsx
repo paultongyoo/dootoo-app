@@ -19,6 +19,8 @@ import * as amplitude from '@amplitude/analytics-react-native';
 import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import { Flag } from "@/components/svg/flag";
 import { Trash } from "@/components/svg/trash";
+import { ThumbUp } from "@/components/svg/thumb-up";
+import { ThumbDown } from "@/components/svg/thumb-down";
 
 
 export default function ItemTips() {
@@ -224,13 +226,13 @@ export default function ItemTips() {
             <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Upvote, (tip.user_vote_value == 1) && styles.action_vote_selected]}>
               <Pressable
                 onPress={() => { handleTipVote(tip, 1) }}>
-                <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/thumbs_up_white.png")} />
+                <ThumbUp wxh="25" color="white" />
               </Pressable>
             </Reanimated.View>
             <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Downvote, (tip.user_vote_value == -1) && styles.action_vote_selected]}>
               <Pressable
                 onPress={() => { handleTipVote(tip, -1) }}>
-                <Image style={listStyles.swipeActionIcon} source={require("@/assets/images/thumbs_down_white.png")} />
+                <ThumbDown wxh="25" color="white" />
               </Pressable>
             </Reanimated.View>
             <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Flag]}>
@@ -339,11 +341,7 @@ export default function ItemTips() {
       fontSize: 16,
       paddingRight: 10
     },
-    scoreIcon: {
-      width: 16,
-      height: 16,
-      opacity: 0.5
-    },
+
     voteThumbIcon: {
       width: 30,
       height: 30

@@ -1470,7 +1470,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         console.log("Tapping bulb");
                                         swipeableRefs.current[item.uuid].openLeft()
                                     }}>
-                                    <Bulb wxh="28" color="#556B2F" strokeWidth='1.5' />
+                                    <Bulb wxh="28" opacity="0.8" color="#556B2F" strokeWidth='1.5' />
                                 </Pressable> : <></>
                             }
                             <View style={listStyles.itemNameContainer}>

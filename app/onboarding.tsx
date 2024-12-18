@@ -14,6 +14,7 @@ import { ArrowLeft } from '@/components/svg/arrow-left';
 import { Bulb } from '@/components/svg/bulb';
 import { ChevronRight } from '@/components/svg/chevron-right';
 import { ArrowRight } from '@/components/svg/arrow-right';
+import { ThumbUp } from '@/components/svg/thumb-up';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -483,11 +484,6 @@ const Step4 = () => {
             fontSize: 16,
             paddingRight: 10
         },
-        scoreIcon: {
-            width: 16,
-            height: 16,
-            opacity: 0.5
-        },
         tipListIconContainer: {
             marginLeft: 15
         },
@@ -533,7 +529,7 @@ const Step4 = () => {
                             </View>
                             <View style={styles.scoreContainer}>
                                 <Text style={styles.scoreText}>173</Text>
-                                <Image style={styles.scoreIcon} source={require("@/assets/images/thumbs_up_556B2F.png")} />
+                                <ThumbUp wxh="16" opacity="0.5" color="#556B2F" />
                             </View>
                         </View>
                     </View>
@@ -547,7 +543,7 @@ const Step4 = () => {
                             </View>
                             <View style={styles.scoreContainer}>
                                 <Text style={styles.scoreText}>75</Text>
-                                <Image style={styles.scoreIcon} source={require("@/assets/images/thumbs_up_556B2F.png")} />
+                                <ThumbUp wxh="16" opacity="0.5" color="#556B2F" />
                             </View>
                         </View>
                     </View>
@@ -561,7 +557,7 @@ const Step4 = () => {
                             </View>
                             <View style={styles.scoreContainer}>
                                 <Text style={styles.scoreText}>66</Text>
-                                <Image style={styles.scoreIcon} source={require("@/assets/images/thumbs_up_556B2F.png")} />
+                                <ThumbUp wxh="16" opacity="0.5" color="#556B2F" />
                             </View>
                         </View>
                     </View>
