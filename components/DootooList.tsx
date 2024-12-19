@@ -16,17 +16,18 @@ import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, isThingOverdue } from './Helpers';
+import { areDateObjsEqual, calculateTextInputRowHeight, capitalizeFirstCharacter, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, insertArrayAfter, isThingOverdue, pluralize } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Bulb } from './svg/bulb';
+import { Clock } from './svg/clock';
 
 const THINGNAME_ITEM = "item";
 const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
-    renderLeftActions = (item, index) => { return <></> },
-    renderRightActions = (item, index, swipeableMethods) => { return <></> },
-    swipeableOpenFunc = (direction, thing, index) => { return; },
+    renderLeftActions = () => { return <></> },
+    renderRightActions = () => { return <></> },
+    swipeableOpenFunc = () => { return; },
     isDoneable = true,
-    handleDoneClick = (thing) => { return; },
+    handleDoneClick = () => { return; },
     saveAllThings,
     saveTextUpdateFunc,
     saveThingOrderFunc,
@@ -111,23 +112,23 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             //console.log("useEffect([listArray]) discarding call on initial mount");
             initialListArrayMount.current = false;
         } else {
-             //console.log(`useEffect[listArray] called: List length ${listArray.length}`);
-             //console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
-    
+            //console.log(`useEffect[listArray] called: List length ${listArray.length}`);
+            //console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
+
             // Asyncronously update local cache with latest listArray update
             if (thingName == THINGNAME_ITEM) {
                 updateItemsCache(listArray);
             } else {
                 updateTipsCache(selectedItem, listArray);
             }
-    
+
             if (lastRecordedCount.current > 0) {
                 // If we're inside here, we were called after recording new things
-    
+
                 if (thingName == 'tip') {
                     ProfileCountEventEmitter.emit('incr_tips', { count: lastRecordedCount.current });
                 }
-    
+
                 // Display Toast
                 Toast.show({
                     type: 'msgOpenWidth',
@@ -136,13 +137,13 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                     bottomOffset: 220,
                     visibilityTime: 8000,
                     props: {
-    
+
                         // 1.3 TODO Revise undo logic with upcoming speaking into subtasks
                         //      (items can no longer be assumed to have been just appended to top of list);
                         //
                         // numItemsRecorded: lastRecordedCount.current,
                         // onUndoPress: (numItemsToUndo) => {
-    
+
                         //     // TODO: This doesn't delete in DB, FIX
                         //     listArraySetter((prevItems) => prevItems.slice(numItemsToUndo)); // This should update UI only and not invoke any syncronous backend operations            
                         // }
@@ -150,20 +151,20 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 });
                 lastRecordedCount.current = 0;
             } else {
-    
+
                 // This call has to be in this "main UI thread" in order to work
                 Toast.hide();
             }
-    
+
             // Immediately look for new counts on any list update
             restartPolling();
-    
+
             if (thingName == THINGNAME_ITEM) {
                 syncItemCalendarUpdates();
             }
-    
+
             if (!screenInitialized) {
-                
+
                 // if we have an empty list array when we reach this logic,
                 // explicitly set fullListRendered boolean as it will not
                 // have been set in the renderItem logic (reminder: this boolean is for enabling rowHeight animations)
@@ -177,7 +178,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                     }
                 });
             }
-    
+
             // Check for count updates since user just made an action
             pollThingCounts();
         }
@@ -1098,6 +1099,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
         const [refreshKey, setRefreshKey] = useState(1);
         const lastEnrichedText = useRef('');
         const renderTappedField = useRef(false);                    // Used to delay rendering of TextInput field to after animation reveal
+        const previousIndex = useRef(-1);
 
         const fullRowHeight = useRef(-1);
         const lastTextInputHeight = useRef(0);         // iOS-specific var used to keep track of last input height and
@@ -1210,6 +1212,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             if (isInitialTextMount.current) {
                 isInitialTextMount.current = false;
             } else if ((thingName == THINGNAME_ITEM) && item.text && (item.text.length > 0) && (item.text != lastEnrichedText.current)) {
+                console.log("Attempting to enrich item: " + item.text);
                 const attemptToEnrichedItem = async (itemToEnrich) => {
                     try {
                         const enrichmentResponse = await fetchWithRetry(() => enrichItem(itemToEnrich));
@@ -1286,6 +1289,14 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
         const handleThingTextTap = (thing) => {
             console.log(`handleItemTextTap for ${thing.text}, renderTappedField: ${renderTappedField}`);
+
+            // If something else was selected/active when the 
+            // user tapped a new item -- process that item's latest
+            // value before activating newly tapped thing
+            if (currentlyTappedThing.current) {
+                console.log("Blurring currently tapped item before processing new tap...");
+                handleBlur(currentlyTappedThing.current);
+            }
 
             // Update currently tapped thing to cause
             // list to re-render and display text field for currently tapped thing
@@ -1407,6 +1418,104 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             });
         }
 
+        const handleMoveToTop = async (selectedThing) => {
+            console.log("Starting handleMoveToTop: " + selectedThing.text)
+
+            // Save current index prior to move in case user wants to undo operation
+            previousIndex.current = getIndex();
+
+            // Build array of rows to collapse in case thing has children
+            const thingsToCollapse = [selectedThing];
+            const thingChildren = listArray.filter(thing => thing.parent_item_uuid == selectedThing.uuid);
+            if (thingChildren.length > 0) {
+                thingsToCollapse.push(...thingChildren);
+            }
+
+            // Create animations to collapse all things and await their completion
+            const collapseAnimations = [];
+            thingsToCollapse.forEach(thing => {
+                collapseAnimations.push(new Promise<void>((resolve) =>
+                    thingRowHeights.current[thing.uuid].value = withTiming(0, { duration: 300 }, (isFinished) => {
+                        if (isFinished) {
+                            runOnJS(resolve)();
+                        }
+                    })
+                ))
+            });
+
+            await Promise.all(collapseAnimations);
+
+            // Move thing and any kids to top of list!
+            listArraySetter(prevThings => {
+
+                // Create shallow copy to not risk mutating original state
+                const shallowListCopy = prevThings.map(thing => thing);
+
+                // Pull things out of list 
+                const thingsToMove = shallowListCopy.splice(getIndex(), thingsToCollapse.length);
+
+                // If thing is a child, ASSume the user wants to move the thing to the top
+                // of the family, else move it to the top of their entire list            
+                if (selectedThing.parent_item_uuid) {
+                    const parentIndex = shallowListCopy.findIndex(thing => thing.uuid == selectedThing.parent_item_uuid);
+                    return insertArrayAfter(shallowListCopy, thingsToMove, parentIndex);
+                } else {
+                    return thingsToMove.concat(shallowListCopy);
+                }
+            });
+
+            // Set toast string and display undoable toast
+            let toastString = '';
+            if (selectedThing.parent_item_uuid) {
+                toastString = `Moved ${pluralize(thingName, thingsToCollapse.length)} to top of subitems.`;
+            } else {
+                toastString = `Moved ${pluralize(thingName, thingsToCollapse.length)} to top of list.`;
+            }
+
+            Toast.show({
+                type: 'undoableToast',
+                text1: toastString,
+                visibilityTime: 8000,
+                position: 'bottom',
+                bottomOffset: 220,
+                props: {
+                    onUndoClick: () => handleMoveToTopUndo(selectedThing)
+                }
+            });
+        }
+
+        const handleMoveToTopUndo = async (selectedThing) => {
+
+            // Build array of rows to collapse in case thing has children
+            const thingsToCollapse = [selectedThing];
+            const thingChildren = listArray.filter(thing => thing.parent_item_uuid == selectedThing.uuid);
+            if (thingChildren.length > 0) {
+                thingsToCollapse.push(...thingChildren);
+            }
+
+            // Create animations to collapse all things and await their completion
+            const collapseAnimations = [];
+            thingsToCollapse.forEach(thing => {
+                collapseAnimations.push(new Promise<void>((resolve) =>
+                    thingRowHeights.current[thing.uuid].value = withTiming(0, { duration: 300 }, (isFinished) => {
+                        if (isFinished) {
+                            runOnJS(resolve)();
+                        }
+                    })
+                ))
+            });
+
+            await Promise.all(collapseAnimations);
+
+            // Move thing and any kids to top of list!
+            listArraySetter(prevThings => {
+                const shallowListCopy = prevThings.map(thing => thing);
+                const thingsToMove = shallowListCopy.splice(getIndex(), thingsToCollapse.length);
+                shallowListCopy.splice(previousIndex.current, 0, ...thingsToMove);
+                return shallowListCopy;
+            });
+        }
+
         return (
             <Reanimated.View style={[
                 //{ backgroundColor: 'red' },                                           // For Debugging: If seen, unexpected row height change/non-change likely
@@ -1459,7 +1568,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                         });
                     }}
                     renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(item, getIndex()) } else { return <></> } }}
-                    renderRightActions={(progress, dragX, swipeableMethods) => { if (renderRightActions) { return renderRightActions(item, handleThingDelete, swipeableMethods) } else { return <></> } }}>
+                    renderRightActions={(progress, dragX, swipeableMethods) => { if (renderRightActions) { return renderRightActions(item, getIndex(), handleThingDelete, handleMoveToTop, swipeableMethods) } else { return <></> } }}>
                     <ScaleDecorator>
                         <View style={[listStyles.itemContainer, styles.itemContainer]}>
                             {(item.parent_item_uuid) ?
@@ -1483,11 +1592,12 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                 {((thingName == THINGNAME_ITEM) && item.scheduled_datetime_utc) ?
                                     <Reanimated.View style={[listStyles.timerIconContainer, timerContainerWidthAnimatedStyle]}>
                                         <Pressable hitSlop={10} onPress={() => handleTimerClick(item)}>
-                                            <Reanimated.Image style={[listStyles.timerIcon, timerOpacityAnimatedStyle]} source={
-                                                (isThingOverdue(item) && !item.is_done)
-                                                    ? require("@/assets/images/timer_icon_FF0000.png")
-                                                    : require("@/assets/images/timer_icon_556B2F.png")
-                                            } />
+                                            <Reanimated.View style={timerOpacityAnimatedStyle}>
+                                                {(isThingOverdue(item) && !item.is_done)
+                                                    ? <Clock wxh="20" color="#FF0000" />
+                                                    : <Clock wxh="20" color="#556B2F" />
+                                                }
+                                            </Reanimated.View>
                                         </Pressable>
                                     </Reanimated.View>
                                     : <></>}
@@ -1777,7 +1887,9 @@ export const listStyles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         flexDirection: 'row',
-        backgroundColor: '#FAF3E0'
+        backgroundColor: '#FAF3E0',
+        borderBottomWidth: 1,
+        borderBottomColor: '#3E272333'
     },
     swipeActionIcon: {
         height: 25,

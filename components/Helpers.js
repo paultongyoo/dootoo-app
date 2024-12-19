@@ -354,3 +354,14 @@ export function insertArrayAfter(array, itemsToInsert, index) {
     ...array.slice(index + 1),   // Elements after the specified index
   ];
 }
+
+export function capitalizeFirstCharacter(word) {
+  if (typeof word !== 'string' || word.length === 0) {
+      return ''; // Return an empty string for invalid input
+  }
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
+export function pluralize(word, count) {
+  return `${count} ${count === 1 ? word : word + 's'}`;
+}

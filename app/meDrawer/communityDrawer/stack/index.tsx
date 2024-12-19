@@ -27,6 +27,7 @@ import { IndentDecrease } from "@/components/svg/indent-decrease";
 import { Trash } from "@/components/svg/trash";
 import { Microphone } from "@/components/svg/microphone";
 import { ChevronDown } from "@/components/svg/chevron-down";
+import { ChevronUp } from "@/components/svg/chevron-up";
 
 export default function Index() {
   const listRef = useRef();
@@ -665,14 +666,10 @@ export default function Index() {
       width: 20
     },
     action_Delete: {
-      backgroundColor: 'red',
-      borderBottomWidth: 1,
-      borderBottomColor: '#3E272333' //#322723 with approx 20% alpha
+      backgroundColor: 'red'
     },
     action_InsertRecording: {
-      backgroundColor: '#556B2F',
-      borderBottomWidth: 1,
-      borderBottomColor: '#3E272333' //#322723 with approx 20% alpha
+      backgroundColor: '#556B2F'
     },
     swipeableContainer: {
       backgroundColor: '#DCC7AA'
@@ -680,6 +677,10 @@ export default function Index() {
     swipeIconsContainer: {
       flexDirection: 'row',
       alignItems: 'flex-end'
+    },
+    action_MoveToTop: {
+      borderRightWidth: 1,
+      borderRightColor: '#3E272333'
     }
   });
 
@@ -695,13 +696,27 @@ export default function Index() {
     }
   }
 
-  const renderRightActions = (item, handleThingDeleteFunc, swipeableMethods) => {
+  const renderRightActions = (item, index, handleThingDeleteFunc, handleMoveToTopFunc, swipeableMethods) => {
+
+    // Used as part of visibility rules of Move To Top action (don't display if already at top of parent list)
+    const idxOfParent = 
+      (item.parent_item_uuid) ? dootooItems.findIndex(prevItem => prevItem.uuid == item.parent_item_uuid) : -999;
+
     return (
       <>
         <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
           <Pressable
             onPress={() => handleThingDeleteFunc(item)}>
             <Trash wxh="25" color="white" />
+          </Pressable>
+        </Reanimated.View>
+        <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_InsertRecording]}>
+          <Pressable
+            onPress={() => handleInsertRecording(swipeableMethods, item)}>
+            <View style={styles.swipeIconsContainer}>
+              <Microphone wxh="25" />
+              <ChevronDown wxh="15" color="white" strokeWidth="3" />
+            </View>
           </Pressable>
         </Reanimated.View>
         {item.parent_item_uuid ?
@@ -713,15 +728,15 @@ export default function Index() {
           </Reanimated.View>
           : <></>
         }
-        <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_InsertRecording]}>
-          <Pressable
-            onPress={() => handleInsertRecording(swipeableMethods, item)}>
-              <View style={styles.swipeIconsContainer}>
-                <Microphone wxh="25" />
-                <ChevronDown wxh="15" color="white" strokeWidth="3" />
-            </View>
-          </Pressable>
-        </Reanimated.View>
+        {(!item.is_done && (index != 0) && (index != (idxOfParent + 1))) ?
+          <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_MoveToTop]}>
+            <Pressable
+              onPress={() => handleMoveToTopFunc(item)}>
+              <ChevronUp wxh="25" color="#3E2723" strokeWidth="2" />
+            </Pressable>
+          </Reanimated.View>
+          : <></>
+        }
       </>
     );
   };
