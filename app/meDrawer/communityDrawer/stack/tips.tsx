@@ -2,7 +2,7 @@ import {
   Image, Text, View, StyleSheet, Pressable, Alert,
   Platform
 } from "react-native";
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useRef } from 'react';
 import { useNavigation, usePathname, useRouter } from 'expo-router';
 import Reanimated, {
   configureReanimatedLogger,
@@ -21,9 +21,13 @@ import { Flag } from "@/components/svg/flag";
 import { Trash } from "@/components/svg/trash";
 import { ThumbUp } from "@/components/svg/thumb-up";
 import { ThumbDown } from "@/components/svg/thumb-down";
+import { Microphone } from "@/components/svg/microphone";
+import { ChevronDown } from "@/components/svg/chevron-down";
 
 
 export default function ItemTips() {
+  const listRef = useRef();
+
   const router = useRouter();
   const { anonymousId, selectedItem, setSelectedItem, setSelectedProfile } = useContext(AppContext);
   const [tips, setTips] = useState([]);
@@ -211,16 +215,36 @@ export default function ItemTips() {
 
   }
 
-  const renderRightActions = (tip, handleThingDeleteFunc) => {
+  const handleInsertRecording = (swipeableMethods, item) => {
+    if (listRef.current) {
+      swipeableMethods.close();
+      listRef.current.invokeStartRecording(item);
+    } else {
+      console.log("Can't invoke start recording because listRef is null.");
+    }
+  }
+
+  const renderRightActions = (tip, handleThingDeleteFunc, swipeableMethods) => {
     return (
       <>
         {(selectedItem.is_done) ?
+        <>
           <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
             <Pressable
               onPress={() => handleThingDeleteFunc(tip)}>
               <Trash wxh="25" color="white" />
             </Pressable>
           </Reanimated.View>
+          <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_InsertRecording]}>
+            <Pressable
+              onPress={() => handleInsertRecording(swipeableMethods, tip)}>
+              <View style={styles.swipeIconsContainer}>
+                <Microphone wxh="25" />
+                <ChevronDown wxh="15" color="white" strokeWidth="3" />
+            </View>
+            </Pressable>
+          </Reanimated.View> 
+          </>
           :
           <>
             <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Upvote, (tip.user_vote_value == 1) && styles.action_vote_selected]}>
@@ -423,6 +447,15 @@ export default function ItemTips() {
       width: 28,
       height: 28,
       opacity: 1
+    },
+    action_InsertRecording: {
+      backgroundColor: '#556B2F',
+      borderBottomWidth: 1,
+      borderBottomColor: '#3E272333' //#322723 with approx 20% alpha
+    },
+    swipeIconsContainer: {
+      flexDirection: 'row',
+      alignItems: 'flex-end'
     }
   });
 
@@ -443,6 +476,7 @@ export default function ItemTips() {
           </View>
         </View>
         <DootooList
+          ref={listRef}
           thingName="tip"
           loadingAnimMsg={(selectedItem.is_done) ? "Loading your tips to the community" : "Loading tips from the community"}
           listArray={tips}

@@ -1,5 +1,5 @@
 import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, TouchableWithoutFeedback, AppState, StyleSheet, Platform, Alert } from 'react-native';
-import { useState, useRef, useContext, useEffect } from 'react';
+import { useState, useRef, useContext, useEffect, forwardRef, useImperativeHandle } from 'react';
 import Reanimated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -21,9 +21,9 @@ import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community
 import { Bulb } from './svg/bulb';
 
 const THINGNAME_ITEM = "item";
-const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
+const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = (item, index) => { return <></> },
-    renderRightActions = (item, index) => { return <></> },
+    renderRightActions = (item, index, swipeableMethods) => { return <></> },
     swipeableOpenFunc = (direction, thing, index) => { return; },
     isDoneable = true,
     handleDoneClick = (thing) => { return; },
@@ -37,7 +37,13 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     isThingPressable,
     isThingDraggable,
     hideRecordButton = false,
-    shouldInitialLoad = true }) => {
+    shouldInitialLoad = true }, ref) => {
+
+    const footerRef = useRef();
+    useImperativeHandle(ref, () => ({
+        invokeStartRecording: (footerRef.current) ? footerRef.current.invokeStartRecording : Alert.alert("Footer ref is null!")
+    }));
+
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, initializeLocalUser,
         thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap, selectedItem,
@@ -1453,7 +1459,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         });
                     }}
                     renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(item, getIndex()) } else { return <></> } }}
-                    renderRightActions={(progress, dragX) => { if (renderRightActions) { return renderRightActions(item, handleThingDelete) } else { return <></> } }}>
+                    renderRightActions={(progress, dragX, swipeableMethods) => { if (renderRightActions) { return renderRightActions(item, handleThingDelete, swipeableMethods) } else { return <></> } }}>
                     <ScaleDecorator>
                         <View style={[listStyles.itemContainer, styles.itemContainer]}>
                             {(item.parent_item_uuid) ?
@@ -1663,7 +1669,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         </Reanimated.View>
                         : <EmptyThingUX />
                 }
-                <DootooFooter hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveAllThingsFunc={saveAllThings} />
+                <DootooFooter ref={footerRef} hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveAllThingsFunc={saveAllThings} />
                 <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
                     <Dialog.Title>Select Calendar</Dialog.Title>
                     <Dialog.Description>Which calendar to put this item?</Dialog.Description>
@@ -1708,7 +1714,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         </TouchableWithoutFeedback>
     );
 
-};
+});
 
 // Used by Tips screen as well
 export const listStyles = StyleSheet.create({

@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useRef } from "react";
 import { usePathname } from 'expo-router';
 import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
@@ -11,7 +11,8 @@ import * as amplitude from '@amplitude/analytics-react-native';
 import {
   Image, StyleSheet, Pressable,
   Platform,
-  Alert
+  Alert,
+  View
 } from "react-native";
 import { AppContext } from '@/components/AppContext';
 import Reanimated, {
@@ -24,8 +25,12 @@ import Reanimated, {
 import { IndentIncrease } from "@/components/svg/indent-increase";
 import { IndentDecrease } from "@/components/svg/indent-decrease";
 import { Trash } from "@/components/svg/trash";
+import { Microphone } from "@/components/svg/microphone";
+import { ChevronDown } from "@/components/svg/chevron-down";
 
 export default function Index() {
+  const listRef = useRef();
+
   const pathname = usePathname();
   const { anonymousId, dootooItems, setDootooItems,
     thingRowHeights, thingRowPositionXs } = useContext(AppContext);
@@ -630,6 +635,15 @@ export default function Index() {
     }
   }
 
+  const handleInsertRecording = (swipeableMethods, item) => {
+    if (listRef.current) {
+      swipeableMethods.close();
+      listRef.current.invokeStartRecording(item);
+    } else {
+      console.log("Can't invoke start recording because listRef is null.");
+    }
+  }
+
   const styles = StyleSheet.create({
     listContainer: {
       backgroundColor: "#DCC7AA"
@@ -655,13 +669,17 @@ export default function Index() {
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333' //#322723 with approx 20% alpha
     },
-    action_Give: {
+    action_InsertRecording: {
       backgroundColor: '#556B2F',
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333' //#322723 with approx 20% alpha
     },
     swipeableContainer: {
       backgroundColor: '#DCC7AA'
+    },
+    swipeIconsContainer: {
+      flexDirection: 'row',
+      alignItems: 'flex-end'
     }
   });
 
@@ -677,7 +695,7 @@ export default function Index() {
     }
   }
 
-  const renderRightActions = (item, handleThingDeleteFunc) => {
+  const renderRightActions = (item, handleThingDeleteFunc, swipeableMethods) => {
     return (
       <>
         <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
@@ -695,6 +713,15 @@ export default function Index() {
           </Reanimated.View>
           : <></>
         }
+        <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_InsertRecording]}>
+          <Pressable
+            onPress={() => handleInsertRecording(swipeableMethods, item)}>
+              <View style={styles.swipeIconsContainer}>
+                <Microphone wxh="25" />
+                <ChevronDown wxh="15" color="white" strokeWidth="3" />
+            </View>
+          </Pressable>
+        </Reanimated.View>
       </>
     );
   };
@@ -716,7 +743,7 @@ export default function Index() {
   };
 
   return (
-    <DootooList listArray={dootooItems}
+    <DootooList ref={listRef} listArray={dootooItems}
       listArraySetter={setDootooItems}
       styles={styles}
       renderLeftActions={renderLeftActions}

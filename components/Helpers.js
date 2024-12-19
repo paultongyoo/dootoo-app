@@ -339,3 +339,18 @@ export const generateCurrentTimeAPIHeaders = () => {
       utcdatetime: utcDateTime
     };
 }
+
+// Safely insert the items of one array into another after a specified index, 
+// you can use JavaScript's array slicing and concatenation methods
+export function insertArrayAfter(array, itemsToInsert, index) {
+  // Ensure index is within bounds
+  if (index < 0) index = -1; // Adjust so items are inserted at the start when index < 0
+  if (index >= array.length) index = array.length - 1; // Adjust so items are appended when index is out of bounds
+
+  // Use slicing and concatenation to insert items after the index
+  return [
+    ...array.slice(0, index + 1), // Elements up to and including the specified index
+    ...itemsToInsert,            // Elements to insert
+    ...array.slice(index + 1),   // Elements after the specified index
+  ];
+}

@@ -2,7 +2,7 @@ import { Platform, Image, View, StyleSheet, Pressable, ActivityIndicator, Alert,
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import RNFS from 'react-native-fs';
 import { AppContext } from './AppContext.js';
-import { useState, useContext, useRef, useEffect } from "react";
+import { useState, useContext, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
 import Reanimated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import Toast from "react-native-toast-message";
@@ -11,14 +11,19 @@ import { usePathname } from 'expo-router';
 import { ListItemEventEmitter } from "./EventEmitters";
 import { checkOpenAPIStatus } from "./BackendServices.js";
 import Animated from "react-native-reanimated";
-import { calculateAndroidButtonScale, generateNewKeyboardEntry } from './Helpers'
+import { calculateAndroidButtonScale, generateNewKeyboardEntry, insertArrayAfter } from './Helpers'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Microphone } from "./svg/microphone";
 import { Keyboard } from "./svg/keyboard";
 import { Undo } from "./svg/undo";
 import { Redo } from "./svg/redo";
 
-const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }) => {
+const DootooFooter = forwardRef(({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }, ref) => {
+    
+    useImperativeHandle(ref, () => ({
+        invokeStartRecording: startRecording
+    }));
+    
     const pathname = usePathname();
     const { anonymousId, currentlyTappedThing, undoRedoCache,
         lastRecordedCount, emptyListCTAOpacity, emptyListCTAFadeOutAnimation } = useContext(AppContext);
@@ -32,6 +37,7 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
     const redoButtonOpacity = useSharedValue(0.3);
     const undoButtonOpacity = useSharedValue(0.3);
     const recordingTimeStart = useRef(null);        // Var used for calculating time
+    const selectedThingAtRecord = useRef(null);
 
     // Auto stop threshold feature
     const audioTreshold = useRef(0);
@@ -118,7 +124,21 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
         const adapterStatuses = await mobileAds().initialize();
     }
 
-    const startRecording = async () => {
+    const startRecording = async (selectedThing = null) => {
+
+        // If Start Recording was invoekd from a thing's swipe action
+        // store that thing in a ref so that we can use it to decide
+        // where to place the recorded things.  If nothing was selected
+        // when record was placed (i.e. record was invoked from footer),
+        // reset the selected thing ref so that we just insert based on
+        // base behavior.
+        if (selectedThing) {
+            console.log("Noting selected thing for processing after recording: " + selectedThing.text);
+            selectedThingAtRecord.current = selectedThing;
+        } else {
+            selectedThingAtRecord.current = null;
+        }
+
         recordingTimeStart.current = performance.now();
         //console.log("Logging start time: " + new Date(recordingTimeStart.current).toLocaleString());
         amplitude.track("Recording Started", {
@@ -361,43 +381,78 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
                     if (listArray && response && response.length > 0) {
                         lastRecordedCount.current = response.length;  // Set for future toast undo potential
 
-                        // Set UI flag to inform user that counts may change after async backend save complete
-                        // Update v1.1.1:  Commented out counts_updating as item counts refresh on any update
-                        // for (var i = 0; i < response.length; i++) {
-                        //     response[i].counts_updating = true; 
-                        // }
-
-
+                        // If list is empty, we ASSume that the empty CTA is visible so we first
+                        // fade it out before displaying the list to user.
                         if (listArray.length == 0) {
-
-                            // Assume the empty list CTA is visible, so fade it out first
-                            //("Attempting to fade out empty CTA animation...");
-                            // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
-                            // emptyListCTAFadeOutAnimation.reset();
-                            // emptyListCTAOpacity.current = 1;
-                            // console.log("Current emptyListCTAOpacity value: " + JSON.stringify(emptyListCTAOpacity));
-
-                            // TODO: Port animation to Reanimated 3
                             emptyListCTAFadeOutAnimation.start(() => {
+
+                                //If list is initially empty, fade in the new list
+                                // If user had nothing selected, simply prepend their new items above
+                                // their existing items
                                 listArraySetterFunc((prevThings) => {
-                                    undoRedoCache.current.push(prevThings);
-                                    return response.concat(prevThings)
+                                    if (prevThings.length != 0) {
+                                        console.error("Prev things unexpectedly non-empty in empty scenario!");
+                                    }
+                                    const updatedList = response;    // Assuming prevThings is empty
+                                    saveAllThingsFunc(updatedList, () => {
+                                        ListItemEventEmitter.emit("items_saved");
+                                    });
+                                    return updatedList;
                                 });
+
                                 emptyListCTAFadeOutAnimation.reset();
                             });
-                        } else {
+                        } else if (selectedThingAtRecord.current) {
+                            console.log("Attempting to insert new items above selected item...");
 
+                            // TWO ASSumptions on user's desires being made here:
+                            // 
+                            // 1) If user invoked recording from a parent item, ASSume the want to 
+                            //    place their new recorded things as children directly
+                            //    beneath the selected item.  
+                            // 
+                            // 2) If their tapped item is a child, ASSume the user wants
+                            //    their new records to be made children/sibilings as well, so assign the
+                            //    same parent and insert beneath the selected child.
+                            let recordedThings = response;
                             listArraySetterFunc((prevThings) => {
-                                undoRedoCache.current.push(prevThings);
-                                return response.concat(prevThings)
+                                                     
+                                // If selected thing doesn't have a parent, assign all recorded things as children
+                                // of selected thing
+                                const parentUuidOfSelectedThing = selectedThingAtRecord.current.parent_item_uuid;
+                                if (!parentUuidOfSelectedThing) {
+                                    console.log("Assigning recorded things as child of selected thing");
+                                    recordedThings = recordedThings.map(thing => ({...thing, parent_item_uuid: selectedThingAtRecord.current.uuid }));
+                                } else {
+                                    console.log("Assigning recorded things as siblings of selected thing");
+                                    recordedThings = recordedThings.map(thing => ({...thing, parent_item_uuid: parentUuidOfSelectedThing }));
+                                }
+
+                                // Insert recorded things below the selected thing
+                                const idxOfSelectedThing = prevThings.findIndex(thing => thing.uuid == selectedThingAtRecord.current.uuid);
+                                const updatedList = insertArrayAfter(prevThings, recordedThings, idxOfSelectedThing);
+                                
+                                // Make sure this function is asynchronous!!!
+                                saveAllThingsFunc(updatedList, () => {
+                                    ListItemEventEmitter.emit("items_saved");
+                                });
+
+                                return updatedList;
+                            });
+                        } else {
+                            
+                            // If user had nothing selected, simply prepend their new items above
+                            // their existing items
+                            listArraySetterFunc((prevThings) => {
+                                const updatedList = response.concat(prevThings);
+                                saveAllThingsFunc(updatedList, () => {
+                                    ListItemEventEmitter.emit("items_saved");
+                                });
+                                return updatedList;
                             });
                         }
 
-                        // Make sure this function is asynchronous!!!
-                        var updatedItems = response.concat(listArray);
-                        saveAllThingsFunc(updatedItems, () => {
-                            ListItemEventEmitter.emit("items_saved");
-                        });
+
                     } else {
                         //console.log("Did not call setter with updated list, attempting to show toast.");
                         amplitude.track("Empty Recording Toast Displayed", {
@@ -423,6 +478,9 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             }
         } catch (error) {
             console.error("Unexpected error occurred during recording processing!!", error);
+            console.error("Error message:", error.message); // Basic error message
+            console.error("Error stack trace:", error.stack); // Full stack trace
+            console.error("Full error object:", error); // Log the complete error object
             Alert.alert(
                 "An Unexpected Error Occurred",
                 "Your voice recording may have been too long or we were unable to transcribe it into items.  Please try again."
@@ -778,6 +836,6 @@ const DootooFooter = ({ transcribeFunction, listArray, listArraySetterFunc, save
             </>
         );
     }
-};
+});
 
 export default DootooFooter;
