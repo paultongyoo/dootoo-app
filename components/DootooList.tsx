@@ -1493,6 +1493,8 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 thingsToCollapse.push(...thingChildren);
             }
 
+            Toast.hide();
+
             // Create animations to collapse all things and await their completion
             const collapseAnimations = [];
             thingsToCollapse.forEach(thing => {
