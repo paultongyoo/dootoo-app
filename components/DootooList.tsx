@@ -19,6 +19,7 @@ import * as Linking from 'expo-linking';
 import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, isThingOverdue } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Bulb } from './svg/bulb';
+import { Clock } from './svg/clock';
 
 const THINGNAME_ITEM = "item";
 const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
@@ -1491,11 +1492,12 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                 {((thingName == THINGNAME_ITEM) && item.scheduled_datetime_utc) ?
                                     <Reanimated.View style={[listStyles.timerIconContainer, timerContainerWidthAnimatedStyle]}>
                                         <Pressable hitSlop={10} onPress={() => handleTimerClick(item)}>
-                                            <Reanimated.Image style={[listStyles.timerIcon, timerOpacityAnimatedStyle]} source={
-                                                (isThingOverdue(item) && !item.is_done)
-                                                    ? require("@/assets/images/timer_icon_FF0000.png")
-                                                    : require("@/assets/images/timer_icon_556B2F.png")
-                                            } />
+                                            <Reanimated.View style={timerOpacityAnimatedStyle}>
+                                                {(isThingOverdue(item) && !item.is_done)
+                                                    ? <Clock wxh="20" color="#FF0000" />
+                                                    :  <Clock wxh="20" color="#556B2F" />
+                                                }
+                                            </Reanimated.View>
                                         </Pressable>
                                     </Reanimated.View>
                                     : <></>}
