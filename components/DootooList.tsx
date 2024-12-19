@@ -101,8 +101,26 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 //console.log("Skipping initial load for user per shouldInitialLoad == false.");
             }
         });
+
+        const forceItemCountsUpdate = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__UPDATE_COUNTS, refreshThingCounts);
+
+        const handleAppStateChange = (nextAppState) => {
+            console.log("App State Changed: " + nextAppState);
+            if (nextAppState === "active") {
+                refreshThingCounts();
+
+                // Asynchronously check if updated any events in Calendar app
+                if (thingName == THINGNAME_ITEM) {
+                    syncItemCalendarUpdates();
+                }
+            }
+        };
+
+        const subscription = AppState.addEventListener("change", handleAppStateChange);
+
         return () => {
-            //console.log("DootooList.useEffect([]) component unmounted " + new Date(Date.now()).toLocaleString());
+            forceItemCountsUpdate.remove();
+            subscription.remove();
         }
     }, []);
 
@@ -156,9 +174,6 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 Toast.hide();
             }
 
-            // Immediately look for new counts on any list update
-            restartPolling();
-
             if (thingName == THINGNAME_ITEM) {
                 syncItemCalendarUpdates();
             }
@@ -179,16 +194,16 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 });
             }
 
-            // Check for count updates since user just made an action
-            pollThingCounts();
+            // Check for count updates since user just made an list update action
+            refreshThingCounts();
         }
     }, [listArray]);
 
-    const pollThingCounts = async () => {
+    const refreshThingCounts = async () => {
         let ignore = false;
         if (!ignore) {
             ignore = true;
-            console.log(`Polling for ${thingName} latest counts: ${new Date(Date.now()).toLocaleString()}`);
+            console.log(`Refreshing latest ${thingName} counts: ${new Date(Date.now()).toLocaleString()}`);
             if (listArray.filter(thing => !thing.newKeyboardEntry).length > 0) {
                 if (thingName == THINGNAME_ITEM) {
                     const itemUUIDs = listArray.map(thing => thing.uuid);
@@ -204,44 +219,16 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                         console.log("itemUUIDs.length unexpectedly zero given listArray.length > 0 -- is app in bad state?");
                     }
                 } else {
-                    console.log("Ignoring poll call for tips, not supported at this time");
+                    console.log("Ignoring counts refresh call for tips, not supported at this time");
                 }
             } else {
-                console.log(`${thingName} list empty, calling stopPolling...`);
-                stopPolling();
+                console.log(`${thingName} list empty, no counts to refresh.`);
             }
             ignore = false;
         } else {
-            console.log("Poll already in progress, ignoring duplicate call");
+            console.log("Refresh already in progress, ignoring duplicate call");
         }
     }
-
-    const { startPolling, stopPolling, restartPolling } = usePolling(pollThingCounts);
-    useEffect(() => {
-
-        const forceItemCountsUpdate = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__UPDATE_COUNTS, restartPolling);
-
-        const handleAppStateChange = (nextAppState) => {
-            console.log("App State Changed: " + nextAppState);
-            if (nextAppState === "active") {
-                startPolling();
-
-                // Asynchronously check if updated any events in Calendar app
-                if (thingName == THINGNAME_ITEM) {
-                    syncItemCalendarUpdates();
-                }
-            } else {
-                stopPolling();
-            }
-        };
-
-        const subscription = AppState.addEventListener("change", handleAppStateChange);
-
-        return () => {
-            forceItemCountsUpdate.remove();
-            subscription.remove();
-        }
-    }, [startPolling, stopPolling]);
 
     // 1.2 This function is modified to always execute the page = 1 scenario on all calls,
     //     whether it is first launch scenario or on refresh pull down
