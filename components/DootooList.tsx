@@ -1287,6 +1287,14 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
         const handleThingTextTap = (thing) => {
             console.log(`handleItemTextTap for ${thing.text}, renderTappedField: ${renderTappedField}`);
 
+            // If something else was selected/active when the 
+            // user tapped a new item -- process that item's latest
+            // value before activating newly tapped thing
+            if (currentlyTappedThing.current) {
+                console.log("Blurring currently tapped item before processing new tap...");
+                handleBlur(currentlyTappedThing.current);
+            }
+
             // Update currently tapped thing to cause
             // list to re-render and display text field for currently tapped thing
             currentlyTappedThing.current = thing;
