@@ -27,7 +27,7 @@ import { IndentDecrease } from "@/components/svg/indent-decrease";
 import { Trash } from "@/components/svg/trash";
 import { Microphone } from "@/components/svg/microphone";
 import { ChevronDown } from "@/components/svg/chevron-down";
-import { ChevronUp } from "@/components/svg/chevron-up";
+import { MoveToTop } from "@/components/svg/move-to-top";
 
 export default function Index() {
   const listRef = useRef();
@@ -732,7 +732,7 @@ export default function Index() {
           <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_MoveToTop]}>
             <Pressable
               onPress={() => handleMoveToTopFunc(item)}>
-              <ChevronUp wxh="25" color="#3E2723" strokeWidth="2" />
+              <MoveToTop wxh="25" color="#3E2723" strokeWidth="2" />
             </Pressable>
           </Reanimated.View>
           : <></>
