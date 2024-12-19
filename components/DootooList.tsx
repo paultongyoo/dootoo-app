@@ -1418,6 +1418,25 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 thingsToCollapse.push(...thingChildren);
             }
 
+            // Set toast string and display undoable toast
+            let toastString = '';
+            if (selectedThing.parent_item_uuid) {
+                toastString = `Moved ${pluralize(thingName, thingsToCollapse.length)} to top of subitems.`;
+            } else {
+                toastString = `Moved ${pluralize(thingName, thingsToCollapse.length)} to top of list.`;
+            }
+
+            Toast.show({
+                type: 'undoableToast',
+                text1: toastString,
+                visibilityTime: 8000,
+                position: 'bottom',
+                bottomOffset: 220,
+                props: {
+                    onUndoClick: () => handleMoveToTopUndo(selectedThing)
+                }
+            });
+
             // Create animations to collapse all things and await their completion
             const collapseAnimations = [];
             thingsToCollapse.forEach(thing => {
@@ -1448,25 +1467,6 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                     return insertArrayAfter(shallowListCopy, thingsToMove, parentIndex);
                 } else {
                     return thingsToMove.concat(shallowListCopy);
-                }
-            });
-
-            // Set toast string and display undoable toast
-            let toastString = '';
-            if (selectedThing.parent_item_uuid) {
-                toastString = `Moved ${pluralize(thingName, thingsToCollapse.length)} to top of subitems.`;
-            } else {
-                toastString = `Moved ${pluralize(thingName, thingsToCollapse.length)} to top of list.`;
-            }
-
-            Toast.show({
-                type: 'undoableToast',
-                text1: toastString,
-                visibilityTime: 8000,
-                position: 'bottom',
-                bottomOffset: 220,
-                props: {
-                    onUndoClick: () => handleMoveToTopUndo(selectedThing)
                 }
             });
         }
