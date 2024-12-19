@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useRef } from "react";
 import { usePathname } from 'expo-router';
 import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
@@ -24,8 +24,11 @@ import Reanimated, {
 import { IndentIncrease } from "@/components/svg/indent-increase";
 import { IndentDecrease } from "@/components/svg/indent-decrease";
 import { Trash } from "@/components/svg/trash";
+import { Microphone } from "@/components/svg/microphone";
 
 export default function Index() {
+  const listRef = useRef();
+  
   const pathname = usePathname();
   const { anonymousId, dootooItems, setDootooItems,
     thingRowHeights, thingRowPositionXs } = useContext(AppContext);
@@ -630,6 +633,15 @@ export default function Index() {
     }
   }
 
+  const handleInsertRecording = (swipeableMethods, item) => {
+    if (listRef.current) {
+      swipeableMethods.close();
+      listRef.current.invokeStartRecording(item);
+    } else {
+      console.log("Can't invoke start recording because listRef is null.");
+    }
+  }
+
   const styles = StyleSheet.create({
     listContainer: {
       backgroundColor: "#DCC7AA"
@@ -655,7 +667,7 @@ export default function Index() {
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333' //#322723 with approx 20% alpha
     },
-    action_Give: {
+    action_InsertRecording: {
       backgroundColor: '#556B2F',
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333' //#322723 with approx 20% alpha
@@ -677,7 +689,7 @@ export default function Index() {
     }
   }
 
-  const renderRightActions = (item, handleThingDeleteFunc) => {
+  const renderRightActions = (item, handleThingDeleteFunc, swipeableMethods) => {
     return (
       <>
         <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
@@ -695,6 +707,12 @@ export default function Index() {
           </Reanimated.View>
           : <></>
         }
+        <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_InsertRecording]}>
+          <Pressable
+            onPress={() => handleInsertRecording(swipeableMethods, item)}>
+            <Microphone wxh="25" />
+          </Pressable>
+        </Reanimated.View>
       </>
     );
   };
@@ -716,7 +734,7 @@ export default function Index() {
   };
 
   return (
-    <DootooList listArray={dootooItems}
+    <DootooList ref={listRef} listArray={dootooItems}
       listArraySetter={setDootooItems}
       styles={styles}
       renderLeftActions={renderLeftActions}
