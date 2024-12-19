@@ -22,6 +22,7 @@ import { Trash } from "@/components/svg/trash";
 import { ThumbUp } from "@/components/svg/thumb-up";
 import { ThumbDown } from "@/components/svg/thumb-down";
 import { Microphone } from "@/components/svg/microphone";
+import { ChevronDown } from "@/components/svg/chevron-down";
 
 
 export default function ItemTips() {
@@ -237,7 +238,10 @@ export default function ItemTips() {
           <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_InsertRecording]}>
             <Pressable
               onPress={() => handleInsertRecording(swipeableMethods, tip)}>
-              <Microphone wxh="25" />
+              <View style={styles.swipeIconsContainer}>
+                <Microphone wxh="25" />
+                <ChevronDown wxh="15" color="white" strokeWidth="3" />
+            </View>
             </Pressable>
           </Reanimated.View> 
           </>
@@ -448,6 +452,10 @@ export default function ItemTips() {
       backgroundColor: '#556B2F',
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333' //#322723 with approx 20% alpha
+    },
+    swipeIconsContainer: {
+      flexDirection: 'row',
+      alignItems: 'flex-end'
     }
   });
 
