@@ -87,7 +87,7 @@ const DootooFooter = forwardRef(({ transcribeFunction, listArray, listArraySette
             });
             Alert.alert(
                 "Voice Transcription May Be Impacted",
-                "Please be aware that our AI partner is currently experiencing issues that may impact posting new tasks and tips.  " +
+                "Please be aware that our AI partner is currently experiencing issues that may impact new voice recordings and text edits.  " +
                 "This message will cease to appear once their issues are resolved.",
                 [
                     {
