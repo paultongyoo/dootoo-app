@@ -23,6 +23,7 @@ import { ThumbUp } from "@/components/svg/thumb-up";
 import { ThumbDown } from "@/components/svg/thumb-down";
 import { Microphone } from "@/components/svg/microphone";
 import { ChevronDown } from "@/components/svg/chevron-down";
+import { ChevronUp } from "@/components/svg/chevron-up";
 
 
 export default function ItemTips() {
@@ -224,26 +225,35 @@ export default function ItemTips() {
     }
   }
 
-  const renderRightActions = (tip, handleThingDeleteFunc, swipeableMethods) => {
+  const renderRightActions = (tip, index, handleThingDeleteFunc, handleMoveToTopFunc, swipeableMethods) => {
     return (
       <>
         {(selectedItem.is_done) ?
-        <>
-          <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
-            <Pressable
-              onPress={() => handleThingDeleteFunc(tip)}>
-              <Trash wxh="25" color="white" />
-            </Pressable>
-          </Reanimated.View>
-          <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_InsertRecording]}>
-            <Pressable
-              onPress={() => handleInsertRecording(swipeableMethods, tip)}>
-              <View style={styles.swipeIconsContainer}>
-                <Microphone wxh="25" />
-                <ChevronDown wxh="15" color="white" strokeWidth="3" />
-            </View>
-            </Pressable>
-          </Reanimated.View> 
+          <>
+            <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
+              <Pressable
+                onPress={() => handleThingDeleteFunc(tip)}>
+                <Trash wxh="25" color="white" />
+              </Pressable>
+            </Reanimated.View>
+            <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_InsertRecording]}>
+              <Pressable
+                onPress={() => handleInsertRecording(swipeableMethods, tip)}>
+                <View style={styles.swipeIconsContainer}>
+                  <Microphone wxh="25" />
+                  <ChevronDown wxh="15" color="white" strokeWidth="3" />
+                </View>
+              </Pressable>
+            </Reanimated.View>
+            {(index != 0) ?
+              <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_MoveToTop]}>
+                <Pressable
+                  onPress={() => handleMoveToTopFunc(tip)}>
+                  <ChevronUp wxh="25" color="#3E2723" strokeWidth="2" />
+                </Pressable>
+              </Reanimated.View>
+              : <></>
+            }
           </>
           :
           <>
@@ -262,7 +272,7 @@ export default function ItemTips() {
             <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Flag]}>
               <Pressable
                 onPress={() => { handleTipFlag(tip) }}>
-                  <Flag wxh="25" color="white" />
+                <Flag wxh="25" color="white" />
               </Pressable>
             </Reanimated.View>
           </>
@@ -456,6 +466,11 @@ export default function ItemTips() {
     swipeIconsContainer: {
       flexDirection: 'row',
       alignItems: 'flex-end'
+    },
+    action_MoveToTop: {
+      backgroundColor: '#FAF3E0',
+      borderBottomWidth: 1,
+      borderBottomColor: '#3E272333'
     }
   });
 
