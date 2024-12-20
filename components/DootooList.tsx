@@ -1597,6 +1597,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                         multiline={true}
                                         style={listStyles.itemTextInput}
                                         defaultValue={item.text}
+                                        editable={true}
                                         autoFocus={true}
                                         onContentSizeChange={(event) => {
                                             const newHeight = event.nativeEvent.contentSize.height;
