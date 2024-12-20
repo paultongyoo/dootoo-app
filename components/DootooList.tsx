@@ -1617,7 +1617,6 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                         onChangeText={(text) => {
                                             onChangeInputValue.current = text;
                                         }}
-                                        contextMenuHidden={true}
                                         onBlur={() => handleBlur(item)}
                                     />
                                     : (
