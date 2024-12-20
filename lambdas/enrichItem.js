@@ -52,22 +52,22 @@ export const handler = async (event) => {
     }
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         {
           "role": "system",
           "content": `
                 ${currentDateStringPrompt}
                 The user has submitted a description of a task.
-                If the user cites date and/or time information within the task, remove referral to the date/time from the task and cite it in the scheduled_datetime_utc field below.
-                If they only mention a time in their task, assume the scheduled date is the current date in the user's timezone.
-                If they only mention a date in their task, assume the scheduled time is 12:00AM in the user's timezone.
+                If the task includes time, date, or temporal adverbs, remove that text from the task and represent it in the scheduled_datetime_utc field below.
+                If the task only contains time info, assume the scheduled date is the current date in the user's timezone.
+                If the task only contains a date or temporal adverbs, assume the scheduled time is 12:00AM in the user's timezone.
                 Respond only in English.
                 Return your analysis in the following JSON format:
                 {
                   "enriched: <true if task was modified, false otherwise>,
-                  "text": "<modified task description if it contained date and/or time info, otherwise return unmodified task>", 
-                  "scheduled_datetime_utc": <ISO 8601 formatted string in UTC timezone per rules above, or null if no date or time info provided>
+                  "text": <modified task description if it contained date and/or time info, otherwise exclude this field from JSON>, 
+                  "scheduled_datetime_utc": <ISO 8601 formatted string in UTC timezone per rules above if task was modified, otherwise exclude this field from JSON>
                 }`
         },
         { "role": "user", "content": `User-provided input: ${decryptedText}` }
@@ -78,9 +78,21 @@ export const handler = async (event) => {
 
     const enrichedItem = JSON.parse(completion.choices[0].message.content);
 
+    const usage = completion.usage;
+    const inputTokens = usage.prompt_tokens;
+    const inputCost = inputTokens * (0.15 / 1000000);
+    const outputTokens = usage.completion_tokens;
+    const outputCost = outputTokens * (0.60 / 1000000);
+    const chatCost = inputCost + outputCost;
+    console.log("Chat Input Tokens: " + inputTokens);
+    console.log("Chat Output Tokens: " + outputTokens);
+    console.log("Chat Usage cost: $" + chatCost);
+
+    console.log("Total AI Cost: " + chatCost);
+
     const response = {
       statusCode: 200,
-      body: enrichedItem
+      body: { ...enrichedItem, chat_cost: chatCost }
     };
     return response;
   } catch (error) {

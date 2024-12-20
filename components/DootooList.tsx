@@ -1199,12 +1199,12 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             if (isInitialTextMount.current) {
                 isInitialTextMount.current = false;
             } else if ((thingName == THINGNAME_ITEM) && item.text && (item.text.length > 0) && (item.text != lastEnrichedText.current)) {
-                console.log("Attempting to enrich item: " + item.text);
+                //console.log("Attempting to enrich item: " + item.text);
                 const attemptToEnrichedItem = async (itemToEnrich) => {
                     try {
                         const enrichmentResponse = await fetchWithRetry(() => enrichItem(itemToEnrich));
+                        //console.log("Enriched Item Response: " + JSON.stringify(enrichmentResponse));
                         if (enrichmentResponse && enrichmentResponse.enriched) {
-                            //console.log("Enriched Item Response: " + JSON.stringify(enrichedItem));
 
                             lastEnrichedText.current = enrichmentResponse.text;
 
@@ -1258,19 +1258,19 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                 //console.log("Calendar Event Updated Asyncronously: " + eventIdToUpdate);
                             }
                         } else {
-                            console.log("Enrichment response had no updates");
+                            //console.log("Enrichment response had no updates");
                         }
                     } catch (error) {
                         // Log a message to console and abandon updating UI
-                        console.warn("Enrichment calls were not successful, potential issue?", error);
+                        //console.warn("Enrichment calls were not successful, potential issue?", error);
                     }
                 }
-                console.log("Calling attemptToEnrichedItem for changed text: " + item.text);
+                //console.log("Calling attemptToEnrichedItem for changed text: " + item.text);
                 attemptToEnrichedItem(item);
             } else if (item.text == lastEnrichedText.current) {
-                console.log("Discarding enrichment call as item text equals last enrichment text: " + item.text);
+                //console.log("Discarding enrichment call as item text equals last enrichment text: " + item.text);
             } else {
-                console.log("Discarding enrichment call for blanked text");
+                //console.log("Discarding enrichment call for blanked text");
             }
         }, [item.text])
 

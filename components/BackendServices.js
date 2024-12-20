@@ -63,6 +63,8 @@ export const transcribeAudioToTasks = async (fileUri, durationSeconds, anonymous
         audio_cost: (response.headers['audio_cost']) ? Number(response.headers['audio_cost']) : 0,
         chat_cost: (response.headers['chat_cost']) ? Number(response.headers['chat_cost']) : 0
       });
+    } else {
+      console.log("No audio_cost/chat_cost header in enrichItem response.")
     }
 
     return response.data;
@@ -110,6 +112,8 @@ export const transcribeAudioToTips = async (fileUri, durationSeconds, anonymous_
         audio_cost: (response.headers['audio_cost']) ? Number(response.headers['audio_cost']) : 0,
         chat_cost: (response.headers['chat_cost']) ? Number(response.headers['chat_cost']) : 0
       });
+    } else {
+      console.log("No audio_cost/chat_cost header in enrichItem response.")
     }
 
     return response.data;
