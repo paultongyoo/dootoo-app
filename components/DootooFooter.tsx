@@ -324,6 +324,10 @@ const DootooFooter = forwardRef(({ transcribeFunction,
             return;
         }
 
+        // Re-renders footer to display loading animation; make
+        // sure this happens prior to stop recording so you don't see a flicker
+        setIsRecordingProcessing(true);
+
         const { fileUri, duration } = await stopRecording(localRecordingObject, isAutoStop);
         try {
 
@@ -335,7 +339,6 @@ const DootooFooter = forwardRef(({ transcribeFunction,
                     pathname: pathname,
                     stop_type: (isAutoStop) ? 'auto' : 'manual'
                 });
-                setIsRecordingProcessing(true);
 
 
                 const response = await callBackendTranscribeService(fileUri, duration);
