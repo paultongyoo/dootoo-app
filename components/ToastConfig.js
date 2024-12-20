@@ -114,7 +114,7 @@ const toastConfig = {
   timerInfo: ({ props }) => (
     <View style={[styles.baseToast, styles.timerInfo]}>
       <View style={styles.timerIconContainer}>
-          {(isThingOverdue(props.thing) && !item.is_done)
+          {(isThingOverdue(props.thing) && !props.thing.is_done)
               ? <Clock wxh="20" color="#FF0000" />
               :  <Clock wxh="20" color="#556B2F" />
           }
