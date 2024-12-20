@@ -18,7 +18,9 @@ import { Keyboard } from "./svg/keyboard";
 import { Undo } from "./svg/undo";
 import { Redo } from "./svg/redo";
 
-const DootooFooter = forwardRef(({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }, ref) => {
+const DootooFooter = forwardRef(({ transcribeFunction, 
+    listArray, listArraySetterFunc, saveNewThingsFunc,
+    hideRecordButton = false }, ref) => {
     
     useImperativeHandle(ref, () => ({
         invokeStartRecording: startRecording
@@ -86,8 +88,8 @@ const DootooFooter = forwardRef(({ transcribeFunction, listArray, listArraySette
                 pathname: pathname
             });
             Alert.alert(
-                "Voice Transcription May Be Impacted",
-                "Please be aware that our AI partner is currently experiencing issues that may impact posting new tasks and tips.  " +
+                "AI Features May Be Impacted",
+                "Please be aware that our AI partner is currently experiencing issues that may impact new voice recordings and text edits.  " +
                 "This message will cease to appear once their issues are resolved.",
                 [
                     {
@@ -322,6 +324,10 @@ const DootooFooter = forwardRef(({ transcribeFunction, listArray, listArraySette
             return;
         }
 
+        // Re-renders footer to display loading animation; make
+        // sure this happens prior to stop recording so you don't see a flicker
+        setIsRecordingProcessing(true);
+
         const { fileUri, duration } = await stopRecording(localRecordingObject, isAutoStop);
         try {
 
@@ -333,7 +339,6 @@ const DootooFooter = forwardRef(({ transcribeFunction, listArray, listArraySette
                     pathname: pathname,
                     stop_type: (isAutoStop) ? 'auto' : 'manual'
                 });
-                setIsRecordingProcessing(true);
 
 
                 const response = await callBackendTranscribeService(fileUri, duration);
@@ -393,10 +398,10 @@ const DootooFooter = forwardRef(({ transcribeFunction, listArray, listArraySette
                                     if (prevThings.length != 0) {
                                         console.error("Prev things unexpectedly non-empty in empty scenario!");
                                     }
+
                                     const updatedList = response;    // Assuming prevThings is empty
-                                    saveAllThingsFunc(updatedList, () => {
-                                        ListItemEventEmitter.emit("items_saved");
-                                    });
+                                    const latestUuidOrder = updatedList.map((thing) => ({ uuid: thing.uuid }));
+                                    saveNewThingsFunc(updatedList, latestUuidOrder);
                                     return updatedList;
                                 });
 
@@ -433,9 +438,8 @@ const DootooFooter = forwardRef(({ transcribeFunction, listArray, listArraySette
                                 const updatedList = insertArrayAfter(prevThings, recordedThings, idxOfSelectedThing);
                                 
                                 // Make sure this function is asynchronous!!!
-                                saveAllThingsFunc(updatedList, () => {
-                                    ListItemEventEmitter.emit("items_saved");
-                                });
+                                const latestUuidOrder = updatedList.map((thing) => ({ uuid: thing.uuid }));
+                                saveNewThingsFunc(updatedList, latestUuidOrder);
 
                                 return updatedList;
                             });
@@ -445,9 +449,8 @@ const DootooFooter = forwardRef(({ transcribeFunction, listArray, listArraySette
                             // their existing items
                             listArraySetterFunc((prevThings) => {
                                 const updatedList = response.concat(prevThings);
-                                saveAllThingsFunc(updatedList, () => {
-                                    ListItemEventEmitter.emit("items_saved");
-                                });
+                                const latestUuidOrder = updatedList.map((thing) => ({ uuid: thing.uuid }));
+                                saveNewThingsFunc(updatedList, latestUuidOrder);
                                 return updatedList;
                             });
                         }
@@ -570,11 +573,16 @@ const DootooFooter = forwardRef(({ transcribeFunction, listArray, listArraySette
         footerContainer: {
             backgroundColor: '#FAF3E0',
             alignItems: 'center',
-            height: 50
+            height: 50,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 5,
+            elevation: 5 // Elevation for Android      
         },
         bannerAdContainer: {
             borderTopWidth: 1,
-            borderColor: "#00000066",
+            borderColor: "#00000033",
             justifyContent: 'center',
             alignItems: 'center',
             backgroundColor: "#c0c0c0",

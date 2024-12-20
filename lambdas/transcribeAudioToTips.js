@@ -105,7 +105,11 @@ export const handler = async (event) => {
       console.log("Final Output: ", tip_array);
       response = {
         statusCode: 200,
-        body: JSON.stringify(tip_array)
+        body: JSON.stringify(tip_array),
+        headers: {
+          "audio_cost": audioCost,
+          "chat_cost" : chatCost
+        }
       };
     } else {
       console.log("Couldn't find anonymous_id");

@@ -1,6 +1,6 @@
 import { useContext, useRef } from "react";
 import { usePathname } from 'expo-router';
-import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem } from '@/components/Storage';
+import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList, { listStyles } from "@/components/DootooList";
@@ -27,7 +27,7 @@ import { IndentDecrease } from "@/components/svg/indent-decrease";
 import { Trash } from "@/components/svg/trash";
 import { Microphone } from "@/components/svg/microphone";
 import { ChevronDown } from "@/components/svg/chevron-down";
-import { ChevronUp } from "@/components/svg/chevron-up";
+import { MoveToTop } from "@/components/svg/move-to-top";
 
 export default function Index() {
   const listRef = useRef();
@@ -732,7 +732,7 @@ export default function Index() {
           <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_MoveToTop]}>
             <Pressable
               onPress={() => handleMoveToTopFunc(item)}>
-              <ChevronUp wxh="25" color="#3E2723" strokeWidth="2" />
+              <MoveToTop wxh="25" color="#3E2723" strokeWidth="2" />
             </Pressable>
           </Reanimated.View>
           : <></>
@@ -765,7 +765,7 @@ export default function Index() {
       renderRightActions={renderRightActions}
       swipeableOpenFunc={onSwipeableOpen}
       handleDoneClick={handleDoneClick}
-      saveAllThings={saveAllItems}
+      saveNewThings={saveNewItems}
       saveTextUpdateFunc={saveTextUpdate}
       saveThingOrderFunc={saveItemOrder}
       loadAllThings={loadItems}

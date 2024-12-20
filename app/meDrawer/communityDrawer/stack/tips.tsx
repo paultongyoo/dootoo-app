@@ -10,7 +10,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { AppContext } from '@/components/AppContext';
 import { transcribeAudioToTips } from '@/components/BackendServices';
-import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText, updateTipOrder, saveNewTip } from '@/components/Storage';
+import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText, updateTipOrder, saveNewTip, saveNewTips } from '@/components/Storage';
 import DootooTipSidebar from "@/components/DootooTipSidebar";
 import DootooTipEmptyUX from "@/components/DootooTipEmptyUX";
 import DootooList, { listStyles } from "@/components/DootooList";
@@ -23,7 +23,7 @@ import { ThumbUp } from "@/components/svg/thumb-up";
 import { ThumbDown } from "@/components/svg/thumb-down";
 import { Microphone } from "@/components/svg/microphone";
 import { ChevronDown } from "@/components/svg/chevron-down";
-import { ChevronUp } from "@/components/svg/chevron-up";
+import { MoveToTop } from "@/components/svg/move-to-top";
 
 
 export default function ItemTips() {
@@ -249,7 +249,7 @@ export default function ItemTips() {
               <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_MoveToTop]}>
                 <Pressable
                   onPress={() => handleMoveToTopFunc(tip)}>
-                  <ChevronUp wxh="25" color="#3E2723" strokeWidth="2" />
+                  <MoveToTop wxh="25" color="#3E2723" strokeWidth="2" />
                 </Pressable>
               </Reanimated.View>
               : <></>
@@ -500,7 +500,7 @@ export default function ItemTips() {
           isDoneable={false}
           renderRightActions={renderRightActions}
           renderLeftActions={renderLeftActions}
-          saveAllThings={saveAllTips}
+          saveNewThings={(tips, latest_tip_uuids) => saveNewTips(tips, selectedItem.uuid, latest_tip_uuids)}
           saveTextUpdateFunc={saveTextUpdate}
           saveThingOrderFunc={saveTipOrder}
           loadAllThings={(isPullDown) => loadTips(isPullDown, selectedItem.uuid)}

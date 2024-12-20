@@ -28,7 +28,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     swipeableOpenFunc = () => { return; },
     isDoneable = true,
     handleDoneClick = () => { return; },
-    saveAllThings,
+    saveNewThings,
     saveTextUpdateFunc,
     saveThingOrderFunc,
     loadAllThings,
@@ -101,8 +101,26 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 //console.log("Skipping initial load for user per shouldInitialLoad == false.");
             }
         });
+
+        const forceItemCountsUpdate = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__UPDATE_COUNTS, refreshThingCounts);
+
+        const handleAppStateChange = (nextAppState) => {
+            console.log("App State Changed: " + nextAppState);
+            if (nextAppState === "active") {
+                refreshThingCounts();
+
+                // Asynchronously check if updated any events in Calendar app
+                if (thingName == THINGNAME_ITEM) {
+                    syncItemCalendarUpdates();
+                }
+            }
+        };
+
+        const subscription = AppState.addEventListener("change", handleAppStateChange);
+
         return () => {
-            //console.log("DootooList.useEffect([]) component unmounted " + new Date(Date.now()).toLocaleString());
+            forceItemCountsUpdate.remove();
+            subscription.remove();
         }
     }, []);
 
@@ -156,9 +174,6 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 Toast.hide();
             }
 
-            // Immediately look for new counts on any list update
-            restartPolling();
-
             if (thingName == THINGNAME_ITEM) {
                 syncItemCalendarUpdates();
             }
@@ -179,16 +194,16 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 });
             }
 
-            // Check for count updates since user just made an action
-            pollThingCounts();
+            // Check for count updates since user just made an list update action
+            refreshThingCounts();
         }
     }, [listArray]);
 
-    const pollThingCounts = async () => {
+    const refreshThingCounts = async () => {
         let ignore = false;
         if (!ignore) {
             ignore = true;
-            console.log(`Polling for ${thingName} latest counts: ${new Date(Date.now()).toLocaleString()}`);
+            console.log(`Refreshing latest ${thingName} counts: ${new Date(Date.now()).toLocaleString()}`);
             if (listArray.filter(thing => !thing.newKeyboardEntry).length > 0) {
                 if (thingName == THINGNAME_ITEM) {
                     const itemUUIDs = listArray.map(thing => thing.uuid);
@@ -204,44 +219,16 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                         console.log("itemUUIDs.length unexpectedly zero given listArray.length > 0 -- is app in bad state?");
                     }
                 } else {
-                    console.log("Ignoring poll call for tips, not supported at this time");
+                    console.log("Ignoring counts refresh call for tips, not supported at this time");
                 }
             } else {
-                console.log(`${thingName} list empty, calling stopPolling...`);
-                stopPolling();
+                console.log(`${thingName} list empty, no counts to refresh.`);
             }
             ignore = false;
         } else {
-            console.log("Poll already in progress, ignoring duplicate call");
+            console.log("Refresh already in progress, ignoring duplicate call");
         }
     }
-
-    const { startPolling, stopPolling, restartPolling } = usePolling(pollThingCounts);
-    useEffect(() => {
-
-        const forceItemCountsUpdate = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__UPDATE_COUNTS, restartPolling);
-
-        const handleAppStateChange = (nextAppState) => {
-            console.log("App State Changed: " + nextAppState);
-            if (nextAppState === "active") {
-                startPolling();
-
-                // Asynchronously check if updated any events in Calendar app
-                if (thingName == THINGNAME_ITEM) {
-                    syncItemCalendarUpdates();
-                }
-            } else {
-                stopPolling();
-            }
-        };
-
-        const subscription = AppState.addEventListener("change", handleAppStateChange);
-
-        return () => {
-            forceItemCountsUpdate.remove();
-            subscription.remove();
-        }
-    }, [startPolling, stopPolling]);
 
     // 1.2 This function is modified to always execute the page = 1 scenario on all calls,
     //     whether it is first launch scenario or on refresh pull down
@@ -1212,12 +1199,12 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             if (isInitialTextMount.current) {
                 isInitialTextMount.current = false;
             } else if ((thingName == THINGNAME_ITEM) && item.text && (item.text.length > 0) && (item.text != lastEnrichedText.current)) {
-                console.log("Attempting to enrich item: " + item.text);
+                //console.log("Attempting to enrich item: " + item.text);
                 const attemptToEnrichedItem = async (itemToEnrich) => {
                     try {
                         const enrichmentResponse = await fetchWithRetry(() => enrichItem(itemToEnrich));
+                        //console.log("Enriched Item Response: " + JSON.stringify(enrichmentResponse));
                         if (enrichmentResponse && enrichmentResponse.enriched) {
-                            //console.log("Enriched Item Response: " + JSON.stringify(enrichedItem));
 
                             lastEnrichedText.current = enrichmentResponse.text;
 
@@ -1271,19 +1258,19 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                 //console.log("Calendar Event Updated Asyncronously: " + eventIdToUpdate);
                             }
                         } else {
-                            console.log("Enrichment response had no updates");
+                            //console.log("Enrichment response had no updates");
                         }
                     } catch (error) {
                         // Log a message to console and abandon updating UI
-                        console.warn("Enrichment calls were not successful, potential issue?", error);
+                        //console.warn("Enrichment calls were not successful, potential issue?", error);
                     }
                 }
-                console.log("Calling attemptToEnrichedItem for changed text: " + item.text);
+                //console.log("Calling attemptToEnrichedItem for changed text: " + item.text);
                 attemptToEnrichedItem(item);
             } else if (item.text == lastEnrichedText.current) {
-                console.log("Discarding enrichment call as item text equals last enrichment text: " + item.text);
+                //console.log("Discarding enrichment call as item text equals last enrichment text: " + item.text);
             } else {
-                console.log("Discarding enrichment call for blanked text");
+                //console.log("Discarding enrichment call for blanked text");
             }
         }, [item.text])
 
@@ -1431,6 +1418,25 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 thingsToCollapse.push(...thingChildren);
             }
 
+            // Set toast string and display undoable toast
+            let toastString = '';
+            if (selectedThing.parent_item_uuid) {
+                toastString = `Moved ${pluralize(thingName, thingsToCollapse.length)} to top of subitems.`;
+            } else {
+                toastString = `Moved ${pluralize(thingName, thingsToCollapse.length)} to top of list.`;
+            }
+
+            Toast.show({
+                type: 'undoableToast',
+                text1: toastString,
+                visibilityTime: 8000,
+                position: 'bottom',
+                bottomOffset: 220,
+                props: {
+                    onUndoClick: () => handleMoveToTopUndo(selectedThing)
+                }
+            });
+
             // Create animations to collapse all things and await their completion
             const collapseAnimations = [];
             thingsToCollapse.forEach(thing => {
@@ -1463,25 +1469,6 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                     return thingsToMove.concat(shallowListCopy);
                 }
             });
-
-            // Set toast string and display undoable toast
-            let toastString = '';
-            if (selectedThing.parent_item_uuid) {
-                toastString = `Moved ${pluralize(thingName, thingsToCollapse.length)} to top of subitems.`;
-            } else {
-                toastString = `Moved ${pluralize(thingName, thingsToCollapse.length)} to top of list.`;
-            }
-
-            Toast.show({
-                type: 'undoableToast',
-                text1: toastString,
-                visibilityTime: 8000,
-                position: 'bottom',
-                bottomOffset: 220,
-                props: {
-                    onUndoClick: () => handleMoveToTopUndo(selectedThing)
-                }
-            });
         }
 
         const handleMoveToTopUndo = async (selectedThing) => {
@@ -1492,6 +1479,8 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             if (thingChildren.length > 0) {
                 thingsToCollapse.push(...thingChildren);
             }
+
+            Toast.hide();
 
             // Create animations to collapse all things and await their completion
             const collapseAnimations = [];
@@ -1608,6 +1597,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                         multiline={true}
                                         style={listStyles.itemTextInput}
                                         defaultValue={item.text}
+                                        editable={true}
                                         autoFocus={true}
                                         onContentSizeChange={(event) => {
                                             const newHeight = event.nativeEvent.contentSize.height;
@@ -1628,7 +1618,6 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                         onChangeText={(text) => {
                                             onChangeInputValue.current = text;
                                         }}
-                                        contextMenuHidden={true}
                                         onBlur={() => handleBlur(item)}
                                     />
                                     : (
@@ -1779,7 +1768,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                         </Reanimated.View>
                         : <EmptyThingUX />
                 }
-                <DootooFooter ref={footerRef} hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveAllThingsFunc={saveAllThings} />
+                <DootooFooter ref={footerRef} hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveNewThingsFunc={saveNewThings} />
                 <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
                     <Dialog.Title>Select Calendar</Dialog.Title>
                     <Dialog.Description>Which calendar to put this item?</Dialog.Description>
