@@ -119,7 +119,11 @@ export const handler = async (event) => {
 
     const response = {
       statusCode: 200,
-      body: JSON.stringify(item_array)
+      body: JSON.stringify(item_array),
+      headers: {
+        "audio_cost" : audioCost,
+        "chat_cost" : chatCost
+      }
     };
     return response;
   } catch (error) {
