@@ -28,7 +28,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     swipeableOpenFunc = () => { return; },
     isDoneable = true,
     handleDoneClick = () => { return; },
-    saveAllThings,
+    saveNewThings,
     saveTextUpdateFunc,
     saveThingOrderFunc,
     loadAllThings,
@@ -1768,7 +1768,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                         </Reanimated.View>
                         : <EmptyThingUX />
                 }
-                <DootooFooter ref={footerRef} hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveAllThingsFunc={saveAllThings} />
+                <DootooFooter ref={footerRef} hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveNewThingsFunc={saveNewThings} />
                 <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
                     <Dialog.Title>Select Calendar</Dialog.Title>
                     <Dialog.Description>Which calendar to put this item?</Dialog.Description>

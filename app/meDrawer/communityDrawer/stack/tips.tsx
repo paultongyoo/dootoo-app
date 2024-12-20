@@ -10,7 +10,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { AppContext } from '@/components/AppContext';
 import { transcribeAudioToTips } from '@/components/BackendServices';
-import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText, updateTipOrder, saveNewTip } from '@/components/Storage';
+import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText, updateTipOrder, saveNewTip, saveNewTips } from '@/components/Storage';
 import DootooTipSidebar from "@/components/DootooTipSidebar";
 import DootooTipEmptyUX from "@/components/DootooTipEmptyUX";
 import DootooList, { listStyles } from "@/components/DootooList";
@@ -500,7 +500,7 @@ export default function ItemTips() {
           isDoneable={false}
           renderRightActions={renderRightActions}
           renderLeftActions={renderLeftActions}
-          saveAllThings={saveAllTips}
+          saveNewThings={(tips, latest_tip_uuids) => saveNewTips(tips, selectedItem.uuid, latest_tip_uuids)}
           saveTextUpdateFunc={saveTextUpdate}
           saveThingOrderFunc={saveTipOrder}
           loadAllThings={(isPullDown) => loadTips(isPullDown, selectedItem.uuid)}

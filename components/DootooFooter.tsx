@@ -18,7 +18,9 @@ import { Keyboard } from "./svg/keyboard";
 import { Undo } from "./svg/undo";
 import { Redo } from "./svg/redo";
 
-const DootooFooter = forwardRef(({ transcribeFunction, listArray, listArraySetterFunc, saveAllThingsFunc, hideRecordButton = false }, ref) => {
+const DootooFooter = forwardRef(({ transcribeFunction, 
+    listArray, listArraySetterFunc, saveNewThingsFunc,
+    hideRecordButton = false }, ref) => {
     
     useImperativeHandle(ref, () => ({
         invokeStartRecording: startRecording
@@ -393,10 +395,13 @@ const DootooFooter = forwardRef(({ transcribeFunction, listArray, listArraySette
                                     if (prevThings.length != 0) {
                                         console.error("Prev things unexpectedly non-empty in empty scenario!");
                                     }
+
+                                    // TODO Implement new saveNewThingsFunc func!!
+
+
                                     const updatedList = response;    // Assuming prevThings is empty
-                                    saveAllThingsFunc(updatedList, () => {
-                                        ListItemEventEmitter.emit("items_saved");
-                                    });
+                                    const latestUuidOrder = updatedList.map((thing) => ({ uuid: thing.uuid }));
+                                    saveNewThingsFunc(updatedList, latestUuidOrder);
                                     return updatedList;
                                 });
 
@@ -433,9 +438,8 @@ const DootooFooter = forwardRef(({ transcribeFunction, listArray, listArraySette
                                 const updatedList = insertArrayAfter(prevThings, recordedThings, idxOfSelectedThing);
                                 
                                 // Make sure this function is asynchronous!!!
-                                saveAllThingsFunc(updatedList, () => {
-                                    ListItemEventEmitter.emit("items_saved");
-                                });
+                                const latestUuidOrder = updatedList.map((thing) => ({ uuid: thing.uuid }));
+                                saveNewThingsFunc(updatedList, latestUuidOrder);
 
                                 return updatedList;
                             });
@@ -445,9 +449,8 @@ const DootooFooter = forwardRef(({ transcribeFunction, listArray, listArraySette
                             // their existing items
                             listArraySetterFunc((prevThings) => {
                                 const updatedList = response.concat(prevThings);
-                                saveAllThingsFunc(updatedList, () => {
-                                    ListItemEventEmitter.emit("items_saved");
-                                });
+                                const latestUuidOrder = updatedList.map((thing) => ({ uuid: thing.uuid }));
+                                saveNewThingsFunc(updatedList, latestUuidOrder);
                                 return updatedList;
                             });
                         }

@@ -1,6 +1,6 @@
 import { useContext, useRef } from "react";
 import { usePathname } from 'expo-router';
-import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem } from '@/components/Storage';
+import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList, { listStyles } from "@/components/DootooList";
@@ -765,7 +765,7 @@ export default function Index() {
       renderRightActions={renderRightActions}
       swipeableOpenFunc={onSwipeableOpen}
       handleDoneClick={handleDoneClick}
-      saveAllThings={saveAllItems}
+      saveNewThings={saveNewItems}
       saveTextUpdateFunc={saveTextUpdate}
       saveThingOrderFunc={saveItemOrder}
       loadAllThings={loadItems}
