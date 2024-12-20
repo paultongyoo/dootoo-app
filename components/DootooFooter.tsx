@@ -576,11 +576,16 @@ const DootooFooter = forwardRef(({ transcribeFunction,
         footerContainer: {
             backgroundColor: '#FAF3E0',
             alignItems: 'center',
-            height: 50
+            height: 50,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 5,
+            elevation: 5 // Elevation for Android      
         },
         bannerAdContainer: {
             borderTopWidth: 1,
-            borderColor: "#00000066",
+            borderColor: "#00000033",
             justifyContent: 'center',
             alignItems: 'center',
             backgroundColor: "#c0c0c0",
