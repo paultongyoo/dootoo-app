@@ -399,9 +399,6 @@ const DootooFooter = forwardRef(({ transcribeFunction,
                                         console.error("Prev things unexpectedly non-empty in empty scenario!");
                                     }
 
-                                    // TODO Implement new saveNewThingsFunc func!!
-
-
                                     const updatedList = response;    // Assuming prevThings is empty
                                     const latestUuidOrder = updatedList.map((thing) => ({ uuid: thing.uuid }));
                                     saveNewThingsFunc(updatedList, latestUuidOrder);
