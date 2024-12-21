@@ -42,7 +42,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     hideRecordButton = false,
     shouldInitialLoad = true }, ref) => {
 
-    const footerRef = useRef();
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, initializeLocalUser,
         thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap, selectedItem,
@@ -1816,7 +1815,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         </Reanimated.View>
                         : <EmptyThingUX />
                 }
-                <DootooFooter ref={footerRef} hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveNewThingsFunc={saveNewThings} />
+                <DootooFooter hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveNewThingsFunc={saveNewThings} />
                 <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
                     <Dialog.Title>Select Calendar</Dialog.Title>
                     <Dialog.Description>Which calendar to put this item?</Dialog.Description>

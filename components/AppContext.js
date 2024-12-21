@@ -13,9 +13,6 @@ export const AppProvider = ({ children }) => {
     const [dootooItems, setDootooItems] = useState([]);
     const [selectedItem, setSelectedItem] = useState(null);         // Selected Item context of Tips pages
     const [selectedProfile, setSelectedProfile] = useState(null);   // Selected Profile from Tip pages
-    const [recording, setRecording] = useState();
-    const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
-
 
     // Reference variables:  Changing these should intentionally NOT cause components to re-render
     const swipeableRefs = useRef({});
@@ -78,8 +75,6 @@ export const AppProvider = ({ children }) => {
             swipeableRefs,
             itemCountsMap,
             currentlyTappedThing,
-            recording, setRecording,
-            isRecordingProcessing, setIsRecordingProcessing
              }}>
           {children}
         </AppContext.Provider>
