@@ -25,7 +25,7 @@ import { Plus } from './svg/plus';
 
 const THINGNAME_ITEM = "item";
 const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
-    renderLeftActions = () => { return <></> },
+    renderLeftActions = (item, index) => { return <></> },
     renderRightActions = (item: any, p0: any, handleThingDelete: (thing: any) => void, handleMoveToTop: (selectedThing: any) => Promise<void>, p1: unknown) => { return <></> },
     swipeableOpenFunc = (direction, item, index) => { return; },
     isDoneable = true,
@@ -1577,7 +1577,9 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         if (renderRightActions) {
                             return renderRightActions(item, getIndex(), handleThingDelete, handleMoveToTop,  
                                 <Reanimated.View style={[listStyles.itemSwipeAction, 
-                                                         ((recording || isRecordingProcessing) ? listStyles.action_StopRecording : listStyles.action_InsertRecording)]}>
+                                                         ((recording || isRecordingProcessing) 
+                                                            ? listStyles.action_StopRecording 
+                                                            : listStyles.action_InsertRecording)]}>
                                     <Pressable
                                         disabled={isRecordingProcessing}
                                         onPress={() => {
@@ -1757,7 +1759,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
     return (
         <TouchableWithoutFeedback onPress={() => {
-            console.log("Tapped below list...");
+            //console.log("Tapped below list...");
             if (!currentlyTappedThing.current) {
                 handleBelowListTap();
             } else {
