@@ -1,4 +1,4 @@
-import { View, Text, Image, ActivityIndicator, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Platform, ActivityIndicator, Pressable, StyleSheet } from 'react-native';
 import { formatNumber } from './Helpers';
 import Toast from 'react-native-toast-message';
 import { useContext, useEffect, useState } from 'react';
@@ -65,7 +65,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
             type: 'msgWithLink',
             text1: `${similarCount} ${(similarCount > 1) ? 'people' : 'person'} had similar thing`,
             position: 'bottom',
-            bottomOffset: 220,
+            bottomOffset: (Platform.OS == 'ios') ? 240 : 220,
             props: {
                 width: 230
             }

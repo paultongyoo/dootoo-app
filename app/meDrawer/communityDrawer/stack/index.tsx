@@ -644,7 +644,7 @@ export default function Index() {
         type: 'msgOpenWidth',
         text1: `Your items will appear underneath the row.`,
         position: 'bottom',
-        bottomOffset: 220
+        bottomOffset: (Platform.OS == 'ios') ? 240 : 220
       });     
       listRef.current.invokeStartRecording(item);
     } else {
