@@ -712,7 +712,7 @@ const DootooFooter = forwardRef(({ transcribeFunction,
         },
         bannerAdCopyContainer: {
             alignItems: 'center',
-            paddingBottom: 8
+            paddingBottom: 5
         },
         bannerAdCopy: {
             color: '#808080',
