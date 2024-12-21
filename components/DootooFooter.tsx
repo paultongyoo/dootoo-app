@@ -600,10 +600,10 @@ const DootooFooter = forwardRef(({ transcribeFunction,
             alignItems: 'center',
             justifyContent: 'center',
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: 5 },
+            shadowOffset: { width: 2, height: 4 },
             shadowOpacity: 0.6,
-            shadowRadius: 5,
-            elevation: 5, // Elevation for Android        
+            shadowRadius: 4,
+            elevation: 4, // Elevation for Android        
         },
         footerButton_Underlay: {
             height: 50,
@@ -679,7 +679,7 @@ const DootooFooter = forwardRef(({ transcribeFunction,
             flexDirection: 'row',
             flex: 1,
             position: 'relative',
-            top: -70,
+            top: -28,
             alignItems: 'center'
         },
         footerButtonContainer: {
