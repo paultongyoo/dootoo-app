@@ -8,15 +8,13 @@ import Reanimated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from
 import Toast from "react-native-toast-message";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
-import { ListItemEventEmitter } from "./EventEmitters";
 import { checkOpenAPIStatus } from "./BackendServices.js";
 import Animated from "react-native-reanimated";
 import { calculateAndroidButtonScale, generateNewKeyboardEntry, insertArrayAfter } from './Helpers'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Microphone } from "./svg/microphone";
 import { Keyboard } from "./svg/keyboard";
-import { Undo } from "./svg/undo";
-import { Redo } from "./svg/redo";
+import { Plus } from "./svg/plus";
 
 const DootooFooter = forwardRef(({ transcribeFunction, 
     listArray, listArraySetterFunc, saveNewThingsFunc,
@@ -591,43 +589,31 @@ const DootooFooter = forwardRef(({ transcribeFunction,
             paddingBottom: (insets.bottom && insets.bottom > 0) ? insets.bottom : 10
         },
         footerButton: {
-            height: 58,
-            width: 58,
-            borderRadius: 29,
+            height: 50,
+            width: 50,
+            borderRadius: 25,
             borderColor: '#3E2723',
             borderWidth: 1,
-            marginRight: 30,
-            marginLeft: 30,
+            marginRight: 20,
+            marginLeft: 20,
             flex: 1,
             alignItems: 'center',
             justifyContent: 'center',
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.2,
+            shadowOffset: { width: 0, height: 5 },
+            shadowOpacity: 0.6,
             shadowRadius: 5,
             elevation: 5, // Elevation for Android        
         },
         footerButton_Underlay: {
-            height: 58,
-            width: 58,
-            borderRadius: 29,
-            marginRight: 30,
-            marginLeft: 30,
+            height: 50,
+            width: 50,
+            borderRadius: 25,
+            marginRight: 20,
+            marginLeft: 20,
             position: 'absolute',
             top: 0,
             backgroundColor: 'black'
-        },
-        footerButtonImage_Record: {
-            height: 38,
-            width: 38
-        },
-        footerButtonImage_Restart: {
-            height: 38,
-            width: 38
-        },
-        footerButtonImage_Cancel: {
-            height: 38,
-            width: 38
         },
         footerButtonTitle: {
             fontWeight: 'bold',
@@ -693,11 +679,11 @@ const DootooFooter = forwardRef(({ transcribeFunction,
             flexDirection: 'row',
             flex: 1,
             position: 'relative',
-            top: -27,
+            top: -70,
             alignItems: 'center'
         },
         footerButtonContainer: {
-            height: 58
+            height: 50
         },
         undoRedoFooterButtonContainer: {
             height: 40
@@ -711,44 +697,22 @@ const DootooFooter = forwardRef(({ transcribeFunction,
             height: 40,
             width: 40,
             borderRadius: 20   
+        },
+        iconPlusContainer: {
+            position: 'relative'
+        },
+        plusContainer: {
+            position: 'absolute',
+            right: -5,
+            top: -5
         }
+
     });
 
     // Animated style for scaling the button
     const animatedStyle = useAnimatedStyle(() => ({
         transform: [{ scale: meteringLevel.value }],
     }));
-
-    const makeTestData = () => {
-        const testData = [
-            {
-                "uuid": 1,
-                "text": "take a bath",
-                "is_done": false,
-                "is_deleted": false
-            },
-            {
-                "uuid": 2,
-                "text": "make waffles",
-                "is_done": false,
-                "is_deleted": false
-            },
-            {
-                "uuid": 3,
-                "text": "do some jumping jacks",
-                "is_done": false,
-                "is_deleted": false
-            },
-            {
-                "uuid": 4,
-                "text": "take a ride a bike",
-                "is_done": false,
-                "is_deleted": false
-            }
-        ];
-        listArraySetterFunc(testData);
-
-    }
 
     if (!hideRecordButton) {
         return (
@@ -782,7 +746,13 @@ const DootooFooter = forwardRef(({ transcribeFunction,
                                         </View>
                                         : (recording) ?
                                             <View style={styles.footerButtonIcon_Stop}></View>
-                                            : <Microphone wxh={38} />}
+                                            : <View style={styles.iconPlusContainer}>
+                                                <Microphone wxh={27} />
+                                                <View style={styles.plusContainer}>
+                                                    <Plus wxh="15" color="white" bgColor="#556B2F" bgStrokeWidth="8" />
+                                                </View>
+                                              </View>                                         
+                                            }
                                 </Pressable>
                             </Reanimated.View>
                         </View>
@@ -793,7 +763,12 @@ const DootooFooter = forwardRef(({ transcribeFunction,
                                     onPress={handleKeyboardButtonPress}
                                     onPressIn={() => keyboardButtonOpacity.value = withTiming(0.7, { duration: 150 })}
                                     onPressOut={() => keyboardButtonOpacity.value = withTiming(1, { duration: 150 })}>
-                                    < Keyboard wxh={38} />
+                                    <View style={styles.iconPlusContainer}>
+                                        <Keyboard wxh={27} />
+                                        <View style={styles.plusContainer}>
+                                            <Plus wxh="15" color="white" bgColor="#556B2F" bgStrokeWidth="8" />
+                                        </View>
+                                    </View>       
                                 </Pressable>
                             </Reanimated.View>
                         </View>
