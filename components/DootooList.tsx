@@ -1762,7 +1762,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 handleBelowListTap();
             } else {
                 // Dimiss the keyboard to automatically blur
-                // any activate field on screen
+                // any active field on screen
                 Keyboard.dismiss();
             }
         }}>
