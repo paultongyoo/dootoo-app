@@ -1,4 +1,4 @@
-import { Platform, Image, View, StyleSheet, Pressable, ActivityIndicator, Alert, AppState } from "react-native";
+import { Platform, Image, Text, View, StyleSheet, Pressable, ActivityIndicator, Alert, AppState } from "react-native";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import RNFS from 'react-native-fs';
 import { AppContext } from './AppContext.js';
@@ -16,14 +16,14 @@ import { Microphone } from "./svg/microphone";
 import { Keyboard } from "./svg/keyboard";
 import { Plus } from "./svg/plus";
 
-const DootooFooter = forwardRef(({ transcribeFunction, 
+const DootooFooter = forwardRef(({ transcribeFunction,
     listArray, listArraySetterFunc, saveNewThingsFunc,
     hideRecordButton = false }, ref) => {
-    
+
     useImperativeHandle(ref, () => ({
         invokeStartRecording: startRecording
     }));
-    
+
     const pathname = usePathname();
     const { anonymousId, currentlyTappedThing, undoRedoCache,
         lastRecordedCount, emptyListCTAOpacity, emptyListCTAFadeOutAnimation } = useContext(AppContext);
@@ -419,22 +419,22 @@ const DootooFooter = forwardRef(({ transcribeFunction,
                             //    same parent and insert beneath the selected child.
                             let recordedThings = response;
                             listArraySetterFunc((prevThings) => {
-                                                     
+
                                 // If selected thing doesn't have a parent, assign all recorded things as children
                                 // of selected thing
                                 const parentUuidOfSelectedThing = selectedThingAtRecord.current.parent_item_uuid;
                                 if (!parentUuidOfSelectedThing) {
                                     console.log("Assigning recorded things as child of selected thing");
-                                    recordedThings = recordedThings.map(thing => ({...thing, parent_item_uuid: selectedThingAtRecord.current.uuid }));
+                                    recordedThings = recordedThings.map(thing => ({ ...thing, parent_item_uuid: selectedThingAtRecord.current.uuid }));
                                 } else {
                                     console.log("Assigning recorded things as siblings of selected thing");
-                                    recordedThings = recordedThings.map(thing => ({...thing, parent_item_uuid: parentUuidOfSelectedThing }));
+                                    recordedThings = recordedThings.map(thing => ({ ...thing, parent_item_uuid: parentUuidOfSelectedThing }));
                                 }
 
                                 // Insert recorded things below the selected thing
                                 const idxOfSelectedThing = prevThings.findIndex(thing => thing.uuid == selectedThingAtRecord.current.uuid);
                                 const updatedList = insertArrayAfter(prevThings, recordedThings, idxOfSelectedThing);
-                                
+
                                 // Make sure this function is asynchronous!!!
                                 const latestUuidOrder = updatedList.map((thing) => ({ uuid: thing.uuid }));
                                 saveNewThingsFunc(updatedList, latestUuidOrder);
@@ -442,7 +442,7 @@ const DootooFooter = forwardRef(({ transcribeFunction,
                                 return updatedList;
                             });
                         } else {
-                            
+
                             // If user had nothing selected, simply prepend their new items above
                             // their existing items
                             listArraySetterFunc((prevThings) => {
@@ -569,23 +569,27 @@ const DootooFooter = forwardRef(({ transcribeFunction,
     const insets = useSafeAreaInsets();
     const styles = StyleSheet.create({
         footerContainer: {
+
+            // height: 170,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: "#c0c0c0"
+        },
+        navigationContainer: {
+            width: '100%',
             backgroundColor: '#FAF3E0',
             alignItems: 'center',
             height: 50,
+            borderBottomWidth: 1,
+            borderBottomColor: "#00000033",
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.2,
-            shadowRadius: 5,
-            elevation: 5 // Elevation for Android      
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.6,
+            shadowRadius: 3,
+            elevation: 3 // Elevation for Android      
         },
         bannerAdContainer: {
-            borderTopWidth: 1,
-            borderColor: "#00000033",
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: "#c0c0c0",
-            height: 120,
-            paddingTop: 15,
+            paddingTop: 20,
             paddingBottom: (insets.bottom && insets.bottom > 0) ? insets.bottom : 10
         },
         footerButton: {
@@ -696,7 +700,7 @@ const DootooFooter = forwardRef(({ transcribeFunction,
         undoRedofooterButton_Underlay: {
             height: 40,
             width: 40,
-            borderRadius: 20   
+            borderRadius: 20
         },
         iconPlusContainer: {
             position: 'relative'
@@ -705,8 +709,16 @@ const DootooFooter = forwardRef(({ transcribeFunction,
             position: 'absolute',
             right: -5,
             top: -5
+        },
+        bannerAdCopyContainer: {
+            alignItems: 'center',
+            paddingBottom: 8
+        },
+        bannerAdCopy: {
+            color: '#808080',
+            fontSize: 12,
+            letterSpacing: 1
         }
-
     });
 
     // Animated style for scaling the button
@@ -718,61 +730,62 @@ const DootooFooter = forwardRef(({ transcribeFunction,
         return (
             <>
                 <Animated.View style={[(pathname == ITEMS_PATHNAME) && { opacity }, styles.footerContainer]}>
-                    {/* <Pressable
+                    <View style={styles.navigationContainer}>
+                        {/* <Pressable
                     style={[styles.footerButton, styles.cancelButton]}
                     onPress={makeTestData}>
                     <Text>Test Data</Text>
                 </Pressable> */}
-                    <View style={styles.footerButtonsContainer}>
-                        <View style={styles.footerButtonContainer}>
-                            <View style={styles.footerButton_Underlay}></View>
-                            <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || isRecordingProcessing) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
-                                <Pressable
-                                    disabled={isRecordingProcessing}
-                                    onPress={() => {
-                                        if (isRecordingProcessing) {
-                                            cancelRecordingProcessing();       // 1.2: Made this scenario unreachable for now to prevent user from accidentally cancelling working process
-                                        } else if (recording) {
-                                            processRecording();
-                                        } else {
-                                            startRecording();
-                                        }
-                                    }}
-                                    onPressIn={recordButton_handlePressIn}
-                                    onPressOut={recordButton_handlePressOut}>
-                                    {(isRecordingProcessing) ?
-                                        <View style={styles.loadingAnim}>
-                                            <ActivityIndicator size={"small"} color="white" />
-                                        </View>
-                                        : (recording) ?
-                                            <View style={styles.footerButtonIcon_Stop}></View>
-                                            : <View style={styles.iconPlusContainer}>
-                                                <Microphone wxh={27} />
-                                                <View style={styles.plusContainer}>
-                                                    <Plus wxh="15" color="white" bgColor="#556B2F" bgStrokeWidth="8" />
-                                                </View>
-                                              </View>                                         
+                        <View style={styles.footerButtonsContainer}>
+                            <View style={styles.footerButtonContainer}>
+                                <View style={styles.footerButton_Underlay}></View>
+                                <Reanimated.View style={[animatedStyle, styles.footerButton, ((recording || isRecordingProcessing) ? styles.stopRecordButton : styles.recordButton), recordButtonOpacityAnimatedStyle]}>
+                                    <Pressable
+                                        disabled={isRecordingProcessing}
+                                        onPress={() => {
+                                            if (isRecordingProcessing) {
+                                                cancelRecordingProcessing();       // 1.2: Made this scenario unreachable for now to prevent user from accidentally cancelling working process
+                                            } else if (recording) {
+                                                processRecording();
+                                            } else {
+                                                startRecording();
                                             }
-                                </Pressable>
-                            </Reanimated.View>
-                        </View>
-                        <View style={styles.footerButtonContainer}>
-                            <View style={styles.footerButton_Underlay}></View>
-                            <Reanimated.View style={[styles.footerButton, styles.keyboardButton, { opacity: keyboardButtonOpacity }]}>
-                                <Pressable
-                                    onPress={handleKeyboardButtonPress}
-                                    onPressIn={() => keyboardButtonOpacity.value = withTiming(0.7, { duration: 150 })}
-                                    onPressOut={() => keyboardButtonOpacity.value = withTiming(1, { duration: 150 })}>
-                                    <View style={styles.iconPlusContainer}>
-                                        <Keyboard wxh={27} />
-                                        <View style={styles.plusContainer}>
-                                            <Plus wxh="15" color="white" bgColor="#556B2F" bgStrokeWidth="8" />
+                                        }}
+                                        onPressIn={recordButton_handlePressIn}
+                                        onPressOut={recordButton_handlePressOut}>
+                                        {(isRecordingProcessing) ?
+                                            <View style={styles.loadingAnim}>
+                                                <ActivityIndicator size={"small"} color="white" />
+                                            </View>
+                                            : (recording) ?
+                                                <View style={styles.footerButtonIcon_Stop}></View>
+                                                : <View style={styles.iconPlusContainer}>
+                                                    <Microphone wxh={27} />
+                                                    <View style={styles.plusContainer}>
+                                                        <Plus wxh="15" color="white" bgColor="#556B2F" bgStrokeWidth="8" />
+                                                    </View>
+                                                </View>
+                                        }
+                                    </Pressable>
+                                </Reanimated.View>
+                            </View>
+                            <View style={styles.footerButtonContainer}>
+                                <View style={styles.footerButton_Underlay}></View>
+                                <Reanimated.View style={[styles.footerButton, styles.keyboardButton, { opacity: keyboardButtonOpacity }]}>
+                                    <Pressable
+                                        onPress={handleKeyboardButtonPress}
+                                        onPressIn={() => keyboardButtonOpacity.value = withTiming(0.7, { duration: 150 })}
+                                        onPressOut={() => keyboardButtonOpacity.value = withTiming(1, { duration: 150 })}>
+                                        <View style={styles.iconPlusContainer}>
+                                            <Keyboard wxh={27} />
+                                            <View style={styles.plusContainer}>
+                                                <Plus wxh="15" color="white" bgColor="#556B2F" bgStrokeWidth="8" />
+                                            </View>
                                         </View>
-                                    </View>       
-                                </Pressable>
-                            </Reanimated.View>
-                        </View>
-                        { /*<View style={styles.undoRedoFooterButtonContainer}>
+                                    </Pressable>
+                                </Reanimated.View>
+                            </View>
+                            { /*<View style={styles.undoRedoFooterButtonContainer}>
                             <Reanimated.View style={[styles.footerButton_Underlay, styles.undoRedofooterButton_Underlay]}></Reanimated.View>
                             <Reanimated.View style={[styles.footerButton, styles.undoRedoFooterButton, styles.undoRedoButton, { opacity: undoButtonOpacity }]}>
                                 <Pressable
@@ -794,27 +807,35 @@ const DootooFooter = forwardRef(({ transcribeFunction,
                                 </Pressable>
                             </Reanimated.View> 
                         </View> */ }
+                        </View>
+                    </View>
+                    <View style={styles.bannerAdContainer}>
+                        <View style={styles.bannerAdCopyContainer}>
+                            <Text style={styles.bannerAdCopy}>ADVERTISEMENT</Text>
+                        </View>
+                        <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+                            onPaid={() => amplitude.track("Banner Ad Paid")}
+                            onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
+                            onAdOpened={() => amplitude.track("Banner Ad Opened")}
+                            onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
                     </View>
                 </Animated.View>
-                <View style={styles.bannerAdContainer}>
-                    <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-                        onPaid={() => amplitude.track("Banner Ad Paid")}
-                        onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
-                        onAdOpened={() => amplitude.track("Banner Ad Opened")}
-                        onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
-                </View>
             </>
         );
     } else {
         return (
             <>
-                <View style={styles.footerContainer}></View>
-                <View style={styles.bannerAdContainer}>
-                    <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-                        onPaid={() => amplitude.track("Banner Ad Paid")}
-                        onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
-                        onAdOpened={() => amplitude.track("Banner Ad Opened")}
-                        onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
+                <View style={styles.footerContainer}>
+                    <View style={styles.navigationContainer}>
+                        { /* TODO */ }
+                    </View>
+                    <View style={styles.bannerAdContainer}>
+                        <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+                            onPaid={() => amplitude.track("Banner Ad Paid")}
+                            onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
+                            onAdOpened={() => amplitude.track("Banner Ad Opened")}
+                            onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
+                    </View>
                 </View>
             </>
         );
