@@ -27,11 +27,10 @@ const DootooFooter = forwardRef(({ transcribeFunction,
     }));
 
     const pathname = usePathname();
-    const { anonymousId, currentlyTappedThing,
+    const { anonymousId, currentlyTappedThing, recording, setRecording, 
+        isRecordingProcessing, setIsRecordingProcessing,
         lastRecordedCount, emptyListCTAOpacity, emptyListCTAFadeOutAnimation } = useContext(AppContext);
-    const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
     const recorderProcessLocked = useRef(false);
-    const [recording, setRecording] = useState();
     const [permissionResponse, requestPermission] = Audio.usePermissions();
     const meteringLevel = useSharedValue(1); // shared value for animated scale
     const recordButtonOpacity = useSharedValue(1);

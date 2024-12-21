@@ -13,7 +13,10 @@ export const AppProvider = ({ children }) => {
     const [dootooItems, setDootooItems] = useState([]);
     const [selectedItem, setSelectedItem] = useState(null);         // Selected Item context of Tips pages
     const [selectedProfile, setSelectedProfile] = useState(null);   // Selected Profile from Tip pages
-    
+    const [recording, setRecording] = useState();
+    const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
+
+
     // Reference variables:  Changing these should intentionally NOT cause components to re-render
     const swipeableRefs = useRef({});
     const thingRowPositionXs = useRef({});
@@ -22,7 +25,7 @@ export const AppProvider = ({ children }) => {
     const username = useRef();
     const anonymousId = useRef();
     const itemCountsMap = useRef(new Map());
-    const currentlyTappedThing = useRef(null);    
+    const currentlyTappedThing = useRef(null);   
 
     // Animation related
     const emptyListCTAOpacity = useRef(new Animated.Value(0)).current;
@@ -74,7 +77,9 @@ export const AppProvider = ({ children }) => {
             selectedProfile, setSelectedProfile,
             swipeableRefs,
             itemCountsMap,
-            currentlyTappedThing
+            currentlyTappedThing,
+            recording, setRecording,
+            isRecordingProcessing, setIsRecordingProcessing
              }}>
           {children}
         </AppContext.Provider>

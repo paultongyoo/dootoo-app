@@ -27,7 +27,7 @@ const THINGNAME_ITEM = "item";
 const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = () => { return <></> },
     renderRightActions = (item: any, p0: any, handleThingDelete: (thing: any) => void, handleMoveToTop: (selectedThing: any) => Promise<void>, p1: unknown) => { return <></> },
-    swipeableOpenFunc = () => { return; },
+    swipeableOpenFunc = (direction, item, index) => { return; },
     isDoneable = true,
     handleDoneClick = () => { return; },
     saveNewThings,
@@ -46,7 +46,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, initializeLocalUser,
         thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap, selectedItem,
-        currentlyTappedThing, emptyListCTAFadeOutAnimation
+        currentlyTappedThing, emptyListCTAFadeOutAnimation, recording, isRecordingProcessing
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [isRefreshing, setRefreshing] = useState(false);
@@ -1521,15 +1521,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             });
         }
 
-        const handleInsertRecording = (swipeableMethods, item) => {
-            if (footerRef.current) {
-                swipeableMethods.close();
-                footerRef.current.invokeStartRecording(item);
-            } else {
-                console.log("Can't start recording because Footer ref is null")
-            }
-        }
-
         return (
             <Reanimated.View style={[
                 //{ backgroundColor: 'red' },                                           // For Debugging: If seen, unexpected row height change/non-change likely
@@ -1585,9 +1576,19 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     renderRightActions={(progress, dragX, swipeableMethods) => {
                         if (renderRightActions) {
                             return renderRightActions(item, getIndex(), handleThingDelete, handleMoveToTop,  
-                                <Reanimated.View style={[listStyles.itemSwipeAction, listStyles.action_InsertRecording]}>
+                                <Reanimated.View style={[listStyles.itemSwipeAction, 
+                                                         ((recording || isRecordingProcessing) ? listStyles.action_StopRecording : listStyles.action_InsertRecording)]}>
                                     <Pressable
-                                        onPress={() => handleInsertRecording(swipeableMethods, item)}>
+                                        disabled={isRecordingProcessing}
+                                        onPress={() => {
+                                            if (!isRecordingProcessing) {
+                                                if (recording) {
+                                                    footerRef.current?.invokeProcessRecording();
+                                                } else {
+                                                    footerRef.current?.invokeStartRecording(item);
+                                                }
+                                            }
+                                        }}>
                                         <View style={listStyles.iconPlusContainer}>
                                             <Microphone wxh={27} />
                                             <View style={listStyles.plusContainer}>
@@ -1760,9 +1761,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             if (!currentlyTappedThing.current) {
                 handleBelowListTap();
             } else {
-               // Future TODO Requires making renderThing.handleBlur accessible
+                // Dimiss the keyboard to automatically blur
+                // any activate field on screen
+                Keyboard.dismiss();
             }
-        }} >
+        }}>
             <View style={[listStyles.listContainer, styles.listContainer]}>
                 {(!screenInitialized) ?
                     <Reanimated.View style={[listStyles.initialLoadAnimContainer, { opacity: initialLoadFadeInOpacity }]}>
@@ -1937,6 +1940,9 @@ export const listStyles = StyleSheet.create({
     },
     action_InsertRecording: {
         backgroundColor: '#556B2F'
+    },
+    action_StopRecording: {
+        backgroundColor: '#A23E48'
     },
     iconPlusContainer: {
         position: 'relative'
