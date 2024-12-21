@@ -20,12 +20,14 @@ const DootooFooter = forwardRef(({ transcribeFunction,
     listArray, listArraySetterFunc, saveNewThingsFunc,
     hideRecordButton = false }, ref) => {
 
+    // Made these functions accessible to other components (e.g. DootooList)
     useImperativeHandle(ref, () => ({
-        invokeStartRecording: startRecording
+        invokeStartRecording: startRecording,
+        invokeProcessRecording: processRecording
     }));
 
     const pathname = usePathname();
-    const { anonymousId, currentlyTappedThing, undoRedoCache,
+    const { anonymousId, currentlyTappedThing,
         lastRecordedCount, emptyListCTAOpacity, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
     const recorderProcessLocked = useRef(false);
@@ -34,8 +36,6 @@ const DootooFooter = forwardRef(({ transcribeFunction,
     const meteringLevel = useSharedValue(1); // shared value for animated scale
     const recordButtonOpacity = useSharedValue(1);
     const keyboardButtonOpacity = useSharedValue(1);
-    const redoButtonOpacity = useSharedValue(0.3);
-    const undoButtonOpacity = useSharedValue(0.3);
     const recordingTimeStart = useRef(null);        // Var used for calculating time
     const selectedThingAtRecord = useRef(null);
 
@@ -558,14 +558,6 @@ const DootooFooter = forwardRef(({ transcribeFunction,
         }
     }
 
-    const handleUndoButtonPress = () => {
-        Alert.alert("Implement undo!");
-    }
-
-    const handleRedoButtonPress = () => {
-        Alert.alert("Implement redo!");
-    }
-
     const insets = useSafeAreaInsets();
     const styles = StyleSheet.create({
         footerContainer: {
@@ -733,11 +725,6 @@ const DootooFooter = forwardRef(({ transcribeFunction,
             <>
                 <Animated.View style={[(pathname == ITEMS_PATHNAME) && { opacity }, styles.footerContainer]}>
                     <View style={styles.navigationContainer}>
-                        {/* <Pressable
-                    style={[styles.footerButton, styles.cancelButton]}
-                    onPress={makeTestData}>
-                    <Text>Test Data</Text>
-                </Pressable> */}
                         <View style={styles.footerButtonsContainer}>
                             <View style={styles.footerButtonContainer}>
                                 <View style={styles.footerButton_Underlay}></View>
@@ -787,28 +774,6 @@ const DootooFooter = forwardRef(({ transcribeFunction,
                                     </Pressable>
                                 </Reanimated.View>
                             </View>
-                            { /*<View style={styles.undoRedoFooterButtonContainer}>
-                            <Reanimated.View style={[styles.footerButton_Underlay, styles.undoRedofooterButton_Underlay]}></Reanimated.View>
-                            <Reanimated.View style={[styles.footerButton, styles.undoRedoFooterButton, styles.undoRedoButton, { opacity: undoButtonOpacity }]}>
-                                <Pressable
-                                    onPress={handleUndoButtonPress}
-                                    onPressIn={() =>  undoButtonOpacity.value = withTiming(0.7, { duration: 150 })}
-                                    onPressOut={() =>  undoButtonOpacity.value = withTiming(1, { duration: 150 })}>
-                                    < Undo wxh={20} color="#3E2723" />
-                                </Pressable>
-                            </Reanimated.View>
-                        </View>
-                        <View style={styles.undoRedoFooterButtonContainer}>
-                            <Reanimated.View style={[styles.footerButton_Underlay, styles.undoRedofooterButton_Underlay]}></Reanimated.View>
-                            <Reanimated.View style={[styles.footerButton, styles.undoRedoFooterButton, styles.undoRedoButton, { opacity: redoButtonOpacity }]}>
-                                <Pressable
-                                    onPress={handleRedoButtonPress}
-                                    onPressIn={() =>  redoButtonOpacity.value = withTiming(0.7, { duration: 150 })}
-                                    onPressOut={() =>  redoButtonOpacity.value = withTiming(1, { duration: 150 })}>
-                                    < Redo wxh={20} color="#3E2723" />
-                                </Pressable>
-                            </Reanimated.View> 
-                        </View> */ }
                         </View>
                     </View>
                     <View style={styles.bannerAdContainer}>

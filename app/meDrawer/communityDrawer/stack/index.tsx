@@ -31,8 +31,6 @@ import { Plus } from "@/components/svg/plus";
 import Toast from "react-native-toast-message";
 
 export default function Index() {
-  const listRef = useRef();
-
   const pathname = usePathname();
   const { anonymousId, dootooItems, setDootooItems,
     thingRowHeights, thingRowPositionXs } = useContext(AppContext);
@@ -637,15 +635,6 @@ export default function Index() {
     }
   }
 
-  const handleInsertRecording = (swipeableMethods, item) => {
-    if (listRef.current) {
-      swipeableMethods.close();  
-      listRef.current.invokeStartRecording(item);
-    } else {
-      console.log("Can't invoke start recording because listRef is null.");
-    }
-  }
-
   const styles = StyleSheet.create({
     listContainer: {
       backgroundColor: "#DCC7AA"
@@ -669,9 +658,7 @@ export default function Index() {
     action_Delete: {
       backgroundColor: 'red'
     },
-    action_InsertRecording: {
-      backgroundColor: '#556B2F'
-    },
+
     swipeableContainer: {
       backgroundColor: '#DCC7AA'
     },
@@ -682,14 +669,6 @@ export default function Index() {
     action_MoveToTop: {
       borderRightWidth: 1,
       borderRightColor: '#3E272333'
-    },
-    iconPlusContainer: {
-      position: 'relative'
-    },
-    plusContainer: {
-        position: 'absolute',
-        right: -5,
-        top: -5
     }
   });
 
@@ -705,7 +684,7 @@ export default function Index() {
     }
   }
 
-  const renderRightActions = (item, index, handleThingDeleteFunc, handleMoveToTopFunc, swipeableMethods) => {
+  const renderRightActions = (item, index, handleThingDeleteFunc, handleMoveToTopFunc, insertRecordingAction) => {
 
     // Used as part of visibility rules of Move To Top action (don't display if already at top of parent list)
     const idxOfParent =
@@ -719,17 +698,7 @@ export default function Index() {
             <Trash wxh="25" color="white" />
           </Pressable>
         </Reanimated.View>
-        <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_InsertRecording]}>
-          <Pressable
-            onPress={() => handleInsertRecording(swipeableMethods, item)}>
-            <View style={styles.iconPlusContainer}>
-              <Microphone wxh={27} />
-              <View style={styles.plusContainer}>
-                <Plus wxh="15" color="white" bgColor="#556B2F" bgStrokeWidth="8" />
-              </View>
-            </View>
-          </Pressable>
-        </Reanimated.View>
+        {insertRecordingAction}
         {item.parent_item_uuid ?
           <Reanimated.View style={[listStyles.itemSwipeAction]}>
             <Pressable
@@ -769,7 +738,7 @@ export default function Index() {
   };
 
   return (
-    <DootooList ref={listRef} listArray={dootooItems}
+    <DootooList listArray={dootooItems}
       listArraySetter={setDootooItems}
       styles={styles}
       renderLeftActions={renderLeftActions}

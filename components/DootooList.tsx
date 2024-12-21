@@ -20,11 +20,13 @@ import { areDateObjsEqual, calculateTextInputRowHeight, capitalizeFirstCharacter
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Bulb } from './svg/bulb';
 import { Clock } from './svg/clock';
+import { Microphone } from './svg/microphone';
+import { Plus } from './svg/plus';
 
 const THINGNAME_ITEM = "item";
-const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
+const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = () => { return <></> },
-    renderRightActions = () => { return <></> },
+    renderRightActions = (item: any, p0: any, handleThingDelete: (thing: any) => void, handleMoveToTop: (selectedThing: any) => Promise<void>, p1: unknown) => { return <></> },
     swipeableOpenFunc = () => { return; },
     isDoneable = true,
     handleDoneClick = () => { return; },
@@ -41,10 +43,6 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     shouldInitialLoad = true }, ref) => {
 
     const footerRef = useRef();
-    useImperativeHandle(ref, () => ({
-        invokeStartRecording: (footerRef.current) ? footerRef.current.invokeStartRecording : Alert.alert("Footer ref is null!")
-    }));
-
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, initializeLocalUser,
         thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap, selectedItem,
@@ -168,10 +166,6 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                     }
                 });
                 lastRecordedCount.current = 0;
-            } else {
-
-                // This call has to be in this "main UI thread" in order to work
-                Toast.hide();
             }
 
             if (thingName == THINGNAME_ITEM) {
@@ -1505,6 +1499,15 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             });
         }
 
+        const handleInsertRecording = (swipeableMethods, item) => {
+            if (footerRef.current) {
+                swipeableMethods.close();
+                footerRef.current.invokeStartRecording(item);
+            } else {
+                console.log("Can't start recording because Footer ref is null")
+            }
+        }
+
         return (
             <Reanimated.View style={[
                 //{ backgroundColor: 'red' },                                           // For Debugging: If seen, unexpected row height change/non-change likely
@@ -1557,7 +1560,25 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                         });
                     }}
                     renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(item, getIndex()) } else { return <></> } }}
-                    renderRightActions={(progress, dragX, swipeableMethods) => { if (renderRightActions) { return renderRightActions(item, getIndex(), handleThingDelete, handleMoveToTop, swipeableMethods) } else { return <></> } }}>
+                    renderRightActions={(progress, dragX, swipeableMethods) => {
+                        if (renderRightActions) {
+                            return renderRightActions(item, getIndex(), handleThingDelete, handleMoveToTop,  
+                                <Reanimated.View style={[listStyles.itemSwipeAction, listStyles.action_InsertRecording]}>
+                                    <Pressable
+                                        onPress={() => handleInsertRecording(swipeableMethods, item)}>
+                                        <View style={listStyles.iconPlusContainer}>
+                                            <Microphone wxh={27} />
+                                            <View style={listStyles.plusContainer}>
+                                                <Plus wxh="15" color="white" bgColor="#556B2F" bgStrokeWidth="8" />
+                                            </View>
+                                        </View>
+                                    </Pressable>
+                                </Reanimated.View>
+                                );
+                        } else {
+                            return <></>
+                        }
+                    }}>
                     <ScaleDecorator>
                         <View style={[listStyles.itemContainer, styles.itemContainer]}>
                             {(item.parent_item_uuid) ?
@@ -1813,7 +1834,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
         </TouchableWithoutFeedback>
     );
 
-});
+};
 
 // Used by Tips screen as well
 export const listStyles = StyleSheet.create({
@@ -1892,6 +1913,17 @@ export const listStyles = StyleSheet.create({
         height: 16,
         width: 16
     },
+    action_InsertRecording: {
+        backgroundColor: '#556B2F'
+    },
+    iconPlusContainer: {
+        position: 'relative'
+    },
+    plusContainer: {
+        position: 'absolute',
+        right: -5,
+        top: -5
+    }
 })
 
 export default DootooList;

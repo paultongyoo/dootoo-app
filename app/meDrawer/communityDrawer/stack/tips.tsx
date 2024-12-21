@@ -27,8 +27,6 @@ import { MoveToTop } from "@/components/svg/move-to-top";
 
 
 export default function ItemTips() {
-  const listRef = useRef();
-
   const router = useRouter();
   const { anonymousId, selectedItem, setSelectedItem, setSelectedProfile } = useContext(AppContext);
   const [tips, setTips] = useState([]);
@@ -216,16 +214,7 @@ export default function ItemTips() {
 
   }
 
-  const handleInsertRecording = (swipeableMethods, item) => {
-    if (listRef.current) {
-      swipeableMethods.close();
-      listRef.current.invokeStartRecording(item);
-    } else {
-      console.log("Can't invoke start recording because listRef is null.");
-    }
-  }
-
-  const renderRightActions = (tip, index, handleThingDeleteFunc, handleMoveToTopFunc, swipeableMethods) => {
+  const renderRightActions = (tip, index, handleThingDeleteFunc, handleMoveToTopFunc, insertRecordingAction) => {
     return (
       <>
         {(selectedItem.is_done) ?
@@ -236,15 +225,7 @@ export default function ItemTips() {
                 <Trash wxh="25" color="white" />
               </Pressable>
             </Reanimated.View>
-            <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_InsertRecording]}>
-              <Pressable
-                onPress={() => handleInsertRecording(swipeableMethods, tip)}>
-                <View style={styles.swipeIconsContainer}>
-                  <Microphone wxh="25" />
-                  <ChevronDown wxh="15" color="white" strokeWidth="3" />
-                </View>
-              </Pressable>
-            </Reanimated.View>
+            {insertRecordingAction}
             {(index != 0) ?
               <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_MoveToTop]}>
                 <Pressable
@@ -491,7 +472,6 @@ export default function ItemTips() {
           </View>
         </View>
         <DootooList
-          ref={listRef}
           thingName="tip"
           loadingAnimMsg={(selectedItem.is_done) ? "Loading your tips to the community" : "Loading tips from the community"}
           listArray={tips}
