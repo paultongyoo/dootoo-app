@@ -17,11 +17,7 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
 
     const pathname = usePathname();
     const { anonymousId, currentlyTappedThing, emptyListCTAFadeOutAnimation } = useContext(AppContext);
-    const meteringLevel = useSharedValue(1); // shared value for animated scale
     const keyboardButtonOpacity = useSharedValue(1);
-
-    const [recording, setRecording] = useState();
-    const [isRecordingProcessing, setIsRecordingProcessing] = useState(false);
 
     const bannerAdId = __DEV__ ?
         TestIds.ADAPTIVE_BANNER :
@@ -218,10 +214,10 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
                     <View style={styles.navigationContainer}>
                         <View style={styles.footerButtonsContainer}>
                             <View style={styles.footerButtonContainer}>
-                                {/* <MicButton listArray={listArray} 
+                                <MicButton listArray={listArray} 
                                            listArraySetterFunc={listArraySetterFunc} 
                                            saveNewThingsFunc={saveNewThingsFunc} 
-                                           transcribeFunc={transcribeFunction} /> */}
+                                           transcribeFunc={transcribeFunction} />
                             </View>
                             <View style={styles.footerButtonContainer}>
                                 <View style={styles.footerButton_Underlay}></View>

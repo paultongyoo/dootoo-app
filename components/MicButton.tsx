@@ -479,7 +479,7 @@ const MicButton = ({ listArray, listArraySetterFunc, transcribeFunc, saveNewThin
                 ((recording || isRecordingProcessing)
                     ? styles.stopRecordButton
                     : styles.recordButton),
-                { opacity: recordButtonOpacity.value }]}>
+                { opacity: recordButtonOpacity }]}>
                 <Pressable
                     disabled={isRecordingProcessing}
                     onPress={() => {
