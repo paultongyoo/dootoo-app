@@ -47,7 +47,8 @@ const DootooHeader = ({ meDrawerNavigation }) => {
             bottom: -4
         },
         mainLogoPart: {
-            fontSize: 28
+            fontSize: 28,
+            fontWeight: 500 
         },
         secondLogoPart: {
             color: "#A23E48"
@@ -82,7 +83,7 @@ const DootooHeader = ({ meDrawerNavigation }) => {
             <View style={styles.headerLeftContainer}>
                 {((pathname == ITEMS_PATHNAME)) ?
                     <View style={styles.mainLogoContainer}>
-                        <Text style={styles.mainLogoPart}>doo</Text>
+                        <Text style={[{ fontWeight: 500 }, styles.mainLogoPart]}>doo</Text>
                         <Text style={[styles.mainLogoPart, styles.secondLogoPart]}>too</Text>
                     </View>
                     : <View style={styles.backButtonContainer}>
