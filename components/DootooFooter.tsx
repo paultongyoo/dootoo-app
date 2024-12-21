@@ -584,7 +584,7 @@ const DootooFooter = forwardRef(({ transcribeFunction,
             borderBottomColor: "#00000033",
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 3 },
-            shadowOpacity: 0.6,
+            shadowOpacity: 0.2,
             shadowRadius: 3,
             elevation: 3 // Elevation for Android      
         },
