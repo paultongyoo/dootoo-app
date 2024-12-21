@@ -583,12 +583,14 @@ const DootooFooter = forwardRef(({ transcribeFunction,
             borderBottomWidth: 1,
             borderBottomColor: "#00000033",
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: 3 },
-            shadowOpacity: 0.2,
-            shadowRadius: 3,
-            elevation: 3 // Elevation for Android      
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 4 // Elevation for Android      
         },
         bannerAdContainer: {
+            justifyContent: 'center',
+            alignItems: 'center',
             paddingTop: 20,
             paddingBottom: (insets.bottom && insets.bottom > 0) ? insets.bottom : 10
         },
