@@ -650,8 +650,8 @@ const DootooFooter = forwardRef(({ transcribeFunction,
             left: 1
         },
         footerButtonIcon_Stop: {
-            width: 21,
-            height: 21,
+            width: 18,
+            height: 18,
             backgroundColor: 'white'
         },
         keyboardFooterButton: {
