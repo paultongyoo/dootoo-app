@@ -26,8 +26,9 @@ import { IndentIncrease } from "@/components/svg/indent-increase";
 import { IndentDecrease } from "@/components/svg/indent-decrease";
 import { Trash } from "@/components/svg/trash";
 import { Microphone } from "@/components/svg/microphone";
-import { ChevronDown } from "@/components/svg/chevron-down";
 import { MoveToTop } from "@/components/svg/move-to-top";
+import { Plus } from "@/components/svg/plus";
+import Toast from "react-native-toast-message";
 
 export default function Index() {
   const listRef = useRef();
@@ -639,6 +640,12 @@ export default function Index() {
   const handleInsertRecording = (swipeableMethods, item) => {
     if (listRef.current) {
       swipeableMethods.close();
+      Toast.show({
+        type: 'msgOpenWidth',
+        text1: `Your items will appear underneath the row.`,
+        position: 'bottom',
+        bottomOffset: 220
+      });     
       listRef.current.invokeStartRecording(item);
     } else {
       console.log("Can't invoke start recording because listRef is null.");
@@ -681,6 +688,14 @@ export default function Index() {
     action_MoveToTop: {
       borderRightWidth: 1,
       borderRightColor: '#3E272333'
+    },
+    iconPlusContainer: {
+      position: 'relative'
+    },
+    plusContainer: {
+        position: 'absolute',
+        right: -5,
+        top: -5
     }
   });
 
@@ -699,7 +714,7 @@ export default function Index() {
   const renderRightActions = (item, index, handleThingDeleteFunc, handleMoveToTopFunc, swipeableMethods) => {
 
     // Used as part of visibility rules of Move To Top action (don't display if already at top of parent list)
-    const idxOfParent = 
+    const idxOfParent =
       (item.parent_item_uuid) ? dootooItems.findIndex(prevItem => prevItem.uuid == item.parent_item_uuid) : -999;
 
     return (
@@ -713,9 +728,11 @@ export default function Index() {
         <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_InsertRecording]}>
           <Pressable
             onPress={() => handleInsertRecording(swipeableMethods, item)}>
-            <View style={styles.swipeIconsContainer}>
-              <Microphone wxh="25" />
-              <ChevronDown wxh="15" color="white" strokeWidth="3" />
+            <View style={styles.iconPlusContainer}>
+              <Microphone wxh={27} />
+              <View style={styles.plusContainer}>
+                <Plus wxh="15" color="white" bgColor="#556B2F" bgStrokeWidth="8" />
+              </View>
             </View>
           </Pressable>
         </Reanimated.View>
