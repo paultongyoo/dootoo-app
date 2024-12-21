@@ -152,7 +152,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                     type: 'msgOpenWidth',
                     text1: `Added ${lastRecordedCount.current} ${thingName}${(lastRecordedCount.current > 1) ? 's' : ''}.`,
                     position: 'bottom',
-                    bottomOffset: 220,
+                    bottomOffset: (Platform.OS == 'ios') ? 240 : 220,
                     visibilityTime: 8000,
                     props: {
 
@@ -604,7 +604,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             type: 'timerInfo',
             visibilityTime: 8000,
             position: 'bottom',
-            bottomOffset: 220,
+            bottomOffset: (Platform.OS == 'ios') ? 240 : 220,
             props: {
                 thing: thing,
                 onEditIconClick: () => handleTimerToastEditClick(thing),
@@ -1431,7 +1431,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 text1: toastString,
                 visibilityTime: 8000,
                 position: 'bottom',
-                bottomOffset: 220,
+                bottomOffset: (Platform.OS == 'ios') ? 240 : 220,
                 props: {
                     onUndoClick: () => handleMoveToTopUndo(selectedThing)
                 }
