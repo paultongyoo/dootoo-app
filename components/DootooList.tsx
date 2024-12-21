@@ -22,6 +22,7 @@ import { Bulb } from './svg/bulb';
 import { Clock } from './svg/clock';
 import { Microphone } from './svg/microphone';
 import { Plus } from './svg/plus';
+import MicButton from './MicButton';
 
 const THINGNAME_ITEM = "item";
 const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
@@ -1070,7 +1071,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }
     }
 
-    const handleBelowListTap = () => {
+    const addThingToBottomOfList = () => {
         const newItem = generateNewKeyboardEntry();
         currentlyTappedThing.current = newItem;
 
@@ -1089,7 +1090,18 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             });
         } else {
             listArraySetter((prevItems) => [...prevItems, newItem]);
-        }  
+        }
+    }
+
+    const handleBelowListTap = () => {
+        console.log("Tapped below list...");
+        if (!currentlyTappedThing.current) {
+            addThingToBottomOfList();
+        } else {
+            // Dimiss the keyboard to automatically blur
+            // any active field on screen
+            Keyboard.dismiss();
+        }
     }
 
     const renderThing = ({ item, getIndex, drag, isActive }) => {
@@ -1574,31 +1586,12 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(item, getIndex()) } else { return <></> } }}
                     renderRightActions={(progress, dragX, swipeableMethods) => {
                         if (renderRightActions) {
-                            return renderRightActions(item, getIndex(), handleThingDelete, handleMoveToTop,  
-                                <Reanimated.View style={[listStyles.itemSwipeAction, 
-                                                         ((recording || isRecordingProcessing) 
-                                                            ? listStyles.action_StopRecording 
-                                                            : listStyles.action_InsertRecording)]}>
-                                    <Pressable
-                                        disabled={isRecordingProcessing}
-                                        onPress={() => {
-                                            if (!isRecordingProcessing) {
-                                                if (recording) {
-                                                    footerRef.current?.invokeProcessRecording();
-                                                } else {
-                                                    footerRef.current?.invokeStartRecording(item);
-                                                }
-                                            }
-                                        }}>
-                                        <View style={listStyles.iconPlusContainer}>
-                                            <Microphone wxh={27} />
-                                            <View style={listStyles.plusContainer}>
-                                                <Plus wxh="15" color="white" bgColor="#556B2F" bgStrokeWidth="8" />
-                                            </View>
-                                        </View>
-                                    </Pressable>
-                                </Reanimated.View>
-                                );
+                            return renderRightActions(item, getIndex(), handleThingDelete, handleMoveToTop,
+                                <MicButton listArray={listArray}
+                                    listArraySetterFunc={listArraySetter}
+                                    transcribeFunc={transcribeAudioToThings}
+                                    saveNewThingsFunc={saveNewThings} />
+                            );
                         } else {
                             return <></>
                         }
@@ -1757,23 +1750,14 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     });
 
     return (
-        <TouchableWithoutFeedback onPress={() => {
-            //console.log("Tapped below list...");
-            if (!currentlyTappedThing.current) {
-                handleBelowListTap();
-            } else {
-                // Dimiss the keyboard to automatically blur
-                // any active field on screen
-                Keyboard.dismiss();
-            }
-        }}>
-            <View style={[listStyles.listContainer, styles.listContainer]}>
-                {(!screenInitialized) ?
-                    <Reanimated.View style={[listStyles.initialLoadAnimContainer, { opacity: initialLoadFadeInOpacity }]}>
-                        <Text style={listStyles.initialLoadMsg}>{loadingAnimMsg}</Text>
-                        <ActivityIndicator size={"large"} color="#3E3723" />
-                    </Reanimated.View>
-                    : (listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0) ?
+        <View style={[listStyles.listContainer, styles.listContainer]}>
+            {(!screenInitialized) ?
+                <Reanimated.View style={[listStyles.initialLoadAnimContainer, { opacity: initialLoadFadeInOpacity }]}>
+                    <Text style={listStyles.initialLoadMsg}>{loadingAnimMsg}</Text>
+                    <ActivityIndicator size={"large"} color="#3E3723" />
+                </Reanimated.View>
+                : (listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0) ?
+                    <>
                         <Reanimated.View style={[listStyles.taskContainer, { opacity: listOpacity }]}>
                             <DraggableFlatList
                                 data={listArray.filter(item => !item.is_deleted)}
@@ -1807,61 +1791,62 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 // onEndReachedThreshold={0.1}
 
                                 ListFooterComponent={
-                                    <View style={{ paddingTop: 10 }}>
+                                    <Pressable onPress={handleBelowListTap} style={{ paddingTop: 10 }}>
                                         {/* {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />} */}
                                         <View style={{ height: 50 }} />
-                                    </View>}
+                                    </Pressable>}
                             />
                         </Reanimated.View>
-                        : <EmptyThingUX />
+                        <Pressable style={{ flex: 1 }} onPress={handleBelowListTap}></Pressable>
+                    </>
+                    : <EmptyThingUX />
+            }
+            <DootooFooter hideRecordButton={hideRecordButton}
+                transcribeFunction={transcribeAudioToThings}
+                listArray={listArray}
+                listArraySetterFunc={listArraySetter}
+                saveNewThingsFunc={saveNewThings} />
+            <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
+                <Dialog.Title>Select Calendar</Dialog.Title>
+                <Dialog.Description>Which calendar to put this item?</Dialog.Description>
+                <RNPickerSelect
+                    value={calendarSelectionInputValue}
+                    onValueChange={(value) => {
+                        setCalendarSelectionInputValue(value);
+                        if (value != 'no_calendar') {
+                            setCalendarSelectionInvalid(false);
+                        }
+                    }}
+                    placeholder={{ label: 'Select a calendar', value: 'no_calendar' }}
+                    style={pickerSelectStyles}
+                    items={editableCalendars.current.map((calendar) => ({ label: calendar.title, value: calendar.id }))} />
+                {(calendarSelectionInvalid)
+                    ? <Text style={formStyles.formValidationMessage}>Please select a calendar.</Text>
+                    : <></>}
+                <Dialog.Button label="Cancel" onPress={handleCalendarSelectDialogCancel} />
+                <Dialog.Button label="Continue" onPress={handleCalendarSelectDialogSubmission} />
+            </Dialog.Container>
+            <Dialog.Container visible={showScheduleEditDialog} onBackdropPress={handleScheduleEditDialogCancel}>
+                <Dialog.Title>Edit Scheduled Date & Time</Dialog.Title>
+                {(Platform.OS == 'android')
+                    ?
+                    <View style={formStyles.dateTimeContainer}>
+                        <View style={formStyles.dateTimeTextContainer}>
+                            <Text onPress={handleScheduleEditDialogEditDateClick} style={formStyles.dateTimeText}>{extractDateInLocalTZ(scheduleEditDialogDate)}</Text>
+                        </View>
+                        <View style={formStyles.dateTimeTextContainer}>
+                            <Text onPress={handleScheduleEditDialogEditTimeClick} style={formStyles.dateTimeText}>{extractTimeInLocalTZ(scheduleEditDialogDate)}</Text>
+                        </View>
+                    </View>
+                    : <View style={formStyles.dateTimePickerContainer}>
+                        <RNDateTimePicker style={formStyles.dateTimePicker} mode="datetime" value={scheduleEditDialogDate} onChange={(event, date) => setScheduleEditDialogDate(date)} />
+                    </View>
                 }
-                <DootooFooter hideRecordButton={hideRecordButton} 
-                              transcribeFunction={transcribeAudioToThings} 
-                              listArray={listArray} 
-                              listArraySetterFunc={listArraySetter} 
-                              saveNewThingsFunc={saveNewThings} />
-                <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
-                    <Dialog.Title>Select Calendar</Dialog.Title>
-                    <Dialog.Description>Which calendar to put this item?</Dialog.Description>
-                    <RNPickerSelect
-                        value={calendarSelectionInputValue}
-                        onValueChange={(value) => {
-                            setCalendarSelectionInputValue(value);
-                            if (value != 'no_calendar') {
-                                setCalendarSelectionInvalid(false);
-                            }
-                        }}
-                        placeholder={{ label: 'Select a calendar', value: 'no_calendar' }}
-                        style={pickerSelectStyles}
-                        items={editableCalendars.current.map((calendar) => ({ label: calendar.title, value: calendar.id }))} />
-                    {(calendarSelectionInvalid)
-                        ? <Text style={formStyles.formValidationMessage}>Please select a calendar.</Text>
-                        : <></>}
-                    <Dialog.Button label="Cancel" onPress={handleCalendarSelectDialogCancel} />
-                    <Dialog.Button label="Continue" onPress={handleCalendarSelectDialogSubmission} />
-                </Dialog.Container>
-                <Dialog.Container visible={showScheduleEditDialog} onBackdropPress={handleScheduleEditDialogCancel}>
-                    <Dialog.Title>Edit Scheduled Date & Time</Dialog.Title>
-                    {(Platform.OS == 'android')
-                        ?
-                        <View style={formStyles.dateTimeContainer}>
-                            <View style={formStyles.dateTimeTextContainer}>
-                                <Text onPress={handleScheduleEditDialogEditDateClick} style={formStyles.dateTimeText}>{extractDateInLocalTZ(scheduleEditDialogDate)}</Text>
-                            </View>
-                            <View style={formStyles.dateTimeTextContainer}>
-                                <Text onPress={handleScheduleEditDialogEditTimeClick} style={formStyles.dateTimeText}>{extractTimeInLocalTZ(scheduleEditDialogDate)}</Text>
-                            </View>
-                        </View>
-                        : <View style={formStyles.dateTimePickerContainer}>
-                            <RNDateTimePicker style={formStyles.dateTimePicker} mode="datetime" value={scheduleEditDialogDate} onChange={(event, date) => setScheduleEditDialogDate(date)} />
-                        </View>
-                    }
-                    <Dialog.Button label="Cancel" onPress={handleScheduleEditDialogCancel} />
-                    <Dialog.Button label="Clear" onPress={handleScheduleEditDialogClear} />
-                    <Dialog.Button label="Submit" onPress={handleScheduleEditDialogSubmission} />
-                </Dialog.Container>
-            </View>
-        </TouchableWithoutFeedback>
+                <Dialog.Button label="Cancel" onPress={handleScheduleEditDialogCancel} />
+                <Dialog.Button label="Clear" onPress={handleScheduleEditDialogClear} />
+                <Dialog.Button label="Submit" onPress={handleScheduleEditDialogSubmission} />
+            </Dialog.Container>
+        </View>
     );
 
 };
@@ -1874,7 +1859,7 @@ export const listStyles = StyleSheet.create({
         alignItems: 'center'
     },
     listContainer: {
-        flex: 1
+        flex: 1,
     },
     taskContainer: {
         flex: 1
@@ -1897,7 +1882,8 @@ export const listStyles = StyleSheet.create({
     itemNamePressable: {
         flex: 1,
         width: '100%',
-        paddingRight: 5
+        paddingRight: 5,
+        // backgroundColor: 'red'
     },
     itemTextInput: {
         fontSize: 16,
@@ -1942,20 +1928,6 @@ export const listStyles = StyleSheet.create({
     timerIcon: {
         height: 16,
         width: 16
-    },
-    action_InsertRecording: {
-        backgroundColor: '#556B2F'
-    },
-    action_StopRecording: {
-        backgroundColor: '#A23E48'
-    },
-    iconPlusContainer: {
-        position: 'relative'
-    },
-    plusContainer: {
-        position: 'absolute',
-        right: -5,
-        top: -5
     }
 })
 
