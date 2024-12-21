@@ -639,13 +639,7 @@ export default function Index() {
 
   const handleInsertRecording = (swipeableMethods, item) => {
     if (listRef.current) {
-      swipeableMethods.close();
-      Toast.show({
-        type: 'msgOpenWidth',
-        text1: `Your items will appear underneath the row.`,
-        position: 'bottom',
-        bottomOffset: 220
-      });     
+      swipeableMethods.close();  
       listRef.current.invokeStartRecording(item);
     } else {
       console.log("Can't invoke start recording because listRef is null.");
