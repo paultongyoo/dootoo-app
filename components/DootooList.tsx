@@ -46,7 +46,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, initializeLocalUser,
         thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap, selectedItem,
-        currentlyTappedThing
+        currentlyTappedThing, emptyListCTAFadeOutAnimation
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [isRefreshing, setRefreshing] = useState(false);
@@ -1071,6 +1071,28 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }
     }
 
+    const handleBelowListTap = () => {
+        const newItem = generateNewKeyboardEntry();
+        currentlyTappedThing.current = newItem;
+
+        amplitude.track("Tap Below List Entry Started", {
+            anonymous_id: anonymousId.current,
+            pathname: pathname,
+            uuid: newItem.uuid
+        });
+
+        if (listArray.length == 0) {
+
+            // If the list is empty, we ASSume the empty list CTA is visible.  Fade it out first before
+            // adding the first item
+            emptyListCTAFadeOutAnimation.start(() => {
+                listArraySetter((prevItems) => [...prevItems, newItem]);
+            });
+        } else {
+            listArraySetter((prevItems) => [...prevItems, newItem]);
+        }  
+    }
+
     const renderThing = ({ item, getIndex, drag, isActive }) => {
         const textInputRef = useRef(null);
         const rowPositionX = useSharedValue(0);
@@ -1734,11 +1756,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
     return (
         <TouchableWithoutFeedback onPress={() => {
-            if (currentlyTappedThing != null) {
-                if (Keyboard.isVisible()) {
-                    Keyboard.dismiss();
-                }
-                //handleBlur(currentlyTappedThing);
+            console.log("Tapped below list...");
+            if (!currentlyTappedThing.current) {
+                handleBelowListTap();
+            } else {
+               // Future TODO Requires making renderThing.handleBlur accessible
             }
         }} >
             <View style={[listStyles.listContainer, styles.listContainer]}>
