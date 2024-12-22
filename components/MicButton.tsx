@@ -317,7 +317,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                             type: 'msgOpenWidth',
                             text1: `We couldn't transcribe your voice.\n\nPlease try again.`,
                             position: 'bottom',
-                            bottomOffset: (Platform.OS == 'ios') ? 240 : 220
+                            bottomOffset: (Platform.OS == 'ios') ? 280 : 260
                         });
                     }
                 }
@@ -327,7 +327,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                     type: 'msgOpenWidth',
                     text1: `We couldn't distinguish your voice from the background noise.\n\nPlease try again.`,
                     position: 'bottom',
-                    bottomOffset: (Platform.OS == 'ios') ? 240 : 220
+                    bottomOffset: (Platform.OS == 'ios') ? 280 : 260
                 });
             }
         } catch (error) {

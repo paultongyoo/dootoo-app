@@ -1,25 +1,18 @@
 import { Platform, Text, View, StyleSheet, Pressable, ActivityIndicator, Alert, AppState } from "react-native";
-import { AppContext } from './AppContext.js';
-import { useContext, useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
-import Reanimated, { Easing, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import { useSharedValue, withTiming } from 'react-native-reanimated';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
-import { checkOpenAPIStatus } from "./BackendServices.js";
 import Animated from "react-native-reanimated";
-import { generateNewKeyboardEntry } from './Helpers'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Keyboard } from "./svg/keyboard";
-import { Plus } from "./svg/plus";
 import MicButton from "./MicButton";
-import { ProfileCountEventEmitter } from "./EventEmitters.js";
 import NavigationSections from "./NavigationSections";
+import KeyboardButton from "./KeyboardButton";
 
 const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, transcribeFunction, hideRecordButton = false }) => {
 
     const pathname = usePathname();
-    const { anonymousId, currentlyTappedThing, emptyListCTAFadeOutAnimation } = useContext(AppContext);
-    const keyboardButtonOpacity = useSharedValue(1);
 
     const bannerAdId = __DEV__ ?
         TestIds.ADAPTIVE_BANNER :
@@ -29,58 +22,9 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
 
     const opacity = useSharedValue(0);
 
-    const ITEMS_PATHNAME = "/meDrawer/communityDrawer/stack";
+    const ITEMS_PATHNAME = "/list";
     const FOOTER_BUTTON_HEIGHT = 50;
-
-    useEffect(() => {
-        if (!hideRecordButton) {
-            checkOpenAPIHealth();
-        }
-
-        const handleAppStateChange = (nextAppState) => {
-            if (nextAppState === "active") {
-                checkOpenAPIHealth();
-            }
-        };
-        const subscription = AppState.addEventListener("change", handleAppStateChange);
-
-        return () => {
-            subscription.remove();
-        }
-    }, []);
-
-    useEffect(() => {
-
-    }, [listArray]);
-
-    const checkOpenAPIHealth = async () => {
-        const status = await checkOpenAPIStatus();
-        console.log("OpenAPI Health Status: " + status);
-        if (status != "operational") {
-            amplitude.track("OpenAI API Impacted Prompt Displayed", {
-                anonymous_id: anonymousId.current,
-                pathname: pathname
-            });
-            Alert.alert(
-                "AI Features May Be Impacted",
-                "Please be aware that our AI partner is currently experiencing issues that may impact new voice recordings and text edits.  " +
-                "This message will cease to appear once their issues are resolved.",
-                [
-                    {
-                        text: 'OK',
-                        onPress: () => {
-                            amplitude.track("OpenAI API Impacted Prompt OK'd", {
-                                anonymous_id: anonymousId.current,
-                                pathname: pathname
-                            });
-                        },
-                    },
-                ],
-                { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
-            );
-        }
-    }
-
+ 
     useEffect(() => {
         initializeMobileAds();
         //console.log(`Pathname: ${pathname}`);
@@ -98,28 +42,6 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
 
     const initializeMobileAds = async () => {
         const adapterStatuses = await mobileAds().initialize();
-    }
-
-    const handleKeyboardButtonPress = () => {
-        const newItem = generateNewKeyboardEntry();
-        currentlyTappedThing.current = newItem;
-
-        amplitude.track("Keyboard Entry Started", {
-            anonymous_id: anonymousId.current,
-            pathname: pathname,
-            uuid: newItem.uuid
-        });
-
-        if (listArray.length == 0) {
-
-            // If the list is empty, we ASSume the empty list CTA is visible.  Fade it out first before
-            // adding the first item
-            emptyListCTAFadeOutAnimation.start(() => {
-                listArraySetterFunc((prevItems) => [newItem, ...prevItems]);
-            });
-        } else {
-            listArraySetterFunc((prevItems) => [newItem, ...prevItems]);
-        }
     }
 
     const insets = useSafeAreaInsets();
@@ -156,8 +78,14 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
             top: -95,
             alignItems: 'center'
         },
-        footerButtonContainer: {
-            height: 50
+        bannerAdCopyContainer: {
+            alignItems: 'center',
+            paddingBottom: 5
+        },
+        bannerAdCopy: {
+            color: '#808080',
+            fontSize: 12,
+            letterSpacing: 1
         },
         footerButton: {
             height: 50,
@@ -185,26 +113,6 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
             position: 'absolute',
             top: 0,
             backgroundColor: 'black'
-        },
-        keyboardButton: {
-            backgroundColor: '#556B2F'
-        },
-        iconPlusContainer: {
-            position: 'relative'
-        },
-        plusContainer: {
-            position: 'absolute',
-            right: -5,
-            top: -5
-        },
-        bannerAdCopyContainer: {
-            alignItems: 'center',
-            paddingBottom: 5
-        },
-        bannerAdCopy: {
-            color: '#808080',
-            fontSize: 12,
-            letterSpacing: 1
         }
     });
 
@@ -224,22 +132,7 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
                                 listArraySetterFunc={listArraySetterFunc}
                                 saveNewThingsFunc={saveNewThingsFunc}
                                 transcribeFunc={transcribeFunction} />
-                            <View style={styles.footerButtonContainer}>
-                                <View style={styles.footerButton_Underlay}></View>
-                                <Reanimated.View style={[styles.footerButton, styles.keyboardButton, { opacity: keyboardButtonOpacity }]}>
-                                    <Pressable
-                                        onPress={handleKeyboardButtonPress}
-                                        onPressIn={() => keyboardButtonOpacity.value = withTiming(0.7, { duration: 150 })}
-                                        onPressOut={() => keyboardButtonOpacity.value = withTiming(1, { duration: 150 })}>
-                                        <View style={styles.iconPlusContainer}>
-                                            <Keyboard wxh={27} />
-                                            <View style={styles.plusContainer}>
-                                                <Plus wxh="15" color="white" bgColor="#556B2F" bgStrokeWidth="8" />
-                                            </View>
-                                        </View>
-                                    </Pressable>
-                                </Reanimated.View>
-                            </View>
+                            <KeyboardButton listArray={listArray} listArraySetterFunc={listArraySetterFunc} />
                         </View>
                     </View>
                     <View style={styles.bannerAdContainer}>

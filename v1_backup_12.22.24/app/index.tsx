@@ -12,7 +12,7 @@ export default function Index() {
             if (launchStatus === null) {
                 router.replace('/onboarding');
             } else {
-                router.replace('/(tabs)/list');
+                router.replace('/meDrawer/communityDrawer/stack');
             }
         };
         checkFirstLaunch();

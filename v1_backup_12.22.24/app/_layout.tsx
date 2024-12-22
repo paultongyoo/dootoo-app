@@ -1,58 +1,20 @@
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { usePathname } from 'expo-router';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { AppProvider } from "@/components/AppContext";
 const AMPLITUDE_KEY_DEV = "28fd28b2a8714bea3efa4a0bc73fbd0b";
 const AMPLITUDE_KEY_PROD = "ac9cdda8bd0d54ba50553219f407d353";
 import { setJSExceptionHandler } from "react-native-exception-handler";
-import { Alert, AppState, BackHandler, Platform } from "react-native";
-import { checkOpenAPIStatus } from "@/components/BackendServices";
+import { Alert, BackHandler, Platform } from "react-native";
 
 export default function StackLayout() {
   const pathname = usePathname();
 
   useEffect(() => {
-
-    // Initialize Analytics Tracking
     amplitude.init((__DEV__) ? AMPLITUDE_KEY_DEV : AMPLITUDE_KEY_PROD);
-
-    // Initialize App State event handlers
-    const handleAppStateChange = (nextAppState) => {
-        if (nextAppState === "active") {
-            checkOpenAPIHealth();
-        }
-    };
-    const subscription = AppState.addEventListener("change", handleAppStateChange);
-    checkOpenAPIHealth();
-
-    return () => {
-      subscription.remove();
-    }
   }, []);
-
-  const checkOpenAPIHealth = async () => {
-      const status = await checkOpenAPIStatus();
-      console.log("OpenAPI Health Status: " + status);
-      if (status != "operational") {
-          amplitude.track("OpenAI API Impacted Prompt Displayed");
-          Alert.alert(
-              "AI Features May Be Impacted",
-              "Please be aware that our AI partner is currently experiencing issues that may impact new voice recordings and text edits.  " +
-              "This message will cease to appear once their issues are resolved.",
-              [
-                  {
-                      text: 'OK',
-                      onPress: () => {
-                          amplitude.track("OpenAI API Impacted Prompt OK'd");
-                      },
-                  },
-              ],
-              { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
-          );
-      }
-  }
 
   useEffect(() => {
     amplitude.track('Screen Viewed', { pathname: pathname });
@@ -100,8 +62,8 @@ export default function StackLayout() {
           headerShown: false
         }}>
           <Stack.Screen name="index" />
-          <Stack.Screen name="onboarding" />
-          <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
+          <Stack.Screen name="onboarding" options={{ animation: 'none' }} />
+          <Stack.Screen name="meDrawer" options={{ animation: 'none' }} />
         </Stack>
       </GestureHandlerRootView>
     </AppProvider>
