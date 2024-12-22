@@ -1,16 +1,13 @@
-import { Platform, Text, View, StyleSheet, Pressable, ActivityIndicator, Alert, AppState } from "react-native";
+import { Platform, View, StyleSheet } from "react-native";
 import { useRef, useEffect } from "react";
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
-import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import MicButton from "./MicButton";
 import NavigationSections from "./NavigationSections";
-import KeyboardButton from "./KeyboardButton";
 
-const DootooFooter = ({ hideRecordButton = false }) => {
+const DootooFooter = () => {
 
     const pathname = usePathname();
 
