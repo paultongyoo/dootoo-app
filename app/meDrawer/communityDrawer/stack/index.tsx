@@ -1,4 +1,4 @@
-import { useContext, useRef } from "react";
+import { useContext } from "react";
 import { usePathname } from 'expo-router';
 import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
@@ -9,10 +9,7 @@ import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEvent
 import * as amplitude from '@amplitude/analytics-react-native';
 
 import {
-  Image, StyleSheet, Pressable,
-  Platform,
-  Alert,
-  View
+  StyleSheet, Pressable, Alert,
 } from "react-native";
 import { AppContext } from '@/components/AppContext';
 import Reanimated, {
@@ -25,10 +22,7 @@ import Reanimated, {
 import { IndentIncrease } from "@/components/svg/indent-increase";
 import { IndentDecrease } from "@/components/svg/indent-decrease";
 import { Trash } from "@/components/svg/trash";
-import { Microphone } from "@/components/svg/microphone";
 import { MoveToTop } from "@/components/svg/move-to-top";
-import { Plus } from "@/components/svg/plus";
-import Toast from "react-native-toast-message";
 
 export default function Index() {
   const pathname = usePathname();
