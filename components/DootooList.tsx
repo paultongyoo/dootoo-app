@@ -1798,7 +1798,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 ListFooterComponent={
                                     <Pressable onPress={handleBelowListTap} style={{ paddingTop: 10 }}>
                                         {/* {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />} */}
-                                        <View style={{ height: 50 }} />
+                                        <View style={{ height: 70 }} />
                                     </Pressable>}
                             />
                         </Reanimated.View>
@@ -1938,8 +1938,8 @@ export const listStyles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#556B2F',
-        borderColor: '#3E2723',
-        borderWidth: 1
+        // borderColor: '#3E2723',
+        // borderWidth: 0
     },
     action_Microphone_Underlay: {
         position: 'absolute',
