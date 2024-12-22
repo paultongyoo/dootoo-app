@@ -658,7 +658,6 @@ export default function Index() {
     action_Delete: {
       backgroundColor: 'red'
     },
-
     swipeableContainer: {
       backgroundColor: '#DCC7AA'
     },

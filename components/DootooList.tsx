@@ -30,7 +30,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     renderRightActions = (item: any, p0: any, handleThingDelete: (thing: any) => void, handleMoveToTop: (selectedThing: any) => Promise<void>, p1: unknown) => { return <></> },
     swipeableOpenFunc = (direction, item, index) => { return; },
     isDoneable = true,
-    handleDoneClick = () => { return; },
+    handleDoneClick = (item) => { return; },
     saveNewThings,
     saveTextUpdateFunc,
     saveThingOrderFunc,
@@ -1589,6 +1589,9 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             return renderRightActions(item, getIndex(), handleThingDelete, handleMoveToTop,
                                 <MicButton 
                                     selectedThing={item}
+                                    buttonHeight={fullRowHeight.current}
+                                    buttonStyle={[listStyles.action_Microphone, { height: fullRowHeight.current }]}
+                                    buttonUnderlayStyle={listStyles.action_Microphone_Underlay}
                                     listArray={listArray}
                                     listArraySetterFunc={listArraySetter}
                                     transcribeFunc={transcribeAudioToThings}
@@ -1930,7 +1933,20 @@ export const listStyles = StyleSheet.create({
     timerIcon: {
         height: 16,
         width: 16
-    }
+    },
+    action_Microphone: {
+        width: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#556B2F',
+        borderColor: '#3E2723',
+        borderWidth: 1
+    },
+    action_Microphone_Underlay: {
+        position: 'absolute',
+        top: 0,
+        backgroundColor: 'black'
+    },
 })
 
 export default DootooList;

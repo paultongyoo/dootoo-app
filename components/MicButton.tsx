@@ -10,7 +10,7 @@ import { AppContext } from "./AppContext";
 import { calculateAndroidButtonScale, deleteFile, insertArrayAfter } from "./Helpers";
 import Toast from "react-native-toast-message";
 
-const MicButton = ({ containerStyleOverrides = {}, buttonStyleOverrides = {}, buttonUnderlayStyleOverrides = {}, 
+const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle, 
                     selectedThing = null, listArray, listArraySetterFunc, transcribeFunc, saveNewThingsFunc }) => {
     const { anonymousId, lastRecordedCount, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const pathname = usePathname();
@@ -405,33 +405,6 @@ const MicButton = ({ containerStyleOverrides = {}, buttonStyleOverrides = {}, bu
     // }
 
     const styles = StyleSheet.create({
-        footerButton: {
-            height: 50,
-            width: 50,
-            borderRadius: 25,
-            borderColor: '#3E2723',
-            borderWidth: 1,
-            marginRight: 20,
-            marginLeft: 20,
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'center',
-            shadowColor: '#000',
-            shadowOffset: { width: 2, height: 4 },
-            shadowOpacity: 0.6,
-            shadowRadius: 4,
-            elevation: 4, // Elevation for Android        
-        },
-        micButton_Underlay: {
-            height: 50,
-            width: 50,
-            borderRadius: 25,
-            marginRight: 20,
-            marginLeft: 20,
-            position: 'absolute',
-            top: 0,
-            backgroundColor: 'black'
-        },
         stopRecordButton: {
             backgroundColor: '#A23E48',
         },
@@ -443,13 +416,10 @@ const MicButton = ({ containerStyleOverrides = {}, buttonStyleOverrides = {}, bu
             position: 'relative',
             left: 1
         },
-        footerButtonIcon_Stop: {
+        micButtonIcon_Stop: {
             width: 18,
             height: 18,
             backgroundColor: 'white'
-        },
-        micButtonContainer: {
-            height: 50
         },
         iconPlusContainer: {
             position: 'relative'
@@ -474,14 +444,13 @@ const MicButton = ({ containerStyleOverrides = {}, buttonStyleOverrides = {}, bu
     }));
 
     return (
-        <View style={[styles.micButtonContainer, containerStyleOverrides]}>
-            <View style={[styles.micButton_Underlay, buttonUnderlayStyleOverrides]}></View>
-            <Reanimated.View style={[scaleAnimatedStyle, styles.footerButton,
+        <View style={{height: buttonHeight}}>
+            <View style={buttonUnderlayStyle}></View>
+            <Reanimated.View style={[buttonStyle, scaleAnimatedStyle,
                 ((recording || isRecordingProcessing)
                     ? styles.stopRecordButton
                     : styles.recordButton),
-                { opacity: recordButtonOpacity },
-                buttonStyleOverrides]}>
+                { opacity: recordButtonOpacity }]}>
                 <Pressable
                     disabled={isRecordingProcessing}
                     onPress={() => {
@@ -500,7 +469,7 @@ const MicButton = ({ containerStyleOverrides = {}, buttonStyleOverrides = {}, bu
                             <ActivityIndicator size={"small"} color="white" />
                         </View>
                         : (recording) ?
-                            <View style={styles.footerButtonIcon_Stop}></View>
+                            <View style={styles.micButtonIcon_Stop}></View>
                             : <View style={styles.iconPlusContainer}>
                                 <Microphone wxh={27} />
                                 <View style={styles.plusContainer}>

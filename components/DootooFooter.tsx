@@ -28,6 +28,7 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
     const opacity = useSharedValue(0);
 
     const ITEMS_PATHNAME = "/meDrawer/communityDrawer/stack";
+    const FOOTER_BUTTON_HEIGHT = 50;
 
     useEffect(() => {
         if (!hideRecordButton) {
@@ -147,6 +148,16 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
             paddingTop: 20,
             paddingBottom: (insets.bottom && insets.bottom > 0) ? insets.bottom : 10
         },
+        footerButtonsContainer: {
+            flexDirection: 'row',
+            flex: 1,
+            position: 'relative',
+            top: -28,
+            alignItems: 'center'
+        },
+        footerButtonContainer: {
+            height: 50
+        },
         footerButton: {
             height: 50,
             width: 50,
@@ -177,17 +188,6 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
         keyboardButton: {
             backgroundColor: '#556B2F'
         },
-        footerButtonsContainer: {
-            //backgroundColor: 'orange',
-            flexDirection: 'row',
-            flex: 1,
-            position: 'relative',
-            top: -28,
-            alignItems: 'center'
-        },
-        footerButtonContainer: {
-            height: 50
-        },
         iconPlusContainer: {
             position: 'relative'
         },
@@ -213,12 +213,14 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
                 <Animated.View style={[(pathname == ITEMS_PATHNAME) && { opacity }, styles.footerContainer]}>
                     <View style={styles.navigationContainer}>
                         <View style={styles.footerButtonsContainer}>
-                            <View style={styles.footerButtonContainer}>
-                                <MicButton listArray={listArray} 
-                                           listArraySetterFunc={listArraySetterFunc} 
-                                           saveNewThingsFunc={saveNewThingsFunc} 
-                                           transcribeFunc={transcribeFunction} />
-                            </View>
+                            <MicButton 
+                                buttonHeight={FOOTER_BUTTON_HEIGHT} 
+                                buttonUnderlayStyle={styles.footerButton_Underlay} 
+                                buttonStyle={styles.footerButton}
+                                listArray={listArray}
+                                listArraySetterFunc={listArraySetterFunc}
+                                saveNewThingsFunc={saveNewThingsFunc}
+                                transcribeFunc={transcribeFunction} />
                             <View style={styles.footerButtonContainer}>
                                 <View style={styles.footerButton_Underlay}></View>
                                 <Reanimated.View style={[styles.footerButton, styles.keyboardButton, { opacity: keyboardButtonOpacity }]}>
