@@ -83,7 +83,7 @@ const NavigationSections = () => {
             marginLeft: 18,         // Keep these synced with sectionIcon padding
             marginRight: 18,
             width: 42,
-            height: 3,
+            height: 4,
             backgroundColor: "#556b2f"
         },
         doneCountContainer: {
