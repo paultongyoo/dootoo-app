@@ -33,6 +33,9 @@ const NavigationSections = () => {
         }
     }, [])
 
+    const listIconColor = useSharedValue("#3e2723");
+    const doneIconColor = useSharedValue("#3e2723");
+    const profileIconColor = useSharedValue("#3e2723");
     const barTranslateX = useSharedValue(0);
     const animateCurrentSectionIndicator = (sectionIndex) => {
         // 0 = First section
@@ -42,6 +45,13 @@ const NavigationSections = () => {
             duration: 150,
             easing: Easing.out(Easing.exp)
         });
+
+        // 1.6 KNOWN ISSUE Colors aren't changing, at least on Android
+        //
+        //console.log("sectionIndex value: " + sectionIndex);
+        listIconColor.value = withTiming((sectionIndex == 0) ? "#556b2f" : "#3e2723", { duration: 500 });
+        doneIconColor.value = withTiming((sectionIndex == 1) ? "#556b2f" : "#3e2723", { duration: 500 });
+        profileIconColor.value = withTiming((sectionIndex == 2) ? "#556b2f" : "#3e2723", { duration: 500 });
     }
 
     // Pulse the badge on every change of doneCount, even on
@@ -74,7 +84,7 @@ const NavigationSections = () => {
             marginRight: 18,
             width: 42,
             height: 3,
-            backgroundColor: "#3E2723"
+            backgroundColor: "#556b2f"
         },
         doneCountContainer: {
             justifyContent: 'center',
@@ -109,13 +119,13 @@ const NavigationSections = () => {
                     animateCurrentSectionIndicator(0);
                     //Alert.alert("Implement Me!")
                 }}>
-                    <List wxh="24" color="#3E2723" />
+                    <List wxh="24" color={listIconColor} />
                 </Pressable>
                 <Pressable hitSlop={10} style={styles.sectionIconContainer} onPress={() => {
                     animateCurrentSectionIndicator(1);
                     //Alert.alert("Implement Me!")
                 }}><View style={styles.doneIconContainer}>
-                        <CircleCheck wxh="24" color="#3E2723" />
+                        <CircleCheck wxh="24" color={doneIconColor} />
                         {(doneCount > 0) ?
                             <Animated.View style={[styles.doneCountContainer, { transform: [{ scale: doneBadgeScaleX }] }]}>
                                 <Text style={styles.doneCountText}>{formatNumber(doneCount)}</Text>
@@ -128,7 +138,7 @@ const NavigationSections = () => {
                     animateCurrentSectionIndicator(2);
                     //Alert.alert("Implement Me!")
                 }}>
-                    <UserRound wxh="24" color="#3E2723" />
+                    <UserRound wxh="24" color={profileIconColor} />
                 </Pressable>
             </View>
         </View>

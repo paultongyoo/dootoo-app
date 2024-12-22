@@ -130,6 +130,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
             </View>
         );
     } else {
+        const greenColorSV = useSharedValue("#556B2F")
         return (
             <Animated.View style={[/*opacityAnimatedStyle,*/ { flexDirection: 'row' }]}>
                 {(tipCount || thing.is_done) ?
@@ -148,7 +149,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
                         style={sidebarStyles.similarCountContainer}
                         onPress={() => handleSimilarCountTap()}>
                         <Text style={sidebarStyles.similarCountText}>{formatNumber(similarCount)}</Text>
-                        <UserRound wxh="18" opacity="0.8" color="#556B2F" />
+                        <UserRound wxh="18" opacity="0.8" color={greenColorSV} />
                     </Pressable> : <></>}
             </Animated.View>
         );
