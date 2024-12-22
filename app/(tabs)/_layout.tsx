@@ -1,3 +1,4 @@
+import DootooFooter from '@/components/DootooFooter';
 import { CircleCheck } from '@/components/svg/circle-check';
 import { List } from '@/components/svg/list';
 import { UserRound } from '@/components/svg/user-round';
@@ -6,7 +7,8 @@ import { useSharedValue } from 'react-native-reanimated';
 
 export default function TabLayout() {
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: 'blue' }}>
+    <Tabs 
+      tabBar={(props) => (<DootooFooter {...props} />)}>
       <Tabs.Screen
         name="list"
         options={{

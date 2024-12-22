@@ -7,7 +7,7 @@ import { usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import NavigationSections from "./NavigationSections";
 
-const DootooFooter = () => {
+const DootooFooter = ({ state, descriptors, navigation }) => {
 
     const pathname = usePathname();
 
