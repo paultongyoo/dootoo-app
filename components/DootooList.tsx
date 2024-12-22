@@ -1802,7 +1802,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                     </Pressable>}
                             />
                         </Reanimated.View>
-                        <Pressable style={{ flex: 1 }} onPress={handleBelowListTap}></Pressable>
                     </>
                     : <EmptyThingUX />
             }
@@ -1867,7 +1866,7 @@ export const listStyles = StyleSheet.create({
         flex: 1,
     },
     taskContainer: {
-        flexShrink: 0
+        flex: 1
     },
     itemContainer: {
         flexDirection: 'row',
