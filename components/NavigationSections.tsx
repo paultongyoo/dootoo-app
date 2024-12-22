@@ -1,0 +1,130 @@
+import { View, Pressable, StyleSheet, Text } from "react-native";
+import { formatNumber } from "./Helpers";
+import { CircleCheck } from "./svg/circle-check";
+import { List } from "./svg/list";
+import { UserRound } from "./svg/user-round";
+import Animated, { Easing, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
+import { useEffect, useState } from "react";
+import { ProfileCountEventEmitter } from "./EventEmitters";
+
+const NavigationSections = () => {
+
+    const [doneCount, setDoneCount] = useState(0);
+
+    useEffect(() => {
+        const listener_incr_done = ProfileCountEventEmitter.addListener('incr_done', () => {
+            setDoneCount((prev) => prev + 1);
+        });
+        const listener_descr_done = ProfileCountEventEmitter.addListener('decr_done', () => {
+            setDoneCount((prev) => prev - 1);
+        });
+
+        return () => {
+            listener_incr_done.remove();
+            listener_descr_done.remove();
+        }
+    }, [])
+
+    const barTranslateX = useSharedValue(0);
+    const animateCurrentSectionIndicator = (sectionIndex) => {
+        // 0 = First section
+        // 1 = Second section
+        // 2 = Third Section
+        barTranslateX.value = withTiming(sectionIndex * 80, {
+            duration: 150,
+            easing: Easing.out(Easing.exp)
+        });
+    }
+
+    // Pulse the badge on every change of doneCount, even on
+    // the initial mount
+    const doneBadgeScaleX = useSharedValue(0);
+    useEffect(() => {
+        doneBadgeScaleX.value = withSequence(
+            withTiming(1.4, { duration: 200, easing: Easing.out(Easing.cubic) }),
+            withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) })
+        );
+    }, [doneCount])
+
+    const styles = StyleSheet.create({
+        sectionContainer: {
+
+        },
+        iconContainer: {
+            flexDirection: 'row',
+            height: 48,
+            justifyContent: 'center',
+            alignItems: 'center'
+        },
+        sectionIconContainer: {
+            position: 'relative',   // For positioning any badging
+            paddingRight: 28,       // Keep these synced with currentSectionIndicator margin
+            paddingLeft: 28
+        },
+        currentSectionIndicator: {
+            marginLeft: 18,         // Keep these synced with sectionIcon padding
+            marginRight: 18,
+            width: 42,
+            height: 3,
+            backgroundColor: "#3E2723"
+        },
+        doneCountContainer: {
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: '#556B2F',
+            borderRadius: 9,
+            borderWidth: 2,
+            borderColor: '#FAF3E0',
+            width: (doneCount < 10) ? 20 : (doneCount < 100) ? 26 : 36,
+            position: 'absolute',
+            left: 12,
+            top: -6,
+            paddingHorizontal: 3
+        },
+        doneCountText: {
+            fontSize: 12,
+            color: 'white',
+            position: 'relative',
+            top: -0.5,
+            textAlign: 'center'
+        },
+        doneIconContainer: {
+            position: 'relative'
+        }
+    });
+
+    return (
+        <View style={styles.sectionContainer}>
+            <Animated.View style={[styles.currentSectionIndicator, { transform: [{ translateX: barTranslateX }] }]}></Animated.View>
+            <View style={styles.iconContainer}>
+                <Pressable hitSlop={10} style={styles.sectionIconContainer} onPress={() => {
+                    animateCurrentSectionIndicator(0);
+                    //Alert.alert("Implement Me!")
+                }}>
+                    <List wxh="24" color="#3E2723" />
+                </Pressable>
+                <Pressable hitSlop={10} style={styles.sectionIconContainer} onPress={() => {
+                    animateCurrentSectionIndicator(1);
+                    //Alert.alert("Implement Me!")
+                }}><View style={styles.doneIconContainer}>
+                        <CircleCheck wxh="24" color="#3E2723" />
+                        {(doneCount > 0) ?
+                            <Animated.View style={[styles.doneCountContainer, { transform: [{ scale: doneBadgeScaleX }] }]}>
+                                <Text style={styles.doneCountText}>{formatNumber(doneCount)}</Text>
+                            </Animated.View>
+                            : <></>
+                        }
+                    </View>
+                </Pressable>
+                <Pressable hitSlop={10} style={styles.sectionIconContainer} onPress={() => {
+                    animateCurrentSectionIndicator(2);
+                    //Alert.alert("Implement Me!")
+                }}>
+                    <UserRound wxh="24" color="#3E2723" />
+                </Pressable>
+            </View>
+        </View>
+    )
+}
+
+export default NavigationSections;

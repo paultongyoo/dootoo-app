@@ -1,8 +1,8 @@
 import { Platform, Text, View, StyleSheet, Pressable, ActivityIndicator, Alert, AppState } from "react-native";
 import { AppContext } from './AppContext.js';
-import { useContext, useRef, useEffect } from "react";
+import { useContext, useRef, useEffect, useState } from "react";
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
-import Reanimated, { Easing, useSharedValue, withTiming } from 'react-native-reanimated';
+import Reanimated, { Easing, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { checkOpenAPIStatus } from "./BackendServices.js";
@@ -12,9 +12,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Keyboard } from "./svg/keyboard";
 import { Plus } from "./svg/plus";
 import MicButton from "./MicButton";
-import { List } from "./svg/list";
-import { CircleCheck } from "./svg/circle-check";
-import { UserRound } from "./svg/user-round";
+import { ProfileCountEventEmitter } from "./EventEmitters.js";
+import NavigationSections from "./NavigationSections";
 
 const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, transcribeFunction, hideRecordButton = false }) => {
 
@@ -206,73 +205,20 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
             color: '#808080',
             fontSize: 12,
             letterSpacing: 1
-        },
-        sectionContainer: {
-
-        },
-        iconContainer: {
-            flexDirection: 'row',
-            height: 48,
-            justifyContent: 'center',
-            alignItems: 'center'
-        },
-        sectionIconContainer: {
-            position: 'relative',   // For positioning any badging
-            paddingRight: 28,       // Keep these synced with currentSectionIndicator margin
-            paddingLeft: 28
-        },
-        currentSectionIndicator: {
-            marginLeft: 18,         // Keep these synced with sectionIcon padding
-            marginRight: 18,
-            width: 42,
-            height: 3,
-            backgroundColor: "#3E2723"
         }
     });
 
-    const barTranslateX = useSharedValue(0);
-    const animateCurrentSectionIndicator = (sectionIndex) => {
-        // 0 = First section
-        // 1 = Second section
-        // 2 = Third Section
-        barTranslateX.value = withTiming(sectionIndex * 80, {
-            duration: 150,
-            easing: Easing.out(Easing.exp)
-        });
-    }
 
     if (!hideRecordButton) {
         return (
             <>
                 <Animated.View style={[(pathname == ITEMS_PATHNAME) && { opacity }, styles.footerContainer]}>
                     <View style={styles.navigationContainer}>
-                        <View style={styles.sectionContainer}>
-                            <Animated.View style={[styles.currentSectionIndicator, {transform: [{ translateX: barTranslateX }]}]}></Animated.View>
-                            <View style={styles.iconContainer}>
-                                <Pressable hitSlop={10} style={styles.sectionIconContainer} onPress={() => {
-                                    animateCurrentSectionIndicator(0);
-                                    //Alert.alert("Implement Me!")
-                                }}>
-                                    <List wxh="24" color="#3E2723" />
-                                </Pressable>
-                                <Pressable hitSlop={10} style={styles.sectionIconContainer} onPress={() => {
-                                    animateCurrentSectionIndicator(1);
-                                    //Alert.alert("Implement Me!")
-                                }}>
-                                    <CircleCheck wxh="24" color="#3E2723" />
-                                </Pressable>
-                                <Pressable hitSlop={10} style={styles.sectionIconContainer} onPress={() => {
-                                    animateCurrentSectionIndicator(2);
-                                    //Alert.alert("Implement Me!")
-                                }}>
-                                    <UserRound wxh="24" color="#3E2723" />
-                                </Pressable>
-                            </View>
-                        </View>
+                        <NavigationSections />
                         <View style={styles.footerButtonsContainer}>
-                            <MicButton 
-                                buttonHeight={FOOTER_BUTTON_HEIGHT} 
-                                buttonUnderlayStyle={styles.footerButton_Underlay} 
+                            <MicButton
+                                buttonHeight={FOOTER_BUTTON_HEIGHT}
+                                buttonUnderlayStyle={styles.footerButton_Underlay}
                                 buttonStyle={styles.footerButton}
                                 listArray={listArray}
                                 listArraySetterFunc={listArraySetterFunc}
@@ -314,7 +260,7 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
             <>
                 <View style={styles.footerContainer}>
                     <View style={styles.navigationContainer}>
-                        { /* TODO */ }
+                        <NavigationSections />
                     </View>
                     <View style={styles.bannerAdContainer}>
                         <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
