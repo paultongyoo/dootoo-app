@@ -6,12 +6,19 @@ import { UserRound } from "./svg/user-round";
 import Animated, { Easing, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
 import { useEffect, useState } from "react";
 import { ProfileCountEventEmitter } from "./EventEmitters";
+import { loadUsername } from "./Storage";
 
 const NavigationSections = () => {
 
     const [doneCount, setDoneCount] = useState(0);
 
     useEffect(() => {
+        const listener_set_username = ProfileCountEventEmitter.addListener('username_set', async (data) => {
+            const username = data.name;
+            const usernameCounts = await loadUsername(username);
+            setDoneCount(usernameCounts.doneCount);
+        });
+
         const listener_incr_done = ProfileCountEventEmitter.addListener('incr_done', () => {
             setDoneCount((prev) => prev + 1);
         });
@@ -20,6 +27,7 @@ const NavigationSections = () => {
         });
 
         return () => {
+            listener_set_username.remove();
             listener_incr_done.remove();
             listener_descr_done.remove();
         }
