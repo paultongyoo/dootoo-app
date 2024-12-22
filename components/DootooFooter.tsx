@@ -10,7 +10,7 @@ import MicButton from "./MicButton";
 import NavigationSections from "./NavigationSections";
 import KeyboardButton from "./KeyboardButton";
 
-const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, transcribeFunction, hideRecordButton = false }) => {
+const DootooFooter = ({ hideRecordButton = false }) => {
 
     const pathname = usePathname();
 
@@ -23,7 +23,7 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
     const opacity = useSharedValue(0);
 
     const ITEMS_PATHNAME = "/list";
-    const FOOTER_BUTTON_HEIGHT = 50;
+
  
     useEffect(() => {
         initializeMobileAds();
@@ -71,13 +71,6 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
             paddingTop: 20,
             paddingBottom: (insets.bottom && insets.bottom > 0) ? insets.bottom : 10
         },
-        footerButtonsContainer: {
-            flexDirection: 'row',
-            flex: 1,
-            position: 'relative',
-            top: -95,
-            alignItems: 'center'
-        },
         bannerAdCopyContainer: {
             alignItems: 'center',
             paddingBottom: 5
@@ -86,86 +79,25 @@ const DootooFooter = ({ listArray, listArraySetterFunc, saveNewThingsFunc, trans
             color: '#808080',
             fontSize: 12,
             letterSpacing: 1
-        },
-        footerButton: {
-            height: 50,
-            width: 50,
-            borderRadius: 25,
-            borderColor: '#3E2723',
-            borderWidth: 1,
-            marginRight: 20,
-            marginLeft: 20,
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'center',
-            shadowColor: '#000',
-            shadowOffset: { width: 2, height: 4 },
-            shadowOpacity: 0.6,
-            shadowRadius: 4,
-            elevation: 4, // Elevation for Android        
-        },
-        footerButton_Underlay: {
-            height: 50,
-            width: 50,
-            borderRadius: 25,
-            marginRight: 20,
-            marginLeft: 20,
-            position: 'absolute',
-            top: 0,
-            backgroundColor: 'black'
         }
     });
 
-
-    if (!hideRecordButton) {
-        return (
-            <>
-                <Animated.View style={[(pathname == ITEMS_PATHNAME) && { opacity }, styles.footerContainer]}>
-                    <View style={styles.navigationContainer}>
-                        <NavigationSections />
-                        <View style={styles.footerButtonsContainer}>
-                            <MicButton
-                                buttonHeight={FOOTER_BUTTON_HEIGHT}
-                                buttonUnderlayStyle={styles.footerButton_Underlay}
-                                buttonStyle={styles.footerButton}
-                                listArray={listArray}
-                                listArraySetterFunc={listArraySetterFunc}
-                                saveNewThingsFunc={saveNewThingsFunc}
-                                transcribeFunc={transcribeFunction} />
-                            <KeyboardButton listArray={listArray} listArraySetterFunc={listArraySetterFunc} />
-                        </View>
-                    </View>
-                    <View style={styles.bannerAdContainer}>
-                        <View style={styles.bannerAdCopyContainer}>
-                            <Text style={styles.bannerAdCopy}>ADVERTISEMENT</Text>
-                        </View>
-                        <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-                            onPaid={() => amplitude.track("Banner Ad Paid")}
-                            onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
-                            onAdOpened={() => amplitude.track("Banner Ad Opened")}
-                            onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
-                    </View>
-                </Animated.View>
-            </>
-        );
-    } else {
-        return (
-            <>
-                <View style={styles.footerContainer}>
-                    <View style={styles.navigationContainer}>
-                        <NavigationSections />
-                    </View>
-                    <View style={styles.bannerAdContainer}>
-                        <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-                            onPaid={() => amplitude.track("Banner Ad Paid")}
-                            onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
-                            onAdOpened={() => amplitude.track("Banner Ad Opened")}
-                            onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
-                    </View>
+    return (
+        <>
+            <View style={styles.footerContainer}>
+                <View style={styles.navigationContainer}>
+                    <NavigationSections />
                 </View>
-            </>
-        );
-    }
+                <View style={styles.bannerAdContainer}>
+                    <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+                        onPaid={() => amplitude.track("Banner Ad Paid")}
+                        onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
+                        onAdOpened={() => amplitude.track("Banner Ad Opened")}
+                        onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
+                </View>
+            </View>
+        </>
+    );
 };
 
 export default DootooFooter;

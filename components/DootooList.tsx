@@ -23,6 +23,7 @@ import { Clock } from './svg/clock';
 import { Microphone } from './svg/microphone';
 import { Plus } from './svg/plus';
 import MicButton from './MicButton';
+import KeyboardButton from './KeyboardButton';
 
 const THINGNAME_ITEM = "item";
 const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
@@ -42,6 +43,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     isThingDraggable,
     hideRecordButton = false,
     shouldInitialLoad = true }, ref) => {
+
+    const FOOTER_BUTTON_HEIGHT = 50;
 
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, initializeLocalUser,
@@ -1805,6 +1808,17 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     </>
                     : <EmptyThingUX />
             }
+            <View style={listStyles.bottomButtonsContainer}>
+                <MicButton
+                    buttonHeight={FOOTER_BUTTON_HEIGHT}
+                    buttonUnderlayStyle={listStyles.bottomButton_Underlay}
+                    buttonStyle={listStyles.bottomButton}
+                    listArray={listArray}
+                    listArraySetterFunc={listArraySetter}
+                    saveNewThingsFunc={saveNewThings}
+                    transcribeFunc={transcribeAudioToThings} />
+                <KeyboardButton listArray={listArray} listArraySetterFunc={listArraySetter} />
+            </View>
             <DootooFooter hideRecordButton={hideRecordButton}
                 transcribeFunction={transcribeAudioToThings}
                 listArray={listArray}
@@ -1946,6 +1960,40 @@ export const listStyles = StyleSheet.create({
         top: 0,
         backgroundColor: 'black'
     },
+    bottomButtonsContainer: {
+        flexDirection: 'row',
+        flexShrink: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20
+    },
+    bottomButton: {
+        height: 50,
+        width: 50,
+        borderRadius: 25,
+        borderColor: '#3E2723',
+        borderWidth: 1,
+        marginRight: 20,
+        marginLeft: 20,
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 4 },
+        shadowOpacity: 0.6,
+        shadowRadius: 4,
+        elevation: 4, // Elevation for Android        
+    },
+    bottomButton_Underlay: {
+        height: 50,
+        width: 50,
+        borderRadius: 25,
+        marginRight: 20,
+        marginLeft: 20,
+        position: 'absolute',
+        top: 0,
+        backgroundColor: 'black'
+    }
 })
 
 export default DootooList;
