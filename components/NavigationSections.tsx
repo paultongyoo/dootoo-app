@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { ProfileCountEventEmitter } from "./EventEmitters";
 import { loadUsername } from "./Storage";
 
-const NavigationSections = () => {
+const NavigationSections = ({navigation}) => {
 
     const [doneCount, setDoneCount] = useState(0);
 
@@ -52,6 +52,9 @@ const NavigationSections = () => {
         listIconColor.value = withTiming((sectionIndex == 0) ? "#556b2f" : "#3e2723", { duration: 500 });
         doneIconColor.value = withTiming((sectionIndex == 1) ? "#556b2f" : "#3e2723", { duration: 500 });
         profileIconColor.value = withTiming((sectionIndex == 2) ? "#556b2f" : "#3e2723", { duration: 500 });
+    
+        navigation.navigate((sectionIndex == 0) ? 'list'
+                                : (sectionIndex == 1) ? 'done' : 'profile');
     }
 
     // Pulse the badge on every change of doneCount, even on

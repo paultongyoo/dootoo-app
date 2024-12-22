@@ -8,12 +8,10 @@ import { ChevronLeft } from "./svg/chevron-left";
 import { UserCircle } from "./svg/user-circle";
 import { CircleUserRound } from "./svg/circle-user-round";
 
-const DootooHeader = ({ meDrawerNavigation }) => {
+const DootooHeader = ({ navigation, route, options }) => {
     const router = useRouter();
     const pathname = usePathname();
     const opacity = useSharedValue(0);
-
-    const ITEMS_PATHNAME = "/meDrawer/communityDrawer/stack";
 
     useEffect(() => {
         opacity.value = withTiming(1, {
@@ -25,20 +23,15 @@ const DootooHeader = ({ meDrawerNavigation }) => {
         headerContainer: {
             backgroundColor: '#FAF3E0',
             height: (Platform.OS == 'ios') ? 100 : 90,
-            shadowColor: '#000', 
-            shadowOffset: { width: 0, height: 1 }, 
-            shadowOpacity: 0.2, 
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.2,
             shadowRadius: 2,
             elevation: 2 // Elevation for Android      
         },
         headerLeftContainer: {
             position: 'absolute',
             left: 10,
-            bottom: 5
-        },
-        headerRightContainer: {
-            position: 'absolute',
-            right: 10,
             bottom: 5
         },
         mainLogoContainer: {
@@ -48,7 +41,7 @@ const DootooHeader = ({ meDrawerNavigation }) => {
         },
         mainLogoPart: {
             fontSize: 28,
-            fontWeight: 500 
+            fontWeight: 500
         },
         secondLogoPart: {
             color: "#A23E48"
@@ -56,10 +49,6 @@ const DootooHeader = ({ meDrawerNavigation }) => {
         mainProfileIconContainer: {
             position: 'relative',
             paddingRight: 4,
-        },
-        profileIcon: {
-            height: 30,
-            width: 30
         },
         backButtonContainer: {
             width: 40,
@@ -81,29 +70,10 @@ const DootooHeader = ({ meDrawerNavigation }) => {
     return (
         <Animated.View style={[styles.headerContainer, { opacity }]}>
             <View style={styles.headerLeftContainer}>
-                {((pathname == ITEMS_PATHNAME)) ?
-                    <View style={styles.mainLogoContainer}>
-                        <Text style={[{ fontWeight: 500 }, styles.mainLogoPart]}>doo</Text>
-                        <Text style={[styles.mainLogoPart, styles.secondLogoPart]}>too</Text>
-                    </View>
-                    : <View style={styles.backButtonContainer}>
-                        <Pressable onPress={router.back}>
-                            {(Platform.OS == 'ios') ? <ChevronLeft wxh="30" strokeWidth="2" color="#556B2F" />
-                                : <ArrowLeft wxh="30" strokeWidth="2" color="#556B2F" />
-                            }
-                        </Pressable>
-                    </View>}
-            </View>
-            <View style={styles.headerRightContainer}>
-                <Pressable style={styles.mainProfileIconContainer}
-                    onPress={() => {
-                        amplitude.track("Profile Drawer Opened", {
-                            pathname: pathname
-                        });
-                        meDrawerNavigation.openDrawer()
-                    }}>
-                    <Image style={styles.profileIcon} source={require("@/assets/images/profile_icon_green.png")}/>
-                </Pressable>
+                <View style={styles.mainLogoContainer}>
+                    <Text style={[{ fontWeight: 500 }, styles.mainLogoPart]}>doo</Text>
+                    <Text style={[styles.mainLogoPart, styles.secondLogoPart]}>too</Text>
+                </View>
             </View>
         </Animated.View>
     );

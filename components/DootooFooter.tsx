@@ -83,7 +83,7 @@ const DootooFooter = ({ state, descriptors, navigation }) => {
         <>
             <View style={styles.footerContainer}>
                 <View style={styles.navigationContainer}>
-                    <NavigationSections />
+                    <NavigationSections navigation={navigation} />
                 </View>
                 <View style={styles.bannerAdContainer}>
                     <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
