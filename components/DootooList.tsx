@@ -1819,11 +1819,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     transcribeFunc={transcribeAudioToThings} />
                 <KeyboardButton listArray={listArray} listArraySetterFunc={listArraySetter} />
             </View>
-            <DootooFooter hideRecordButton={hideRecordButton}
-                transcribeFunction={transcribeAudioToThings}
-                listArray={listArray}
-                listArraySetterFunc={listArraySetter}
-                saveNewThingsFunc={saveNewThings} />
+            <DootooFooter />
             <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
                 <Dialog.Title>Select Calendar</Dialog.Title>
                 <Dialog.Description>Which calendar to put this item?</Dialog.Description>
