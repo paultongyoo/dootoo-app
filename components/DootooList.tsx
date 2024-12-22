@@ -1587,7 +1587,9 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     renderRightActions={(progress, dragX, swipeableMethods) => {
                         if (renderRightActions) {
                             return renderRightActions(item, getIndex(), handleThingDelete, handleMoveToTop,
-                                <MicButton listArray={listArray}
+                                <MicButton 
+                                    selectedThing={item}
+                                    listArray={listArray}
                                     listArraySetterFunc={listArraySetter}
                                     transcribeFunc={transcribeAudioToThings}
                                     saveNewThingsFunc={saveNewThings} />
@@ -1862,7 +1864,7 @@ export const listStyles = StyleSheet.create({
         flex: 1,
     },
     taskContainer: {
-        flex: 1
+        flexShrink: 0
     },
     itemContainer: {
         flexDirection: 'row',

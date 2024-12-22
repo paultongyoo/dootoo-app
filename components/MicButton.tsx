@@ -10,7 +10,8 @@ import { AppContext } from "./AppContext";
 import { calculateAndroidButtonScale, deleteFile, insertArrayAfter } from "./Helpers";
 import Toast from "react-native-toast-message";
 
-const MicButton = ({ listArray, listArraySetterFunc, transcribeFunc, saveNewThingsFunc }) => {
+const MicButton = ({ containerStyleOverrides = {}, buttonStyleOverrides = {}, buttonUnderlayStyleOverrides = {}, 
+                    selectedThing = null, listArray, listArraySetterFunc, transcribeFunc, saveNewThingsFunc }) => {
     const { anonymousId, lastRecordedCount, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const pathname = usePathname();
     const [permissionResponse, requestPermission] = Audio.usePermissions();
@@ -421,7 +422,7 @@ const MicButton = ({ listArray, listArraySetterFunc, transcribeFunc, saveNewThin
             shadowRadius: 4,
             elevation: 4, // Elevation for Android        
         },
-        footerButton_Underlay: {
+        micButton_Underlay: {
             height: 50,
             width: 50,
             borderRadius: 25,
@@ -473,13 +474,14 @@ const MicButton = ({ listArray, listArraySetterFunc, transcribeFunc, saveNewThin
     }));
 
     return (
-        <View style={styles.micButtonContainer}>
-            <View style={styles.footerButton_Underlay}></View>
+        <View style={[styles.micButtonContainer, containerStyleOverrides]}>
+            <View style={[styles.micButton_Underlay, buttonUnderlayStyleOverrides]}></View>
             <Reanimated.View style={[scaleAnimatedStyle, styles.footerButton,
                 ((recording || isRecordingProcessing)
                     ? styles.stopRecordButton
                     : styles.recordButton),
-                { opacity: recordButtonOpacity }]}>
+                { opacity: recordButtonOpacity },
+                buttonStyleOverrides]}>
                 <Pressable
                     disabled={isRecordingProcessing}
                     onPress={() => {
@@ -487,7 +489,7 @@ const MicButton = ({ listArray, listArraySetterFunc, transcribeFunc, saveNewThin
                             if (recording) {
                                 processRecording();
                             } else {
-                                startRecording();
+                                startRecording(selectedThing);
                             }
                         }
                     }}
