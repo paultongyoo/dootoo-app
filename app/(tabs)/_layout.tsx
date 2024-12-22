@@ -4,12 +4,12 @@ import { Tabs } from 'expo-router';
 
 export default function TabLayout() {
   return (
-    <Tabs 
+    <Tabs
       tabBar={(props) => (<DootooFooter {...props} />)}
       screenOptions={{
         header: (props) => (<DootooHeader {...props} />)
       }}
-      >
+    >
       <Tabs.Screen name="list" />
       <Tabs.Screen name="done" />
       <Tabs.Screen name="profile" />
