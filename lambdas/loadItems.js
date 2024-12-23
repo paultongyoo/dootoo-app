@@ -88,7 +88,11 @@ export const handler = async (event) => {
       };
       prismaParams.select = null;
       prismaParams.include = {
-        children: true
+        children: {
+          include: {
+            parent: true, // Explicitly include the parent relationship for each child
+          }
+        }
       };
 
     }
@@ -106,6 +110,15 @@ export const handler = async (event) => {
       }
 
       retrievedItems = await prisma.item.findMany(prismaParams);
+
+      if (event.onlyDoneParents) {
+
+        // TODO Address ordering
+        retrievedItems = retrievedItems.flatMap((parent) => [
+                              parent, // Add the parent first
+                              ...parent.children.sort((a, b) => a.rank_idx - b.rank_idx), // Then add its children, sorted by rank_idx
+                         ]);
+      }
 
       if (!event.skipPagination) {
       hasMore = retrievedItems.length > pageSize;
