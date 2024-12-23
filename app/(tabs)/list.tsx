@@ -359,7 +359,7 @@ export default function ListScreen() {
                         ProfileCountEventEmitter.emit("incr_done");
                       });
 
-                      // 1.6 Update latest list by removing the item and all of its children
+                      // 1.6 Update list by removing the item and all of its children
                       const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
                       doneChildren.forEach(obj => subtaskUUIDSet.add(obj.uuid));
                       setDootooItems((prevItems) => {
@@ -415,8 +415,22 @@ export default function ListScreen() {
                         ProfileCountEventEmitter.emit("incr_done");
                       });
 
-                      // Set item and ALL of its children (previously open as well as pre-existing closed) to done, move them to top of Done Parents List 
-                      doneItemAndMoveFamilyToTopOfDoneAdults(setDootooItems, item, saveItemOrder);
+                      // 1.6 Update list by removing the item and all of its children
+                      const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
+                      doneChildren.forEach(obj => subtaskUUIDSet.add(obj.uuid));
+                      setDootooItems((prevItems) => {
+
+                        // First filter out deleted items and set clicked item to done
+                        var filteredAndDonedList = prevItems.filter((obj) => 
+                            (!subtaskUUIDSet.has(obj.uuid) && (obj.uuid != item.uuid)))
+
+                        // Update order in backend
+                        const uuidArray = filteredAndDonedList.map((thing) => ({ uuid: thing.uuid }));
+                        saveItemOrder(uuidArray);
+
+                        // Return updated list to state setter
+                        return filteredAndDonedList;
+                      });
                     },
                   },
                 ],
