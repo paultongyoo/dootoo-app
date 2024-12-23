@@ -53,7 +53,6 @@ export default function Index() {
 
   const saveTextUpdate = async (item) => {
     updateItemText(item, async () => {
-      // ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
 
       // 1.2 Event Text edit not working for some reason TODO revisit
       // if (item.event_id) {
@@ -260,7 +259,6 @@ export default function Index() {
           item.is_done = true;
           updateItemDoneState(item, () => {
             ProfileCountEventEmitter.emit("incr_done");
-            // ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
           });
 
         } else {
@@ -339,7 +337,6 @@ export default function Index() {
                       item.is_done = true;
                       updateItemDoneState(item, () => {
                         ProfileCountEventEmitter.emit("incr_done");
-                        // ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
                       });
 
                       // Collapse the doned item and of its done children
@@ -418,7 +415,6 @@ export default function Index() {
                       item.is_done = true;
                       updateItemDoneState(item, () => {
                         ProfileCountEventEmitter.emit("incr_done");
-                        // ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
                       });
 
                       // Set item and ALL of its children (previously open as well as pre-existing closed) to done, move them to top of Done Parents List 
@@ -453,7 +449,6 @@ export default function Index() {
                 item.is_done = true;
                 updateItemDoneState(item, () => {
                   ProfileCountEventEmitter.emit("incr_done");
-                  // ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
                 });
 
                 doneItemAndMoveFamilyToTopOfDoneAdults(setDootooItems, item, saveItemOrder);
@@ -478,7 +473,6 @@ export default function Index() {
             item.is_done = true;
             updateItemDoneState(item, () => {
               ProfileCountEventEmitter.emit("incr_done");
-              // ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
             });
 
             // Update item done state and position in UI; save new order in backend
@@ -500,7 +494,6 @@ export default function Index() {
         item.is_done = false;
         updateItemDoneState(item, () => {
           ProfileCountEventEmitter.emit("decr_done");
-          // ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
         });
 
         // if item is a child
