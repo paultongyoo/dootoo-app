@@ -8,7 +8,7 @@ import Toast from 'react-native-toast-message';
 import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
-import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
+import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
 import { enrichItem, loadItemsCounts, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
@@ -37,7 +37,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     transcribeAudioToThings,
     isThingPressable,
     isThingDraggable,
-    hideRecordButton = false,
     shouldInitialLoad = true }, ref) => {
 
     const FOOTER_BUTTON_HEIGHT = 50;
@@ -86,6 +85,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const [page, setPage] = useState(1);
 
     useEffect(() => {
+        console.log("DootooList.useEffect([])");
+
         initializeLocalUser((isNew: boolean) => {
             //console.log("initializeLocalUser callback method: " + shouldInitialLoad);
             if (shouldInitialLoad) {
@@ -99,7 +100,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             }
         });
 
-        const forceItemCountsUpdate = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__UPDATE_COUNTS, refreshThingCounts);
 
         const handleAppStateChange = (nextAppState) => {
             console.log("App State Changed: " + nextAppState);
@@ -112,11 +112,9 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 }
             }
         };
-
         const subscription = AppState.addEventListener("change", handleAppStateChange);
 
         return () => {
-            forceItemCountsUpdate.remove();
             subscription.remove();
         }
     }, []);

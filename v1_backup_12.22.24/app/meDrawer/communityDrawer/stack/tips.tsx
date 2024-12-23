@@ -16,7 +16,7 @@ import DootooTipEmptyUX from "@/components/DootooTipEmptyUX";
 import DootooList, { listStyles } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import * as amplitude from '@amplitude/analytics-react-native';
-import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
+import { ProfileCountEventEmitter } from "@/components/EventEmitters";
 import { Flag } from "@/components/svg/flag";
 import { Trash } from "@/components/svg/trash";
 import { ThumbUp } from "@/components/svg/thumb-up";
@@ -52,9 +52,7 @@ export default function ItemTips() {
     if (latestTips && latestTips.length > 0) {
 
       // Asynchronously sync DB with latest tips
-      saveTips(selectedItem, latestTips, () => {
-        ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
-      });
+      saveTips(selectedItem, latestTips);
     }
   };
 

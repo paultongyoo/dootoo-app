@@ -9,6 +9,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 export default function TabLayout() {
 
   useEffect(() => {
+    console.log("TabLayout.useEffect([])");
 
     // Initialize App State event handlers
     const handleAppStateChange = (nextAppState) => {
@@ -23,7 +24,6 @@ export default function TabLayout() {
       subscription.remove();
     }
   }, [])
-
 
   const checkOpenAPIHealth = async () => {
     const status = await checkOpenAPIStatus();

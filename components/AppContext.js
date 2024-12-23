@@ -40,7 +40,6 @@ export const AppProvider = ({ children }) => {
     });
 
     const initializeLocalUser = async(callback) => {
-      //console.log("initializeLocalUser");
       const userData = await initalizeUser();
       username.current = userData.name;
       ProfileCountEventEmitter.emit("username_set", {name: userData.name });

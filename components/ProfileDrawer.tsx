@@ -1,3 +1,5 @@
+// 1.6 Deprecated, replaced by /(tabs)/profile.tsx
+
 import { usePathname } from "expo-router";
 import { useContext, useEffect, useRef, useState } from "react";
 import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Linking, Platform } from "react-native";
@@ -10,10 +12,9 @@ import Dialog from "react-native-dialog";
 import { Bulb } from "./svg/bulb";
 import { CloseX } from "./svg/close-x";
 import { Edit } from "./svg/edit";
-import { CircleUserRound } from "./svg/circle-user-round";
 
 
-const ProfileDrawer = ({ navigation }) => {
+const ProfileScreen = ({ navigation }) => {
   const pathname = usePathname();
   const { anonymousId, resetUserContext } = useContext(AppContext);
 
@@ -493,4 +494,4 @@ const ProfileDrawer = ({ navigation }) => {
   );
 }
 
-export default ProfileDrawer;
+export default ProfileScreen;

@@ -27,6 +27,8 @@ const OnboardingScreen = () => {
     const onboardingOpacity = useRef(new Animated.Value(0)).current
 
     useEffect(() => {
+        console.log("OnboardingScreen.useEffect([])");
+
         Animated.timing(onboardingOpacity, {
             toValue: 1,
             duration: 300,

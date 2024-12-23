@@ -7,6 +7,8 @@ export default function Index() {
     const router = useRouter();
 
     useEffect(() => {
+        console.log("Index.useEffect([])");
+        
         const checkFirstLaunch = async () => {
             const launchStatus = await AsyncStorage.getItem('isFirstLaunch');
             if (launchStatus === null) {
