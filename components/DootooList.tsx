@@ -182,7 +182,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     type: 'msgOpenWidth',
                     text1: `Added ${lastRecordedCount.current} ${thingName}${(lastRecordedCount.current > 1) ? 's' : ''}.`,
                     position: 'bottom',
-                    bottomOffset: (Platform.OS == 'ios') ? 260 : 240,
+                    bottomOffset: (Platform.OS == 'ios') ? 260 : 260,
                     visibilityTime: 8000,
                     props: {
 
@@ -630,7 +630,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             type: 'timerInfo',
             visibilityTime: 8000,
             position: 'bottom',
-            bottomOffset: (Platform.OS == 'ios') ? 260 : 240,
+            bottomOffset: (Platform.OS == 'ios') ? 260 : 260,
             props: {
                 thing: thing,
                 onEditIconClick: () => handleTimerToastEditClick(thing),
@@ -1490,7 +1490,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 text1: toastString,
                 visibilityTime: 8000,
                 position: 'bottom',
-                bottomOffset: (Platform.OS == 'ios') ? 260 : 240,
+                bottomOffset: (Platform.OS == 'ios') ? 260 : 260,
                 props: {
                     onUndoClick: () => handleMoveToTopUndo(selectedThing)
                 }
