@@ -1,4 +1,4 @@
-import { Platform, View, StyleSheet } from "react-native";
+import { Platform, View, StyleSheet, Text } from "react-native";
 import { useRef, useEffect } from "react";
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
@@ -86,6 +86,9 @@ const DootooFooter = ({ state, descriptors, navigation }) => {
                     <NavigationSections navigation={navigation} />
                 </View>
                 <View style={styles.bannerAdContainer}>
+                    <View style={styles.bannerAdCopyContainer}>
+                        <Text style={styles.bannerAdCopy}>ADVERTISEMENT</Text>
+                    </View>
                     <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
                         onPaid={() => amplitude.track("Banner Ad Paid")}
                         onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
