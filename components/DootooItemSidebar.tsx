@@ -90,7 +90,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
 
     const goToTips = () => {
         setSelectedItem(thing);
-        router.push(TIPS_PATHNAME);
+        //router.push(TIPS_PATHNAME);           // 1.6 Commented out with deprecation of TIps functionality
     }
 
     const sidebarStyles = StyleSheet.create({
