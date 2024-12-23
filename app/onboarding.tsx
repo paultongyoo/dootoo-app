@@ -102,7 +102,7 @@ const OnboardingScreen = () => {
             easing: Easing.out(Easing.quad),
             useNativeDriver: true
         }).start(() => {    
-            router.replace('/home');
+            router.replace('/list');
         });
     };
 
