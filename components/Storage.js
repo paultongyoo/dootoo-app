@@ -133,7 +133,8 @@ export const loadItems = async (isPullDown) => {
         anonymous_id : localAnonId,
         //page: page,                         // Removed in 1.2
         skipCounts: true,
-        skipPagination: true                  // Added in 1.2
+        skipPagination: true,                  // Added in 1.2
+        noDoneParents: true                    // Added in 1.6
       }
     );
     const item_array = response.data.body.items;

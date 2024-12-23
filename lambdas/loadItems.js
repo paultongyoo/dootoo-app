@@ -72,6 +72,16 @@ export const handler = async (event) => {
       }
     };
 
+    if (event.noDoneParents) {
+      prismaParams.where = { 
+          ...prismaParams.where, NOT: {
+          AND: [
+            { parent_item_id: null },
+            { is_done: true }
+          ]
+        }};
+    }
+
     const pageSize = 15   // hardcode this for now
     if (!event.skipPagination) {
         const page = event.page || 1;
