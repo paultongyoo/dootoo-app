@@ -80,6 +80,17 @@ export const handler = async (event) => {
             { is_done: true }
           ]
         }};
+    } else if (event.onlyDoneParents) {
+      prismaParams.where = { 
+        ...prismaParams.where,
+        is_done: true,
+        parent_item_id: null
+      };
+      prismaParams.select = null;
+      prismaParams.include = {
+        children: true
+      };
+
     }
 
     const pageSize = 15   // hardcode this for now
