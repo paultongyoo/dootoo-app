@@ -65,7 +65,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
             type: 'msgWithLink',
             text1: `${similarCount} ${(similarCount > 1) ? 'people' : 'person'} had similar thing`,
             position: 'bottom',
-            bottomOffset: (Platform.OS == 'ios') ? 240 : 220,
+            bottomOffset: (Platform.OS == 'ios') ? 260 : 240,
             props: {
                 width: 230
             }

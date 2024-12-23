@@ -5,6 +5,8 @@ import { Tabs } from 'expo-router';
 import { useEffect } from 'react';
 import { Alert, AppState } from 'react-native';
 import * as amplitude from '@amplitude/analytics-react-native';
+import Toast from "react-native-toast-message";
+import toastConfig from "@/components/ToastConfig";
 
 export default function TabLayout() {
 
@@ -49,14 +51,17 @@ export default function TabLayout() {
 
 
   return (
-    <Tabs
-      tabBar={(props) => (<DootooFooter {...props} />)}
-      screenOptions={{
-        header: (props) => (<DootooHeader {...props} />),
-      }}>
-      <Tabs.Screen name="list" />
-      <Tabs.Screen name="done" />
-      <Tabs.Screen name="profile" />
-    </Tabs>
+    <>
+      <Tabs
+        tabBar={(props) => (<DootooFooter {...props} />)}
+        screenOptions={{
+          header: (props) => (<DootooHeader {...props} />),
+        }}>
+        <Tabs.Screen name="list" />
+        <Tabs.Screen name="done" />
+        <Tabs.Screen name="profile" />
+      </Tabs>
+      <Toast config={toastConfig} />
+    </>
   );
 }
