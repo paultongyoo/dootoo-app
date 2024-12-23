@@ -1,7 +1,6 @@
 import { Animated, Easing } from 'react-native';
 import { createContext, useState, useRef } from 'react';
 import { initalizeUser, resetAllData } from './Storage';
-import { ProfileCountEventEmitter } from './EventEmitters';
 
 // Create the context
 export const AppContext = createContext();
@@ -10,7 +9,8 @@ export const AppContext = createContext();
 export const AppProvider = ({ children }) => {
 
     // State Variables:  Changing these SHOULD intentionally cause components to re-render
-    const [dootooItems, setDootooItems] = useState([]);
+    const [openItems, setOpenItems] = useState([]);
+    const [doneItems, setDoneItems] = useState([]);
     const [selectedItem, setSelectedItem] = useState(null);         // Selected Item context of Tips pages
     const [selectedProfile, setSelectedProfile] = useState(null);   // Selected Profile from Tip pages
 
@@ -59,7 +59,8 @@ export const AppProvider = ({ children }) => {
 
     return (
         <AppContext.Provider value={{ 
-            dootooItems, setDootooItems,
+            openItems, setOpenItems,
+            doneItems, setDoneItems,
             username, setUsername,
             anonymousId, setAnonymousId,
             doneCount, setDoneCount,

@@ -9,7 +9,7 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
-import { enrichItem, loadItemsCounts, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
+import { enrichItem, loadItemsCounts, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
@@ -21,7 +21,8 @@ import { Clock } from './svg/clock';
 import MicButton from './MicButton';
 import KeyboardButton from './KeyboardButton';
 
-const THINGNAME_ITEM = "item";
+export const THINGNAME_ITEM = "item";
+export const THINGNAME_DONE_ITEM = "done_item";
 const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = (item, index) => { return <></> },
     renderRightActions = (item: any, p0: any, handleThingDelete: (thing: any) => void, handleMoveToTop: (selectedThing: any) => Promise<void>, p1: unknown) => { return <></> },
@@ -37,7 +38,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     transcribeAudioToThings,
     isThingPressable,
     isThingDraggable,
-    shouldInitialLoad = true }, ref) => {
+    shouldInitialLoad = true,
+    hideBottomButtons = false }, ref) => {
 
     const FOOTER_BUTTON_HEIGHT = 50;
 
@@ -131,6 +133,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             // Asyncronously update local cache with latest listArray update
             if (thingName == THINGNAME_ITEM) {
                 updateItemsCache(listArray);
+            } else if (thingName == THINGNAME_DONE_ITEM) {
+                updateDoneItemsCache(listArray); 
             } else {
                 updateTipsCache(selectedItem, listArray);
             }
@@ -196,7 +200,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             ignore = true;
             console.log(`Refreshing latest ${thingName} counts: ${new Date(Date.now()).toLocaleString()}`);
             if (listArray.filter(thing => !thing.newKeyboardEntry).length > 0) {
-                if (thingName == THINGNAME_ITEM) {
+                if ((thingName == THINGNAME_ITEM) || (thingName == THINGNAME_DONE_ITEM)) {
                     const itemUUIDs = listArray.map(thing => thing.uuid);
                     if (itemUUIDs.length > 0) {
                         itemCountsMap.current = await loadItemsCounts(itemUUIDs);
@@ -1802,17 +1806,20 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     </>
                     : <EmptyThingUX />
             }
-            <View style={listStyles.bottomButtonsContainer}>
-                <MicButton
-                    buttonHeight={FOOTER_BUTTON_HEIGHT}
-                    buttonUnderlayStyle={listStyles.bottomButton_Underlay}
-                    buttonStyle={listStyles.bottomButton}
-                    listArray={listArray}
-                    listArraySetterFunc={listArraySetter}
-                    saveNewThingsFunc={saveNewThings}
-                    transcribeFunc={transcribeAudioToThings} />
-                <KeyboardButton listArray={listArray} listArraySetterFunc={listArraySetter} />
-            </View>
+            { (!hideBottomButtons) ?
+                <View style={listStyles.bottomButtonsContainer}>
+                    <MicButton
+                        buttonHeight={FOOTER_BUTTON_HEIGHT}
+                        buttonUnderlayStyle={listStyles.bottomButton_Underlay}
+                        buttonStyle={listStyles.bottomButton}
+                        listArray={listArray}
+                        listArraySetterFunc={listArraySetter}
+                        saveNewThingsFunc={saveNewThings}
+                        transcribeFunc={transcribeAudioToThings} />
+                    <KeyboardButton listArray={listArray} listArraySetterFunc={listArraySetter} />
+                </View>
+                : <></> 
+            }
             <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
                 <Dialog.Title>Select Calendar</Dialog.Title>
                 <Dialog.Description>Which calendar to put this item?</Dialog.Description>

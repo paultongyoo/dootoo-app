@@ -1,9 +1,9 @@
 import { useContext, useEffect } from "react";
 import { usePathname } from 'expo-router';
-import { loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems } from '@/components/Storage';
+import { loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_NO_DONE_PARENTS } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
-import DootooList, { listStyles } from "@/components/DootooList";
+import DootooList, { listStyles, THINGNAME_ITEM } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import { ProfileCountEventEmitter } from "@/components/EventEmitters";
 import * as amplitude from '@amplitude/analytics-react-native';
@@ -26,7 +26,7 @@ import { MoveToTop } from "@/components/svg/move-to-top";
 
 export default function ListScreen() {
   const pathname = usePathname();
-  const { anonymousId, dootooItems, setDootooItems,
+  const { anonymousId, openItems, setOpenItems,
     thingRowHeights, thingRowPositionXs } = useContext(AppContext);
 
   configureReanimatedLogger({
@@ -42,7 +42,7 @@ export default function ListScreen() {
   // 1.5 Deprecated, remove in future
   // const saveAllItems = async (latestItems, callback) => {
 
-  //   // console.log("saveAllItems called with latestItems length: " + dootooItems.length);
+  //   // console.log("saveAllItems called with latestItems length: " + openItems.length);
   //   if (latestItems && latestItems.length > 0) {
   //     //console.log(`Passing ${latestItems.length} to saveItems method...`);
 
@@ -86,7 +86,7 @@ export default function ListScreen() {
     updateItemHierarchy(item.uuid, null);
 
     console.log("Setting new parent into list");
-    setDootooItems((prevItems) => {
+    setOpenItems((prevItems) => {
 
       var newListToReturn = prevItems.map((obj) =>
         (obj.uuid == item.uuid)
@@ -122,7 +122,7 @@ export default function ListScreen() {
     // Get UUID of nearest parent above item to be made into child
     let nearestParentUUID = '';
     for (var i = index - 1; i >= 0; i--) {
-      const currItem = dootooItems[i];
+      const currItem = openItems[i];
       if (!currItem.parent_item_uuid) {
         console.log("Nearest Parent: " + currItem.text);
         nearestParentUUID = currItem.uuid;
@@ -140,11 +140,11 @@ export default function ListScreen() {
     updateItemHierarchy(item.uuid, nearestParentUUID);
 
     // If item had children, make those children children of nearest parent too
-    const childrenOfItem = dootooItems.filter((prevItem) => prevItem.parent_item_uuid == item.uuid);
+    const childrenOfItem = openItems.filter((prevItem) => prevItem.parent_item_uuid == item.uuid);
     childrenOfItem.forEach((child) => updateItemHierarchy(child.uuid, nearestParentUUID));
 
     console.log("Setting new child into list");
-    setDootooItems((prevItems) => {
+    setOpenItems((prevItems) => {
 
       // Make selected item child of nearest parent
       const listWithUpdatedItem = prevItems.map((obj) =>
@@ -203,8 +203,8 @@ export default function ListScreen() {
       });
 
       // Check if item has open kids
-      const openChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
-      const doneChildren = dootooItems.filter((child) => (child.parent_item_uuid == item.uuid) && child.is_done);
+      const openChildren = openItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
+      const doneChildren = openItems.filter((child) => (child.parent_item_uuid == item.uuid) && child.is_done);
 
       // 1) If attempting to set item TO done
       if (!item.is_done) {
@@ -222,7 +222,7 @@ export default function ListScreen() {
               })
           });
 
-          setDootooItems((prevItems) => {
+          setOpenItems((prevItems) => {
 
             // Create beginnings of new state, setting item to done
             const donedList = prevItems.map((obj) => (obj.uuid == item.uuid) ? { ...obj, is_done: true } : obj);
@@ -270,7 +270,7 @@ export default function ListScreen() {
         } else {
 
           // Item is either an adult or parent, check if it has kids...
-          const children = dootooItems.filter((obj) => obj.parent_item_uuid == item.uuid);
+          const children = openItems.filter((obj) => obj.parent_item_uuid == item.uuid);
 
           // Item has kids....
           if (children.length > 0) {
@@ -362,7 +362,7 @@ export default function ListScreen() {
                       // 1.6 Update list by removing the item and all of its children
                       const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
                       doneChildren.forEach(obj => subtaskUUIDSet.add(obj.uuid));
-                      setDootooItems((prevItems) => {
+                      setOpenItems((prevItems) => {
 
                         // First filter out deleted items and set clicked item to done
                         var filteredAndDonedList = prevItems.filter((obj) => 
@@ -418,7 +418,7 @@ export default function ListScreen() {
                       // 1.6 Update list by removing the item and all of its children
                       const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
                       doneChildren.forEach(obj => subtaskUUIDSet.add(obj.uuid));
-                      setDootooItems((prevItems) => {
+                      setOpenItems((prevItems) => {
 
                         // First filter out deleted items and set clicked item to done
                         var filteredAndDonedList = prevItems.filter((obj) => 
@@ -465,7 +465,7 @@ export default function ListScreen() {
 
                 // 1.6 Update list by removing the item and all of its children
                 const subtaskUUIDSet = new Set(doneChildren.map(obj => obj.uuid));
-                setDootooItems((prevItems) => {
+                setOpenItems((prevItems) => {
 
                   // First filter out deleted items and set clicked item to done
                   var filteredAndDonedList = prevItems.filter((obj) => 
@@ -502,7 +502,7 @@ export default function ListScreen() {
             });
 
             // 1.6 Remove done parent from list; save new order in backend
-            setDootooItems((prevItems) => {
+            setOpenItems((prevItems) => {
 
               const filteredList = prevItems.filter((obj) => (obj.uuid != item.uuid));
               const uuidArray = filteredList.map((thing) => ({ uuid: thing.uuid }));
@@ -533,7 +533,7 @@ export default function ListScreen() {
               })
           });
 
-          const [parent] = dootooItems.filter(obj => obj.uuid == item.parent_item_uuid);
+          const [parent] = openItems.filter(obj => obj.uuid == item.parent_item_uuid);
 
           // If Item's parent is done, convert item to adult and move it above the parent
           // 1.6 This scenario shouldn't happen with the new rules on this list
@@ -542,7 +542,7 @@ export default function ListScreen() {
 
             // updateItemHierarchy(item.uuid, null);
 
-            // setDootooItems((prevItems) => {
+            // setOpenItems((prevItems) => {
 
             //   const openedItems = prevItems.map(obj =>
             //     (obj.uuid == item.uuid)
@@ -573,7 +573,7 @@ export default function ListScreen() {
           } else {
             // if Item's parent is open, move item to top of parent's done kids or bottom of fam if none
 
-            setDootooItems((prevItems) => {
+            setOpenItems((prevItems) => {
 
               const openedItems = prevItems.map(obj =>
                 (obj.uuid == item.uuid)
@@ -625,7 +625,7 @@ export default function ListScreen() {
           // await Promise.all(collapseAnimationPromises);
 
           // // Item is a parent -- move it and any of its children to the top of DA list
-          // setDootooItems((prevItems) => {
+          // setOpenItems((prevItems) => {
 
           //   const openedList = prevItems.map(obj => (obj.uuid == item.uuid) ? { ...obj, is_done: false } : obj);
           //   const children = openedList.filter(obj => obj.parent_item_uuid == item.uuid);
@@ -703,7 +703,7 @@ export default function ListScreen() {
 
     // Used as part of visibility rules of Move To Top action (don't display if already at top of parent list)
     const idxOfParent =
-      (item.parent_item_uuid) ? dootooItems.findIndex(prevItem => prevItem.uuid == item.parent_item_uuid) : -999;
+      (item.parent_item_uuid) ? openItems.findIndex(prevItem => prevItem.uuid == item.parent_item_uuid) : -999;
 
     return (
       <>
@@ -753,8 +753,10 @@ export default function ListScreen() {
   };
 
   return (
-    <DootooList listArray={dootooItems}
-      listArraySetter={setDootooItems}
+    <DootooList 
+      thingName={THINGNAME_ITEM}
+      listArray={openItems}
+      listArraySetter={setOpenItems}
       styles={styles}
       renderLeftActions={renderLeftActions}
       renderRightActions={renderRightActions}
@@ -763,7 +765,7 @@ export default function ListScreen() {
       saveNewThings={saveNewItems}
       saveTextUpdateFunc={saveTextUpdate}
       saveThingOrderFunc={saveItemOrder}
-      loadAllThings={loadItems}
+      loadAllThings={(isPullDown) => loadItems(isPullDown, DONE_ITEM_FILTER_NO_DONE_PARENTS)}
       deleteThing={deleteItem}
       saveNewThing={saveNewItem}
       transcribeAudioToThings={transcribeAudioToTasks}
@@ -774,56 +776,3 @@ export default function ListScreen() {
   );
 
 }
-
-// 1.3 Modified to include family and then noticed function right after it is named to do same thing
-//     Consolidate at some point?
-function moveItemFamilyToTopOfDoneAdults(itemList, item_uuid) {
-
-  // Check if item has any kids
-  const itemChildren = itemList.filter((obj) => obj.parent_item_uuid == item_uuid);
-  const itemIdx = itemList.findIndex((obj) => obj.uuid == item_uuid);
-
-  // Extract the item and any of its kids, we ASSume they're listed immediately after it!!!  TODO Dehack this!
-  const movedItems = itemList.splice(itemIdx, 1 + itemChildren.length);
-
-  const doneAdults = itemList.filter((obj) => obj.is_done && !obj.parent_item_uuid);
-  if (doneAdults.length == 0) {
-    return itemList.concat(movedItems);
-  } else {
-    const firstDoneAdultIdx = itemList.findIndex((obj) => obj.uuid == doneAdults[0].uuid);
-    itemList.splice(firstDoneAdultIdx, 0, ...movedItems);
-    return itemList;
-  }
-}
-
-// 1.3  See potentially redundant function above!
-function
-  doneItemAndMoveFamilyToTopOfDoneAdults(setDootooItems: any, item: any, saveItemOrder: (uuidArray: any) => Promise<void>) {
-  setDootooItems((prevItems) => {
-
-    const allChildrenUUIDSet = new Set(prevItems.filter(obj => obj.parent_item_uuid == item.uuid));
-
-    const donedList = prevItems.map((obj) => ((obj.uuid == item.uuid) || allChildrenUUIDSet.has(obj.uuid))
-      ? { ...obj, is_done: true }
-      : obj);
-
-    const doneParentsList = donedList.filter((obj) => !obj.parent_item_uuid && obj.is_done && obj.uuid != item.uuid);
-    if (doneParentsList.length > 0) {
-      const itemIdx = donedList.findIndex(obj => obj.uuid == item.uuid);
-      const removed = donedList.splice(itemIdx, 1 + allChildrenUUIDSet.size);
-      const firstParentIdx = donedList.findIndex((obj) => obj.uuid == doneParentsList[0].uuid);
-      donedList.splice(firstParentIdx, 0, ...removed);
-    } else {
-      // Move item and its children to bottom of list
-      const itemIdx = donedList.findIndex(obj => obj.uuid == item.uuid);
-      const removed = donedList.splice(itemIdx, 1 + allChildrenUUIDSet.size);
-      donedList.push(...removed);
-    }
-
-    const uuidArray = donedList.map((thing) => ({ uuid: thing.uuid }));
-    saveItemOrder(uuidArray);
-
-    return donedList;
-  });
-}
-
