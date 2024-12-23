@@ -9,8 +9,8 @@ import * as amplitude from '@amplitude/analytics-react-native';
 const DONE_COUNT_KEY = "user_done_count";
 const TIP_COUNT_KEY = "user_tip_count";
 const USER_OBJ_KEY = "user_obj";
-const ITEM_LIST_KEY = "item_list";
-const DONE_ITEM_LIST_KEY = "done_item_list";
+export const ITEM_LIST_KEY = "item_list";
+export const DONE_ITEM_LIST_KEY = "done_item_list";
 const TIP_LIST_KEY_PREFIX = "tip_list_";    // Append item UUID to key
 
 const CREATEUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev' 
@@ -192,6 +192,33 @@ export const updateTipsCache = async(item_obj, tip_list_obj) => {
     }
   } catch (e) {
     console.log("Error in updateTipsCache", e);
+  }
+}
+
+export const clearItemCache = async(cacheKeyStr = null) => {
+  try {
+    if (cacheKeyStr == null) {
+      throw new Error("Null cache key provided");
+    } else if ((cacheKeyStr != DONE_ITEM_LIST_KEY) && (cacheKeyStr != ITEM_LIST_KEY)) {
+      throw new Error("Unrecognized item list cache key");
+    }
+    console.log("Clearing cache: " + cacheKeyStr);
+    await AsyncStorage.removeItem(cacheKeyStr);
+  } catch (e) {
+    console.error("Error in updateItemsCache", e);
+  }
+}
+
+export const areItemsCached = async(cacheKeyStr = null) => {
+  try {
+    if (cacheKeyStr == null) {
+      throw new Error("Null cache key provided");
+    } else if ((cacheKeyStr != DONE_ITEM_LIST_KEY) && (cacheKeyStr != ITEM_LIST_KEY)) {
+      throw new Error("Unrecognized item list cache key");
+    }
+    return await AsyncStorage.getItem(cacheKeyStr) != null;
+  } catch (e) {
+    console.error("Error in areItemsCached", e);
   }
 }
 

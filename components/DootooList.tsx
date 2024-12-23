@@ -9,7 +9,7 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
-import { enrichItem, loadItemsCounts, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
+import { areItemsCached, DONE_ITEM_LIST_KEY, enrichItem, ITEM_LIST_KEY, loadItemsCounts, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
@@ -86,6 +86,37 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     // 1.2 Page state var will remain and stay at its value of (1)
     const [page, setPage] = useState(1);
 
+    const initialCacheCheckMount = useRef(true);
+    useEffect(() => {
+        let ignore = false;
+        if (initialCacheCheckMount.current) {
+            initialCacheCheckMount.current = false;
+        } else {
+            const refreshCacheIfNeeded = async () => {
+                if (!ignore) {
+                    const cacheKey = (thingName == THINGNAME_DONE_ITEM) ? DONE_ITEM_LIST_KEY
+                        : (thingName == THINGNAME_ITEM) ? ITEM_LIST_KEY
+                            : null;
+                    const isListCached = await areItemsCached(cacheKey);
+                    if (!isListCached) {
+                        //console.log("Refreshing " + thingName + " page due to empty cache: " + cacheKey);
+                        resetListWithFirstPageLoad();
+                    } else {
+                        //console.log(thingName + " list cached, skipping extra load");
+                    }
+                } else {
+                    //console.log("Ignoring concurrent refreshCacheIfNeeded call");
+                }
+            }
+            refreshCacheIfNeeded();
+        }
+
+        return () => {
+            //console.log(thingName + " Unmounting DootooList.useEffect() render");
+            ignore = true;
+        }
+    });
+
     useEffect(() => {
         console.log("DootooList.useEffect([])");
 
@@ -134,7 +165,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             if (thingName == THINGNAME_ITEM) {
                 updateItemsCache(listArray);
             } else if (thingName == THINGNAME_DONE_ITEM) {
-                updateDoneItemsCache(listArray); 
+                updateDoneItemsCache(listArray);
             } else {
                 updateTipsCache(selectedItem, listArray);
             }
@@ -1588,7 +1619,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     renderRightActions={(progress, dragX, swipeableMethods) => {
                         if (renderRightActions) {
                             return renderRightActions(item, getIndex(), handleThingDelete, handleMoveToTop,
-                                <MicButton 
+                                <MicButton
                                     selectedThing={item}
                                     buttonHeight={fullRowHeight.current}
                                     buttonStyle={[listStyles.action_Microphone, { height: fullRowHeight.current }]}
@@ -1806,7 +1837,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     </>
                     : <EmptyThingUX />
             }
-            { (!hideBottomButtons) ?
+            {(!hideBottomButtons) ?
                 <View style={listStyles.bottomButtonsContainer}>
                     <MicButton
                         buttonHeight={FOOTER_BUTTON_HEIGHT}
@@ -1818,7 +1849,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         transcribeFunc={transcribeAudioToThings} />
                     <KeyboardButton listArray={listArray} listArraySetterFunc={listArraySetter} />
                 </View>
-                : <></> 
+                : <></>
             }
             <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
                 <Dialog.Title>Select Calendar</Dialog.Title>

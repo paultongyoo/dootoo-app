@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
 import { usePathname } from 'expo-router';
-import { loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_ONLY_DONE_PARENTS } from '@/components/Storage';
+import { loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_ONLY_DONE_PARENTS, clearItemCache, ITEM_LIST_KEY } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList, { listStyles, THINGNAME_DONE_ITEM } from "@/components/DootooList";
@@ -200,6 +200,9 @@ export default function DoneScreen() {
         parent_item_uuid: item.parent_item_uuid,
         item_type: (item.parent_item_uuid) ? 'child' : 'adult'
       });
+
+        // Clear the opposite cache to force a DB load on next load of opposite screen
+        clearItemCache(ITEM_LIST_KEY);
 
       // Check if item has open kids
       const openChildren = doneItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
