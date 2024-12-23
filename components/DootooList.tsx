@@ -1989,10 +1989,11 @@ export const listStyles = StyleSheet.create({
     },
     bottomButtonsContainer: {
         flexDirection: 'row',
-        flexShrink: 0,
+        width: '100%',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 20
+        position: 'absolute',
+        bottom: 20
     },
     bottomButton: {
         height: 50,
