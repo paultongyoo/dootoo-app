@@ -311,20 +311,28 @@ export default function ListScreen() {
                       // var slideAnimationArray = [];
                       // var heightAnimationArray = [];
 
-                      // Execute animations to slide/collapse the item off the screen  
-                      const deleteAnimationPromises = [];
+                      // Execute animations to collapse the parent and all of its items off the screen  
+                      const collapseAnimationPromises = [
+                        new Promise<void>((resolve) => thingRowHeights.current[item.uuid].value = withTiming(0, {
+                          duration: 300,
+                          easing: Easing.in(Easing.quad)
+                        }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                        )
+                      ];
                       openChildren.forEach((child) => {
 
                         // Call asyncronous delete to mark item as deleted in backend to sync database
                         deleteItem(child.uuid);
 
-                        deleteAnimationPromises.push(
-                          new Promise<void>((resolve) => thingRowPositionXs.current[child.uuid].value = withTiming(-600, {
+                        collapseAnimationPromises.push(
+                          new Promise<void>((resolve) => thingRowHeights.current[child.uuid].value = withTiming(0, {
                             duration: 300,
                             easing: Easing.in(Easing.quad)
                           }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
                           ));
-                        deleteAnimationPromises.push(
+                      });
+                      doneChildren.forEach((child) => {
+                        collapseAnimationPromises.push(
                           new Promise<void>((resolve) => thingRowHeights.current[child.uuid].value = withTiming(0, {
                             duration: 300,
                             easing: Easing.in(Easing.quad)
@@ -332,9 +340,15 @@ export default function ListScreen() {
                           ));
                       });
 
-                      await Promise.all(deleteAnimationPromises);
+                      await Promise.all(collapseAnimationPromises);
 
+                      delete thingRowPositionXs.current[item.uuid];
+                      delete thingRowHeights.current[item.uuid] 
                       openChildren.forEach((child) => {
+                        delete thingRowPositionXs.current[child.uuid];
+                        delete thingRowHeights.current[child.uuid]
+                      });
+                      doneChildren.forEach((child) => {
                         delete thingRowPositionXs.current[child.uuid];
                         delete thingRowHeights.current[child.uuid]
                       });
@@ -345,43 +359,21 @@ export default function ListScreen() {
                         ProfileCountEventEmitter.emit("incr_done");
                       });
 
-                      // Collapse the doned item and of its done children
-                      const uuidsToCollapse = [item.uuid];
-                      uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
-                      const collapseAnimationPromises = [];
-                      uuidsToCollapse.forEach((uuid) => {
-                        collapseAnimationPromises.push(
-                          new Promise<void>((resolve) => {
-                            thingRowHeights.current[uuid].value =
-                              withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
-                          })
-                        );
-                      });
-                      await Promise.all(collapseAnimationPromises);
-
-                      // Update latest list by:
-                      // 1) filtering out the deleted children
-                      // 2) Setting the item to done
-                      // 3) Moving doned item plus any of its done children to top of done adults
+                      // 1.6 Update latest list by removing the item and all of its children
                       const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
+                      doneChildren.forEach(obj => subtaskUUIDSet.add(obj.uuid));
                       setDootooItems((prevItems) => {
 
                         // First filter out deleted items and set clicked item to done
-                        var filteredAndDonedList = prevItems.filter((obj) => !subtaskUUIDSet.has(obj.uuid))
-                          .map((obj) =>
-                            (obj.uuid == item.uuid)
-                              ? { ...obj, is_done: true }
-                              : obj);
-
-                        // Move done item and any of its kids to top of DAWNKs
-                        const dawnkedList = moveItemFamilyToTopOfDoneAdults(filteredAndDonedList, item.uuid);
+                        var filteredAndDonedList = prevItems.filter((obj) => 
+                            (!subtaskUUIDSet.has(obj.uuid) && (obj.uuid != item.uuid)))
 
                         // Update order in backend
-                        const uuidArray = dawnkedList.map((thing) => ({ uuid: thing.uuid }));
+                        const uuidArray = filteredAndDonedList.map((thing) => ({ uuid: thing.uuid }));
                         saveItemOrder(uuidArray);
 
                         // Return updated list to state setter
-                        return dawnkedList;
+                        return filteredAndDonedList;
                       });
                     }
                   },
