@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
 import { usePathname } from 'expo-router';
-import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems } from '@/components/Storage';
+import { loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList, { listStyles } from "@/components/DootooList";
@@ -38,22 +38,24 @@ export default function ListScreen() {
     console.log("ListScreen.useEffect([])");
   }, []);
 
-  const saveAllItems = async (latestItems, callback) => {
 
-    // console.log("saveAllItems called with latestItems length: " + dootooItems.length);
-    if (latestItems && latestItems.length > 0) {
-      //console.log(`Passing ${latestItems.length} to saveItems method...`);
+  // 1.5 Deprecated, remove in future
+  // const saveAllItems = async (latestItems, callback) => {
 
-      //console.log("saveAllItems started...");
-      // Asynchronously sync DB with latest items
-      saveItems(latestItems, () => {
-        if (callback) {
-          callback();
-        }
-      });
-      //console.log("saveAllItems successful.");
-    }
-  };
+  //   // console.log("saveAllItems called with latestItems length: " + dootooItems.length);
+  //   if (latestItems && latestItems.length > 0) {
+  //     //console.log(`Passing ${latestItems.length} to saveItems method...`);
+
+  //     //console.log("saveAllItems started...");
+  //     // Asynchronously sync DB with latest items
+  //     saveItems(latestItems, () => {
+  //       if (callback) {
+  //         callback();
+  //       }
+  //     });
+  //     //console.log("saveAllItems successful.");
+  //   }
+  // };
 
   const saveTextUpdate = async (item) => {
     updateItemText(item, async () => {
@@ -76,7 +78,7 @@ export default function ListScreen() {
   const handleMakeParent = (item) => {
 
     amplitude.track("Item Made Into Parent", {
-      anonymous_id: anonymousId.current,
+      anonymous_id: anonymousId,
       item_uuid: item.uuid
     });
 
@@ -129,7 +131,7 @@ export default function ListScreen() {
     }
 
     amplitude.track("Item Made Into Child", {
-      anonymous_id: anonymousId.current,
+      anonymous_id: anonymousId,
       item_uuid: item.uuid,
       parent_item_uuid: nearestParentUUID
     });
@@ -192,7 +194,7 @@ export default function ListScreen() {
     try {
 
       amplitude.track("Item Done Clicked", {
-        anonymous_id: anonymousId.current,
+        anonymous_id: anonymousId,
         pathname: pathname,
         uuid: item.uuid,
         done_state_at_click: item.is_done,
@@ -276,7 +278,7 @@ export default function ListScreen() {
             // item has open children, prompt user how to handle them
             if (openChildren.length > 0) {
               amplitude.track("Doneify With Kids Prompt Displayed", {
-                anonymous_id: anonymousId.current,
+                anonymous_id: anonymousId,
                 pathname: pathname,
                 num_open_kids: openChildren.length
               });
@@ -289,7 +291,7 @@ export default function ListScreen() {
                     text: 'Cancel', // 1.2.3
                     onPress: () => {
                       amplitude.track("Doneify With Kids Prompt Cancelled", {
-                        anonymous_id: anonymousId.current,
+                        anonymous_id: anonymousId,
                         pathname: pathname,
                         num_open_kids: openChildren.length
                       });
@@ -300,7 +302,7 @@ export default function ListScreen() {
                     text: 'Delete Them',
                     onPress: async () => {
                       amplitude.track("Doneify With Kids Prompt: Delete Chosen", {
-                        anonymous_id: anonymousId.current,
+                        anonymous_id: anonymousId,
                         pathname: pathname,
                         num_open_children: openChildren.length
                       });
@@ -387,7 +389,7 @@ export default function ListScreen() {
                     text: 'Complete Them',
                     onPress: async () => {
                       amplitude.track("Doneify With Kids Prompt: Complete Chosen", {
-                        anonymous_id: anonymousId.current,
+                        anonymous_id: anonymousId,
                         pathname: pathname,
                         num_open_children: openChildren.length
                       });

@@ -4,7 +4,7 @@ import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Lin
 import { AppContext } from "@/components/AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, showComingSoonAlert } from '@/components/Helpers';
-import { loadUsername, overrideUserAnonId, saveUserLocally, updateUsername } from "@/components/Storage";
+import { overrideUserAnonId, saveUserLocally, updateUsername } from "@/components/Storage";
 import { ProfileCountEventEmitter } from "@/components/EventEmitters";
 import Dialog from "react-native-dialog";
 import { Bulb } from "@/components/svg/bulb";
@@ -13,11 +13,11 @@ import { Edit } from "@/components/svg/edit";
 
 const ProfileScreen = ({ navigation }) => {
     const pathname = usePathname();
-    const { username, anonymousId, resetUserContext } = useContext(AppContext);
+    const { username, doneCount, tipCount, setTipCount, anonymousId, resetUserContext } = useContext(AppContext);
 
     //const [username, setUsername] = useState('');
-    const [doneCount, setDoneCount] = useState(0);
-    const [tipCount, setTipCount] = useState(0);
+    // const [doneCount, setDoneCount] = useState(0);
+    // const [tipCount, setTipCount] = useState(0);
     const [loadingNewUsername, setLoadingNewUsername] = useState(false);
     const [usernameDialogVisible, setUsernameDialogVisible] = useState(false);
     const [usernameInvalid, setUsernameInvalid] = useState(false);
@@ -36,50 +36,50 @@ const ProfileScreen = ({ navigation }) => {
         // const listener_set_username = ProfileCountEventEmitter.addListener('username_set', (data) => {
         //     setUsername(data.name);
         // });
-        const listener_incr_done = ProfileCountEventEmitter.addListener('incr_done', () => {
-            setDoneCount((prev) => prev + 1);
-        });
-        const listener_descr_done = ProfileCountEventEmitter.addListener('decr_done', () => {
-            setDoneCount((prev) => prev - 1);
-        });
+        // const listener_incr_done = ProfileCountEventEmitter.addListener('incr_done', () => {
+        //     setDoneCount((prev) => prev + 1);
+        // });
+        // const listener_descr_done = ProfileCountEventEmitter.addListener('decr_done', () => {
+        //     setDoneCount((prev) => prev - 1);
+        // });
         const listener_incr_tips = ProfileCountEventEmitter.addListener('incr_tips', (data) => {
-            setTipCount((prev) => prev + data.count);
+            setTipCount(prevCount => prevCount + data.count);
         });
         const listener_decr_tips = ProfileCountEventEmitter.addListener('decr_tips', () => {
-            setTipCount((prev) => prev - 1);
+            setTipCount(prevCount => prevCount - 1);;
         });
 
         return () => {
-            listener_incr_done.remove();
-            listener_descr_done.remove();
+            // listener_incr_done.remove();
+            // listener_descr_done.remove();
             listener_incr_tips.remove();
             listener_decr_tips.remove();
             //listener_set_username.remove();
         }
     }, []);
 
-    useEffect(() => {
-        console.log("ProfileScreen.useEffect([username])");
-        if (username.current) {
+    // useEffect(() => {
+    //     console.log("ProfileScreen.useEffect([username])");
+    //     if (username.current) {
 
-            const fetchUsernameCounts = async () => {
-                const usernameCounts = await loadUsername(username.current);
-                console.log("Updating latest profile counts: " + JSON.stringify(usernameCounts));
-                setDoneCount(usernameCounts.doneCount);
-                setTipCount(usernameCounts.tipCount);
-            }
+    //         const fetchUsernameCounts = async () => {
+    //             const usernameCounts = await loadUsername(username.current);
+    //             console.log("Updating latest profile counts: " + JSON.stringify(usernameCounts));
+    //             setDoneCount(usernameCounts.doneCount);
+    //             setTipCount(usernameCounts.tipCount);
+    //         }
 
-            // Initialize counts
-            fetchUsernameCounts();
+    //         // Initialize counts
+    //         fetchUsernameCounts();
 
-        } else {
-            console.log("ProfileScreen.useEffect([username]) called with null username, skipping.  Expected?");
-        }
-    }, [username.current])
+    //     } else {
+    //         console.log("ProfileScreen.useEffect([username]) called with null username, skipping.  Expected?");
+    //     }
+    // }, [username.current])
 
     const showConfirmationPrompt = () => {
         amplitude.track("User Data Deletion Started", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname
         });
         Alert.alert(
@@ -90,7 +90,7 @@ const ProfileScreen = ({ navigation }) => {
                     text: 'Cancel',
                     onPress: () => {
                         amplitude.track("User Data Deletion Cancelled", {
-                            anonymous_id: anonymousId.current,
+                            anonymous_id: anonymousId,
                             pathname: pathname
                         });
                     },
@@ -101,7 +101,7 @@ const ProfileScreen = ({ navigation }) => {
                     onPress: () => {
                         //console.log('Data Deletion OK Pressed');
                         amplitude.track("User Data Deletion Completed", {
-                            anonymous_id: anonymousId.current,
+                            anonymous_id: anonymousId,
                             pathname: pathname
                         });
                         resetUserData();
@@ -120,12 +120,12 @@ const ProfileScreen = ({ navigation }) => {
 
     const sendEmail = () => {
         amplitude.track("Email Feedback Link Clicked", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname
         });
 
         const email = 'contact@thoughtswork.co'; // Replace with the desired email address
-        const subject = `Feedback from ${username.current}`; // Optional: add a subject
+        const subject = `Feedback from ${username}`; // Optional: add a subject
         const body = '';
 
         // Construct the mailto URL
@@ -135,7 +135,7 @@ const ProfileScreen = ({ navigation }) => {
         Linking.openURL(url).catch(err => console.error('Error opening email client:', err));
 
         amplitude.track("Email Feedback Link Opened", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname
         });
     };
@@ -245,7 +245,7 @@ const ProfileScreen = ({ navigation }) => {
 
     const handleEditUsername = () => {
         amplitude.track("Edit Username Started", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname
         });
         usernameTextInputValue.current = username.current;
@@ -270,7 +270,7 @@ const ProfileScreen = ({ navigation }) => {
 
     function handleUsernameDialogCancel(): void {
         setUsernameDialogVisible(false);
-        usernameTextInputValue.current = username.current;
+        usernameTextInputValue.current = username;
     }
 
     const handleUsernameDialogSubmit = async () => {
@@ -278,11 +278,11 @@ const ProfileScreen = ({ navigation }) => {
         setLoadingNewUsername(true);
         const statusCode = await updateUsername(usernameTextInputValue.current);
         if (statusCode == 200) {
-            setUsername(usernameTextInputValue.current);
+            username.current = usernameTextInputValue.current;
 
             const updatedUserObj = {
                 name: usernameTextInputValue.current,
-                anonymous_id: anonymousId.current,
+                anonymous_id: anonymousId,
                 tipCount: tipCount,
                 doneCount: doneCount
             };
@@ -290,7 +290,7 @@ const ProfileScreen = ({ navigation }) => {
             setLoadingNewUsername(false);
 
             amplitude.track("Edit Username Completed", {
-                anonymous_id: anonymousId.current,
+                anonymous_id: anonymousId,
                 pathname: pathname,
                 username: usernameTextInputValue.current
             });
@@ -299,7 +299,7 @@ const ProfileScreen = ({ navigation }) => {
             setDupeUsernameDialogVisible(true);
 
             amplitude.track("Edit Username Submission Invalid", {
-                anonymous_id: anonymousId.current,
+                anonymous_id: anonymousId,
                 pathname: pathname,
                 error_type: 'dupe',
                 username: usernameTextInputValue.current
@@ -309,7 +309,7 @@ const ProfileScreen = ({ navigation }) => {
             setUsernameModerationFailedDialogVisible(true);
 
             amplitude.track("Edit Username Submission Invalid", {
-                anonymous_id: anonymousId.current,
+                anonymous_id: anonymousId,
                 pathname: pathname,
                 error_type: 'moderation_failed',
                 username: usernameTextInputValue.current
@@ -319,7 +319,7 @@ const ProfileScreen = ({ navigation }) => {
             setUsernameSpammingFailedDialogVisible(true);
 
             amplitude.track("Edit Username Submission Invalid", {
-                anonymous_id: anonymousId.current,
+                anonymous_id: anonymousId,
                 pathname: pathname,
                 error_type: 'spam',
                 username: usernameTextInputValue.current
@@ -329,13 +329,13 @@ const ProfileScreen = ({ navigation }) => {
             setUsernameUnexpectedDialogVisible(true);
 
             amplitude.track("Edit Username Submission Invalid", {
-                anonymous_id: anonymousId.current,
+                anonymous_id: anonymousId,
                 pathname: pathname,
                 error_type: 'unexpected',
                 username: usernameTextInputValue.current
             });
         }
-        usernameTextInputValue.current = username.current;
+        usernameTextInputValue.current = username;
     }
 
     const showAnonIdOverridePrompt = () => {
@@ -355,10 +355,10 @@ const ProfileScreen = ({ navigation }) => {
             <View style={styles.profileDrawerProfileIconContainer}>
                 <Image source={require("@/assets/images/profile_icon_green.png")} />
                 <View style={styles.profileDrawerProfileNameContainer}>
-                    {(!username.current || username.current.length == 0) ?
+                    {(!username || username.length == 0) ?
                         <ActivityIndicator size={"large"} color="#3E3723" />
                         :
-                        <Text style={styles.profileDrawerProfileNameText}>{username.current}</Text>
+                        <Text style={styles.profileDrawerProfileNameText}>{username}</Text>
                     }
                 </View>
                 <Pressable hitSlop={10} style={styles.refreshNameContainer}
@@ -372,7 +372,7 @@ const ProfileScreen = ({ navigation }) => {
             </View>
             <View style={styles.statsContainer}>
                 <Pressable style={styles.statContainer}
-                    onPress={() => showComingSoonAlert(anonymousId.current, "'Done'", pathname)}>
+                    onPress={() => showComingSoonAlert(anonymousId, "'Done'", pathname)}>
                     <View style={styles.statIconContainer}>
                         <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
                     </View>
@@ -380,7 +380,7 @@ const ProfileScreen = ({ navigation }) => {
                     <Text style={styles.statName}>Done</Text>
                 </Pressable>
                 <Pressable style={styles.statContainer}
-                    onPress={() => showComingSoonAlert(anonymousId.current, "'Tips'", pathname)}>
+                    onPress={() => showComingSoonAlert(anonymousId, "'Tips'", pathname)}>
                     <View style={styles.statIconContainer}>
                         <Bulb wxh="40" color="#556B2F" strokeWidth="1.5" />
                     </View>

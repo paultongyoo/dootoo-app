@@ -34,7 +34,7 @@ const DootooTipSidebar = ({ thing, styles }) => {
 
     const sendFlagContextEmail = () => {
         const email = 'contact@thoughtswork.co'; // Replace with the desired email address
-        const subject = `Tip Flag Objection from User ${username.current}`; // Optional: add a subject
+        const subject = `Tip Flag Objection from User ${username}`; // Optional: add a subject
         const body = `Tip text: ${thing.text} - Reason I'm contesting flagging this: `;
 
         // Construct the mailto URL

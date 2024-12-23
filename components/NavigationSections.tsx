@@ -11,17 +11,18 @@ import { AppContext } from "./AppContext";
 
 const NavigationSections = ({navigation}) => {
 
-    const [doneCount, setDoneCount] = useState(0);
-    const { username } = useContext(AppContext);
+    const { username, doneCount, setDoneCount, tipCount, setTipCount } = useContext(AppContext);
+    const [refreshKey, setRefreshKey] = useState(0);
+
 
     useEffect(() => {
-        console.log("NavigationSections.useEFfect([])");
+        console.log("NavigationSections.useEffect([])");
 
         const listener_incr_done = ProfileCountEventEmitter.addListener('incr_done', () => {
-            setDoneCount((prev) => prev + 1);
+            setDoneCount(prevVal => prevVal + 1);
         });
         const listener_descr_done = ProfileCountEventEmitter.addListener('decr_done', () => {
-            setDoneCount((prev) => prev - 1);
+            setDoneCount(prevVal => prevVal - 1);
         });
 
         return () => {
@@ -31,17 +32,18 @@ const NavigationSections = ({navigation}) => {
     }, [])
 
     useEffect(() => {
-        console.log("ProfileScreen.useEffect([username])");
-        if (username.current) {
+        console.log("NavigationSections.useEffect([username])");
+        if (username) {
             const initUsername = async () => {
-                const usernameCounts = await loadUsername(username.current);
+                const usernameCounts = await loadUsername(username);
                 setDoneCount(usernameCounts.doneCount);
+                setTipCount(usernameCounts.tipCount);
             }
             initUsername();
         } else {
-            console.log("ProfileScreen.useEffect([username]) called with null username.current");
+            console.log("NavigationSections.useEffect([username]) called with null username.current");
         }
-    }, [username.current])
+    }, [username])
 
     const listIconColor = useSharedValue("#3e2723");
     const doneIconColor = useSharedValue("#3e2723");
@@ -130,13 +132,11 @@ const NavigationSections = ({navigation}) => {
             <View style={styles.iconContainer}>
                 <Pressable hitSlop={10} style={styles.sectionIconContainer} onPress={() => {
                     animateCurrentSectionIndicator(0);
-                    //Alert.alert("Implement Me!")
                 }}>
                     <List wxh="24" color={listIconColor} />
                 </Pressable>
                 <Pressable hitSlop={10} style={styles.sectionIconContainer} onPress={() => {
                     animateCurrentSectionIndicator(1);
-                    //Alert.alert("Implement Me!")
                 }}><View style={styles.doneIconContainer}>
                         <CircleCheck wxh="24" color={doneIconColor} />
                         {(doneCount > 0) ?
@@ -149,7 +149,6 @@ const NavigationSections = ({navigation}) => {
                 </Pressable>
                 <Pressable hitSlop={10} style={styles.sectionIconContainer} onPress={() => {
                     animateCurrentSectionIndicator(2);
-                    //Alert.alert("Implement Me!")
                 }}>
                     <UserRound wxh="24" color={profileIconColor} />
                 </Pressable>

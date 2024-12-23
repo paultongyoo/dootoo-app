@@ -19,8 +19,10 @@ export const AppProvider = ({ children }) => {
     const thingRowPositionXs = useRef({});
     const thingRowHeights = useRef({});
     const lastRecordedCount = useRef(0);
-    const username = useRef();
-    const anonymousId = useRef();
+    const [username, setUsername] = useState(null);
+    const [anonymousId, setAnonymousId] = useState(null);
+    const [doneCount, setDoneCount] = useState(0);
+    const [tipCount, setTipCount] = useState(0);
     const itemCountsMap = useRef(new Map());
     const currentlyTappedThing = useRef(null);   
 
@@ -41,10 +43,9 @@ export const AppProvider = ({ children }) => {
 
     const initializeLocalUser = async(callback) => {
       const userData = await initalizeUser();
-      username.current = userData.name;
-      ProfileCountEventEmitter.emit("username_set", {name: userData.name });
-      anonymousId.current = userData.anonymous_id;
-
+      setUsername(userData.name);
+      setAnonymousId(userData.anonymous_id);
+      console.log("username/anonymousId.current values set: " + JSON.stringify(userData));
       if (callback) {
         callback(userData.isNew);
       }
@@ -59,8 +60,10 @@ export const AppProvider = ({ children }) => {
     return (
         <AppContext.Provider value={{ 
             dootooItems, setDootooItems,
-            username,
-            anonymousId, 
+            username, setUsername,
+            anonymousId, setAnonymousId,
+            doneCount, setDoneCount,
+            tipCount, setTipCount,
             lastRecordedCount,
             resetUserContext,
             initializeLocalUser,
@@ -73,7 +76,7 @@ export const AppProvider = ({ children }) => {
             selectedProfile, setSelectedProfile,
             swipeableRefs,
             itemCountsMap,
-            currentlyTappedThing,
+            currentlyTappedThing
              }}>
           {children}
         </AppContext.Provider>

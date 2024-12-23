@@ -29,13 +29,7 @@ const DootooItemEmptyUX = () => {
       duration: 1500,
       easing: Easing.inOut(Easing.ease),
       useNativeDriver: true
-    }),
-    // Animated.timing(fadeAnimArrow, {
-    //   toValue: 1,
-    //   duration: 800,
-    //   easing: Easing.inOut(Easing.ease),
-    //   useNativeDriver: true
-    // }),
+    })
   ]);
 
   useFocusEffect(

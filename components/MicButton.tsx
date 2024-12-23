@@ -47,7 +47,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
         recordingTimeStart.current = performance.now();
         //console.log("Logging start time: " + new Date(recordingTimeStart.current).toLocaleString());
         amplitude.track("Recording Started", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname
         });
         try {
@@ -124,7 +124,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
             } else {
                 //console.error('Failed to start recording', err);
                 amplitude.track("Recording Error Occurred", {
-                    anonymous_id: anonymousId.current,
+                    anonymous_id: anonymousId,
                     pathname: pathname,
                     error: err
                 });
@@ -186,7 +186,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                 recorderProcessLocked.current = true;
 
                 amplitude.track("Recording Processing Started", {
-                    anonymous_id: anonymousId.current,
+                    anonymous_id: anonymousId,
                     pathname: pathname,
                     stop_type: (isAutoStop) ? 'auto' : 'manual'
                 });
@@ -197,7 +197,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                 const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
                 //console.log("Number of scheduled items recorded: " + numScheduledItems);
                 amplitude.track("Recording Processing Completed", {
-                    anonymous_id: anonymousId.current,
+                    anonymous_id: anonymousId,
                     flagged: (response == "flagged"),
                     thing_count: (response && response.length >= 0) ? response.length : -1,
                     numScheduledItems: numScheduledItems,
@@ -207,11 +207,11 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                 if (response == "flagged") {
                     //console.log(`Audio flagged, displaying alert prompt`);
                     amplitude.track("Recording Flagged", {
-                        anonymous_id: anonymousId.current,
+                        anonymous_id: anonymousId,
                         pathname: pathname
                     });
                     amplitude.track("Recording Flagged Prompt Displayed", {
-                        anonymous_id: anonymousId.current,
+                        anonymous_id: anonymousId,
                         pathname: pathname
                     });
                     Alert.alert(
@@ -223,7 +223,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                                 onPress: () => {
                                     //console.log('Audio Content Advisory Acknowledgement button Pressed');
                                     amplitude.track("Recording Flagged Prompt Dismissed", {
-                                        anonymous_id: anonymousId.current,
+                                        anonymous_id: anonymousId,
                                         pathname: pathname
                                     });
                                 },
@@ -310,7 +310,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                     } else {
                         //console.log("Did not call setter with updated list, attempting to show toast.");
                         amplitude.track("Empty Recording Toast Displayed", {
-                            anonymous_id: anonymousId.current,
+                            anonymous_id: anonymousId,
                             pathname: pathname
                         });
                         Toast.show({
@@ -348,14 +348,14 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
     }
 
     const callBackendTranscribeService = async (fileUri: string, durationSeconds: number) => {
-        return await transcribeFunc(fileUri, durationSeconds, anonymousId.current);
+        return await transcribeFunc(fileUri, durationSeconds, anonymousId);
     }
 
     const stopRecording = async (localRecordingObject = null, isAutoStop = false) => {
         const recordingDurationEnd = performance.now();
         const recordingDuration = (recordingDurationEnd - recordingTimeStart.current) / 1000;
         amplitude.track("Recording Stopped", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname,
             durationSeconds: recordingDuration,
             stop_type: (isAutoStop) ? 'auto' : 'manual'
@@ -395,7 +395,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
     //         const { fileUri, duration } = await stopRecording();
     //         deleteFile(fileUri);
     //         amplitude.track("Recording Processing Cancelled", {
-    //             anonymous_id: anonymousId.current,
+    //             anonymous_id: anonymousId,
     //             pathname: pathname,
     //             durationSeconds: duration
     //         });

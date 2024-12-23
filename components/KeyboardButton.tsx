@@ -20,7 +20,7 @@ const KeyboardButton = ({ listArray, listArraySetterFunc }) => {
         currentlyTappedThing.current = newItem;
 
         amplitude.track("Keyboard Entry Started", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname,
             uuid: newItem.uuid
         });

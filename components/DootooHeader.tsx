@@ -9,7 +9,6 @@ import { UserCircle } from "./svg/user-circle";
 import { CircleUserRound } from "./svg/circle-user-round";
 
 const DootooHeader = ({ navigation, route, options }) => {
-    const router = useRouter();
     const pathname = usePathname();
     const opacity = useSharedValue(0);
 
