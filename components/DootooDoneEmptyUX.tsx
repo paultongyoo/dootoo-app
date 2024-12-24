@@ -1,17 +1,18 @@
-import { Animated, Text, StyleSheet, Easing } from 'react-native';
+import { Text, StyleSheet, Easing } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useContext } from 'react';
 import { AppContext } from './AppContext';
+import Animated, { useSharedValue, withTiming } from 'react-native-reanimated';
 
 const DootooDoneEmptyUX = () => {
-  const { emptyListCTAOpacity, emptyListCTAFadeInAnimation } = useContext(AppContext);
-
+  
+  const opacity = useSharedValue(0)
 
   useFocusEffect(
     useCallback(() => {
-      emptyListCTAFadeInAnimation.start();
+      opacity.value = withTiming(1, { duration: 800 })
       return () => {
-        emptyListCTAFadeInAnimation.reset();
+        opacity.value = withTiming(0, { duration: 800 })
       }
     }, [])
   );
@@ -29,7 +30,7 @@ const DootooDoneEmptyUX = () => {
     },
   })
 
-  return <Animated.View style={[emptyStyles.emptyListContainer, { opacity: emptyListCTAOpacity }]}>
+  return <Animated.View style={[emptyStyles.emptyListContainer, { opacity }]}>
     <Text style={emptyStyles.emptyListContainer_words}>Your done items will appear here.</Text>
     <Text style={[emptyStyles.emptyListContainer_words, { color: '#556B2F' }]}>Let's get to work!</Text>
   </Animated.View>;
