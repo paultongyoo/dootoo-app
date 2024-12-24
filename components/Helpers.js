@@ -3,7 +3,6 @@ import * as amplitude from '@amplitude/analytics-react-native';
 import { DateTime } from 'luxon';
 import uuid from 'react-native-uuid';
 import RNFS from 'react-native-fs';
-import { THINGNAME_DONE_ITEM, THINGNAME_ITEM } from "./DootooList";
 
 export const formatNumber = (num) => {
   if (!num) return null;
@@ -385,6 +384,9 @@ export const deleteFile = async (fileUri: string) => {
   }
 };
 
+// Duplicated DootooList constants to stop cyclical reference warning
+export const THINGNAME_ITEM = "item";
+export const THINGNAME_DONE_ITEM = "done_item";
 export const stringizeThingName = (thingName) => {
   if (thingName == THINGNAME_DONE_ITEM || thingName == THINGNAME_ITEM) {
     return "item";
