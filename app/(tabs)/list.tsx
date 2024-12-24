@@ -202,10 +202,6 @@ export default function ListScreen() {
         item_type: (item.parent_item_uuid) ? 'child' : 'adult'
       });
 
-      // Clear the opposite list and cache to force a DB load on next load of opposite screen
-      clearItemCache(DONE_ITEM_LIST_KEY);
-      clearDoneItems();
-
       // Check if item has open kids
       const openChildren = openItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
       const doneChildren = openItems.filter((child) => (child.parent_item_uuid == item.uuid) && child.is_done);
@@ -272,6 +268,11 @@ export default function ListScreen() {
           });
 
         } else {
+
+          // Because this scenario will affect how the opposite list will appear, 
+          // clear the opposite list and cache to force a DB load on next load of opposite screen
+          clearItemCache(DONE_ITEM_LIST_KEY);
+          clearDoneItems();
 
           // Item is either an adult or parent, check if it has kids...
           const children = openItems.filter((obj) => obj.parent_item_uuid == item.uuid);

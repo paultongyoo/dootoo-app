@@ -202,10 +202,6 @@ export default function DoneScreen() {
         item_type: (item.parent_item_uuid) ? 'child' : 'adult'
       });
 
-        // Clear the opposite list and cache to force a DB load on next load of opposite screen
-        clearItemCache(ITEM_LIST_KEY);
-        clearOpenItems();
-
       // Check if item has open kids
       const openChildren = doneItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
       const doneChildren = doneItems.filter((child) => (child.parent_item_uuid == item.uuid) && child.is_done);
@@ -213,67 +209,67 @@ export default function DoneScreen() {
       // 1) If attempting to set item TO done
       if (!item.is_done) {
 
-        // 1.3 If item being doned is a child...
-        if (item.parent_item_uuid) {
+        console.warn("Setting an item _to_ done should not be possible on done page!")
 
-          // Collapse single done item
-          await new Promise<void>((resolve) => {
-            thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 },
-              (isFinished) => {
-                if (isFinished) {
-                  runOnJS(resolve)()
-                }
-              })
-          });
+        // // 1.3 If item being doned is a child...
+        // if (item.parent_item_uuid) {
 
-          setDoneItems((prevItems) => {
+        //   // Collapse single done item
+        //   await new Promise<void>((resolve) => {
+        //     thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 },
+        //       (isFinished) => {
+        //         if (isFinished) {
+        //           runOnJS(resolve)()
+        //         }
+        //       })
+        //   });
 
-            // Create beginnings of new state, setting item to done
-            const donedList = prevItems.map((obj) => (obj.uuid == item.uuid) ? { ...obj, is_done: true } : obj);
+        //   setDoneItems((prevItems) => {
 
-            // Check whether child has done siblings...
-            const doneSiblings = donedList.filter((child) => ((child.parent_item_uuid == item.parent_item_uuid) && child.is_done && (child.uuid != item.uuid)));
-            if (doneSiblings.length > 0) {
+        //     // Create beginnings of new state, setting item to done
+        //     const donedList = prevItems.map((obj) => (obj.uuid == item.uuid) ? { ...obj, is_done: true } : obj);
 
-              // Relocate item to first done sibling location
-              const itemIdx = donedList.findIndex((obj) => obj.uuid == item.uuid);
-              const [movedItem] = donedList.splice(itemIdx, 1);
-              const firstDoneSibilingIdx = donedList.findIndex((obj) => obj.uuid == doneSiblings[0].uuid);
-              donedList.splice(firstDoneSibilingIdx, 0, movedItem);
+        //     // Check whether child has done siblings...
+        //     const doneSiblings = donedList.filter((child) => ((child.parent_item_uuid == item.parent_item_uuid) && child.is_done && (child.uuid != item.uuid)));
+        //     if (doneSiblings.length > 0) {
 
-            } else {
+        //       // Relocate item to first done sibling location
+        //       const itemIdx = donedList.findIndex((obj) => obj.uuid == item.uuid);
+        //       const [movedItem] = donedList.splice(itemIdx, 1);
+        //       const firstDoneSibilingIdx = donedList.findIndex((obj) => obj.uuid == doneSiblings[0].uuid);
+        //       donedList.splice(firstDoneSibilingIdx, 0, movedItem);
 
-              // Child has no done siblings, now check if it has any siblings
-              const siblings = donedList.filter((child) => ((child.parent_item_uuid == item.parent_item_uuid) && (child.uuid != item.uuid)));
+        //     } else {
 
-              // if it has siblings, relocate item to after last sibling
-              if (siblings.length > 0) {
-                const itemIdx = donedList.findIndex((obj) => obj.uuid == item.uuid);
-                const [movedItem] = donedList.splice(itemIdx, 1);
-                const lastSibilingIdx = donedList.findIndex((obj) => obj.uuid == siblings[siblings.length - 1].uuid);
-                donedList.splice(lastSibilingIdx + 1, 0, movedItem);
-              } else {
-                // Leave child where it is, no further ops needed
-              }
-            }
+        //       // Child has no done siblings, now check if it has any siblings
+        //       const siblings = donedList.filter((child) => ((child.parent_item_uuid == item.parent_item_uuid) && (child.uuid != item.uuid)));
 
-            // Save new order to DB
-            const uuidArray = donedList.map((thing) => ({ uuid: thing.uuid }));
-            saveItemOrder(uuidArray);
+        //       // if it has siblings, relocate item to after last sibling
+        //       if (siblings.length > 0) {
+        //         const itemIdx = donedList.findIndex((obj) => obj.uuid == item.uuid);
+        //         const [movedItem] = donedList.splice(itemIdx, 1);
+        //         const lastSibilingIdx = donedList.findIndex((obj) => obj.uuid == siblings[siblings.length - 1].uuid);
+        //         donedList.splice(lastSibilingIdx + 1, 0, movedItem);
+        //       } else {
+        //         // Leave child where it is, no further ops needed
+        //       }
+        //     }
 
-            // Return updated list to state setter
-            return donedList;
-          });
+        //     // Save new order to DB
+        //     const uuidArray = donedList.map((thing) => ({ uuid: thing.uuid }));
+        //     saveItemOrder(uuidArray);
 
-          // Update done state in DB
-          item.is_done = true;
-          updateItemDoneState(item, () => {
-            ProfileCountEventEmitter.emit("incr_done");
-          });
+        //     // Return updated list to state setter
+        //     return donedList;
+        //   });
 
-        } else {
+        //   // Update done state in DB
+        //   item.is_done = true;
+        //   updateItemDoneState(item, () => {
+        //     ProfileCountEventEmitter.emit("incr_done");
+        //   });
 
-          console.log("Entering a scenario that should not happen on the done screen (setting a parent to done)");
+        // } else {
 
         //   // Item is either an adult or parent, check if it has kids...
         //   const children = doneItems.filter((obj) => obj.parent_item_uuid == item.uuid);
@@ -517,8 +513,12 @@ export default function DoneScreen() {
         //       return filteredList;
         //     });
         //   }
-         }
+        // }
       } else {
+
+        // Clear the opposite list and cache to force a DB load on next load of opposite screen
+        clearItemCache(ITEM_LIST_KEY);
+        clearOpenItems();
 
         // Set item TO Open
         item.is_done = false;
@@ -529,38 +529,38 @@ export default function DoneScreen() {
         // if item is a child
         if (item.parent_item_uuid) {
 
-          // Collapse single undone item
-          await new Promise<void>((resolve) => {
-            thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 },
-              (isFinished) => {
-                if (isFinished) {
-                  runOnJS(resolve)()
-                }
-              })
-          });
+          console.warn("Entering scenario that shouldn't happen on the done page: Opening a subitem");
 
-          const [parent] = doneItems.filter(obj => obj.uuid == item.parent_item_uuid);
+          // // Collapse single undone item
+          // await new Promise<void>((resolve) => {
+          //   thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 },
+          //     (isFinished) => {
+          //       if (isFinished) {
+          //         runOnJS(resolve)()
+          //       }
+          //     })
+          // });
 
-          // 1.6 If Item's parent is done, convert item to adult and remove it from the list (so that
-          // it appears on the next DB load on the list page)
-          if (parent.is_done) {
+          // const [parent] = doneItems.filter(obj => obj.uuid == item.parent_item_uuid);
 
-            // TODO: How to address its order?
-            updateItemHierarchy(item.uuid, null);
+          // // 1.6 If Item's parent is done, convert item to adult and remove it from the list (so that
+          // // it appears on the next DB load on the list page)
+          // if (parent.is_done) {
 
-            setDoneItems((prevItems) => {
+          //   // TODO: How to address its order?
+          //   updateItemHierarchy(item.uuid, null);
 
-              const filteredList = prevItems.filter(obj => (obj.uuid != item.uuid))
+          //   setDoneItems((prevItems) => {
 
-              const uuidArray = filteredList.map((thing) => ({ uuid: thing.uuid }));
-              saveItemOrder(uuidArray);
+          //     const filteredList = prevItems.filter(obj => (obj.uuid != item.uuid))
 
-              return filteredList;
-            });
-          } else {
+          //     const uuidArray = filteredList.map((thing) => ({ uuid: thing.uuid }));
+          //     saveItemOrder(uuidArray);
+
+          //     return filteredList;
+          //   });
+          // } else {
             // if Item's parent is open, move item to top of parent's done kids or bottom of fam if none
-
-            console.warn("Entering scenario that shouldn't happen on the done page: Opening a subitem of an open parent");
 
             // setDoneItems((prevItems) => {
 
@@ -591,11 +591,11 @@ export default function DoneScreen() {
 
             //   return openedItems;
             // });
-          }
+        //  }
 
 
         } else {
-
+          
           // Collapse opened item and all of its children
           const uuidsToCollapse = [item.uuid];
           uuidsToCollapse.push(...openChildren.map((child) => child.uuid));
@@ -650,6 +650,10 @@ export default function DoneScreen() {
     },
     childItemSpacer: {
       width: 20
+    },
+    childDoneSpacer: {
+      width: 40,
+      backgroundColor: 'red'
     },
     action_Delete: {
       backgroundColor: 'red'

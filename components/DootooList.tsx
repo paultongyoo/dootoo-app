@@ -1651,9 +1651,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 <View style={styles.childItemSpacer}></View>
                                 : <></>
                             }
-                            {(isDoneable) ?
+                            {(isDoneable && !((thingName == THINGNAME_DONE_ITEM) && item.parent_item_uuid)) ?
                                 <Pressable style={[styles.itemCircleOpen, item.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(item)}></Pressable>
-                                : <></>
+                                : ((thingName == THINGNAME_DONE_ITEM) && item.parent_item_uuid) 
+                                    ? <View style={styles.childDoneSpacer}></View>
+                                    : <></>
                             }
                             {(thingName == 'tip') ?
                                 <Pressable style={styles.tipListIconContainer}
