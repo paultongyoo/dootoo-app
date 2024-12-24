@@ -685,49 +685,18 @@ export default function DoneScreen() {
       (item.parent_item_uuid) ? doneItems.findIndex(prevItem => prevItem.uuid == item.parent_item_uuid) : -999;
 
     return (
-      <>
-        <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
-          <Pressable
-            onPress={() => handleThingDeleteFunc(item)}>
-            <Trash wxh="25" color="white" />
-          </Pressable>
-        </Reanimated.View>
-        {insertRecordingAction}
-        {item.parent_item_uuid ?
-          <Reanimated.View style={[listStyles.itemSwipeAction]}>
-            <Pressable
-              onPress={() => handleMakeParent(item)}>
-              <IndentDecrease wxh="25" color="#3E2723" />
-            </Pressable>
-          </Reanimated.View>
-          : <></>
-        }
-        {(!item.is_done && (index != 0) && (index != (idxOfParent + 1))) ?
-          <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_MoveToTop]}>
-            <Pressable
-              onPress={() => handleMoveToTopFunc(item)}>
-              <MoveToTop wxh="25" color="#3E2723" strokeWidth="2" />
-            </Pressable>
-          </Reanimated.View>
-          : <></>
-        }
-      </>
+      <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
+        <Pressable
+          onPress={() => handleThingDeleteFunc(item)}>
+          <Trash wxh="25" color="white" />
+        </Pressable>
+      </Reanimated.View>
     );
   };
 
   const renderLeftActions = (item, index) => {
     return (
-      <>
-        {(!item.parent_item_uuid && (index != 0)) ?
-          <Reanimated.View style={[listStyles.itemSwipeAction]}>
-            <Pressable
-              onPress={() => handleMakeChild(item, index)}>
-              <IndentIncrease wxh="25" color="#3E2723" />
-            </Pressable>
-          </Reanimated.View>
-          : <></>
-        }
-      </>
+      <></>
     );
   };
 
