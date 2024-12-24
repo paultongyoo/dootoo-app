@@ -3,6 +3,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 import { DateTime } from 'luxon';
 import uuid from 'react-native-uuid';
 import RNFS from 'react-native-fs';
+import { THINGNAME_DONE_ITEM, THINGNAME_ITEM } from "./DootooList";
 
 export const formatNumber = (num) => {
   if (!num) return null;
@@ -383,3 +384,11 @@ export const deleteFile = async (fileUri: string) => {
     console.error('Error deleting file:', error);
   }
 };
+
+export const stringizeThingName = (thingName) => {
+  if (thingName == THINGNAME_DONE_ITEM || thingName == THINGNAME_ITEM) {
+    return "item";
+  } else {
+    return thingName;
+  }
+}

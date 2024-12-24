@@ -66,8 +66,12 @@ const ProfileScreen = ({ navigation }) => {
       const listener_incr_done = ProfileCountEventEmitter.addListener('incr_done', () => {
         setDoneCount((prev) => prev + 1);
       });
-      const listener_descr_done = ProfileCountEventEmitter.addListener('decr_done', () => {
-        setDoneCount((prev) => prev - 1);
+      const listener_descr_done = ProfileCountEventEmitter.addListener('decr_done', (data) => {
+        if (data && data.count) {
+          setDoneCount(prevVal => prevVal - data.count);
+      } else {
+          setDoneCount(prevVal => prevVal - 1);
+      }
       });
       const listener_incr_tips = ProfileCountEventEmitter.addListener('incr_tips', (data) => {
         setTipCount((prev) => prev + data.count);

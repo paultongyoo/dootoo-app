@@ -21,8 +21,12 @@ const NavigationSections = ({navigation}) => {
         const listener_incr_done = ProfileCountEventEmitter.addListener('incr_done', () => {
             setDoneCount(prevVal => prevVal + 1);
         });
-        const listener_descr_done = ProfileCountEventEmitter.addListener('decr_done', () => {
-            setDoneCount(prevVal => prevVal - 1);
+        const listener_descr_done = ProfileCountEventEmitter.addListener('decr_done', (data) => {
+            if (data && data.count) {
+                setDoneCount(prevVal => prevVal - data.count);
+            } else {
+                setDoneCount(prevVal => prevVal - 1);
+            }
         });
 
         return () => {

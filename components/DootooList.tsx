@@ -14,7 +14,7 @@ import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, insertArrayAfter, isThingOverdue, pluralize } from './Helpers';
+import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, insertArrayAfter, isThingOverdue, pluralize, stringizeThingName } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Bulb } from './svg/bulb';
 import { Clock } from './svg/clock';
@@ -180,7 +180,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 // Display Toast
                 Toast.show({
                     type: 'msgOpenWidth',
-                    text1: `Added ${lastRecordedCount.current} ${thingName}${(lastRecordedCount.current > 1) ? 's' : ''}.`,
+                    text1: `Added ${lastRecordedCount.current} ${stringizeThingName(thingName)}${(lastRecordedCount.current > 1) ? 's' : ''}.`,
                     position: 'bottom',
                     bottomOffset: (Platform.OS == 'ios') ? 280 : 260,
                     visibilityTime: 8000,
@@ -471,8 +471,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         if (!thing.parent_item_uuid && (thingSubtasks.length > 0)) {
 
             Alert.alert(
-                `${(thingName == THINGNAME_ITEM) ? "Item" : "Tip"} Has ${thingSubtasks.length} Sub${thingName.toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''}`,
-                `Deleting this ${thingName.toLowerCase()} will delete its sub${thingName.toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''} too.  Continue?`,
+                `${(thingName == THINGNAME_ITEM) ? "Item" : "Tip"} Has ${thingSubtasks.length} Sub${stringizeThingName(thingName).toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''}`,
+                `Deleting this ${stringizeThingName(thingName).toLowerCase()} will delete its sub${stringizeThingName(thingName).toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''} too.  Continue?`,
                 [
                     {
                         text: 'Yes',
@@ -487,7 +487,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             // Call asyncronous delete to mark item as deleted in backend to sync database
                             // 1.2  Deleting parent thing will delete its children too in DB
                             // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
-                            if (!thing.newKeyboardEntry) deleteThing(thing.uuid);
+                            if (!thing.newKeyboardEntry) deleteThing(thing.uuid);                               
 
                             const animationPromises = [];
                             for (var i = index; i <= index + thingSubtasks.length; i++) {
@@ -526,12 +526,20 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                             await Promise.all(animationPromises);
 
+                            let doneDeleteCount = 0;
                             delete thingRowPositionXs.current[thing.uuid];
                             delete thingRowHeights.current[thing.uuid];
-                            for (const subtask in thingSubtasks) {
-                                delete thingRowPositionXs.current[subtask.uuid];
-                                delete thingRowHeights.current[subtask.uuid]
+                            if (thing.is_done) {
+                                doneDeleteCount += 1;
                             }
+                            for (const subtask of thingSubtasks) {
+                                delete thingRowPositionXs.current[subtask.uuid];
+                                delete thingRowHeights.current[subtask.uuid];
+                                if (subtask.is_done) {
+                                    doneDeleteCount += 1;
+                                }
+                            }
+                            ProfileCountEventEmitter.emit("decr_done", { count: doneDeleteCount })
 
                             listArraySetter((prevThings) => {
                                 const subtaskUUIDSet = new Set(thingSubtasks.map(obj => obj.uuid));
@@ -586,6 +594,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
         if (thingName == 'tip') {
             ProfileCountEventEmitter.emit('decr_tips');
+        }
+
+        if (thing.is_done) {
+            ProfileCountEventEmitter.emit("decr_done");
         }
 
         // Remove item from displayed and thingRowPositionXs lists
@@ -1127,7 +1139,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
     const handleBelowListTap = () => {
         console.log("Tapped below list...");
-        if (!currentlyTappedThing.current) {
+        if (thingName != THINGNAME_DONE_ITEM && !currentlyTappedThing.current) {
             addThingToBottomOfList();
         } else {
             // Dimiss the keyboard to automatically blur
@@ -1480,9 +1492,9 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             // Set toast string and display undoable toast
             let toastString = '';
             if (selectedThing.parent_item_uuid) {
-                toastString = `Moved ${pluralize(thingName, thingsToCollapse.length)} to top of subitems.`;
+                toastString = `Moved ${pluralize(stringizeThingName(thingName), thingsToCollapse.length)} to top of subitems.`;
             } else {
-                toastString = `Moved ${pluralize(thingName, thingsToCollapse.length)} to top of list.`;
+                toastString = `Moved ${pluralize(stringizeThingName(thingName), thingsToCollapse.length)} to top of list.`;
             }
 
             Toast.show({
@@ -1701,7 +1713,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                                 hitSlop={10}
                                                 style={listStyles.itemNamePressable}
                                                 onLongPress={drag}
-                                                disabled={isActive}
+                                                disabled={isActive || item.is_done}
                                                 onPress={() => handleThingTextTap(item)}>
                                                 <Reanimated.Text style={[textOpacityAnimatedStyle, listStyles.taskTitle, item.is_done && listStyles.taskTitle_isDone]}>{item.text}</Reanimated.Text>
                                             </Pressable>
