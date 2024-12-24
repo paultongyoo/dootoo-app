@@ -1,22 +1,7 @@
-import { usePathname, useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
 import { Platform, View, StyleSheet, Text, Pressable, Image } from "react-native";
-import * as amplitude from '@amplitude/analytics-react-native';
-import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
-import { ArrowLeft } from "./svg/arrow-left";
-import { ChevronLeft } from "./svg/chevron-left";
-import { UserCircle } from "./svg/user-circle";
-import { CircleUserRound } from "./svg/circle-user-round";
+import Animated from "react-native-reanimated";
 
 const DootooHeader = ({ navigation, route, options }) => {
-    const pathname = usePathname();
-    const opacity = useSharedValue(0);
-
-    useEffect(() => {
-        opacity.value = withTiming(1, {
-            duration: 500
-        })
-    }, [pathname]);
 
     const styles = StyleSheet.create({
         headerContainer: {
@@ -32,6 +17,11 @@ const DootooHeader = ({ navigation, route, options }) => {
             position: 'absolute',
             left: 10,
             bottom: 5
+        },
+        headerRightContainer: {
+            position: 'absolute',
+            right: 10,
+            bottom: 6
         },
         mainLogoContainer: {
             flexDirection: 'row',
@@ -67,13 +57,21 @@ const DootooHeader = ({ navigation, route, options }) => {
     });
 
     return (
-        <Animated.View style={[styles.headerContainer, { opacity }]}>
+        <Animated.View style={[styles.headerContainer]}>
             <View style={styles.headerLeftContainer}>
                 <View style={styles.mainLogoContainer}>
                     <Text style={[{ fontWeight: 500 }, styles.mainLogoPart]}>doo</Text>
                     <Text style={[styles.mainLogoPart, styles.secondLogoPart]}>too</Text>
                 </View>
             </View>
+            {/* <View style={styles.headerRightContainer}>
+                <Pressable style={styles.mainProfileIconContainer}
+                    onPress={() => {
+                        navigation.navigate('/profile')
+                    }}>
+                    <UserRound wxh="24" color={useSharedValue("#556B2F")} />
+                </Pressable>
+            </View> */}
         </Animated.View>
     );
 }

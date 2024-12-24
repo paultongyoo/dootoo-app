@@ -55,7 +55,7 @@ export default function TabLayout() {
       <Tabs
         tabBar={(props) => (<DootooFooter {...props} />)}
         screenOptions={{
-          header: (props) => (<DootooHeader {...props} />),
+          header: (props) => (<DootooHeader {...props} />)
         }}>
         <Tabs.Screen name="list" />
         <Tabs.Screen name="done" />
