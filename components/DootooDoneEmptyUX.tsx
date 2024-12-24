@@ -10,9 +10,9 @@ const DootooDoneEmptyUX = () => {
 
   useFocusEffect(
     useCallback(() => {
-      opacity.value = withTiming(1, { duration: 800 })
+      opacity.value = withTiming(1, { duration: 300 })
       return () => {
-        opacity.value = withTiming(0, { duration: 800 })
+        opacity.value = withTiming(0, { duration: 300 })
       }
     }, [])
   );
