@@ -9,7 +9,8 @@ import { ProfileCountEventEmitter } from "@/components/EventEmitters";
 import * as amplitude from '@amplitude/analytics-react-native';
 
 import {
-  StyleSheet, Pressable
+  StyleSheet, Pressable,
+  Alert
 } from "react-native";
 import { AppContext } from '@/components/AppContext';
 import Reanimated, {
@@ -211,420 +212,92 @@ export default function DoneScreen() {
 
         console.warn("Setting an item _to_ done should not be possible on done page!")
 
-        // // 1.3 If item being doned is a child...
-        // if (item.parent_item_uuid) {
-
-        //   // Collapse single done item
-        //   await new Promise<void>((resolve) => {
-        //     thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 },
-        //       (isFinished) => {
-        //         if (isFinished) {
-        //           runOnJS(resolve)()
-        //         }
-        //       })
-        //   });
-
-        //   setDoneItems((prevItems) => {
-
-        //     // Create beginnings of new state, setting item to done
-        //     const donedList = prevItems.map((obj) => (obj.uuid == item.uuid) ? { ...obj, is_done: true } : obj);
-
-        //     // Check whether child has done siblings...
-        //     const doneSiblings = donedList.filter((child) => ((child.parent_item_uuid == item.parent_item_uuid) && child.is_done && (child.uuid != item.uuid)));
-        //     if (doneSiblings.length > 0) {
-
-        //       // Relocate item to first done sibling location
-        //       const itemIdx = donedList.findIndex((obj) => obj.uuid == item.uuid);
-        //       const [movedItem] = donedList.splice(itemIdx, 1);
-        //       const firstDoneSibilingIdx = donedList.findIndex((obj) => obj.uuid == doneSiblings[0].uuid);
-        //       donedList.splice(firstDoneSibilingIdx, 0, movedItem);
-
-        //     } else {
-
-        //       // Child has no done siblings, now check if it has any siblings
-        //       const siblings = donedList.filter((child) => ((child.parent_item_uuid == item.parent_item_uuid) && (child.uuid != item.uuid)));
-
-        //       // if it has siblings, relocate item to after last sibling
-        //       if (siblings.length > 0) {
-        //         const itemIdx = donedList.findIndex((obj) => obj.uuid == item.uuid);
-        //         const [movedItem] = donedList.splice(itemIdx, 1);
-        //         const lastSibilingIdx = donedList.findIndex((obj) => obj.uuid == siblings[siblings.length - 1].uuid);
-        //         donedList.splice(lastSibilingIdx + 1, 0, movedItem);
-        //       } else {
-        //         // Leave child where it is, no further ops needed
-        //       }
-        //     }
-
-        //     // Save new order to DB
-        //     const uuidArray = donedList.map((thing) => ({ uuid: thing.uuid }));
-        //     saveItemOrder(uuidArray);
-
-        //     // Return updated list to state setter
-        //     return donedList;
-        //   });
-
-        //   // Update done state in DB
-        //   item.is_done = true;
-        //   updateItemDoneState(item, () => {
-        //     ProfileCountEventEmitter.emit("incr_done");
-        //   });
-
-        // } else {
-
-        //   // Item is either an adult or parent, check if it has kids...
-        //   const children = doneItems.filter((obj) => obj.parent_item_uuid == item.uuid);
-
-        //   // Item has kids....
-        //   if (children.length > 0) {
-
-        //     // item has open children, prompt user how to handle them
-        //     if (openChildren.length > 0) {
-        //       amplitude.track("Doneify With Kids Prompt Displayed", {
-        //         anonymous_id: anonymousId,
-        //         pathname: pathname,
-        //         num_open_kids: openChildren.length
-        //       });
-
-        //       Alert.alert(
-        //         `Item Has ${openChildren.length} Open Subitems`,  // 1.2.1
-        //         `You're setting an item to done that has open subitems.  What do you want to do with the subitems?`, // 1.2.2
-        //         [
-        //           {
-        //             text: 'Cancel', // 1.2.3
-        //             onPress: () => {
-        //               amplitude.track("Doneify With Kids Prompt Cancelled", {
-        //                 anonymous_id: anonymousId,
-        //                 pathname: pathname,
-        //                 num_open_kids: openChildren.length
-        //               });
-        //             },
-        //             style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
-        //           },
-        //           {
-        //             text: 'Delete Them',
-        //             onPress: async () => {
-        //               amplitude.track("Doneify With Kids Prompt: Delete Chosen", {
-        //                 anonymous_id: anonymousId,
-        //                 pathname: pathname,
-        //                 num_open_children: openChildren.length
-        //               });
-
-        //               // Delete item's kids
-        //               // var slideAnimationArray = [];
-        //               // var heightAnimationArray = [];
-
-        //               // Execute animations to collapse the parent and all of its items off the screen  
-        //               const collapseAnimationPromises = [
-        //                 new Promise<void>((resolve) => thingRowHeights.current[item.uuid].value = withTiming(0, {
-        //                   duration: 300,
-        //                   easing: Easing.in(Easing.quad)
-        //                 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
-        //                 )
-        //               ];
-        //               openChildren.forEach((child) => {
-
-        //                 // Call asyncronous delete to mark item as deleted in backend to sync database
-        //                 deleteItem(child.uuid);
-
-        //                 collapseAnimationPromises.push(
-        //                   new Promise<void>((resolve) => thingRowHeights.current[child.uuid].value = withTiming(0, {
-        //                     duration: 300,
-        //                     easing: Easing.in(Easing.quad)
-        //                   }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
-        //                   ));
-        //               });
-        //               doneChildren.forEach((child) => {
-        //                 collapseAnimationPromises.push(
-        //                   new Promise<void>((resolve) => thingRowHeights.current[child.uuid].value = withTiming(0, {
-        //                     duration: 300,
-        //                     easing: Easing.in(Easing.quad)
-        //                   }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
-        //                   ));
-        //               });
-
-        //               await Promise.all(collapseAnimationPromises);
-
-        //               delete thingRowPositionXs.current[item.uuid];
-        //               delete thingRowHeights.current[item.uuid] 
-        //               openChildren.forEach((child) => {
-        //                 delete thingRowPositionXs.current[child.uuid];
-        //                 delete thingRowHeights.current[child.uuid]
-        //               });
-        //               doneChildren.forEach((child) => {
-        //                 delete thingRowPositionXs.current[child.uuid];
-        //                 delete thingRowHeights.current[child.uuid]
-        //               });
-
-        //               // Asyncronously updated DB with item set done state
-        //               item.is_done = true;
-        //               updateItemDoneState(item, () => {
-        //                 ProfileCountEventEmitter.emit("incr_done");
-        //               });
-
-        //               // 1.6 Update list by removing the item and all of its children
-        //               const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
-        //               doneChildren.forEach(obj => subtaskUUIDSet.add(obj.uuid));
-        //               setDoneItems((prevItems) => {
-
-        //                 // First filter out deleted items and set clicked item to done
-        //                 var filteredAndDonedList = prevItems.filter((obj) => 
-        //                     (!subtaskUUIDSet.has(obj.uuid) && (obj.uuid != item.uuid)))
-
-        //                 // Update order in backend
-        //                 const uuidArray = filteredAndDonedList.map((thing) => ({ uuid: thing.uuid }));
-        //                 saveItemOrder(uuidArray);
-
-        //                 // Return updated list to state setter
-        //                 return filteredAndDonedList;
-        //               });
-        //             }
-        //           },
-        //           {
-        //             text: 'Complete Them',
-        //             onPress: async () => {
-        //               amplitude.track("Doneify With Kids Prompt: Complete Chosen", {
-        //                 anonymous_id: anonymousId,
-        //                 pathname: pathname,
-        //                 num_open_children: openChildren.length
-        //               });
-
-        //               // Collapse the doned item and of ALL of its children
-        //               const uuidsToCollapse = [item.uuid];
-        //               uuidsToCollapse.push(...openChildren.map((child) => child.uuid));
-        //               uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
-        //               const collapseAnimationPromises = [];
-        //               uuidsToCollapse.forEach((uuid) => {
-        //                 collapseAnimationPromises.push(
-        //                   new Promise<void>((resolve) => {
-        //                     thingRowHeights.current[uuid].value =
-        //                       withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
-        //                   })
-        //                 );
-        //               });
-        //               await Promise.all(collapseAnimationPromises);
-
-        //               // Set each OPEN child as done in backend and incr Profile counter
-        //               openChildren.forEach((child) => {
-        //                 child.is_done = true;
-        //                 updateItemDoneState(child);
-        //                 ProfileCountEventEmitter.emit("incr_done");
-        //                 // We'll defer updating counts until the main item is updated below
-        //               });
-
-        //               // Set item as done in backend and incr Profile counter
-        //               item.is_done = true;
-        //               updateItemDoneState(item, () => {
-        //                 ProfileCountEventEmitter.emit("incr_done");
-        //               });
-
-        //               // 1.6 Update list by removing the item and all of its children
-        //               const subtaskUUIDSet = new Set(openChildren.map(obj => obj.uuid));
-        //               doneChildren.forEach(obj => subtaskUUIDSet.add(obj.uuid));
-        //               setDoneItems((prevItems) => {
-
-        //                 // First filter out deleted items and set clicked item to done
-        //                 var filteredAndDonedList = prevItems.filter((obj) => 
-        //                     (!subtaskUUIDSet.has(obj.uuid) && (obj.uuid != item.uuid)))
-
-        //                 // Update order in backend
-        //                 const uuidArray = filteredAndDonedList.map((thing) => ({ uuid: thing.uuid }));
-        //                 saveItemOrder(uuidArray);
-
-        //                 // Return updated list to state setter
-        //                 return filteredAndDonedList;
-        //               });
-        //             },
-        //           },
-        //         ],
-        //         { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
-        //       );
-        //     } else {
-
-        //       // Collapse the doned item and of all its done children
-        //       const uuidsToCollapse = [item.uuid];
-        //       uuidsToCollapse.push(...openChildren.map((child) => child.uuid));
-        //       uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
-        //       const collapseAnimationPromises = [];
-        //       uuidsToCollapse.forEach((uuid) => {
-        //         collapseAnimationPromises.push(
-        //           new Promise<void>((resolve) => {
-        //             thingRowHeights.current[uuid].value =
-        //               withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
-        //           })
-        //         );
-        //       });
-        //       await Promise.all(collapseAnimationPromises);
-
-        //       // All the item's kids must be done
-        //       if (doneChildren.length > 0) {
-
-        //         // Item is a DAWNK with only done kids; set it to done and move it and its kids to Top of DAWNKs
-        //         // Set item as done in backend and incr Profile counter
-        //         item.is_done = true;
-        //         updateItemDoneState(item, () => {
-        //           ProfileCountEventEmitter.emit("incr_done");
-        //         });
-
-        //         // 1.6 Update list by removing the item and all of its children
-        //         const subtaskUUIDSet = new Set(doneChildren.map(obj => obj.uuid));
-        //         setDoneItems((prevItems) => {
-
-        //           // First filter out deleted items and set clicked item to done
-        //           var filteredAndDonedList = prevItems.filter((obj) => 
-        //               (!subtaskUUIDSet.has(obj.uuid) && (obj.uuid != item.uuid)))
-
-        //           // Update order in backend
-        //           const uuidArray = filteredAndDonedList.map((thing) => ({ uuid: thing.uuid }));
-        //           saveItemOrder(uuidArray);
-
-        //           // Return updated list to state setter
-        //           return filteredAndDonedList;
-        //         });
-
-        //       } else {
-        //         console.log("Assuming reaching this log is unexpected given preceding logic tree.")
-        //       }
-        //      }
-        //   } else {
-
-        //     // Collapse single done item
-        //     await new Promise<void>((resolve) => {
-        //       thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 },
-        //         (isFinished) => {
-        //           if (isFinished) {
-        //             runOnJS(resolve)()
-        //           }
-        //         })
-        //     });
-
-        //     // Item doesn't have any kids, simply set it to done and move it to top of doneAdults
-        //     item.is_done = true;
-        //     updateItemDoneState(item, () => {
-        //       ProfileCountEventEmitter.emit("incr_done");
-        //     });
-
-        //     // 1.6 Remove done parent from list; save new order in backend
-        //     setDoneItems((prevItems) => {
-
-        //       const filteredList = prevItems.filter((obj) => (obj.uuid != item.uuid));
-        //       const uuidArray = filteredList.map((thing) => ({ uuid: thing.uuid }));
-        //       saveItemOrder(uuidArray);
-
-        //       return filteredList;
-        //     });
-        //   }
-        // }
       } else {
 
-        // Clear the opposite list and cache to force a DB load on next load of opposite screen
-        clearItemCache(ITEM_LIST_KEY);
-        clearOpenItems();
-
-        // Set item TO Open
-        item.is_done = false;
-        updateItemDoneState(item, () => {
-          ProfileCountEventEmitter.emit("decr_done");
+        amplitude.track("Item Reopen Prompt Displayed", {
+          anonymous_id: anonymousId.current,
+          pathname: pathname
         });
 
-        // if item is a child
-        if (item.parent_item_uuid) {
+        Alert.alert(
+          "Reopen Item?",
+          (doneChildren.length == 0) 
+            ? "Your item will appear at the top of your opened items list."
+            : "Your item and its subitems will appear at the top of your opened items list.",
+          [
+            {
+              text: 'Cancel',
+              onPress: () => {
+                amplitude.track("Item Reopen Cancelled", {
+                  anonymous_id: anonymousId.current,
+                  pathname: pathname
+                });
+              },
+              style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
+            },
+            {
+              text: 'Yes',
+              onPress: () => {
 
-          console.warn("Entering scenario that shouldn't happen on the done page: Opening a subitem");
+                amplitude.track("Item Reopen Completed", {
+                  anonymous_id: anonymousId.current,
+                  pathname: pathname
+                });
 
-          // // Collapse single undone item
-          // await new Promise<void>((resolve) => {
-          //   thingRowHeights.current[item.uuid].value = withTiming(0, { duration: 300 },
-          //     (isFinished) => {
-          //       if (isFinished) {
-          //         runOnJS(resolve)()
-          //       }
-          //     })
-          // });
+                // Clear the opposite list and cache to force a DB load on next load of opposite screen
+                clearItemCache(ITEM_LIST_KEY);
+                clearOpenItems();
 
-          // const [parent] = doneItems.filter(obj => obj.uuid == item.parent_item_uuid);
+                // Set item TO Open
+                item.is_done = false;
+                updateItemDoneState(item, async () => {
+                  ProfileCountEventEmitter.emit("decr_done");
+                });
 
-          // // 1.6 If Item's parent is done, convert item to adult and remove it from the list (so that
-          // // it appears on the next DB load on the list page)
-          // if (parent.is_done) {
+                // if item is a child
+                if (item.parent_item_uuid) {
+                  console.warn("Entering scenario that shouldn't happen on the done page: Opening a subitem");
+                } else {
 
-          //   // TODO: How to address its order?
-          //   updateItemHierarchy(item.uuid, null);
+                  const reopenFamily = async () => {
 
-          //   setDoneItems((prevItems) => {
+                    // Collapse opened item and all of its children
+                    const uuidsToCollapse = [item.uuid];
+                    uuidsToCollapse.push(...openChildren.map((child) => child.uuid));
+                    uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
+                    const collapseAnimationPromises = [];
+                    uuidsToCollapse.forEach((uuid) => {
+                      collapseAnimationPromises.push(
+                        new Promise<void>((resolve) => {
+                          thingRowHeights.current[uuid].value =
+                            withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                        })
+                      );
+                    });
 
-          //     const filteredList = prevItems.filter(obj => (obj.uuid != item.uuid))
+                    await Promise.all(collapseAnimationPromises);
 
-          //     const uuidArray = filteredList.map((thing) => ({ uuid: thing.uuid }));
-          //     saveItemOrder(uuidArray);
+                    // 1.6 Item is a parent -- remove it and its children from its list (to be rendered on the list screen)
+                    setDoneItems((prevItems) => {
 
-          //     return filteredList;
-          //   });
-          // } else {
-            // if Item's parent is open, move item to top of parent's done kids or bottom of fam if none
+                      const openedList = prevItems.map(obj => (obj.uuid == item.uuid) ? { ...obj, is_done: false } : obj);
+                      const children = openedList.filter(obj => obj.parent_item_uuid == item.uuid);
+                      const itemIdx = openedList.findIndex(obj => obj.uuid == item.uuid);
+                      openedList.splice(itemIdx, 1 + children.length);
 
-            // setDoneItems((prevItems) => {
+                      const uuidArray = openedList.map((thing) => ({ uuid: thing.uuid }));
+                      saveItemOrder(uuidArray);
 
-            //   const openedItems = prevItems.map(obj =>
-            //     (obj.uuid == item.uuid)
-            //       ? {
-            //         ...obj,
-            //         is_done: false
-            //       }
-            //       : obj);
-
-            //   const doneSiblings = openedItems.filter((obj) =>
-            //     obj.is_done && (obj.parent_item_uuid == item.parent_item_uuid) && (obj.uuid != item.uuid));
-            //   console.log("doneSiblings.length: " + doneSiblings.length);
-
-            //   // If DoneSib(s) exist, move item to top of DoneSib list
-            //   if (doneSiblings.length > 0) {
-            //     const itemIdx = openedItems.findIndex(obj => obj.uuid == item.uuid);
-            //     const [movedItem] = openedItems.splice(itemIdx, 1);
-            //     const firstDoneSiblingIdx = openedItems.findIndex(obj => obj.uuid == doneSiblings[0].uuid);
-            //     openedItems.splice(firstDoneSiblingIdx, 0, movedItem);
-            //   } else {
-            //     // Leave it where it is, should already be at bottom of list
-            //   }
-
-            //   const uuidArray = openedItems.map((thing) => ({ uuid: thing.uuid }));
-            //   saveItemOrder(uuidArray);
-
-            //   return openedItems;
-            // });
-        //  }
-
-
-        } else {
-          
-          // Collapse opened item and all of its children
-          const uuidsToCollapse = [item.uuid];
-          uuidsToCollapse.push(...openChildren.map((child) => child.uuid));
-          uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
-          const collapseAnimationPromises = [];
-          uuidsToCollapse.forEach((uuid) => {
-            collapseAnimationPromises.push(
-              new Promise<void>((resolve) => {
-                thingRowHeights.current[uuid].value =
-                  withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
-              })
-            );
-          });
-          await Promise.all(collapseAnimationPromises);
-
-          // 1.6 Item is a parent -- remove it and its children from its list (to be rendered on the list screen)
-          setDoneItems((prevItems) => {
-
-            const openedList = prevItems.map(obj => (obj.uuid == item.uuid) ? { ...obj, is_done: false } : obj);
-            const children = openedList.filter(obj => obj.parent_item_uuid == item.uuid);
-            const itemIdx = openedList.findIndex(obj => obj.uuid == item.uuid);
-            openedList.splice(itemIdx, 1 + children.length);
-
-            const uuidArray = openedList.map((thing) => ({ uuid: thing.uuid }));
-            saveItemOrder(uuidArray);
-
-            return openedList;
-          });
-        }
+                      return openedList;
+                    });
+                  }
+                  reopenFamily();
+                }
+              },
+            },
+          ],
+          { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+        );
       }
     } catch (error) {
       console.error("Unexpected error occurred handling done click", error);
@@ -706,7 +379,7 @@ export default function DoneScreen() {
   };
 
   return (
-    <DootooList 
+    <DootooList
       thingName={THINGNAME_DONE_ITEM}
       listArray={doneItems}
       listArraySetter={setDoneItems}
@@ -725,7 +398,7 @@ export default function DoneScreen() {
       ListThingSidebar={DootooItemSidebar}
       EmptyThingUX={DootooDoneEmptyUX}
       isThingPressable={() => { return true }}
-      isThingDraggable={true} 
+      isThingDraggable={true}
       hideBottomButtons={true} />
   );
 
