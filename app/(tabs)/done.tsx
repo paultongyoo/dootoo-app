@@ -22,6 +22,7 @@ import { IndentIncrease } from "@/components/svg/indent-increase";
 import { IndentDecrease } from "@/components/svg/indent-decrease";
 import { Trash } from "@/components/svg/trash";
 import { MoveToTop } from "@/components/svg/move-to-top";
+import DootooDoneEmptyUX from "@/components/DootooDoneEmptyUX";
 
 export default function DoneScreen() {
   const pathname = usePathname();
@@ -748,7 +749,7 @@ export default function DoneScreen() {
       saveNewThing={saveNewItem}
       transcribeAudioToThings={transcribeAudioToTasks}
       ListThingSidebar={DootooItemSidebar}
-      EmptyThingUX={DootooItemEmptyUX}
+      EmptyThingUX={DootooDoneEmptyUX}
       isThingPressable={() => { return true }}
       isThingDraggable={true} 
       hideBottomButtons={true} />
