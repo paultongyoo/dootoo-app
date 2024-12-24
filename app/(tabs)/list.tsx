@@ -26,7 +26,7 @@ import { MoveToTop } from "@/components/svg/move-to-top";
 
 export default function ListScreen() {
   const pathname = usePathname();
-  const { anonymousId, openItems, setOpenItems,
+  const { anonymousId, openItems, setOpenItems, clearDoneItems,
     thingRowHeights, thingRowPositionXs } = useContext(AppContext);
 
   configureReanimatedLogger({
@@ -202,8 +202,9 @@ export default function ListScreen() {
         item_type: (item.parent_item_uuid) ? 'child' : 'adult'
       });
 
-      // Clear the opposite cache to force a DB load on next load of opposite screen
+      // Clear the opposite list and cache to force a DB load on next load of opposite screen
       clearItemCache(DONE_ITEM_LIST_KEY);
+      clearDoneItems();
 
       // Check if item has open kids
       const openChildren = openItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
@@ -357,6 +358,8 @@ export default function ListScreen() {
                       });
 
                       // Asyncronously updated DB with item set done state
+                      // 1.6 TODO The lambda needs to update Done list order to place
+                      //          this family at the top of the list
                       item.is_done = true;
                       updateItemDoneState(item, () => {
                         ProfileCountEventEmitter.emit("incr_done");
@@ -371,7 +374,7 @@ export default function ListScreen() {
                         var filteredAndDonedList = prevItems.filter((obj) => 
                             (!subtaskUUIDSet.has(obj.uuid) && (obj.uuid != item.uuid)))
 
-                        // Update order in backend
+                        // Update Open list order in backend
                         const uuidArray = filteredAndDonedList.map((thing) => ({ uuid: thing.uuid }));
                         saveItemOrder(uuidArray);
 
@@ -413,6 +416,11 @@ export default function ListScreen() {
                       });
 
                       // Set item as done in backend and incr Profile counter
+                      // 1.6 TODO The lambda needs to update Done list order to place
+                      //          this family at the top of the list
+                      //      NOTE: In theory, this can be done asynchronously to the above done state
+                      //          ops being done on the children AS LONG AS the move is NOT dependent on the
+                      //          childrens' done state
                       item.is_done = true;
                       updateItemDoneState(item, () => {
                         ProfileCountEventEmitter.emit("incr_done");
@@ -459,8 +467,9 @@ export default function ListScreen() {
               // All the item's kids must be done
               if (doneChildren.length > 0) {
 
-                // Item is a DAWNK with only done kids; set it to done and move it and its kids to Top of DAWNKs
-                // Set item as done in backend and incr Profile counter
+                // Item is a DAWNK with only done kids; set it to done and move it 
+                // 1.6 TODO The lambda needs to update Done list order to place
+                //          this family at the top of the list
                 item.is_done = true;
                 updateItemDoneState(item, () => {
                   ProfileCountEventEmitter.emit("incr_done");

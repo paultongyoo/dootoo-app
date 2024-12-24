@@ -26,7 +26,7 @@ import DootooDoneEmptyUX from "@/components/DootooDoneEmptyUX";
 
 export default function DoneScreen() {
   const pathname = usePathname();
-  const { anonymousId, doneItems, setDoneItems,
+  const { anonymousId, doneItems, setDoneItems, clearOpenItems,
     thingRowHeights, thingRowPositionXs } = useContext(AppContext);
 
   configureReanimatedLogger({
@@ -202,8 +202,9 @@ export default function DoneScreen() {
         item_type: (item.parent_item_uuid) ? 'child' : 'adult'
       });
 
-        // Clear the opposite cache to force a DB load on next load of opposite screen
+        // Clear the opposite list and cache to force a DB load on next load of opposite screen
         clearItemCache(ITEM_LIST_KEY);
+        clearOpenItems();
 
       // Check if item has open kids
       const openChildren = doneItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);

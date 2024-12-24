@@ -54,8 +54,17 @@ export const AppProvider = ({ children }) => {
     const resetUserContext = async () => {
       await resetAllData();
       await initializeLocalUser(); 
-      setDootooItems([]);
+      setOpenItems([]);
+      setDoneItems([]);
     };
+
+    const clearOpenItems = () => {
+      setOpenItems([]);
+    }
+
+    const clearDoneItems = () => {
+      setDoneItems([]);
+    }
 
     return (
         <AppContext.Provider value={{ 
@@ -77,7 +86,9 @@ export const AppProvider = ({ children }) => {
             selectedProfile, setSelectedProfile,
             swipeableRefs,
             itemCountsMap,
-            currentlyTappedThing
+            currentlyTappedThing,
+            clearOpenItems,
+            clearDoneItems
              }}>
           {children}
         </AppContext.Provider>
