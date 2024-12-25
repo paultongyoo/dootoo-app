@@ -26,7 +26,7 @@ import { MoveToTop } from "@/components/svg/move-to-top";
 
 export default function ListScreen() {
   const pathname = usePathname();
-  const { anonymousId, openItems, setOpenItems, clearDoneItems,
+  const { anonymousId, openItems, setOpenItems, setDoneItems,
     thingRowHeights, thingRowPositionXs } = useContext(AppContext);
 
   configureReanimatedLogger({
@@ -272,7 +272,6 @@ export default function ListScreen() {
           // Because this scenario will affect how the opposite list will appear, 
           // clear the opposite list and cache to force a DB load on next load of opposite screen
           clearItemCache(DONE_ITEM_LIST_KEY);
-          clearDoneItems();
 
           // Item is either an adult or parent, check if it has kids...
           const children = openItems.filter((obj) => obj.parent_item_uuid == item.uuid);
@@ -381,6 +380,14 @@ export default function ListScreen() {
 
                         // Return updated list to state setter
                         return filteredAndDonedList;
+                      });
+
+                      // Append done items and its children to top of dine list
+                      // 1.6 TODO handle scenario where list hasnt been populated yet
+                      setDoneItems((prevItems) => {
+                        return [item,
+                                ...doneChildren,
+                                ...prevItems]
                       });
                     }
                   },
