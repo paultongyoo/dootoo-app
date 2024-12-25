@@ -450,6 +450,15 @@ export default function ListScreen() {
                         // Return updated list to state setter
                         return filteredAndDonedList;
                       });
+
+                      // Append done items and its children to top of dine list
+                      // 1.6 TODO handle scenario where list hasnt been populated yet
+                      setDoneItems((prevItems) => {
+                        return [item,
+                                ...openChildren.map((child) => ({...child, is_done: true})),
+                                ...doneChildren,
+                                ...prevItems]
+                      });
                     },
                   },
                 ],
