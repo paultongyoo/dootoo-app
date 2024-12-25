@@ -508,6 +508,14 @@ export default function ListScreen() {
                   return filteredAndDonedList;
                 });
 
+                // Append done items and its children to top of dine list
+                // 1.6 TODO handle scenario where list hasnt been populated yet
+                setDoneItems((prevItems) => {
+                  return [item,
+                          ...doneChildren,
+                          ...prevItems]
+                });
+
               } else {
                 console.log("Assuming reaching this log is unexpected given preceding logic tree.")
               }
@@ -539,6 +547,13 @@ export default function ListScreen() {
 
               return filteredList;
             });
+
+            // Append done items and its children to top of dine list
+            // 1.6 TODO handle scenario where list hasnt been populated yet
+            setDoneItems((prevItems) => {
+              return [item,
+                      ...prevItems]
+            });
           }
         }
       } else {
@@ -567,41 +582,10 @@ export default function ListScreen() {
           // If Item's parent is done, convert item to adult and move it above the parent
           // 1.6 This scenario shouldn't happen with the new rules on this list
           if (parent.is_done) {
-            console.warn("Reached unexpected scenario for list page.");
-
-            // updateItemHierarchy(item.uuid, null);
-
-            // setOpenItems((prevItems) => {
-
-            //   const openedItems = prevItems.map(obj =>
-            //     (obj.uuid == item.uuid)
-            //       ? {
-            //         ...obj,
-            //         parent_item_uuid: null,
-            //         is_done: false
-            //       }
-            //       : obj);
-
-            //   const doneAdults = openedItems.filter((obj) => obj.is_done && !obj.parent_item_uuid && (obj.uuid != item.uuid));
-
-            //   // If DA(s) exist, move item to top of DA list
-            //   const itemIdx = openedItems.findIndex(obj => obj.uuid == item.uuid);
-            //   const [movedItem] = openedItems.splice(itemIdx, 1);
-            //   if (doneAdults.length > 0) {
-            //     const firstDoneAdultIdx = openedItems.findIndex(obj => obj.uuid == doneAdults[0].uuid);
-            //     openedItems.splice(firstDoneAdultIdx, 0, movedItem);
-            //   } else {
-            //     openedItems.push(movedItem);
-            //   }
-
-            //   const uuidArray = openedItems.map((thing) => ({ uuid: thing.uuid }));
-            //   saveItemOrder(uuidArray);
-
-            //   return openedItems;
-            // });
+            console.warn("Reached unexpected scenario for list page: opening child of done parent.");
           } else {
-            // if Item's parent is open, move item to top of parent's done kids or bottom of fam if none
 
+            // if Item's parent is open, move item to top of parent's done kids or bottom of fam if none
             setOpenItems((prevItems) => {
 
               const openedItems = prevItems.map(obj =>
@@ -632,47 +616,8 @@ export default function ListScreen() {
               return openedItems;
             });
           }
-
-
         } else {
-
-          console.warn("Reached unexpected scenario for list page.");
-
-          // // Collapse opened item and all of its children
-          // const uuidsToCollapse = [item.uuid];
-          // uuidsToCollapse.push(...openChildren.map((child) => child.uuid));
-          // uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
-          // const collapseAnimationPromises = [];
-          // uuidsToCollapse.forEach((uuid) => {
-          //   collapseAnimationPromises.push(
-          //     new Promise<void>((resolve) => {
-          //       thingRowHeights.current[uuid].value =
-          //         withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
-          //     })
-          //   );
-          // });
-          // await Promise.all(collapseAnimationPromises);
-
-          // // Item is a parent -- move it and any of its children to the top of DA list
-          // setOpenItems((prevItems) => {
-
-          //   const openedList = prevItems.map(obj => (obj.uuid == item.uuid) ? { ...obj, is_done: false } : obj);
-          //   const children = openedList.filter(obj => obj.parent_item_uuid == item.uuid);
-          //   const doneAdults = openedList.filter(obj => !obj.parent_item_uuid && obj.is_done);
-          //   const itemIdx = openedList.findIndex(obj => obj.uuid == item.uuid);
-          //   const removed = openedList.splice(itemIdx, 1 + children.length);
-          //   if (doneAdults.length > 0) {
-          //     const firstDoneAdultsIdx = openedList.findIndex(obj => obj.uuid == doneAdults[0].uuid);
-          //     openedList.splice(firstDoneAdultsIdx, 0, ...removed);
-          //   } else {
-          //     openedList.push(...removed);
-          //   }
-
-          //   const uuidArray = openedList.map((thing) => ({ uuid: thing.uuid }));
-          //   saveItemOrder(uuidArray);
-
-          //   return openedList;
-          // });
+          console.warn("Reached unexpected scenario for list page: Opening a done parent.");
         }
       }
     } catch (error) {
