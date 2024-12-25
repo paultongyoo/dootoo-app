@@ -2,7 +2,6 @@ import { useContext, useEffect } from "react";
 import { usePathname } from 'expo-router';
 import { loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_ONLY_DONE_PARENTS, clearItemCache, ITEM_LIST_KEY } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
-import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList, { listStyles, THINGNAME_DONE_ITEM } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import { ProfileCountEventEmitter } from "@/components/EventEmitters";
@@ -19,15 +18,12 @@ import Reanimated, {
   runOnJS,
   withTiming,
 } from 'react-native-reanimated';
-import { IndentIncrease } from "@/components/svg/indent-increase";
-import { IndentDecrease } from "@/components/svg/indent-decrease";
 import { Trash } from "@/components/svg/trash";
-import { MoveToTop } from "@/components/svg/move-to-top";
 import DootooDoneEmptyUX from "@/components/DootooDoneEmptyUX";
 
 export default function DoneScreen() {
   const pathname = usePathname();
-  const { anonymousId, doneItems, setDoneItems, clearOpenItems,
+  const { anonymousId, doneItems, setDoneItems, setOpenItems,
     thingRowHeights, thingRowPositionXs } = useContext(AppContext);
 
   configureReanimatedLogger({
@@ -38,25 +34,6 @@ export default function DoneScreen() {
   useEffect(() => {
     console.log("DoneScreen.useEffect([])");
   }, []);
-
-
-  // 1.5 Deprecated, remove in future
-  // const saveAllItems = async (latestItems, callback) => {
-
-  //   // console.log("saveAllItems called with latestItems length: " + doneItems.length);
-  //   if (latestItems && latestItems.length > 0) {
-  //     //console.log(`Passing ${latestItems.length} to saveItems method...`);
-
-  //     //console.log("saveAllItems started...");
-  //     // Asynchronously sync DB with latest items
-  //     saveItems(latestItems, () => {
-  //       if (callback) {
-  //         callback();
-  //       }
-  //     });
-  //     //console.log("saveAllItems successful.");
-  //   }
-  // };
 
   const saveTextUpdate = async (item) => {
     updateItemText(item, async () => {
@@ -74,99 +51,6 @@ export default function DoneScreen() {
 
   const saveItemOrder = async (uuidArray) => {
     updateItemOrder(uuidArray);
-  }
-
-  const handleMakeParent = (item) => {
-
-    amplitude.track("Item Made Into Parent", {
-      anonymous_id: anonymousId,
-      item_uuid: item.uuid
-    });
-
-    // Asyncronously update item hierarhcy in DB
-    updateItemHierarchy(item.uuid, null);
-
-    console.log("Setting new parent into list");
-    setDoneItems((prevItems) => {
-
-      var newListToReturn = prevItems.map((obj) =>
-        (obj.uuid == item.uuid)
-          ? {
-            ...obj,
-            parent_item_uuid: null
-          }
-          : obj);
-
-      // If item was above one or more children when
-      // it became a parent, move it below the family
-      const itemIdx = newListToReturn.findIndex((thing) => thing.uuid == item.uuid);
-      var newItemIdx = itemIdx;
-      while (newListToReturn[newItemIdx + 1] &&
-        newListToReturn[newItemIdx + 1].parent_item_uuid) {
-        newItemIdx += 1;
-      }
-      if (itemIdx != newItemIdx) {
-        const [movedItem] = newListToReturn.splice(itemIdx, 1);
-        newListToReturn.splice(newItemIdx, 0, movedItem);
-
-        const uuidArray = newListToReturn.map((thing) => ({ uuid: thing.uuid }));
-        saveItemOrder(uuidArray);
-      }
-
-      return newListToReturn;
-    }); // This should update UI only and not invoke any syncronous backend operations
-
-  }
-
-  const handleMakeChild = (item, index) => {
-
-    // Get UUID of nearest parent above item to be made into child
-    let nearestParentUUID = '';
-    for (var i = index - 1; i >= 0; i--) {
-      const currItem = doneItems[i];
-      if (!currItem.parent_item_uuid) {
-        console.log("Nearest Parent: " + currItem.text);
-        nearestParentUUID = currItem.uuid;
-        break;
-      }
-    }
-
-    amplitude.track("Item Made Into Child", {
-      anonymous_id: anonymousId,
-      item_uuid: item.uuid,
-      parent_item_uuid: nearestParentUUID
-    });
-
-    // Make thing child of nearest parent
-    updateItemHierarchy(item.uuid, nearestParentUUID);
-
-    // If item had children, make those children children of nearest parent too
-    const childrenOfItem = doneItems.filter((prevItem) => prevItem.parent_item_uuid == item.uuid);
-    childrenOfItem.forEach((child) => updateItemHierarchy(child.uuid, nearestParentUUID));
-
-    console.log("Setting new child into list");
-    setDoneItems((prevItems) => {
-
-      // Make selected item child of nearest parent
-      const listWithUpdatedItem = prevItems.map((obj) =>
-        (obj.uuid == item.uuid)
-          ? {
-            ...obj,
-            parent_item_uuid: nearestParentUUID
-          }
-          : obj);
-
-      // Make any children of selected item children of nearest parent
-      const listWithUpdatedItemKids = listWithUpdatedItem.map((obj) =>
-        (obj.parent_item_uuid == item.uuid)
-          ? {
-            ...obj,
-            parent_item_uuid: nearestParentUUID
-          }
-          : obj);
-
-      return listWithUpdatedItemKids
-    });
   }
 
   const handleDoneClick = async (item) => {
@@ -246,7 +130,6 @@ export default function DoneScreen() {
 
                 // Clear the opposite list and cache to force a DB load on next load of opposite screen
                 clearItemCache(ITEM_LIST_KEY);
-                clearOpenItems();
 
                 // Set item TO Open
                 item.is_done = false;
@@ -289,6 +172,14 @@ export default function DoneScreen() {
                       saveItemOrder(uuidArray);
 
                       return openedList;
+                    });
+
+                    // 1.6 Prepend the opened parent and its family to the opened list
+                    setOpenItems((prevItems) => {
+                      return [item,
+                              ...openChildren, // This is assumed empty
+                              ...doneChildren,
+                              ...prevItems];
                     });
                   }
                   reopenFamily();
@@ -345,15 +236,15 @@ export default function DoneScreen() {
   });
 
   const onSwipeableOpen = (direction, item, index) => {
-    //console.log("opSwipeableOpen: " + direction + " " + item.text + " " + index);
-    if (!item.parent_item_uuid && (direction == "left")) {
-      handleMakeChild(item, index);
-    } else if (item.parent_item_uuid && (direction == "right")) {
+    // //console.log("opSwipeableOpen: " + direction + " " + item.text + " " + index);
+    // if (!item.parent_item_uuid && (direction == "left")) {
+    //   handleMakeChild(item, index);
+    // } else if (item.parent_item_uuid && (direction == "right")) {
 
-      // Don't automatically do parent because the Delete swipe action is available too.
-      // TODO:  Implement snapping(?) to only make parent if fully open
-      // handleMakeParent(item);   
-    }
+    //   // Don't automatically do parent because the Delete swipe action is available too.
+    //   // TODO:  Implement snapping(?) to only make parent if fully open
+    //   // handleMakeParent(item);   
+    // }
   }
 
   const renderRightActions = (item, index, handleThingDeleteFunc, handleMoveToTopFunc, insertRecordingAction) => {
