@@ -64,26 +64,13 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const selectedCalendar = useRef();
     const selectedTimerThing = useRef(null);
     const blurredOnSubmit = useRef(false);
+    const isPageLoading = useRef(false);
 
     const firstListRendered = useSharedValue(false);
     const initialLoadFadeInOpacity = useSharedValue(0);
     const listOpacity = useSharedValue(0);
 
-    /* 1.2 Note: DEACTIVATING PAGINATION for now to prevent accidental 
-    //           orphaning as well as testing UX of maintaining local/cached list
-    //           instead.  
-                 -- DB loads only occur on Pull Down to Refresh actions.
-                 -- DB continues to be updated asynchrously in background.
-                 -- Lambda will be updated to return entire list on call.
-                 -- Counts were removed from load in prior release, so this
-                    call should be less heavy and less frequent given app
-                    will only call on pull down to refresh actions with this release.             
-                 -- All operations to sync backend DB updated to also update local cache
-
-    const isPageLoading = useRef(false);
-    */
-
-    // 1.2 Page state var will remain and stay at its value of (1)
+    // 1.6 Reintroducing pagination with the separation of Open and Done lists
     const [page, setPage] = useState(1);
 
     const initialCacheCheckMount = useRef(true);
@@ -118,7 +105,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     });
 
     useEffect(() => {
-        console.log("DootooList.useEffect([])");
+        //console.log("DootooList.useEffect([])");
 
         initializeLocalUser((isNew: boolean) => {
             //console.log("initializeLocalUser callback method: " + shouldInitialLoad);
@@ -135,7 +122,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
 
         const handleAppStateChange = (nextAppState) => {
-            console.log("App State Changed: " + nextAppState);
+            //console.log("App State Changed: " + nextAppState);
             if (nextAppState === "active") {
                 refreshThingCounts();
 
@@ -163,11 +150,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
             // Asyncronously update local cache with latest listArray update
             if (thingName == THINGNAME_ITEM) {
-                updateItemsCache(listArray);
+                updateItemsCache(listArray, page);
             } else if (thingName == THINGNAME_DONE_ITEM) {
-                updateDoneItemsCache(listArray);
+                updateDoneItemsCache(listArray, page);
             } else {
-                updateTipsCache(selectedItem, listArray);
+                updateTipsCache(selectedItem, listArray, page);
             }
 
             if (lastRecordedCount.current > 0) {
@@ -259,56 +246,45 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     // 1.2 This function is modified to always execute the page = 1 scenario on all calls,
     //     whether it is first launch scenario or on refresh pull down
     const resetListWithFirstPageLoad = async (isPullDown = false) => {
-        //        if (page == 1) {
-        // If current page is already 1, manually invoke LoadThingsForCurrentPage 
-        // as useEffect(page) won't be called
-        loadThingsForCurrentPage(isPullDown);
-        // } else {
-        //     //console.log("Setting page var to 1 to trigger loadThingsForCurrentPage().")
-        //     setPage(1);
-        // }
+        if (page == 1) {
+            // If current page is already 1, manually invoke LoadThingsForCurrentPage 
+            // as useEffect(page) won't be called
+            loadThingsForCurrentPage(isPullDown);
+         } else {
+             //console.log("Setting page var to 1 to trigger loadThingsForCurrentPage().")
+             setPage(1);
+         }
     };
 
-    // 1.2 We deactivate this effect because the page value will now longer change from 1
-    // useEffect(() => {
-    //     //console.log("useEffect(page) called for pathname " + Date.now());
-    //     if (screenInitialized) {
-    //         loadThingsForCurrentPage();
-    //     } else {
-    //         //("Not calling loadThingsForCurrentPage in useEffect(page) as it was called during first useEffect([]) call.");
-    //     }
-    // }, [page]);
+    const isInitialPageMount = useRef(true);
+    useEffect(() => {
+        //console.log("useEffect(page) called for pathname " + Date.now());
+        if (isInitialPageMount.current) {
+            isInitialPageMount.current = false;
+        } else {
+            loadThingsForCurrentPage();
+        }
+    }, [page]);
 
-    // 1.2 Pagination deactivated, see note at start of file
-    // const loadNextPage = () => {
-    //     //console.log("loadNextPage called");
-    //     if (hasMoreThings.current) {
-    //         if (!isRefreshing && !isPageLoading.current) {
-    //             //console.log(`List end reached, incrementing current page var (currently ${page}).`);
-    //             isPageLoading.current = true;
-    //             setPage((prevPage) => prevPage + 1);
-    //         } else {
-    //             //console.log(`Ignoring pull down action as page ${page} currently loading or full list is refreshing.`);
-    //         }
-    //     } else {
-    //         //console.log(`Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
-    //     }
-    // };
+    const loadNextPage = () => {
+        //console.log("loadNextPage called");
+        if (hasMoreThings.current) {
+            if (!isRefreshing && !isPageLoading.current) {
+                //console.log(`List end reached, incrementing current page var (currently ${page}).`);
+                isPageLoading.current = true;
+                setPage((prevPage) => prevPage + 1);
+            } else {
+                //console.log(`Ignoring pull down action as page ${page} currently loading or full list is refreshing.`);
+            }
+        } else {
+            //console.log(`Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
+        }
+    };
 
-    // 1.2 Pagination deactivated, see note at start of file
-    //     Even with pagination deactivated, we can keep the following
-    //     function as unchanged as the page = 1 scenario will retrieve entire list
-    //     as desired, we just will never hit the concatenation scenario which
-    //     breaks UX in unexpected orphan and done-ing situations.
-    //
-    //     The pulldown boolean becomes the switch that executes cache load (pulldown == false) or DB load (pulldown == true)
-    //     -- boolean is passed to loadAllThings so backend can distinguish
     const loadThingsForCurrentPage = async (isPullDown = false) => {
         //console.log(`Calling loadAllThings(page) with page = ${page}.`);
 
-        // 1.2 Removed page parameter pass to loadAllThings
-        //const loadResponse = await loadAllThings(isPullDown, page);
-        const loadResponse = await loadAllThings(isPullDown);
+        const loadResponse = await loadAllThings(isPullDown, page);
 
         let things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;
@@ -316,7 +292,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
         hasMoreThings.current = hasMore;
 
-        //isPageLoading.current = false;
+        isPageLoading.current = false;
         setRefreshing(false);
 
         // If we're loading the first page, assume we want to reset the displays list to only the first page
@@ -462,6 +438,9 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     }
 
     const handleThingDelete = (thing: any) => {
+        console.log("handleThingDelete: " + JSON.stringify(thing));
+
+
         //console.log("Entering handle delete item...");
         const listArrayCopy = listArray.map((obj) => ({ ...obj }));
 
@@ -1346,7 +1325,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }, [item.text])
 
         const handleThingTextTap = (thing) => {
-            console.log(`handleItemTextTap for ${thing.text}, renderTappedField: ${renderTappedField}`);
+            console.log(`handleItemTextTap for ${thing.text}, renderTappedField: ${renderTappedField.current}`);
 
             // If something else was selected/active when the 
             // user tapped a new item -- process that item's latest
@@ -1375,14 +1354,14 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }
 
         const handleBlur = (thing) => {
-            //console.log(`Inside handleBlur for index ${getIndex()}`);
+            console.log(`Inside handleBlur for index ${getIndex()}`);
 
             const textOnChange = onChangeInputValue.current;
-            //console.log("textOnChange: " + textOnChange);
+            console.log("textOnChange: " + textOnChange);
 
             // If blur after field changed to empty, assume the user wants to delete it
             if (!textOnChange || textOnChange.length == 0) {
-                //console.log("Blur occurred on empty field, deleting it!");
+                console.log("Blur occurred on empty field, deleting it!");
                 handleThingDelete(thing);
             } else if (textOnChange != thing.text) {
                 //console.log("Text changed to: " + textOnChange);
@@ -1831,20 +1810,18 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         refreshing={isRefreshing} />
                                 }
                                 renderItem={renderThing}
-
-                                // 1.2 Pagination deactivated, see note at start of file
-                                // onEndReached={({ distanceFromEnd }) => {
-                                //     //console.log("onEndReached called, distance from end: " + distanceFromEnd);
-                                //     if (distanceFromEnd > 0) {
-                                //         loadNextPage();
-                                //     }
-                                // }}
-                                // onEndReachedThreshold={0.1}
+                                onEndReached={({ distanceFromEnd }) => {
+                                    //console.log("onEndReached called, distance from end: " + distanceFromEnd);
+                                    if (distanceFromEnd > 0) {
+                                        loadNextPage();
+                                    }
+                                }}
+                                onEndReachedThreshold={0.1}
 
                                 ListFooterComponent={
                                     <Pressable onPress={handleBelowListTap} style={{ paddingTop: 10 }}>
-                                        {/* {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />} */}
-                                        <View style={{ height: 70 }} />
+                                        {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />}
+                                        <View style={{ height: 110 }} />
                                     </Pressable>}
                             />
                         </Reanimated.View>

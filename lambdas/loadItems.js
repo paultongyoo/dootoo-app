@@ -5,15 +5,6 @@ const prisma = new PrismaClient();
 import AWS from 'aws-sdk';
 const kms = new AWS.KMS();
 
-// 1.2 Deactivated pagination logic as fast fix for 
-//     order mixup on completing items inside a page,
-//     and potential improved UX with move to locally
-//     cached lists.  This function should only be called
-//     now when user pulls down to refresh or they don't
-//     have any items cached locally.
-//
-//     To retain backwards compatibility, a boolean will be added to 
-//     deactivate pagination -- bool will be passed by v1.2+
 export const handler = async (event) => {
   const user = await prisma.user.findUnique({
     where: { anonymous_id: event.anonymous_id }
@@ -73,15 +64,16 @@ export const handler = async (event) => {
     };
 
     if (event.noDoneParents) {
-      prismaParams.where = { 
-          ...prismaParams.where, NOT: {
+      prismaParams.where = {
+        ...prismaParams.where, NOT: {
           AND: [
             { parent_item_id: null },
             { is_done: true }
           ]
-        }};
+        }
+      };
     } else if (event.onlyDoneParents) {
-      prismaParams.where = { 
+      prismaParams.where = {
         ...prismaParams.where,
         is_done: true,
         parent_item_id: null
@@ -94,33 +86,31 @@ export const handler = async (event) => {
           }
         }
       };
-
     }
 
     const pageSize = 15   // hardcode this for now
     if (!event.skipPagination) {
-        const page = event.page || 1;
-        const skip = (page - 1) * pageSize;
-        const take = pageSize + 1;  // Take one more than pageSize to determine if there are more items
+      const page = event.page || 1;
+      const skip = (page - 1) * pageSize;
+      const take = pageSize + 1;  // Take one more than pageSize to determine if there are more items
 
-        console.log(`Calling item.findMany with skip (${skip}) and take (${take})`);
-        prismaParams = { skip, take, ...prismaParams};
-      } else {
-        console.log("Skipping passing skip/take to item.findMany");
-      }
+      console.log(`Calling item.findMany with skip (${skip}) and take (${take})`);
+      prismaParams = { skip, take, ...prismaParams };
+    } else {
+      console.log("Skipping passing skip/take to item.findMany");
+    }
 
-      retrievedItems = await prisma.item.findMany(prismaParams);
+    retrievedItems = await prisma.item.findMany(prismaParams);
 
-      if (event.onlyDoneParents) {
+    if (event.onlyDoneParents) {
 
-        // TODO Address ordering
-        retrievedItems = retrievedItems.flatMap((parent) => [
-                              parent, // Add the parent first
-                              ...parent.children.sort((a, b) => a.rank_idx - b.rank_idx), // Then add its children, sorted by rank_idx
-                         ]);
-      }
+      retrievedItems = retrievedItems.flatMap((parent) => [
+        parent, // Add the parent first
+        ...parent.children.sort((a, b) => a.rank_idx - b.rank_idx), // Then add its children, sorted by rank_idx
+      ]);
+    }
 
-      if (!event.skipPagination) {
+    if (!event.skipPagination) {
       hasMore = retrievedItems.length > pageSize;
       console.log(`User does${(!hasMore) ? ' not' : ''} have more items.`);
 
@@ -244,13 +234,13 @@ function removeOrphans(items) {
   const validItems = [];
 
   items.forEach(item => {
-      if (item.parent_item_uuid && !parentUUIDs.has(item.parent_item_uuid)) {
-          // Clear parentId for orphaned subitems
-          item.parent_item_uuid = null;
-          orphanedSubitems.push(item);
-      } else {
-          validItems.push(item);
-      }
+    if (item.parent_item_uuid && !parentUUIDs.has(item.parent_item_uuid)) {
+      // Clear parentId for orphaned subitems
+      item.parent_item_uuid = null;
+      orphanedSubitems.push(item);
+    } else {
+      validItems.push(item);
+    }
   });
 
   console.log(`Discarding ${orphanedSubitems} subitems from the list - Prevent these from occurring!`);

@@ -34,9 +34,9 @@ export default function ListScreen() {
     strict: false
   });
 
-  useEffect(() => {
-    console.log("ListScreen.useEffect([])");
-  }, []);
+  // useEffect(() => {
+  //   console.log("ListScreen.useEffect([])");
+  // }, []);
 
 
   // 1.5 Deprecated, remove in future
@@ -739,7 +739,7 @@ export default function ListScreen() {
       saveNewThings={saveNewItems}
       saveTextUpdateFunc={saveTextUpdate}
       saveThingOrderFunc={saveItemOrder}
-      loadAllThings={(isPullDown) => loadItems(isPullDown, DONE_ITEM_FILTER_NO_DONE_PARENTS)}
+      loadAllThings={(isPullDown, page) => loadItems(isPullDown, page, DONE_ITEM_FILTER_NO_DONE_PARENTS)}
       deleteThing={deleteItem}
       saveNewThing={saveNewItem}
       transcribeAudioToThings={transcribeAudioToTasks}

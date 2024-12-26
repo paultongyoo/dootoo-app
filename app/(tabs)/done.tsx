@@ -31,9 +31,9 @@ export default function DoneScreen() {
     strict: false
   });
 
-  useEffect(() => {
-    console.log("DoneScreen.useEffect([])");
-  }, []);
+  // useEffect(() => {
+  //   console.log("DoneScreen.useEffect([])");
+  // }, []);
 
   const saveTextUpdate = async (item) => {
     updateItemText(item, async () => {
@@ -282,7 +282,7 @@ export default function DoneScreen() {
       saveNewThings={saveNewItems}
       saveTextUpdateFunc={saveTextUpdate}
       saveThingOrderFunc={saveItemOrder}
-      loadAllThings={(isPullDown) => loadItems(isPullDown, DONE_ITEM_FILTER_ONLY_DONE_PARENTS)}
+      loadAllThings={(isPullDown, page) => loadItems(isPullDown, page, DONE_ITEM_FILTER_ONLY_DONE_PARENTS)}
       deleteThing={deleteItem}
       saveNewThing={saveNewItem}
       transcribeAudioToThings={transcribeAudioToTasks}
