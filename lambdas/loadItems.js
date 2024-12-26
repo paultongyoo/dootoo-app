@@ -64,6 +64,9 @@ export const handler = async (event) => {
               }
             }
           },
+          where: {
+            is_deleted: false
+          },
           orderBy: {
             rank_idx: 'asc'
           }
