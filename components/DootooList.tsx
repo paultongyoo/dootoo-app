@@ -150,11 +150,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
             // Asyncronously update local cache with latest listArray update
             if (thingName == THINGNAME_ITEM) {
-                updateItemsCache(listArray, page);
+                updateItemsCache(listArray);
             } else if (thingName == THINGNAME_DONE_ITEM) {
-                updateDoneItemsCache(listArray, page);
+                updateDoneItemsCache(listArray);
             } else {
-                updateTipsCache(selectedItem, listArray, page);
+                updateTipsCache(selectedItem, listArray);
             }
 
             if (lastRecordedCount.current > 0) {

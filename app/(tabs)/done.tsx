@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
 import { usePathname } from 'expo-router';
-import { loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_ONLY_DONE_PARENTS, clearItemCache, ITEM_LIST_KEY } from '@/components/Storage';
+import { loadItems, deleteItem, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_ONLY_DONE_PARENTS } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooList, { listStyles, THINGNAME_DONE_ITEM } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
@@ -127,9 +127,6 @@ export default function DoneScreen() {
                   anonymous_id: anonymousId.current,
                   pathname: pathname
                 });
-
-                // Clear the opposite list and cache to force a DB load on next load of opposite screen
-                clearItemCache(ITEM_LIST_KEY);
 
                 // Set item TO Open
                 item.is_done = false;

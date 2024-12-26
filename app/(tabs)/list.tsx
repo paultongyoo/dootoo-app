@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
 import { usePathname } from 'expo-router';
-import { loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_ONLY_OPEN_PARENTS, DONE_ITEM_LIST_KEY, clearItemCache } from '@/components/Storage';
+import { loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_ONLY_OPEN_PARENTS } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList, { listStyles, THINGNAME_ITEM } from "@/components/DootooList";
@@ -268,10 +268,6 @@ export default function ListScreen() {
           });
 
         } else {
-
-          // Because this scenario will affect how the opposite list will appear, 
-          // clear the opposite list and cache to force a DB load on next load of opposite screen
-          clearItemCache(DONE_ITEM_LIST_KEY);
 
           // Item is either an adult or parent, check if it has kids...
           const children = openItems.filter((obj) => obj.parent_item_uuid == item.uuid);

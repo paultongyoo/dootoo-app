@@ -108,9 +108,9 @@ export const loadItems = async (isPullDown, page, doneFilterString = null) => {
   // Load local items from cache (or empty list) if
   // not called from pulldown (i.e. on first and return launches of app
   if (!isPullDown) {
-    const cachedItems = []; //(doneFilterString == DONE_ITEM_FILTER_ONLY_DONE_PARENTS) 
-                           // ? await loadDoneItemsCache(page)
-                           // : await loadItemsCache(page);
+    const cachedItems = (doneFilterString == DONE_ITEM_FILTER_ONLY_DONE_PARENTS) 
+                           ? await loadDoneItemsCache()
+                           : await loadItemsCache();
 
     // If app had local items cached, we'll return those immediately.
     // If an empty / no list is cached (which will occur for returning users too),
@@ -150,12 +150,12 @@ export const loadItems = async (isPullDown, page, doneFilterString = null) => {
   }
 };
 
-export const updateItemsCache = async(item_list_obj, page) => {
+export const updateItemsCache = async(item_list_obj) => {
   try {
     if (item_list_obj) {
       //console.log(`Updating items cache with ${(item_list_obj) ? item_list_obj.length : 0} size list.`);
       const item_list_str = JSON.stringify(item_list_obj);
-      await AsyncStorage.setItem(ITEM_LIST_KEY + "_" + page, item_list_str);
+      await AsyncStorage.setItem(ITEM_LIST_KEY, item_list_str);
     } else {
       //console.log("Update items cache based null param, ignoring call (was this unexpected?");
     }
@@ -164,12 +164,12 @@ export const updateItemsCache = async(item_list_obj, page) => {
   }
 }
 
-export const updateDoneItemsCache = async(item_list_obj, page) => {
+export const updateDoneItemsCache = async(item_list_obj) => {
   try {
     if (item_list_obj) {
       //console.log(`Updating items cache with ${(item_list_obj) ? item_list_obj.length : 0} size list.`);
       const item_list_str = JSON.stringify(item_list_obj);
-      await AsyncStorage.setItem(DONE_ITEM_LIST_KEY + "_" + page, item_list_str);
+      await AsyncStorage.setItem(DONE_ITEM_LIST_KEY, item_list_str);
     } else {
       //console.log("Update items cache based null param, ignoring call (was this unexpected?");
     }
@@ -178,10 +178,10 @@ export const updateDoneItemsCache = async(item_list_obj, page) => {
   }
 }
 
-export const updateTipsCache = async(item_obj, tip_list_obj, page) => {
+export const updateTipsCache = async(item_obj, tip_list_obj) => {
   try {
     if (item_obj && tip_list_obj) {
-      const storageKey = `${TIP_LIST_KEY_PREFIX}_${item_obj.uuid}_${page}`;
+      const storageKey = `${TIP_LIST_KEY_PREFIX}_${item_obj.uuid}`;
       //console.log('Generated Tips AsyncStorage key: ' + storageKey);
       //console.log(`Updating tips cache with ${(tip_list_obj) ? tip_list_obj.length : 0} size list.`);
       const tip_list_str = JSON.stringify(tip_list_obj);
@@ -194,33 +194,14 @@ export const updateTipsCache = async(item_obj, tip_list_obj, page) => {
   }
 }
 
-export const clearItemCache = async(cacheKeyStr = null) => {
+export const areItemsCached = async(cacheKeyStr = null) => {
   try {
     if (cacheKeyStr == null) {
       throw new Error("Null cache key provided");
     } else if ((cacheKeyStr != DONE_ITEM_LIST_KEY) && (cacheKeyStr != ITEM_LIST_KEY)) {
       throw new Error("Unrecognized item list cache key");
     }
-    
-    let cachePage = 1;
-    while (await AsyncStorage.getItem(cacheKeyStr + "_" + cachePage)) {
-      console.log("Clearing cache: " + cacheKeyStr + "_" + cachePage);
-      await AsyncStorage.removeItem(cacheKeyStr + "_" + cachePage);
-      cachePage += 1;
-    }
-  } catch (e) {
-    console.error("Error in clearItemCache", e);
-  }
-}
-
-export const areItemsCached = async(cacheKeyStr = null, page) => {
-  try {
-    if (cacheKeyStr == null) {
-      throw new Error("Null cache key provided");
-    } else if ((cacheKeyStr != DONE_ITEM_LIST_KEY) && (cacheKeyStr != ITEM_LIST_KEY)) {
-      throw new Error("Unrecognized item list cache key");
-    }
-    return await AsyncStorage.getItem(cacheKeyStr + "_" + page) != null;
+    return await AsyncStorage.getItem(cacheKeyStr) != null;
   } catch (e) {
     console.error("Error in areItemsCached", e);
   }
@@ -1094,10 +1075,10 @@ const saveTipsToBackend = async(item_obj, tip_list_obj, callback) => {
   }
 }
 
-const loadDoneItemsCache = async(page) => {
+const loadDoneItemsCache = async () => {
   try {
     
-    const items_list_str = await AsyncStorage.getItem(DONE_ITEM_LIST_KEY + "_" + page);
+    const items_list_str = await AsyncStorage.getItem(DONE_ITEM_LIST_KEY);
     //console.log("loadDoneItemsCache: " + items_list_str);
     return (items_list_str) ? JSON.parse(items_list_str) : [];
   } catch (e) {
@@ -1105,10 +1086,10 @@ const loadDoneItemsCache = async(page) => {
   }
 }
 
-const loadItemsCache = async(page) => {
+const loadItemsCache = async () => {
   try {
     
-    const items_list_str = await AsyncStorage.getItem(ITEM_LIST_KEY  + "_" + page);
+    const items_list_str = await AsyncStorage.getItem(ITEM_LIST_KEY);
     //console.log("loadItemsCache: " + items_list_str);
     return (items_list_str) ? JSON.parse(items_list_str) : [];
   } catch (e) {
