@@ -34,7 +34,10 @@ export const handler = async (event) => {
 
             updatedItem = await prisma.item.update({
                 where: { id: item.id },
-                data: { is_done: event.is_done }
+                data: { is_done: event.is_done },
+                select: {
+                    uuid: true
+                }
             });
             console.log("Updated Item: " + JSON.stringify(updatedItem));
 
@@ -53,10 +56,13 @@ export const handler = async (event) => {
                 data: { 
                     is_done: (event.is_done == true),
                     rank_idx: -1
+                },
+                select: {
+                    uuid: true
                 }
             });
-            await updateItemRankIndices(true);
-            await updateItemRankIndices(false);
+            await updateItemRankIndices(user, true);
+            await updateItemRankIndices(user, false);
         }
 
         const response = {
@@ -74,7 +80,7 @@ export const handler = async (event) => {
     }
 }
 
-const updateItemRankIndices = async (doneState) => {
+const updateItemRankIndices = async (user, doneState) => {
 
         // Retrieve users' current list of non-deleted _parent_ items
         // but include children in resulset for later flattening.
