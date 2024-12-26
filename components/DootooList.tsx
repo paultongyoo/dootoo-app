@@ -1,6 +1,6 @@
-import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, TouchableWithoutFeedback, AppState, StyleSheet, Platform, Alert } from 'react-native';
-import { useState, useRef, useContext, useEffect, forwardRef, useImperativeHandle } from 'react';
-import Reanimated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
+import { View, Text, ActivityIndicator, Pressable, TextInput, Keyboard, AppState, StyleSheet, Platform, Alert } from 'react-native';
+import { useState, useRef, useContext, useEffect } from 'react';
+import Reanimated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { AppContext } from './AppContext';
