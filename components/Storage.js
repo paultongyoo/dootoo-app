@@ -310,14 +310,15 @@ export const updateItemDoneState = async (item, callback) => {
       {
         anonymous_id : localAnonId,
         item_uuid: item.uuid,
-        is_done: item.is_done
+        is_done: item.is_done,
+        newOpenDoneLists: true
       }
     );
 
     if (callback) {
       callback();
     }
-    //console.log("updateDoneState Response Obj: " + JSON.stringify(response.data.body));
+    console.log("updateDoneState Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateDoneState API:', error);
   }

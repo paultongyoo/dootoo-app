@@ -30,7 +30,7 @@ export const handler = async (event) => {
         // changing its done state does not warrant moving it between the open and done lists.
         // Simply update its done state and return back to the caller.
         let updatedItem;
-        if (item.parent) {
+        if (!event.newOpenDoneLists || item.parent) {
 
             updatedItem = await prisma.item.update({
                 where: { id: item.id },
