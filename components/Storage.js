@@ -119,7 +119,7 @@ export const loadItems = async (isPullDown, doneFilterString = null) => {
       console.log(`Cached items found ${cachedItems.length}, returning those to user...`)
       return { hasMore: false, things: cachedItems };
     } else {
-      console.log("No cached items found, proceeding with backend lookup for user");
+      console.log(doneFilterString + ": No cached items found, proceeding with backend lookup for user");
     }
   } else {
     console.log("Load called on pull down, executing backend load...");
