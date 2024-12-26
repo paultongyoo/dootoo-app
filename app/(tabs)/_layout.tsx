@@ -11,7 +11,7 @@ import toastConfig from "@/components/ToastConfig";
 export default function TabLayout() {
 
   useEffect(() => {
-    console.log("TabLayout.useEffect([])");
+    //console.log("TabLayout.useEffect([])");
 
     // Initialize App State event handlers
     const handleAppStateChange = (nextAppState) => {

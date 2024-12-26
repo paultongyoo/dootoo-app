@@ -13,7 +13,7 @@ export default function StackLayout() {
   const pathname = usePathname();
 
   useEffect(() => {
-    console.log("StackLayout.useEffect([])");
+    //console.log("StackLayout.useEffect([])");
 
     // Initialize Analytics Tracking
     amplitude.init((__DEV__) ? AMPLITUDE_KEY_DEV : AMPLITUDE_KEY_PROD);

@@ -16,7 +16,7 @@ const NavigationSections = ({navigation}) => {
 
 
     useEffect(() => {
-        console.log("NavigationSections.useEffect([])");
+        //console.log("NavigationSections.useEffect([])");
 
         const listener_incr_done = ProfileCountEventEmitter.addListener('incr_done', () => {
             setDoneCount(prevVal => prevVal + 1);
@@ -36,7 +36,7 @@ const NavigationSections = ({navigation}) => {
     }, [])
 
     useEffect(() => {
-        console.log("NavigationSections.useEffect([username])");
+        //console.log("NavigationSections.useEffect([username])");
         if (username) {
             const initUsername = async () => {
                 const usernameCounts = await loadUsername(username);
