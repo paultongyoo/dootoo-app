@@ -45,7 +45,7 @@ export const AppProvider = ({ children }) => {
       const userData = await initalizeUser();
       setUsername(userData.name);
       setAnonymousId(userData.anonymous_id);
-      console.log("username/anonymousId.current values set: " + JSON.stringify(userData));
+      //console.log("username/anonymousId.current values set: " + JSON.stringify(userData));
       if (callback) {
         callback(userData.isNew);
       }
