@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
 import { usePathname } from 'expo-router';
-import { loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_NO_DONE_PARENTS, DONE_ITEM_LIST_KEY, clearItemCache } from '@/components/Storage';
+import { loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_ONLY_OPEN_PARENTS, DONE_ITEM_LIST_KEY, clearItemCache } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList, { listStyles, THINGNAME_ITEM } from "@/components/DootooList";
@@ -739,7 +739,7 @@ export default function ListScreen() {
       saveNewThings={saveNewItems}
       saveTextUpdateFunc={saveTextUpdate}
       saveThingOrderFunc={saveItemOrder}
-      loadAllThings={(isPullDown, page) => loadItems(isPullDown, page, DONE_ITEM_FILTER_NO_DONE_PARENTS)}
+      loadAllThings={(isPullDown, page) => loadItems(isPullDown, page, DONE_ITEM_FILTER_ONLY_OPEN_PARENTS)}
       deleteThing={deleteItem}
       saveNewThing={saveNewItem}
       transcribeAudioToThings={transcribeAudioToTasks}

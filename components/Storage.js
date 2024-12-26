@@ -100,7 +100,7 @@ const UPDATEUSERNAME_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2
 // 1.2  This function updated to load items from local cache if isPullDown == false
 //      and load from DB if isPullDown == true.  
 //      -- page parameter removed from loadItems signature
-export const DONE_ITEM_FILTER_NO_DONE_PARENTS = "noDoneParents";
+export const DONE_ITEM_FILTER_ONLY_OPEN_PARENTS = "onlyOpenParents";
 export const DONE_ITEM_FILTER_ONLY_DONE_PARENTS = "onlyDoneParents";
 export const loadItems = async (isPullDown, page, doneFilterString = null) => {
   //console.log(`loadItems: isPullDown ${isPullDown}, page ${page}, doneFilterString: ${doneFilterString}`);
@@ -138,7 +138,7 @@ export const loadItems = async (isPullDown, page, doneFilterString = null) => {
         anonymous_id : localAnonId,
         page: page,                          
         skipCounts: true,
-        noDoneParents: (doneFilterString == DONE_ITEM_FILTER_NO_DONE_PARENTS),    //  Added in 1.6 for "list" screen
+        onlyOpenParents: (doneFilterString == DONE_ITEM_FILTER_ONLY_OPEN_PARENTS),    //  Added in 1.6 for "list" screen
         onlyDoneParents: (doneFilterString == DONE_ITEM_FILTER_ONLY_DONE_PARENTS) //  Added in 1.6 for "done" screen                                                                           
       }
     );

@@ -42,19 +42,30 @@ export const handler = async (event) => {
     let prismaParams = {
       where: {
         user: { id: user.id },
-        is_deleted: false
+        is_deleted: false,
+        parent_item_id: null
       },
       select: {
-        id: true,
-        is_child: true,
         is_done: true,
         uuid: true,
         text: true,
         scheduled_datetime_utc: true,
         event_id: true,
-        parent: {
+        children: {
           select: {
-            uuid: true
+            uuid: true,
+            text: true,
+            scheduled_datetime_utc: true,
+            event_id: true,
+            is_done: true,
+            parent: {
+              select: {
+                uuid: true
+              }
+            }
+          },
+          orderBy: {
+            rank_idx: 'asc'
           }
         }
       },
@@ -63,29 +74,13 @@ export const handler = async (event) => {
       }
     };
 
-    if (event.noDoneParents) {
-      prismaParams.where = {
-        ...prismaParams.where, NOT: {
-          AND: [
-            { parent_item_id: null },
-            { is_done: true }
-          ]
-        }
-      };
+    console.log("onlyOpenParents: " + event.onlyOpenParents);
+    console.log("onlyDoneParents: " + event.onlyDoneParents);
+
+    if (event.onlyOpenParents) {
+      prismaParams.where = { ...prismaParams.where, is_done: false };
     } else if (event.onlyDoneParents) {
-      prismaParams.where = {
-        ...prismaParams.where,
-        is_done: true,
-        parent_item_id: null
-      };
-      prismaParams.select = null;
-      prismaParams.include = {
-        children: {
-          include: {
-            parent: true, // Explicitly include the parent relationship for each child
-          }
-        }
-      };
+      prismaParams.where = { ...prismaParams.where, is_done: true };
     }
 
     const pageSize = 15   // hardcode this for now
@@ -102,13 +97,11 @@ export const handler = async (event) => {
 
     retrievedItems = await prisma.item.findMany(prismaParams);
 
-    if (event.onlyDoneParents) {
-
-      retrievedItems = retrievedItems.flatMap((parent) => [
-        parent, // Add the parent first
-        ...parent.children.sort((a, b) => a.rank_idx - b.rank_idx), // Then add its children, sorted by rank_idx
-      ]);
+    const flattenItem = (item) => {
+      const { children, ...parent } = item;
+      return [parent, ...children];
     }
+    retrievedItems = retrievedItems.flatMap((item) => flattenItem(item));
 
     if (!event.skipPagination) {
       hasMore = retrievedItems.length > pageSize;
@@ -192,9 +185,6 @@ export const handler = async (event) => {
           retrievedItems[i].tip_count = Number(num_tips_of_close_embeddings[0].count + ''); // Hack workaround to convert BigInt 
         }
       }
-
-      //console.log("Updated Item: " + JSON.stringify(retrievedItems[i]));
-
     } catch (error) {
       console.error('Error encrypting or decrypting:', error);
       return {
@@ -204,10 +194,14 @@ export const handler = async (event) => {
     }
   }
 
+  console.log("Retrieved Items prior to orphan removal: " + JSON.stringify(retrievedItems));
+
   // HACK ALERT:  Move any orphaned items to top of the list
   //              The UI was built to prevent orphans but they're still occurring occassionally.  
   //              Race conditions maybe?
   retrievedItems = removeOrphans(retrievedItems);
+
+ 
 
   var response = null;
   if (event.loadAll) {
@@ -237,13 +231,14 @@ function removeOrphans(items) {
     if (item.parent_item_uuid && !parentUUIDs.has(item.parent_item_uuid)) {
       // Clear parentId for orphaned subitems
       item.parent_item_uuid = null;
+      console.log("Identified item as orphan: " + JSON.stringify(item));
       orphanedSubitems.push(item);
     } else {
       validItems.push(item);
     }
   });
 
-  console.log(`Discarding ${orphanedSubitems} subitems from the list - Prevent these from occurring!`);
+  console.log(`Discarding ${orphanedSubitems.length} subitems from the list - Prevent these from occurring!`);
 
   // Combine orphaned subitems at the top with the valid items
   return validItems;
