@@ -108,9 +108,9 @@ export const loadItems = async (isPullDown, page, doneFilterString = null) => {
   // Load local items from cache (or empty list) if
   // not called from pulldown (i.e. on first and return launches of app
   if (!isPullDown) {
-    const cachedItems = (doneFilterString == DONE_ITEM_FILTER_ONLY_DONE_PARENTS) 
-                            ? await loadDoneItemsCache(page)
-                            : await loadItemsCache(page);
+    const cachedItems = []; //(doneFilterString == DONE_ITEM_FILTER_ONLY_DONE_PARENTS) 
+                           // ? await loadDoneItemsCache(page)
+                           // : await loadItemsCache(page);
 
     // If app had local items cached, we'll return those immediately.
     // If an empty / no list is cached (which will occur for returning users too),
