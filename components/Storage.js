@@ -213,14 +213,14 @@ export const clearItemCache = async(cacheKeyStr = null) => {
   }
 }
 
-export const areItemsCached = async(cacheKeyStr = null) => {
+export const areItemsCached = async(cacheKeyStr = null, page) => {
   try {
     if (cacheKeyStr == null) {
       throw new Error("Null cache key provided");
     } else if ((cacheKeyStr != DONE_ITEM_LIST_KEY) && (cacheKeyStr != ITEM_LIST_KEY)) {
       throw new Error("Unrecognized item list cache key");
     }
-    return await AsyncStorage.getItem(cacheKeyStr) != null;
+    return await AsyncStorage.getItem(cacheKeyStr + "_" + page) != null;
   } catch (e) {
     console.error("Error in areItemsCached", e);
   }
