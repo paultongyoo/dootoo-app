@@ -45,11 +45,12 @@ const DootooTipEmptyUX = ({ selectedItem, tipArray }) => {
           flex: 1,
           justifyContent: 'center',
           paddingLeft: 30,
-          paddingRight: 60          
+          paddingRight: 60,
+          paddingBottom: 40         
         },
         emptyListContainer_words: {
-          fontSize: 40,
-          lineHeight: 48            
+          fontSize: 35,
+          lineHeight: 43            
         },
         initialLoadAnimContainer: {     // TODO: Remove this redundant loading animation
             flex: 1,
