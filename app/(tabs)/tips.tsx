@@ -499,6 +499,7 @@ export default function ItemTips() {
           EmptyThingUX={() => <DootooTipEmptyUX selectedItem={selectedItem} tipArray={tips} />}
           isThingPressable={() => { return selectedItem.is_done; }}
           isThingDraggable={selectedItem.is_done}
+          hideBottomButtons={!selectedItem.is_done}
           shouldInitialLoad={selectedItem.tip_count && (Number(selectedItem.tip_count) > 0)} />
       </>
     );
