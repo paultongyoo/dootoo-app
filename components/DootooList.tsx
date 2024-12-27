@@ -455,7 +455,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         if (!thing.parent_item_uuid && (thingSubtasks.length > 0)) {
 
             Alert.alert(
-                `${(thingName == THINGNAME_ITEM) ? "Item" : "Tip"} Has ${thingSubtasks.length} Sub${stringizeThingName(thingName).toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''}`,
+                `${((thingName == THINGNAME_ITEM) || (thingName == THINGNAME_DONE_ITEM)) ? "Item" : "Tip"} Has ${thingSubtasks.length} Sub${stringizeThingName(thingName).toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''}`,
                 `Deleting this ${stringizeThingName(thingName).toLowerCase()} will delete its sub${stringizeThingName(thingName).toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''} too.  Continue?`,
                 [
                     {
