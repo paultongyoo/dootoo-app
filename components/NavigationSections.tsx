@@ -69,7 +69,7 @@ const NavigationSections = ({navigation}) => {
         doneIconColor.value = withTiming((sectionIndex == 1) ? "#556b2f" : "#3e2723", { duration: 500 });
         profileIconColor.value = withTiming((sectionIndex == 2) ? "#556b2f" : "#3e2723", { duration: 500 });
     
-        navigation.navigate((sectionIndex == 0) ? 'list'
+        navigation.navigate((sectionIndex == 0) ? 'open'
                                 : (sectionIndex == 1) ? 'done' : 'profile');
     }
 
