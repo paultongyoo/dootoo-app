@@ -4,7 +4,7 @@ import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Lin
 import { AppContext } from "@/components/AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, showComingSoonAlert } from '@/components/Helpers';
-import { overrideUserAnonId, saveUserLocally, updateUsername } from "@/components/Storage";
+import { overrideUserAnonId as overrideUser, saveUserLocally, updateUsername } from "@/components/Storage";
 import { ProfileCountEventEmitter } from "@/components/EventEmitters";
 import Dialog from "react-native-dialog";
 import { Bulb } from "@/components/svg/bulb";
@@ -27,8 +27,8 @@ const ProfileScreen = ({ navigation }) => {
     const [usernameSpammingFailedDialogVisible, setUsernameSpammingFailedDialogVisible] = useState(false);
     const [usernameUnexpectedDialogVisible, setUsernameUnexpectedDialogVisible] = useState(false);
     //const isInitialMount = useRef(true);
-    const [overrideAnonIdVisible, setOverrideAnonIdVisible] = useState(false);
-    const [overrideAnonIdInputValue, setOverrideAnonIdInputValue] = useState('');
+    const [overrideUserDialogVisible, setOverrideUserDialogVisible] = useState(false);
+    const [overrideUserDialogInputValue, setOverrideUserDialogInputValue] = useState('');
 
     useEffect(() => {
         //console.log("ProfileScreen.useEffect([])");
@@ -307,16 +307,22 @@ const ProfileScreen = ({ navigation }) => {
         usernameTextInputValue.current = username;
     }
 
-    const showAnonIdOverridePrompt = () => {
-        setOverrideAnonIdVisible(true);
+    const showOverrideUserPrompt = () => {
+        setOverrideUserDialogVisible(true);
     }
 
-    const handleAnonIdOverrideCancel = () => {
-        setOverrideAnonIdVisible(false);
+    const handleUserOverrideDialogCancel = () => {
+        setOverrideUserDialogVisible(false);
     }
 
-    const handleAnonIdOverrideSubmit = async () => {
-        await overrideUserAnonId(overrideAnonIdInputValue);
+    const handleUserOverrideDialogSubmit = async () => {
+        const success = await overrideUser(overrideUserDialogInputValue);
+        if (success) {
+            setOverrideUserDialogVisible(false);
+            Alert.alert("User Override Successful", "Close the app and reopen it to load the new user's data.");
+        } else {
+            Alert.alert("User Override Unsuccessful", "An unexpected error occurred.  Did you input the override string correctly?");
+        }
     }
 
     return (
@@ -360,9 +366,9 @@ const ProfileScreen = ({ navigation }) => {
             <View style={styles.privacyContainer}>
                 {/* <View style={styles.anonIdDisplayContainer}>
                     <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
-                    <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId.current}</Text>
-                    <Pressable onPress={showAnonIdOverridePrompt}>
-                        <Text style={styles.deleteDataLinkText}>Override Anonymous ID</Text>
+                    <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId}</Text>
+                    <Pressable onPress={showOverrideUserPrompt}>
+                        <Text style={styles.deleteDataLinkText}>Override User</Text>
                     </Pressable>
                 </View> */}
                 <View style={styles.deleteDataLinkContainer}>
@@ -413,17 +419,18 @@ const ProfileScreen = ({ navigation }) => {
                 <Dialog.Description>An unexpected error occurred while trying to save your new username.  Please try again later.</Dialog.Description>
                 <Dialog.Button label="OK" onPress={() => setUsernameUnexpectedDialogVisible(false)} />
             </Dialog.Container>
-            <Dialog.Container visible={overrideAnonIdVisible} onBackdropPress={handleAnonIdOverrideCancel}>
-                <Dialog.Title>Override Anonymous ID</Dialog.Title>
+            <Dialog.Container visible={overrideUserDialogVisible} onBackdropPress={handleUserOverrideDialogCancel}>
+                <Dialog.Title>Override User</Dialog.Title>
+                <Dialog.Description>Submit new user info in the format <Text style={{fontWeight: 'bold'}}>user:anonId</Text> to override the current user.</Dialog.Description>
                 <Dialog.Input
                     multiline={false}
                     autoFocus={true}
-                    onSubmitEditing={handleAnonIdOverrideSubmit}
+                    onSubmitEditing={handleUserOverrideDialogSubmit}
                     onChangeText={(text) => {
-                        setOverrideAnonIdInputValue(text);
+                        setOverrideUserDialogInputValue(text);
                     }} />
-                <Dialog.Button label="Cancel" onPress={handleAnonIdOverrideCancel} />
-                <Dialog.Button label="Submit" onPress={handleAnonIdOverrideSubmit} disabled={overrideAnonIdInputValue.length == 0} />
+                <Dialog.Button label="Cancel" onPress={handleUserOverrideDialogCancel} />
+                <Dialog.Button label="Submit" onPress={handleUserOverrideDialogSubmit} disabled={overrideUserDialogInputValue.length == 0} />
             </Dialog.Container>
         </View>
     );

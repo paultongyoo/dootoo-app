@@ -906,18 +906,27 @@ export const resetAllData = async () => {
   }
 };
 
-export const overrideUserAnonId = async(new_anon_id) => {
+export const overrideUserAnonId = async(newUserInfo) => {
   try {
-    console.log("Inside overrideUserAnonId");
+    console.log("Inside overrideUserAnonId, input value: " + newUserInfo);
     const curr_user_obj_str = await AsyncStorage.getItem(USER_OBJ_KEY);
     const curr_user_obj = JSON.parse(curr_user_obj_str);
-    console.log("Current anonymous_id: " + curr_user_obj.anonymous_id);
-    const new_user_obj = {...curr_user_obj, anonymous_id: new_anon_id };
+    console.log("Current User Object: " + JSON.stringify(curr_user_obj));
+    
+    const [newUsername, newAnonId] = newUserInfo.split(":");
+
+    const new_user_obj = {...curr_user_obj, 
+      name: newUsername,
+      anonymous_id: newAnonId 
+    };
+    console.log("Current User Obj: " + JSON.stringify(new_user_obj));
     const user_obj_str = JSON.stringify(new_user_obj);
     await AsyncStorage.setItem(USER_OBJ_KEY, user_obj_str);
-    console.log("Saved new anonymous_id: " + new_user_obj.anonymous_id);
+    console.log("Override successful");
+    return true;
   } catch (e) {
     console.log("Error saving user to local storage.", e);
+    return false;
   }
 }
 
