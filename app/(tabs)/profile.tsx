@@ -31,17 +31,8 @@ const ProfileScreen = ({ navigation }) => {
     const [overrideAnonIdInputValue, setOverrideAnonIdInputValue] = useState('');
 
     useEffect(() => {
-        console.log("ProfileScreen.useEffect([])");
+        //console.log("ProfileScreen.useEffect([])");
 
-        // const listener_set_username = ProfileCountEventEmitter.addListener('username_set', (data) => {
-        //     setUsername(data.name);
-        // });
-        // const listener_incr_done = ProfileCountEventEmitter.addListener('incr_done', () => {
-        //     setDoneCount((prev) => prev + 1);
-        // });
-        // const listener_descr_done = ProfileCountEventEmitter.addListener('decr_done', () => {
-        //     setDoneCount((prev) => prev - 1);
-        // });
         const listener_incr_tips = ProfileCountEventEmitter.addListener('incr_tips', (data) => {
             setTipCount(prevCount => prevCount + data.count);
         });
@@ -50,32 +41,10 @@ const ProfileScreen = ({ navigation }) => {
         });
 
         return () => {
-            // listener_incr_done.remove();
-            // listener_descr_done.remove();
             listener_incr_tips.remove();
             listener_decr_tips.remove();
-            //listener_set_username.remove();
         }
     }, []);
-
-    // useEffect(() => {
-    //     console.log("ProfileScreen.useEffect([username])");
-    //     if (username.current) {
-
-    //         const fetchUsernameCounts = async () => {
-    //             const usernameCounts = await loadUsername(username.current);
-    //             console.log("Updating latest profile counts: " + JSON.stringify(usernameCounts));
-    //             setDoneCount(usernameCounts.doneCount);
-    //             setTipCount(usernameCounts.tipCount);
-    //         }
-
-    //         // Initialize counts
-    //         fetchUsernameCounts();
-
-    //     } else {
-    //         console.log("ProfileScreen.useEffect([username]) called with null username, skipping.  Expected?");
-    //     }
-    // }, [username.current])
 
     const showConfirmationPrompt = () => {
         amplitude.track("User Data Deletion Started", {
