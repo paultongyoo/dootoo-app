@@ -7,16 +7,16 @@ const DootooItemEmptyUX = () => {
 
   const opacity = useSharedValue(0);
 
-  const fadeAnimGoals = useSharedValue(0.1);
+  const fadeAnimGoals = useSharedValue(0);
   const goalsAnimatedOpacity = useAnimatedStyle(() => {
     return { opacity: fadeAnimGoals.value }
   })
-  const fadeAnimDreams = useSharedValue(0.1);
+  const fadeAnimDreams = useSharedValue(0);
   const dreamsAnimatedOpacity = useAnimatedStyle(() => {
     return { opacity: fadeAnimDreams.value }
   })
 
-  const fadeAnimChallenges = useSharedValue(0.1);
+  const fadeAnimChallenges = useSharedValue(0);
   const challengesAnimatedOpacity = useAnimatedStyle(() => {
     return { opacity: fadeAnimChallenges.value }
   })
@@ -55,9 +55,9 @@ const DootooItemEmptyUX = () => {
       return () => {
         opacity.value = withTiming(0, { duration: 800 }, (isFinished) => {
           if (isFinished) {
-            fadeAnimGoals.value = 0.1;
-            fadeAnimDreams.value = 0.1;
-            fadeAnimChallenges.value = 0.1;
+            fadeAnimGoals.value = 0;
+            fadeAnimDreams.value = 0;
+            fadeAnimChallenges.value = 0;
           }
         });
       }
