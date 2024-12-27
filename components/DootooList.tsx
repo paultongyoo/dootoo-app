@@ -263,7 +263,9 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         if (isInitialPageMount.current) {
             isInitialPageMount.current = false;
         } else {
-            loadThingsForCurrentPage();
+
+            // Assume if on effect page == 1 then the page was reset by pulldown
+            loadThingsForCurrentPage(page == 1);
         }
     }, [page]);
 
@@ -289,6 +291,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
         let things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;
+
+        console.log(`DB load returned ${things.length} item(s) and hasMore is ${hasMore}`);
 
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
         hasMoreThings.current = hasMore;
