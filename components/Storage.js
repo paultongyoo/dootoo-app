@@ -399,7 +399,7 @@ export const enrichItem = async (item) => {
   }
 }
 
-export const saveNewTip = async (tip, item_uuid, latest_tip_uuids) => {
+export const saveNewTip = async (tip, item_uuid, latest_tip_uuids, callback) => {
   try {
     //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
@@ -417,13 +417,16 @@ export const saveNewTip = async (tip, item_uuid, latest_tip_uuids) => {
         uuid_array: JSON.stringify(latest_tip_uuids)
       }
     );
+    if (callback) {
+      callback();
+    }
     //console.log("saveNewTip Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling saveNewTip API:', error);
   }
 }
 
-export const saveNewTips = async (tips, item_uuid, latest_tip_uuids) => {
+export const saveNewTips = async (tips, item_uuid, latest_tip_uuids, callback = null) => {
   try {
     //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
@@ -441,7 +444,10 @@ export const saveNewTips = async (tips, item_uuid, latest_tip_uuids) => {
         uuid_array: JSON.stringify(latest_tip_uuids)
       }
     );
-    console.log("saveNewTips Response Obj: " + JSON.stringify(response.data.body));
+    //console.log("saveNewTips Response Obj: " + JSON.stringify(response.data.body));
+    if (callback) {
+      callback();
+    }
   } catch (error) {
     console.error('Error calling saveNewTips API:', error);
   }
