@@ -1,33 +1,34 @@
-import { View, Text, ActivityIndicator, Pressable, TextInput, Image, Keyboard, Animated, TouchableWithoutFeedback, AppState, StyleSheet, Platform, Alert } from 'react-native';
-import { useState, useRef, useContext, useEffect, forwardRef, useImperativeHandle } from 'react';
-import Reanimated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
+import { View, Text, ActivityIndicator, Pressable, TextInput, Keyboard, AppState, StyleSheet, Platform, Alert } from 'react-native';
+import { useState, useRef, useContext, useEffect } from 'react';
+import Reanimated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { AppContext } from './AppContext';
-import DootooFooter from './DootooFooter';
 import Toast from 'react-native-toast-message';
 import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
-import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
-import { enrichItem, loadItemsCounts, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
-import usePolling from './Polling';
+import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
+import { enrichItem, loadItemsCounts, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { areDateObjsEqual, calculateTextInputRowHeight, capitalizeFirstCharacter, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, insertArrayAfter, isThingOverdue, pluralize } from './Helpers';
+import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, insertArrayAfter, isThingOverdue, pluralize, stringizeThingName } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Bulb } from './svg/bulb';
 import { Clock } from './svg/clock';
+import MicButton from './MicButton';
+import KeyboardButton from './KeyboardButton';
 
-const THINGNAME_ITEM = "item";
-const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
-    renderLeftActions = () => { return <></> },
-    renderRightActions = () => { return <></> },
-    swipeableOpenFunc = () => { return; },
+export const THINGNAME_ITEM = "item";
+export const THINGNAME_DONE_ITEM = "done_item";
+const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
+    renderLeftActions = (item, index) => { return <></> },
+    renderRightActions = (item: any, p0: any, handleThingDelete: (thing: any) => void, handleMoveToTop: (selectedThing: any) => Promise<void>, p1: unknown) => { return <></> },
+    swipeableOpenFunc = (direction, item, index) => { return; },
     isDoneable = true,
-    handleDoneClick = () => { return; },
+    handleDoneClick = (item) => { return; },
     saveNewThings,
     saveTextUpdateFunc,
     saveThingOrderFunc,
@@ -37,18 +38,15 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     transcribeAudioToThings,
     isThingPressable,
     isThingDraggable,
-    hideRecordButton = false,
-    shouldInitialLoad = true }, ref) => {
+    shouldInitialLoad = true,
+    hideBottomButtons = false }, ref) => {
 
-    const footerRef = useRef();
-    useImperativeHandle(ref, () => ({
-        invokeStartRecording: (footerRef.current) ? footerRef.current.invokeStartRecording : Alert.alert("Footer ref is null!")
-    }));
+    const FOOTER_BUTTON_HEIGHT = 50;
 
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, initializeLocalUser,
         thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap, selectedItem,
-        currentlyTappedThing
+        currentlyTappedThing, emptyListCTAFadeOutAnimation,
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [isRefreshing, setRefreshing] = useState(false);
@@ -66,29 +64,18 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     const selectedCalendar = useRef();
     const selectedTimerThing = useRef(null);
     const blurredOnSubmit = useRef(false);
+    const isPageLoading = useRef(false);
 
     const firstListRendered = useSharedValue(false);
     const initialLoadFadeInOpacity = useSharedValue(0);
     const listOpacity = useSharedValue(0);
 
-    /* 1.2 Note: DEACTIVATING PAGINATION for now to prevent accidental 
-    //           orphaning as well as testing UX of maintaining local/cached list
-    //           instead.  
-                 -- DB loads only occur on Pull Down to Refresh actions.
-                 -- DB continues to be updated asynchrously in background.
-                 -- Lambda will be updated to return entire list on call.
-                 -- Counts were removed from load in prior release, so this
-                    call should be less heavy and less frequent given app
-                    will only call on pull down to refresh actions with this release.             
-                 -- All operations to sync backend DB updated to also update local cache
-
-    const isPageLoading = useRef(false);
-    */
-
-    // 1.2 Page state var will remain and stay at its value of (1)
+    // 1.6 Reintroducing pagination with the separation of Open and Done lists
     const [page, setPage] = useState(1);
 
     useEffect(() => {
+        //console.log("DootooList.useEffect([])");
+
         initializeLocalUser((isNew: boolean) => {
             //console.log("initializeLocalUser callback method: " + shouldInitialLoad);
             if (shouldInitialLoad) {
@@ -102,10 +89,9 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             }
         });
 
-        const forceItemCountsUpdate = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__UPDATE_COUNTS, refreshThingCounts);
 
         const handleAppStateChange = (nextAppState) => {
-            console.log("App State Changed: " + nextAppState);
+            //console.log("App State Changed: " + nextAppState);
             if (nextAppState === "active") {
                 refreshThingCounts();
 
@@ -115,11 +101,9 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 }
             }
         };
-
         const subscription = AppState.addEventListener("change", handleAppStateChange);
 
         return () => {
-            forceItemCountsUpdate.remove();
             subscription.remove();
         }
     }, []);
@@ -136,6 +120,8 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             // Asyncronously update local cache with latest listArray update
             if (thingName == THINGNAME_ITEM) {
                 updateItemsCache(listArray);
+            } else if (thingName == THINGNAME_DONE_ITEM) {
+                updateDoneItemsCache(listArray);
             } else {
                 updateTipsCache(selectedItem, listArray);
             }
@@ -150,9 +136,9 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 // Display Toast
                 Toast.show({
                     type: 'msgOpenWidth',
-                    text1: `Added ${lastRecordedCount.current} ${thingName}${(lastRecordedCount.current > 1) ? 's' : ''}.`,
+                    text1: `Added ${lastRecordedCount.current} ${stringizeThingName(thingName)}${(lastRecordedCount.current > 1) ? 's' : ''}.`,
                     position: 'bottom',
-                    bottomOffset: 220,
+                    bottomOffset: (Platform.OS == 'ios') ? 280 : 260,
                     visibilityTime: 8000,
                     props: {
 
@@ -168,10 +154,6 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                     }
                 });
                 lastRecordedCount.current = 0;
-            } else {
-
-                // This call has to be in this "main UI thread" in order to work
-                Toast.hide();
             }
 
             if (thingName == THINGNAME_ITEM) {
@@ -205,7 +187,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             ignore = true;
             console.log(`Refreshing latest ${thingName} counts: ${new Date(Date.now()).toLocaleString()}`);
             if (listArray.filter(thing => !thing.newKeyboardEntry).length > 0) {
-                if (thingName == THINGNAME_ITEM) {
+                if ((thingName == THINGNAME_ITEM) || (thingName == THINGNAME_DONE_ITEM)) {
                     const itemUUIDs = listArray.map(thing => thing.uuid);
                     if (itemUUIDs.length > 0) {
                         itemCountsMap.current = await loadItemsCounts(itemUUIDs);
@@ -213,7 +195,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                             const mappedUUIDs = [...itemCountsMap.current.keys()];
                             ListItemEventEmitter.emit(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, mappedUUIDs);
                         } else {
-                            console.log("itemCountsMap.current is null - inspecting itemUUIDs: " + JSON.stringify(itemUUIDs));
+                            console.log("loadItemsCount DB call did not return any counts.  Unexpected?");
                         }
                     } else {
                         console.log("itemUUIDs.length unexpectedly zero given listArray.length > 0 -- is app in bad state?");
@@ -233,64 +215,58 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     // 1.2 This function is modified to always execute the page = 1 scenario on all calls,
     //     whether it is first launch scenario or on refresh pull down
     const resetListWithFirstPageLoad = async (isPullDown = false) => {
-        //        if (page == 1) {
-        // If current page is already 1, manually invoke LoadThingsForCurrentPage 
-        // as useEffect(page) won't be called
-        loadThingsForCurrentPage(isPullDown);
-        // } else {
-        //     //console.log("Setting page var to 1 to trigger loadThingsForCurrentPage().")
-        //     setPage(1);
-        // }
+        //console.log(`${thingName}: resetListWithFirstPageLoad, page ${page}`);
+        if (page == 1) {
+            // If current page is already 1, manually invoke LoadThingsForCurrentPage 
+            // as useEffect(page) won't be called
+            loadThingsForCurrentPage(isPullDown);
+         } else {
+             //console.log("Setting page var to 1 to trigger loadThingsForCurrentPage().")
+             setPage(1);
+         }
     };
 
-    // 1.2 We deactivate this effect because the page value will now longer change from 1
-    // useEffect(() => {
-    //     //console.log("useEffect(page) called for pathname " + Date.now());
-    //     if (screenInitialized) {
-    //         loadThingsForCurrentPage();
-    //     } else {
-    //         //("Not calling loadThingsForCurrentPage in useEffect(page) as it was called during first useEffect([]) call.");
-    //     }
-    // }, [page]);
+    const isInitialPageMount = useRef(true);
+    useEffect(() => {
+        //console.log("useEffect(page) called for pathname " + Date.now());
+        if (isInitialPageMount.current) {
+            isInitialPageMount.current = false;
+        } else {
 
-    // 1.2 Pagination deactivated, see note at start of file
-    // const loadNextPage = () => {
-    //     //console.log("loadNextPage called");
-    //     if (hasMoreThings.current) {
-    //         if (!isRefreshing && !isPageLoading.current) {
-    //             //console.log(`List end reached, incrementing current page var (currently ${page}).`);
-    //             isPageLoading.current = true;
-    //             setPage((prevPage) => prevPage + 1);
-    //         } else {
-    //             //console.log(`Ignoring pull down action as page ${page} currently loading or full list is refreshing.`);
-    //         }
-    //     } else {
-    //         //console.log(`Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
-    //     }
-    // };
+            // Assume if on effect page == 1 then the page was reset by pulldown
+            loadThingsForCurrentPage(page == 1);
+        }
+    }, [page]);
 
-    // 1.2 Pagination deactivated, see note at start of file
-    //     Even with pagination deactivated, we can keep the following
-    //     function as unchanged as the page = 1 scenario will retrieve entire list
-    //     as desired, we just will never hit the concatenation scenario which
-    //     breaks UX in unexpected orphan and done-ing situations.
-    //
-    //     The pulldown boolean becomes the switch that executes cache load (pulldown == false) or DB load (pulldown == true)
-    //     -- boolean is passed to loadAllThings so backend can distinguish
+    const loadNextPage = () => {
+        //console.log("loadNextPage called");
+        if (hasMoreThings.current) {
+            if (!isRefreshing && !isPageLoading.current) {
+                //console.log(`List end reached, incrementing current page var (currently ${page}).`);
+                isPageLoading.current = true;
+                setPage((prevPage) => prevPage + 1);
+            } else {
+                //console.log(`Ignoring pull down action as page ${page} currently loading or full list is refreshing.`);
+            }
+        } else {
+            //console.log(`Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
+        }
+    };
+
     const loadThingsForCurrentPage = async (isPullDown = false) => {
-        //console.log(`Calling loadAllThings(page) with page = ${page}.`);
+        //console.log(`${thingName}: Calling loadAllThings(page) with page = ${page}.`);
 
-        // 1.2 Removed page parameter pass to loadAllThings
-        //const loadResponse = await loadAllThings(isPullDown, page);
-        const loadResponse = await loadAllThings(isPullDown);
+        const loadResponse = await loadAllThings(isPullDown, page);
 
         let things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;
 
+        //console.log(`DB load returned ${things.length} item(s) and hasMore is ${hasMore}`);
+
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
         hasMoreThings.current = hasMore;
 
-        //isPageLoading.current = false;
+        isPageLoading.current = false;
         setRefreshing(false);
 
         // If we're loading the first page, assume we want to reset the displays list to only the first page
@@ -321,7 +297,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     function handleThingDrag(newData: unknown[], fromIndex, toIndex, draggedThing) {
 
         amplitude.track("List Item Dragged", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname,
             uuid: draggedThing.uuid,
             item_type: (draggedThing.parent_item_uuid) ? 'child' : 'adult'
@@ -337,7 +313,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 (newData[toIndex + 1] && !newData[toIndex + 1].parent_item_uuid)) {
 
                 amplitude.track(`Child Dragged Outside Of Family`, {
-                    anonymous_id: anonymousId.current,
+                    anonymous_id: anonymousId,
                     pathname: pathname,
                     uuid: draggedThing.uuid
                 });
@@ -354,7 +330,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 newData[toIndex + 1].parent_item_uuid != draggedThing.parent_item_uuid) {
 
                 amplitude.track(`Child Dragged to New Family`, {
-                    anonymous_id: anonymousId.current,
+                    anonymous_id: anonymousId,
                     pathname: pathname,
                     uuid: draggedThing.uuid
                 });
@@ -388,7 +364,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 updateItemHierarchy(newData[toIndex].uuid, newParentUUID);
 
                 amplitude.track(`Adult Dragged Into Family`, {
-                    anonymous_id: anonymousId.current,
+                    anonymous_id: anonymousId,
                     pathname: pathname,
                     uuid: draggedThing.uuid,
                     kid_count: kidCount
@@ -436,6 +412,9 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     }
 
     const handleThingDelete = (thing: any) => {
+        //console.log("handleThingDelete: " + JSON.stringify(thing));
+
+
         //console.log("Entering handle delete item...");
         const listArrayCopy = listArray.map((obj) => ({ ...obj }));
 
@@ -445,8 +424,8 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
         if (!thing.parent_item_uuid && (thingSubtasks.length > 0)) {
 
             Alert.alert(
-                `${(thingName == THINGNAME_ITEM) ? "Item" : "Tip"} Has ${thingSubtasks.length} Sub${thingName.toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''}`,
-                `Deleting this ${thingName.toLowerCase()} will delete its sub${thingName.toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''} too.  Continue?`,
+                `${((thingName == THINGNAME_ITEM) || (thingName == THINGNAME_DONE_ITEM)) ? "Item" : "Tip"} Has ${thingSubtasks.length} Sub${stringizeThingName(thingName).toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''}`,
+                `Deleting this ${stringizeThingName(thingName).toLowerCase()} will delete its sub${stringizeThingName(thingName).toLowerCase()}${thingSubtasks.length > 1 ? 's' : ''} too.  Continue?`,
                 [
                     {
                         text: 'Yes',
@@ -461,13 +440,13 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                             // Call asyncronous delete to mark item as deleted in backend to sync database
                             // 1.2  Deleting parent thing will delete its children too in DB
                             // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
-                            if (!thing.newKeyboardEntry) deleteThing(thing.uuid);
+                            if (!thing.newKeyboardEntry) deleteThing(thing.uuid);                               
 
                             const animationPromises = [];
                             for (var i = index; i <= index + thingSubtasks.length; i++) {
 
                                 amplitude.track(`${thingName} Deleted`, {
-                                    anonymous_id: anonymousId.current,
+                                    anonymous_id: anonymousId,
                                     thing_uuid: listArrayCopy[i].uuid,
                                     thing_type: thingName
                                 });
@@ -500,12 +479,20 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
                             await Promise.all(animationPromises);
 
+                            let doneDeleteCount = 0;
                             delete thingRowPositionXs.current[thing.uuid];
                             delete thingRowHeights.current[thing.uuid];
-                            for (const subtask in thingSubtasks) {
-                                delete thingRowPositionXs.current[subtask.uuid];
-                                delete thingRowHeights.current[subtask.uuid]
+                            if (thing.is_done) {
+                                doneDeleteCount += 1;
                             }
+                            for (const subtask of thingSubtasks) {
+                                delete thingRowPositionXs.current[subtask.uuid];
+                                delete thingRowHeights.current[subtask.uuid];
+                                if (subtask.is_done) {
+                                    doneDeleteCount += 1;
+                                }
+                            }
+                            ProfileCountEventEmitter.emit("decr_done", { count: doneDeleteCount })
 
                             listArraySetter((prevThings) => {
                                 const subtaskUUIDSet = new Set(thingSubtasks.map(obj => obj.uuid));
@@ -549,7 +536,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     const postSingleDeletionActions = (listArrayCopy, index, thing) => {
 
         amplitude.track(`${thingName} Deleted`, {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             thing_uuid: thing.uuid,
             thing_type: thingName
         });
@@ -560,6 +547,10 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
         if (thingName == 'tip') {
             ProfileCountEventEmitter.emit('decr_tips');
+        }
+
+        if (thing.is_done) {
+            ProfileCountEventEmitter.emit("decr_done");
         }
 
         // Remove item from displayed and thingRowPositionXs lists
@@ -596,7 +587,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
     const handleTimerClick = (thing) => {
         amplitude.track("Item Timer Icon Tapped", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname,
             uuid: thing.uuid
         });
@@ -604,7 +595,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             type: 'timerInfo',
             visibilityTime: 8000,
             position: 'bottom',
-            bottomOffset: 220,
+            bottomOffset: (Platform.OS == 'ios') ? 280 : 260,
             props: {
                 thing: thing,
                 onEditIconClick: () => handleTimerToastEditClick(thing),
@@ -615,7 +606,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
     const handleTimerToastEditClick = (thing) => {
         amplitude.track("Edit Schedule Icon Tapped", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname,
             uuid: thing.uuid
         });
@@ -626,7 +617,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
     const handleScheduleEditDialogCancel = () => {
         amplitude.track("Edit Schedule Dialog Cancelled", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname
         });
         setShowScheduleEditDialog(false);
@@ -634,7 +625,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
     const handleScheduleEditDialogClear = () => {
         amplitude.track("Item Schedule Clear Message Displayed", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname
         });
         Alert.alert(
@@ -646,7 +637,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                     text: 'Cancel',
                     onPress: () => {
                         amplitude.track("Item Schedule Clear Message Cancelled", {
-                            anonymous_id: anonymousId.current,
+                            anonymous_id: anonymousId,
                             pathname: pathname
                         });
                     },
@@ -656,7 +647,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                     text: 'Yes',
                     onPress: () => {
                         amplitude.track("Item Schedule Cleared", {
-                            anonymous_id: anonymousId.current,
+                            anonymous_id: anonymousId,
                             pathname: pathname
                         });
                         clearScheduleInfo();
@@ -718,7 +709,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
         }
 
         amplitude.track("Edit Schedule Dialog Submitted", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname,
             uuid: selectedTimerThing.current.uuid
         });
@@ -757,7 +748,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
     const handleScheduleEditDialogEditDateClick = () => {
         amplitude.track("Edit Schedule Dialog Date Tapped", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
         });
@@ -774,7 +765,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
     const handleScheduleEditDialogEditTimeClick = () => {
         amplitude.track("Edit Schedule Dialog Time Tapped", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
         });
@@ -792,7 +783,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
     const handleTimerToastCalendarClick = async (thing) => {
         amplitude.track("Calendar Icon Tapped", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname,
             uuid: thing.uuid
         });
@@ -806,7 +797,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             const calendarUri = generateCalendarUri(selectedTimerThing.current.scheduled_datetime_utc);
             if (calendarUri) {
                 amplitude.track("Calendar App URI Opened", {
-                    anonymous_id: anonymousId.current,
+                    anonymous_id: anonymousId,
                     pathname: pathname,
                     uuid: thing.uuid
                 });
@@ -821,7 +812,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
         const permissionsResponse = await Calendar.requestCalendarPermissionsAsync();
         amplitude.track("Calendar Permissions Requested", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname,
             uuid: thing.uuid,
             permissionsResponse: permissionsResponse.status
@@ -837,13 +828,13 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 console.log("Created new calendar event after default calendar selection: " + eventId);
             } else if (editableCalendars.current.length > 1) {
                 amplitude.track("Calendar Selection Dialog Displayed", {
-                    anonymous_id: anonymousId.current,
+                    anonymous_id: anonymousId,
                     pathname: pathname
                 });
                 setShowCalendarSelectionDialog(true);
             } else if (editableCalendars.current.length == 0) {
                 amplitude.track("No Calendars Found Message Displayed", {
-                    anonymous_id: anonymousId.current,
+                    anonymous_id: anonymousId,
                     pathname: pathname
                 });
                 Alert.alert(
@@ -854,7 +845,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                             text: 'OK',
                             onPress: () => {
                                 amplitude.track("No Calendars Found Message Dimissed", {
-                                    anonymous_id: anonymousId.current,
+                                    anonymous_id: anonymousId,
                                     pathname: pathname
                                 });
                             }
@@ -865,7 +856,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             }
         } else {
             amplitude.track("Calendar Permissions Required Displayed", {
-                anonymous_id: anonymousId.current,
+                anonymous_id: anonymousId,
                 pathname: pathname
             });
             Alert.alert(
@@ -876,7 +867,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                         text: 'Cancel',
                         onPress: () => {
                             amplitude.track("Calendar Permissions Required Dimissed", {
-                                anonymous_id: anonymousId.current,
+                                anonymous_id: anonymousId,
                                 pathname: pathname
                             });
                         },
@@ -886,7 +877,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                         text: 'Go to Settings',
                         onPress: () => {
                             amplitude.track("Calendar Permissions Required Go to Settings Pressed", {
-                                anonymous_id: anonymousId.current,
+                                anonymous_id: anonymousId,
                                 pathname: pathname
                             });
                             openAppSettings();
@@ -900,7 +891,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
     const handleCalendarSelectDialogCancel = () => {
         amplitude.track("Calendar Selection Dialog Cancelled", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
         });
@@ -911,7 +902,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
     const handleCalendarSelectDialogSubmission = async () => {
         amplitude.track("Calendar Selection Dialog Submitted", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
         });
@@ -933,7 +924,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 updateThingEventId(eventId);
 
                 amplitude.track("Calendar Event Created", {
-                    anonymous_id: anonymousId.current,
+                    anonymous_id: anonymousId,
                     pathname: pathname,
                     uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
                 });
@@ -948,7 +939,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                 text: 'Go to Calendar',
                                 onPress: () => {
                                     amplitude.track("Calendar Event Created Go to Calendar Button Pressed", {
-                                        anonymous_id: anonymousId.current,
+                                        anonymous_id: anonymousId,
                                         pathname: pathname
                                     });
 
@@ -964,7 +955,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                 text: 'OK',
                                 onPress: () => {
                                     amplitude.track("Calendar Event Created Message Dimissed", {
-                                        anonymous_id: anonymousId.current,
+                                        anonymous_id: anonymousId,
                                         pathname: pathname
                                     });
                                 }
@@ -1074,6 +1065,39 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             } else {
                 //console.log("No calendar items to try to sync.");
             }
+        }
+    }
+
+    const addThingToBottomOfList = () => {
+        const newItem = generateNewKeyboardEntry();
+        currentlyTappedThing.current = newItem;
+
+        amplitude.track("Tap Below List Entry Started", {
+            anonymous_id: anonymousId,
+            pathname: pathname,
+            uuid: newItem.uuid
+        });
+
+        if (listArray.length == 0) {
+
+            // If the list is empty, we ASSume the empty list CTA is visible.  Fade it out first before
+            // adding the first item
+            emptyListCTAFadeOutAnimation.start(() => {
+                listArraySetter((prevItems) => [...prevItems, newItem]);
+            });
+        } else {
+            listArraySetter((prevItems) => [...prevItems, newItem]);
+        }
+    }
+
+    const handleBelowListTap = () => {
+        console.log("Tapped below list...");
+        if (thingName != THINGNAME_DONE_ITEM && !currentlyTappedThing.current) {
+            addThingToBottomOfList();
+        } else {
+            // Dimiss the keyboard to automatically blur
+            // any active field on screen
+            Keyboard.dismiss();
         }
     }
 
@@ -1217,7 +1241,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                             })
 
                             amplitude.track("Item Enriched", {
-                                anonymous_id: anonymousId.current,
+                                anonymous_id: anonymousId,
                                 pathname: pathname,
                                 uuid: item.uuid
                             });
@@ -1275,7 +1299,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
         }, [item.text])
 
         const handleThingTextTap = (thing) => {
-            console.log(`handleItemTextTap for ${thing.text}, renderTappedField: ${renderTappedField}`);
+            console.log(`handleItemTextTap for ${thing.text}, renderTappedField: ${renderTappedField.current}`);
 
             // If something else was selected/active when the 
             // user tapped a new item -- process that item's latest
@@ -1324,7 +1348,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 if (thing.newKeyboardEntry) {
 
                     amplitude.track("Keyboard Entry Completed", {
-                        anonymous_id: anonymousId.current,
+                        anonymous_id: anonymousId,
                         pathname: pathname,
                         uuid: thing.uuid
                     });
@@ -1341,7 +1365,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 }
 
                 amplitude.track("Thing Text Edited", {
-                    anonymous_id: anonymousId.current,
+                    anonymous_id: anonymousId,
                     pathname: pathname,
                     thing_uuid: thing.uuid,
                     thing_type: thingName
@@ -1349,7 +1373,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
 
             } else {
-                console.log(`Ignoring blur as text has not changed (${textOnChange})`);
+                //console.log(`Ignoring blur as text has not changed (${textOnChange})`);
             }
 
             // Always treat React state as immutable!  
@@ -1406,7 +1430,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
         }
 
         const handleMoveToTop = async (selectedThing) => {
-            console.log("Starting handleMoveToTop: " + selectedThing.text)
+            //console.log("Starting handleMoveToTop: " + selectedThing.text)
 
             // Save current index prior to move in case user wants to undo operation
             previousIndex.current = getIndex();
@@ -1421,9 +1445,9 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             // Set toast string and display undoable toast
             let toastString = '';
             if (selectedThing.parent_item_uuid) {
-                toastString = `Moved ${pluralize(thingName, thingsToCollapse.length)} to top of subitems.`;
+                toastString = `Moved ${pluralize(stringizeThingName(thingName), thingsToCollapse.length)} to top of subitems.`;
             } else {
-                toastString = `Moved ${pluralize(thingName, thingsToCollapse.length)} to top of list.`;
+                toastString = `Moved ${pluralize(stringizeThingName(thingName), thingsToCollapse.length)} to top of list.`;
             }
 
             Toast.show({
@@ -1431,7 +1455,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 text1: toastString,
                 visibilityTime: 8000,
                 position: 'bottom',
-                bottomOffset: 220,
+                bottomOffset: (Platform.OS == 'ios') ? 280 : 260,
                 props: {
                     onUndoClick: () => handleMoveToTopUndo(selectedThing)
                 }
@@ -1550,23 +1574,41 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                     overshootRight={false}
                     onSwipeableWillOpen={(direction) => {
                         amplitude.track(`Swipe ${direction.toUpperCase()} Actions Opened`, {
-                            anonymous_id: anonymousId.current,
+                            anonymous_id: anonymousId,
                             pathname: pathname,
                             thing_uuid: item.uuid,
                             thing_type: thingName
                         });
                     }}
                     renderLeftActions={(progress, dragX) => { if (renderLeftActions) { return renderLeftActions(item, getIndex()) } else { return <></> } }}
-                    renderRightActions={(progress, dragX, swipeableMethods) => { if (renderRightActions) { return renderRightActions(item, getIndex(), handleThingDelete, handleMoveToTop, swipeableMethods) } else { return <></> } }}>
+                    renderRightActions={(progress, dragX, swipeableMethods) => {
+                        if (renderRightActions) {
+                            return renderRightActions(item, getIndex(), handleThingDelete, handleMoveToTop,
+                                <MicButton
+                                    selectedThing={item}
+                                    buttonHeight={fullRowHeight.current}
+                                    buttonStyle={[listStyles.action_Microphone, { height: fullRowHeight.current }]}
+                                    buttonUnderlayStyle={listStyles.action_Microphone_Underlay}
+                                    listArray={listArray}
+                                    listArraySetterFunc={listArraySetter}
+                                    transcribeFunc={transcribeAudioToThings}
+                                    saveNewThingsFunc={saveNewThings} />
+                            );
+                        } else {
+                            return <></>
+                        }
+                    }}>
                     <ScaleDecorator>
                         <View style={[listStyles.itemContainer, styles.itemContainer]}>
                             {(item.parent_item_uuid) ?
                                 <View style={styles.childItemSpacer}></View>
                                 : <></>
                             }
-                            {(isDoneable) ?
+                            {(isDoneable && !((thingName == THINGNAME_DONE_ITEM) && item.parent_item_uuid)) ?
                                 <Pressable style={[styles.itemCircleOpen, item.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(item)}></Pressable>
-                                : <></>
+                                : ((thingName == THINGNAME_DONE_ITEM) && item.parent_item_uuid) 
+                                    ? <View style={styles.childDoneSpacer}></View>
+                                    : <></>
                             }
                             {(thingName == 'tip') ?
                                 <Pressable style={styles.tipListIconContainer}
@@ -1626,7 +1668,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                                 hitSlop={10}
                                                 style={listStyles.itemNamePressable}
                                                 onLongPress={drag}
-                                                disabled={isActive}
+                                                disabled={isActive || item.is_done}
                                                 onPress={() => handleThingTextTap(item)}>
                                                 <Reanimated.Text style={[textOpacityAnimatedStyle, listStyles.taskTitle, item.is_done && listStyles.taskTitle_isDone]}>{item.text}</Reanimated.Text>
                                             </Pressable>
@@ -1712,21 +1754,14 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     });
 
     return (
-        <TouchableWithoutFeedback onPress={() => {
-            if (currentlyTappedThing != null) {
-                if (Keyboard.isVisible()) {
-                    Keyboard.dismiss();
-                }
-                //handleBlur(currentlyTappedThing);
-            }
-        }} >
-            <View style={[listStyles.listContainer, styles.listContainer]}>
-                {(!screenInitialized) ?
-                    <Reanimated.View style={[listStyles.initialLoadAnimContainer, { opacity: initialLoadFadeInOpacity }]}>
-                        <Text style={listStyles.initialLoadMsg}>{loadingAnimMsg}</Text>
-                        <ActivityIndicator size={"large"} color="#3E3723" />
-                    </Reanimated.View>
-                    : (listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0) ?
+        <View style={[listStyles.listContainer, styles.listContainer]}>
+            {(!screenInitialized) ?
+                <Reanimated.View style={[listStyles.initialLoadAnimContainer, { opacity: initialLoadFadeInOpacity }]}>
+                    <Text style={listStyles.initialLoadMsg}>{loadingAnimMsg}</Text>
+                    <ActivityIndicator size={"large"} color="#3E3723" />
+                </Reanimated.View>
+                : (listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0) ?
+                    <>
                         <Reanimated.View style={[listStyles.taskContainer, { opacity: listOpacity }]}>
                             <DraggableFlatList
                                 data={listArray.filter(item => !item.is_deleted)}
@@ -1743,77 +1778,89 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                     <RefreshControl
                                         tintColor="#3E3723"
                                         onRefresh={() => {
+                                            console.log("in onRefresh");
                                             setRefreshing(true);
                                             resetListWithFirstPageLoad(true);
                                         }}
                                         refreshing={isRefreshing} />
                                 }
                                 renderItem={renderThing}
-
-                                // 1.2 Pagination deactivated, see note at start of file
-                                // onEndReached={({ distanceFromEnd }) => {
-                                //     //console.log("onEndReached called, distance from end: " + distanceFromEnd);
-                                //     if (distanceFromEnd > 0) {
-                                //         loadNextPage();
-                                //     }
-                                // }}
-                                // onEndReachedThreshold={0.1}
+                                onEndReached={({ distanceFromEnd }) => {
+                                    //console.log("onEndReached called, distance from end: " + distanceFromEnd);
+                                    if (distanceFromEnd > 0) {
+                                        loadNextPage();
+                                    }
+                                }}
+                                onEndReachedThreshold={0.1}
 
                                 ListFooterComponent={
-                                    <View style={{ paddingTop: 10 }}>
-                                        {/* {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />} */}
-                                        <View style={{ height: 50 }} />
-                                    </View>}
+                                    <Pressable onPress={handleBelowListTap} style={{ paddingTop: 10 }}>
+                                        {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />}
+                                        <View style={{ height: 110 }} />
+                                    </Pressable>}
                             />
                         </Reanimated.View>
-                        : <EmptyThingUX />
+                    </>
+                    : <EmptyThingUX />
+            }
+            {(!hideBottomButtons) ?
+                <View style={listStyles.bottomButtonsContainer}>
+                    <MicButton
+                        buttonHeight={FOOTER_BUTTON_HEIGHT}
+                        buttonUnderlayStyle={listStyles.bottomButton_Underlay}
+                        buttonStyle={listStyles.bottomButton}
+                        listArray={listArray}
+                        listArraySetterFunc={listArraySetter}
+                        saveNewThingsFunc={saveNewThings}
+                        transcribeFunc={transcribeAudioToThings} />
+                    <KeyboardButton listArray={listArray} listArraySetterFunc={listArraySetter} />
+                </View>
+                : <></>
+            }
+            <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
+                <Dialog.Title>Select Calendar</Dialog.Title>
+                <Dialog.Description>Which calendar to put this item?</Dialog.Description>
+                <RNPickerSelect
+                    value={calendarSelectionInputValue}
+                    onValueChange={(value) => {
+                        setCalendarSelectionInputValue(value);
+                        if (value != 'no_calendar') {
+                            setCalendarSelectionInvalid(false);
+                        }
+                    }}
+                    placeholder={{ label: 'Select a calendar', value: 'no_calendar' }}
+                    style={pickerSelectStyles}
+                    items={editableCalendars.current.map((calendar) => ({ label: calendar.title, value: calendar.id }))} />
+                {(calendarSelectionInvalid)
+                    ? <Text style={formStyles.formValidationMessage}>Please select a calendar.</Text>
+                    : <></>}
+                <Dialog.Button label="Cancel" onPress={handleCalendarSelectDialogCancel} />
+                <Dialog.Button label="Continue" onPress={handleCalendarSelectDialogSubmission} />
+            </Dialog.Container>
+            <Dialog.Container visible={showScheduleEditDialog} onBackdropPress={handleScheduleEditDialogCancel}>
+                <Dialog.Title>Edit Scheduled Date & Time</Dialog.Title>
+                {(Platform.OS == 'android')
+                    ?
+                    <View style={formStyles.dateTimeContainer}>
+                        <View style={formStyles.dateTimeTextContainer}>
+                            <Text onPress={handleScheduleEditDialogEditDateClick} style={formStyles.dateTimeText}>{extractDateInLocalTZ(scheduleEditDialogDate)}</Text>
+                        </View>
+                        <View style={formStyles.dateTimeTextContainer}>
+                            <Text onPress={handleScheduleEditDialogEditTimeClick} style={formStyles.dateTimeText}>{extractTimeInLocalTZ(scheduleEditDialogDate)}</Text>
+                        </View>
+                    </View>
+                    : <View style={formStyles.dateTimePickerContainer}>
+                        <RNDateTimePicker style={formStyles.dateTimePicker} mode="datetime" value={scheduleEditDialogDate} onChange={(event, date) => setScheduleEditDialogDate(date)} />
+                    </View>
                 }
-                <DootooFooter ref={footerRef} hideRecordButton={hideRecordButton} transcribeFunction={transcribeAudioToThings} listArray={listArray} listArraySetterFunc={listArraySetter} saveNewThingsFunc={saveNewThings} />
-                <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
-                    <Dialog.Title>Select Calendar</Dialog.Title>
-                    <Dialog.Description>Which calendar to put this item?</Dialog.Description>
-                    <RNPickerSelect
-                        value={calendarSelectionInputValue}
-                        onValueChange={(value) => {
-                            setCalendarSelectionInputValue(value);
-                            if (value != 'no_calendar') {
-                                setCalendarSelectionInvalid(false);
-                            }
-                        }}
-                        placeholder={{ label: 'Select a calendar', value: 'no_calendar' }}
-                        style={pickerSelectStyles}
-                        items={editableCalendars.current.map((calendar) => ({ label: calendar.title, value: calendar.id }))} />
-                    {(calendarSelectionInvalid)
-                        ? <Text style={formStyles.formValidationMessage}>Please select a calendar.</Text>
-                        : <></>}
-                    <Dialog.Button label="Cancel" onPress={handleCalendarSelectDialogCancel} />
-                    <Dialog.Button label="Continue" onPress={handleCalendarSelectDialogSubmission} />
-                </Dialog.Container>
-                <Dialog.Container visible={showScheduleEditDialog} onBackdropPress={handleScheduleEditDialogCancel}>
-                    <Dialog.Title>Edit Scheduled Date & Time</Dialog.Title>
-                    {(Platform.OS == 'android')
-                        ?
-                        <View style={formStyles.dateTimeContainer}>
-                            <View style={formStyles.dateTimeTextContainer}>
-                                <Text onPress={handleScheduleEditDialogEditDateClick} style={formStyles.dateTimeText}>{extractDateInLocalTZ(scheduleEditDialogDate)}</Text>
-                            </View>
-                            <View style={formStyles.dateTimeTextContainer}>
-                                <Text onPress={handleScheduleEditDialogEditTimeClick} style={formStyles.dateTimeText}>{extractTimeInLocalTZ(scheduleEditDialogDate)}</Text>
-                            </View>
-                        </View>
-                        : <View style={formStyles.dateTimePickerContainer}>
-                            <RNDateTimePicker style={formStyles.dateTimePicker} mode="datetime" value={scheduleEditDialogDate} onChange={(event, date) => setScheduleEditDialogDate(date)} />
-                        </View>
-                    }
-                    <Dialog.Button label="Cancel" onPress={handleScheduleEditDialogCancel} />
-                    <Dialog.Button label="Clear" onPress={handleScheduleEditDialogClear} />
-                    <Dialog.Button label="Submit" onPress={handleScheduleEditDialogSubmission} />
-                </Dialog.Container>
-            </View>
-        </TouchableWithoutFeedback>
+                <Dialog.Button label="Cancel" onPress={handleScheduleEditDialogCancel} />
+                <Dialog.Button label="Clear" onPress={handleScheduleEditDialogClear} />
+                <Dialog.Button label="Submit" onPress={handleScheduleEditDialogSubmission} />
+            </Dialog.Container>
+        </View>
     );
 
-});
+};
 
 // Used by Tips screen as well
 export const listStyles = StyleSheet.create({
@@ -1823,7 +1870,7 @@ export const listStyles = StyleSheet.create({
         alignItems: 'center'
     },
     listContainer: {
-        flex: 1
+        flex: 1,
     },
     taskContainer: {
         flex: 1
@@ -1846,7 +1893,8 @@ export const listStyles = StyleSheet.create({
     itemNamePressable: {
         flex: 1,
         width: '100%',
-        paddingRight: 5
+        paddingRight: 5,
+        // backgroundColor: 'red'
     },
     itemTextInput: {
         fontSize: 16,
@@ -1892,6 +1940,54 @@ export const listStyles = StyleSheet.create({
         height: 16,
         width: 16
     },
+    action_Microphone: {
+        width: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#556B2F',
+        // borderColor: '#3E2723',
+        // borderWidth: 0
+    },
+    action_Microphone_Underlay: {
+        position: 'absolute',
+        top: 0,
+        backgroundColor: 'black'
+    },
+    bottomButtonsContainer: {
+        flexDirection: 'row',
+        width: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'absolute',
+        bottom: 20
+    },
+    bottomButton: {
+        height: 50,
+        width: 50,
+        borderRadius: 25,
+        borderColor: '#3E2723',
+        borderWidth: 1,
+        marginRight: 20,
+        marginLeft: 20,
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 4 },
+        shadowOpacity: 0.6,
+        shadowRadius: 4,
+        elevation: 4, // Elevation for Android        
+    },
+    bottomButton_Underlay: {
+        height: 50,
+        width: 50,
+        borderRadius: 25,
+        marginRight: 20,
+        marginLeft: 20,
+        position: 'absolute',
+        top: 0,
+        backgroundColor: 'black'
+    }
 })
 
 export default DootooList;

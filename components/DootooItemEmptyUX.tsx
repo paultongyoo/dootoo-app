@@ -1,51 +1,65 @@
-import { Animated, Text, StyleSheet, Easing } from 'react-native';
+import { Text, StyleSheet } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import { useRef, useCallback, useContext } from 'react';
-import { AppContext } from './AppContext';
+import { useCallback } from 'react';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 const DootooItemEmptyUX = () => {
-  const { emptyListCTAOpacity, emptyListCTAFadeInAnimation } = useContext(AppContext);
 
-  const fadeAnimGoals = useRef(new Animated.Value(0.1)).current;
-  const fadeAnimDreams = useRef(new Animated.Value(0.1)).current;
-  const fadeAnimChallenges = useRef(new Animated.Value(0.1)).current;
-  const fadeAnimArrow = useRef(new Animated.Value(0)).current;
+  const opacity = useSharedValue(0);
 
-  const ctaAnimation = Animated.sequence([
-    Animated.timing(fadeAnimGoals, {
-      toValue: 1,
-      duration: 1500,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true
-    }),
-    Animated.timing(fadeAnimDreams, {
-      toValue: 1,
-      duration: 1500,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true
-    }),
-    Animated.timing(fadeAnimChallenges, {
-      toValue: 1,
-      duration: 1500,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true
-    }),
-    // Animated.timing(fadeAnimArrow, {
-    //   toValue: 1,
-    //   duration: 800,
-    //   easing: Easing.inOut(Easing.ease),
-    //   useNativeDriver: true
-    // }),
-  ]);
+  const fadeAnimGoals = useSharedValue(0);
+  const goalsAnimatedOpacity = useAnimatedStyle(() => {
+    return { opacity: fadeAnimGoals.value }
+  })
+  const fadeAnimDreams = useSharedValue(0);
+  const dreamsAnimatedOpacity = useAnimatedStyle(() => {
+    return { opacity: fadeAnimDreams.value }
+  })
+
+  const fadeAnimChallenges = useSharedValue(0);
+  const challengesAnimatedOpacity = useAnimatedStyle(() => {
+    return { opacity: fadeAnimChallenges.value }
+  })
+
+  const executeCTAAnimation = async () => {
+    await new Promise<void>((resolve) => {
+      fadeAnimGoals.value = withTiming(1, { duration: 1500 }, (isFinished) => {
+        if (isFinished) {
+          runOnJS(resolve)();
+        }
+      })
+    });
+    await new Promise<void>((resolve) => {
+      fadeAnimDreams.value = withTiming(1, { duration: 1500 }, (isFinished) => {
+        if (isFinished) {
+          runOnJS(resolve)();
+        }
+      })
+    });
+    await new Promise<void>((resolve) => {
+      fadeAnimChallenges.value = withTiming(1, { duration: 1500 }, (isFinished) => {
+        if (isFinished) {
+          runOnJS(resolve)();
+        }
+      })
+    });
+  }
 
   useFocusEffect(
     useCallback(() => {
-      emptyListCTAFadeInAnimation.start(() => {
-        ctaAnimation.start()
+      opacity.value = withTiming(1, { duration: 800 }, (isFinished) => {
+        if (isFinished) {
+          runOnJS(executeCTAAnimation)();
+        }
       });
       return () => {
-        emptyListCTAFadeInAnimation.reset();
-        ctaAnimation.reset();
+        opacity.value = withTiming(0, { duration: 800 }, (isFinished) => {
+          if (isFinished) {
+            fadeAnimGoals.value = 0;
+            fadeAnimDreams.value = 0;
+            fadeAnimChallenges.value = 0;
+          }
+        });
       }
     }, [])
   );
@@ -63,23 +77,20 @@ const DootooItemEmptyUX = () => {
     },
   })
 
-  return <Animated.View style={[emptyStyles.emptyListContainer, { opacity: emptyListCTAOpacity }]}>
+  return <Animated.View style={[emptyStyles.emptyListContainer, { opacity }]}>
     <Text style={emptyStyles.emptyListContainer_words}>what are your</Text>
     <Animated.View>
       <Text style={[emptyStyles.emptyListContainer_words, { color: '#556B2F' }]}>tasks?</Text>
     </Animated.View>
-    <Animated.View style={[{ opacity: fadeAnimGoals }]}>
+    <Animated.View style={goalsAnimatedOpacity}>
       <Text style={[emptyStyles.emptyListContainer_words, { color: '#556B2F' }]}>goals?</Text>
     </Animated.View>
-    <Animated.View style={[{ opacity: fadeAnimDreams }]}>
+    <Animated.View style={dreamsAnimatedOpacity}>
       <Text style={[emptyStyles.emptyListContainer_words, { color: '#556B2F' }]}>dreams?</Text>
     </Animated.View>
-    <Animated.View style={[{ opacity: fadeAnimChallenges }]}>
+    <Animated.View style={challengesAnimatedOpacity}>
       <Text style={[emptyStyles.emptyListContainer_words, { color: '#556B2F' }]}>challenges?</Text>
     </Animated.View>
-    {/* <Animated.View style={{ opacity: fadeAnimArrow }}>
-      <Image style={styles.emptyListContainer_arrow} source={require("@/assets/images/sketch_arrow_556B2F.png")} />
-    </Animated.View> */}
   </Animated.View>;
 };
 

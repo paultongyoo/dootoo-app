@@ -2,6 +2,7 @@ import { Alert, Platform } from "react-native";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { DateTime } from 'luxon';
 import uuid from 'react-native-uuid';
+import RNFS from 'react-native-fs';
 
 export const formatNumber = (num) => {
   if (!num) return null;
@@ -285,7 +286,7 @@ export const generateNewKeyboardEntry = () => {
 }
 
 export const calculateTextInputRowHeight = (text_or_textInput_height) => {
-      return text_or_textInput_height + 31;             // LAST UPDATED 12.13.24:  This height prevents the debug background red from appearing 
+  return text_or_textInput_height + 31;             // LAST UPDATED 12.13.24:  This height prevents the debug background red from appearing 
 }
 
 export const fetchWithRetry = async (backendServiceCall, maxRetries = 5, retryDelay = 5000) => {
@@ -319,25 +320,25 @@ export const fetchWithRetry = async (backendServiceCall, maxRetries = 5, retryDe
 
 export const generateCurrentTimeAPIHeaders = () => {
 
-    // Generate user time info to pass to the API for handling of any scheduled tasks
-    const currentDate = new Date();
-    const userLocalTime = currentDate.toLocaleString(undefined, { 
-      weekday: 'long', // Include the weekday (e.g., "Monday")
-      year: 'numeric',
-      month: 'long', // Full month name (e.g., "December")
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZoneName: 'short' // Include timezone abbreviation
-    });
-    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const utcDateTime = currentDate.toISOString();
+  // Generate user time info to pass to the API for handling of any scheduled tasks
+  const currentDate = new Date();
+  const userLocalTime = currentDate.toLocaleString(undefined, {
+    weekday: 'long', // Include the weekday (e.g., "Monday")
+    year: 'numeric',
+    month: 'long', // Full month name (e.g., "December")
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short' // Include timezone abbreviation
+  });
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const utcDateTime = currentDate.toISOString();
 
-    return {
-      userlocaltime: userLocalTime,
-      usertimezone: userTimeZone,
-      utcdatetime: utcDateTime
-    };
+  return {
+    userlocaltime: userLocalTime,
+    usertimezone: userTimeZone,
+    utcdatetime: utcDateTime
+  };
 }
 
 // Safely insert the items of one array into another after a specified index, 
@@ -357,11 +358,39 @@ export function insertArrayAfter(array, itemsToInsert, index) {
 
 export function capitalizeFirstCharacter(word) {
   if (typeof word !== 'string' || word.length === 0) {
-      return ''; // Return an empty string for invalid input
+    return ''; // Return an empty string for invalid input
   }
   return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
 export function pluralize(word, count) {
   return `${count} ${count === 1 ? word : word + 's'}`;
+}
+
+export const deleteFile = async (fileUri: string) => {
+  try {
+    // Check if the file exists
+    const fileExists = await RNFS.exists(fileUri);
+
+    if (fileExists) {
+      // Delete the file
+      await RNFS.unlink(fileUri);
+      //console.log('File deleted successfully');
+    } else {
+      //console.log('File does not exist');
+    }
+  } catch (error) {
+    console.error('Error deleting file:', error);
+  }
+};
+
+// Duplicated DootooList constants to stop cyclical reference warning
+export const THINGNAME_ITEM = "item";
+export const THINGNAME_DONE_ITEM = "done_item";
+export const stringizeThingName = (thingName) => {
+  if (thingName == THINGNAME_DONE_ITEM || thingName == THINGNAME_ITEM) {
+    return "item";
+  } else {
+    return thingName;
+  }
 }

@@ -2,7 +2,7 @@ import {
   Image, Text, View, StyleSheet, Pressable, Alert,
   Platform
 } from "react-native";
-import { useState, useContext, useEffect, useRef } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useNavigation, usePathname, useRouter } from 'expo-router';
 import Reanimated, {
   configureReanimatedLogger,
@@ -10,27 +10,25 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { AppContext } from '@/components/AppContext';
 import { transcribeAudioToTips } from '@/components/BackendServices';
-import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText, updateTipOrder, saveNewTip, saveNewTips } from '@/components/Storage';
+import { loadTips, saveTips, tipVote, flagTip, deleteTip, updateTipText, updateTipOrder, saveNewTip, saveNewTips, loadItemCounts, loadItemsCounts } from '@/components/Storage';
 import DootooTipSidebar from "@/components/DootooTipSidebar";
 import DootooTipEmptyUX from "@/components/DootooTipEmptyUX";
 import DootooList, { listStyles } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import * as amplitude from '@amplitude/analytics-react-native';
-import { LIST_ITEM_EVENT__UPDATE_COUNTS, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
+import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import { Flag } from "@/components/svg/flag";
 import { Trash } from "@/components/svg/trash";
 import { ThumbUp } from "@/components/svg/thumb-up";
 import { ThumbDown } from "@/components/svg/thumb-down";
-import { Microphone } from "@/components/svg/microphone";
-import { ChevronDown } from "@/components/svg/chevron-down";
 import { MoveToTop } from "@/components/svg/move-to-top";
+import { ChevronLeft } from "@/components/svg/chevron-left";
+import { ArrowLeft } from "@/components/svg/arrow-left";
 
 
 export default function ItemTips() {
-  const listRef = useRef();
-
   const router = useRouter();
-  const { anonymousId, selectedItem, setSelectedItem, setSelectedProfile } = useContext(AppContext);
+  const { anonymousId, selectedItem, setSelectedItem, itemCountsMap } = useContext(AppContext);
   const [tips, setTips] = useState([]);
   const pathname = usePathname();
   const communityDrawerNavigation = useNavigation();
@@ -54,9 +52,7 @@ export default function ItemTips() {
     if (latestTips && latestTips.length > 0) {
 
       // Asynchronously sync DB with latest tips
-      saveTips(selectedItem, latestTips, () => {
-        ListItemEventEmitter.emit(LIST_ITEM_EVENT__UPDATE_COUNTS);
-      });
+      saveTips(selectedItem, latestTips);
     }
   };
 
@@ -79,15 +75,6 @@ export default function ItemTips() {
       // TODO:  Needs to be done _after_ load attempt occurs (need loadAllthings callback?)
     }
   }, [tips])
-
-  const handleDoneClick = async () => {
-    amplitude.track("Selected Item Done Clicked", {
-      anonymous_id: anonymousId.current
-    });
-
-    // For now just navigate user back to full list if they press this
-    router.back();
-  }
 
   const handleTipVote = async (tip, voteValue: number) => {
 
@@ -204,28 +191,21 @@ export default function ItemTips() {
     );
   }
 
-  const handleTipProfileClick = (tip) => {
 
-    amplitude.track("Tip Profile Tapped", {
-      anonymous_id: anonymousId.current,
-      username: tip.name
-    });
+  // 1.6 Deprecated community profile drawer feature
+  // const handleTipProfileClick = (tip) => {
 
-    setSelectedProfile({ name: tip.name });
-    communityDrawerNavigation.openDrawer();
+  //   amplitude.track("Tip Profile Tapped", {
+  //     anonymous_id: anonymousId.current,
+  //     username: tip.name
+  //   });
 
-  }
+  //   setSelectedProfile({ name: tip.name });
+  //   communityDrawerNavigation.openDrawer();
 
-  const handleInsertRecording = (swipeableMethods, item) => {
-    if (listRef.current) {
-      swipeableMethods.close();
-      listRef.current.invokeStartRecording(item);
-    } else {
-      console.log("Can't invoke start recording because listRef is null.");
-    }
-  }
+  // }
 
-  const renderRightActions = (tip, index, handleThingDeleteFunc, handleMoveToTopFunc, swipeableMethods) => {
+  const renderRightActions = (tip, index, handleThingDeleteFunc, handleMoveToTopFunc, insertRecordingAction) => {
     return (
       <>
         {(selectedItem.is_done) ?
@@ -236,15 +216,7 @@ export default function ItemTips() {
                 <Trash wxh="25" color="white" />
               </Pressable>
             </Reanimated.View>
-            <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_InsertRecording]}>
-              <Pressable
-                onPress={() => handleInsertRecording(swipeableMethods, tip)}>
-                <View style={styles.swipeIconsContainer}>
-                  <Microphone wxh="25" />
-                  <ChevronDown wxh="15" color="white" strokeWidth="3" />
-                </View>
-              </Pressable>
-            </Reanimated.View>
+            {insertRecordingAction}
             {(index != 0) ?
               <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_MoveToTop]}>
                 <Pressable
@@ -284,7 +256,7 @@ export default function ItemTips() {
   const renderLeftActions = (tip, index) => {
     return (
       <>
-        {(tip.name) ?
+        {/* {(tip.name) ?
           <Reanimated.View style={styles.itemSwipeArea}>
             <Pressable
               onPress={() => handleTipProfileClick(tip)}>
@@ -299,7 +271,7 @@ export default function ItemTips() {
             </Pressable>
           </Reanimated.View>
           : <></>
-        }
+        } */}
       </>
     );
   };
@@ -471,6 +443,9 @@ export default function ItemTips() {
       backgroundColor: '#FAF3E0',
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333'
+    },
+    tipsBackContainer: {
+      paddingLeft: 10
     }
   });
 
@@ -482,7 +457,10 @@ export default function ItemTips() {
     return (
       <>
         <View style={styles.headerItemContainer}>
-          <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick()}></Pressable>
+          <Pressable style={styles.tipsBackContainer} onPress={() => router.back()}>
+                {(Platform.OS == 'ios') ? <ChevronLeft wxh="26" color="#556B2F" />
+                                        : <ArrowLeft wxh="26" color="#556B2F" /> }
+          </Pressable>
           <View style={styles.headerItemNameContainer}>
             <View style={listStyles.itemNamePressable}>
               <Text style={[listStyles.taskTitle, selectedItem.is_done && listStyles.taskTitle_isDone]}>{selectedItem.text}</Text>
@@ -491,7 +469,6 @@ export default function ItemTips() {
           </View>
         </View>
         <DootooList
-          ref={listRef}
           thingName="tip"
           loadingAnimMsg={(selectedItem.is_done) ? "Loading your tips to the community" : "Loading tips from the community"}
           listArray={tips}
@@ -500,7 +477,9 @@ export default function ItemTips() {
           isDoneable={false}
           renderRightActions={renderRightActions}
           renderLeftActions={renderLeftActions}
-          saveNewThings={(tips, latest_tip_uuids) => saveNewTips(tips, selectedItem.uuid, latest_tip_uuids)}
+          saveNewThings={(tips, latest_tip_uuids) => saveNewTips(tips, selectedItem.uuid, latest_tip_uuids, async () => {
+            await updateSelectedItemCounts(selectedItem, itemCountsMap);
+          })}
           saveTextUpdateFunc={saveTextUpdate}
           saveThingOrderFunc={saveTipOrder}
           loadAllThings={(isPullDown) => loadTips(isPullDown, selectedItem.uuid)}
@@ -512,15 +491,26 @@ export default function ItemTips() {
 
             ProfileCountEventEmitter.emit('decr_tips');
           }}
-          saveNewThing={(tip, latest_tip_uuids) => saveNewTip(tip, selectedItem.uuid, latest_tip_uuids)}
+          saveNewThing={(tip, latest_tip_uuids) => saveNewTip(tip, selectedItem.uuid, latest_tip_uuids, async () => {
+            await updateSelectedItemCounts(selectedItem, itemCountsMap);
+          })}
           transcribeAudioToThings={transcribeAudioToTips}
           ListThingSidebar={DootooTipSidebar}
           EmptyThingUX={() => <DootooTipEmptyUX selectedItem={selectedItem} tipArray={tips} />}
           isThingPressable={() => { return selectedItem.is_done; }}
           isThingDraggable={selectedItem.is_done}
-          hideRecordButton={!selectedItem.is_done}
           shouldInitialLoad={selectedItem.tip_count && (Number(selectedItem.tip_count) > 0)} />
       </>
     );
+  }
+}
+
+async function updateSelectedItemCounts(selectedItem: any, itemCountsMap: any) {
+  const itemCountMapOfOne = await loadItemsCounts([selectedItem.uuid]);
+  console.log("Retrieved updated counts for selected item: " + JSON.stringify(itemCountMapOfOne));
+  if (itemCountsMap.current) {
+    console.log("Calling event to update item sidebar counts");
+    itemCountsMap.current.set(selectedItem.uuid, itemCountMapOfOne.get(selectedItem.uuid));
+    ListItemEventEmitter.emit(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, [selectedItem.uuid]);
   }
 }

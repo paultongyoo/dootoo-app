@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { View, Text, Animated, Dimensions, StyleSheet, Platform, Pressable, Image, Alert, GestureResponderEvent, Linking, Easing } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
@@ -27,8 +27,6 @@ const OnboardingScreen = () => {
     const onboardingOpacity = useRef(new Animated.Value(0)).current
 
     useEffect(() => {
-        console.log("OnboardingScreen.useEffect([])");
-
         Animated.timing(onboardingOpacity, {
             toValue: 1,
             duration: 300,
@@ -104,7 +102,7 @@ const OnboardingScreen = () => {
             easing: Easing.out(Easing.quad),
             useNativeDriver: true
         }).start(() => {    
-            router.replace('/(tabs)/open');
+            router.replace('/meDrawer/communityDrawer/stack');
         });
     };
 

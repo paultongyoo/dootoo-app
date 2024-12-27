@@ -26,7 +26,8 @@ export const handler = async (event) => {
           user: {
             id: loadedUser.id
           },
-          is_done: true
+          is_done: true,
+          is_deleted: false
         }
       });
       console.log("User Task Done Count: " + loadedUser.doneCount);
@@ -37,7 +38,8 @@ export const handler = async (event) => {
           user: {
             id: loadedUser.id
           },
-          is_flagged: false
+          is_flagged: false,
+          is_deleted: false
         }
       });
       console.log("User Tip Count: " + loadedUser.tipCount);

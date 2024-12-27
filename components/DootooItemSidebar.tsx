@@ -1,4 +1,4 @@
-import { View, Text, Image, ActivityIndicator, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Platform, ActivityIndicator, Pressable, StyleSheet } from 'react-native';
 import { formatNumber } from './Helpers';
 import Toast from 'react-native-toast-message';
 import { useContext, useEffect, useState } from 'react';
@@ -16,7 +16,9 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
     const router = useRouter();
     const pathname = usePathname();
     const { anonymousId, setSelectedItem, itemCountsMap } = useContext(AppContext);
-    const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
+
+    const TIPS_PATHNAME = '/(tabs)/tips';
+
     const [tipCount, setTipCount] = 
         useState((itemCountsMap.current && itemCountsMap.current.get(thing.uuid)) ? itemCountsMap.current.get(thing.uuid).tip_count : null);
     const [similarCount, setSimilarCount] = 
@@ -54,7 +56,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
 
     const handleSimilarCountTap = () => {
         amplitude.track(`Item Similar Count Tapped`, {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname,
             uuid: thing.uuid,
             similarCount: similarCount,
@@ -65,7 +67,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
             type: 'msgWithLink',
             text1: `${similarCount} ${(similarCount > 1) ? 'people' : 'person'} had similar thing`,
             position: 'bottom',
-            bottomOffset: 220,
+            bottomOffset: (Platform.OS == 'ios') ? 280 : 260,
             props: {
                 width: 230
             }
@@ -74,7 +76,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
 
     const handleTipCountTap = () => {
         amplitude.track(`Item Tip Count Tapped`, {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
             pathname: pathname,
             uuid: thing.uuid,
             similarCount: similarCount,
@@ -90,7 +92,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
 
     const goToTips = () => {
         setSelectedItem(thing);
-        router.push(TIPS_PATHNAME);
+        router.push(TIPS_PATHNAME);           
     }
 
     const sidebarStyles = StyleSheet.create({
@@ -130,6 +132,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
             </View>
         );
     } else {
+        const greenColorSV = useSharedValue("#556B2F")
         return (
             <Animated.View style={[/*opacityAnimatedStyle,*/ { flexDirection: 'row' }]}>
                 {(tipCount || thing.is_done) ?
@@ -148,7 +151,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
                         style={sidebarStyles.similarCountContainer}
                         onPress={() => handleSimilarCountTap()}>
                         <Text style={sidebarStyles.similarCountText}>{formatNumber(similarCount)}</Text>
-                        <UserRound wxh="18" opacity="0.8" color="#556B2F" />
+                        <UserRound wxh="18" opacity="0.8" color={greenColorSV} />
                     </Pressable> : <></>}
             </Animated.View>
         );

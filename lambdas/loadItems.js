@@ -5,15 +5,6 @@ const prisma = new PrismaClient();
 import AWS from 'aws-sdk';
 const kms = new AWS.KMS();
 
-// 1.2 Deactivated pagination logic as fast fix for 
-//     order mixup on completing items inside a page,
-//     and potential improved UX with move to locally
-//     cached lists.  This function should only be called
-//     now when user pulls down to refresh or they don't
-//     have any items cached locally.
-//
-//     To retain backwards compatibility, a boolean will be added to 
-//     deactivate pagination -- bool will be passed by v1.2+
 export const handler = async (event) => {
   const user = await prisma.user.findUnique({
     where: { anonymous_id: event.anonymous_id }
@@ -51,19 +42,33 @@ export const handler = async (event) => {
     let prismaParams = {
       where: {
         user: { id: user.id },
-        is_deleted: false
+        is_deleted: false,
+        parent_item_id: null
       },
       select: {
-        id: true,
-        is_child: true,
         is_done: true,
         uuid: true,
         text: true,
         scheduled_datetime_utc: true,
         event_id: true,
-        parent: {
+        children: {
           select: {
-            uuid: true
+            uuid: true,
+            text: true,
+            scheduled_datetime_utc: true,
+            event_id: true,
+            is_done: true,
+            parent: {
+              select: {
+                uuid: true
+              }
+            }
+          },
+          where: {
+            is_deleted: false
+          },
+          orderBy: {
+            rank_idx: 'asc'
           }
         }
       },
@@ -72,21 +77,36 @@ export const handler = async (event) => {
       }
     };
 
+    console.log("onlyOpenParents: " + event.onlyOpenParents);
+    console.log("onlyDoneParents: " + event.onlyDoneParents);
+
+    if (event.onlyOpenParents) {
+      prismaParams.where = { ...prismaParams.where, is_done: false };
+    } else if (event.onlyDoneParents) {
+      prismaParams.where = { ...prismaParams.where, is_done: true };
+    }
+
     const pageSize = 15   // hardcode this for now
     if (!event.skipPagination) {
-        const page = event.page || 1;
-        const skip = (page - 1) * pageSize;
-        const take = pageSize + 1;  // Take one more than pageSize to determine if there are more items
+      const page = event.page || 1;
+      const skip = (page - 1) * pageSize;
+      const take = pageSize + 1;  // Take one more than pageSize to determine if there are more items
 
-        console.log(`Calling item.findMany with skip (${skip}) and take (${take})`);
-        prismaParams = { skip, take, ...prismaParams};
-      } else {
-        console.log("Skipping passing skip/take to item.findMany");
-      }
+      console.log(`Calling item.findMany with skip (${skip}) and take (${take})`);
+      prismaParams = { skip, take, ...prismaParams };
+    } else {
+      console.log("Skipping passing skip/take to item.findMany");
+    }
 
-      retrievedItems = await prisma.item.findMany(prismaParams);
+    retrievedItems = await prisma.item.findMany(prismaParams);
 
-      if (!event.skipPagination) {
+    const flattenItem = (item) => {
+      const { children, ...parent } = item;
+      return [parent, ...children];
+    }
+    retrievedItems = retrievedItems.flatMap((item) => flattenItem(item));
+
+    if (!event.skipPagination) {
       hasMore = retrievedItems.length > pageSize;
       console.log(`User does${(!hasMore) ? ' not' : ''} have more items.`);
 
@@ -168,9 +188,6 @@ export const handler = async (event) => {
           retrievedItems[i].tip_count = Number(num_tips_of_close_embeddings[0].count + ''); // Hack workaround to convert BigInt 
         }
       }
-
-      //console.log("Updated Item: " + JSON.stringify(retrievedItems[i]));
-
     } catch (error) {
       console.error('Error encrypting or decrypting:', error);
       return {
@@ -180,10 +197,14 @@ export const handler = async (event) => {
     }
   }
 
+  console.log("Retrieved Items prior to orphan removal: " + JSON.stringify(retrievedItems));
+
   // HACK ALERT:  Move any orphaned items to top of the list
   //              The UI was built to prevent orphans but they're still occurring occassionally.  
   //              Race conditions maybe?
   retrievedItems = removeOrphans(retrievedItems);
+
+ 
 
   var response = null;
   if (event.loadAll) {
@@ -210,16 +231,17 @@ function removeOrphans(items) {
   const validItems = [];
 
   items.forEach(item => {
-      if (item.parent_item_uuid && !parentUUIDs.has(item.parent_item_uuid)) {
-          // Clear parentId for orphaned subitems
-          item.parent_item_uuid = null;
-          orphanedSubitems.push(item);
-      } else {
-          validItems.push(item);
-      }
+    if (item.parent_item_uuid && !parentUUIDs.has(item.parent_item_uuid)) {
+      // Clear parentId for orphaned subitems
+      item.parent_item_uuid = null;
+      console.log("Identified item as orphan: " + JSON.stringify(item));
+      orphanedSubitems.push(item);
+    } else {
+      validItems.push(item);
+    }
   });
 
-  console.log(`Discarding ${orphanedSubitems} subitems from the list - Prevent these from occurring!`);
+  console.log(`Discarding ${orphanedSubitems.length} subitems from the list - Prevent these from occurring!`);
 
   // Combine orphaned subitems at the top with the valid items
   return validItems;

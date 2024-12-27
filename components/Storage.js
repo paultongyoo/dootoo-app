@@ -9,7 +9,8 @@ import * as amplitude from '@amplitude/analytics-react-native';
 const DONE_COUNT_KEY = "user_done_count";
 const TIP_COUNT_KEY = "user_tip_count";
 const USER_OBJ_KEY = "user_obj";
-const ITEM_LIST_KEY = "item_list";
+export const ITEM_LIST_KEY = "item_list";
+export const DONE_ITEM_LIST_KEY = "done_item_list";
 const TIP_LIST_KEY_PREFIX = "tip_list_";    // Append item UUID to key
 
 const CREATEUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev' 
@@ -99,23 +100,29 @@ const UPDATEUSERNAME_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2
 // 1.2  This function updated to load items from local cache if isPullDown == false
 //      and load from DB if isPullDown == true.  
 //      -- page parameter removed from loadItems signature
-export const loadItems = async (isPullDown) => {
+export const DONE_ITEM_FILTER_ONLY_OPEN_PARENTS = "onlyOpenParents";
+export const DONE_ITEM_FILTER_ONLY_DONE_PARENTS = "onlyDoneParents";
+export const loadItems = async (isPullDown, page, doneFilterString = null) => {
+  //console.log(`loadItems: isPullDown ${isPullDown}, page ${page}, doneFilterString: ${doneFilterString}`);
   
   // Load local items from cache (or empty list) if
   // not called from pulldown (i.e. on first and return launches of app
-  if (!isPullDown) {
-    const cachedItems = await loadItemsCache();
+  if (page == 1 && !isPullDown) {
+    const cachedItems = (doneFilterString == DONE_ITEM_FILTER_ONLY_DONE_PARENTS) 
+                           ? await loadDoneItemsCache()
+                           : await loadItemsCache();
 
     // If app had local items cached, we'll return those immediately.
     // If an empty / no list is cached (which will occur for returning users too),
-    // we'll execute pre-existing logic to look for BE data for the user WITH THE
-    // ADDITION of "skipPagination" boolean to deactivate BE pagination for 1.2+ users
+    // we'll execute pre-existing logic to look for BE data for the user
     if (cachedItems.length > 0 ) {
       console.log(`Cached items found ${cachedItems.length}, returning those to user...`)
       return { hasMore: false, things: cachedItems };
     } else {
-      console.log("No cached items found, proceeding with backend lookup for user");
+      console.log(doneFilterString + ": No cached items found, proceeding with backend lookup for user");
     }
+  } else if (page != 1) {
+    console.log("Next page being requested by app, pulling from backend...");
   } else {
     console.log("Load called on pull down, executing backend load...");
   }
@@ -123,7 +130,7 @@ export const loadItems = async (isPullDown) => {
   try {
     const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserStr) {
-      console.log("Received null local anon Id, aborting loadItems!");
+      //console.log("Received null local anon Id, aborting loadItems!");
       return { hasMore: hasMore, things: [] };
     }
     const localUser = JSON.parse(localUserStr);
@@ -131,9 +138,10 @@ export const loadItems = async (isPullDown) => {
     const response = await axios.post(LOADITEMS_URL,
       {
         anonymous_id : localAnonId,
-        //page: page,                         // Removed in 1.2
+        page: page,                          
         skipCounts: true,
-        skipPagination: true                  // Added in 1.2
+        onlyOpenParents: (doneFilterString == DONE_ITEM_FILTER_ONLY_OPEN_PARENTS),    //  Added in 1.6 for "list" screen
+        onlyDoneParents: (doneFilterString == DONE_ITEM_FILTER_ONLY_DONE_PARENTS) //  Added in 1.6 for "done" screen                                                                           
       }
     );
     const item_array = response.data.body.items;
@@ -147,7 +155,7 @@ export const loadItems = async (isPullDown) => {
 export const updateItemsCache = async(item_list_obj) => {
   try {
     if (item_list_obj) {
-      //console.log(`Updating items cache with ${(item_list_obj) ? item_list_obj.length : 0} size list.`);
+      console.log(`Updating Open items cache with ${(item_list_obj) ? item_list_obj.length : 0} size list.`);
       const item_list_str = JSON.stringify(item_list_obj);
       await AsyncStorage.setItem(ITEM_LIST_KEY, item_list_str);
     } else {
@@ -158,12 +166,26 @@ export const updateItemsCache = async(item_list_obj) => {
   }
 }
 
+export const updateDoneItemsCache = async(item_list_obj) => {
+  try {
+    if (item_list_obj) {
+      console.log(`Updating Done items cache with ${(item_list_obj) ? item_list_obj.length : 0} size list.`);
+      const item_list_str = JSON.stringify(item_list_obj);
+      await AsyncStorage.setItem(DONE_ITEM_LIST_KEY, item_list_str);
+    } else {
+      //console.log("Update items cache based null param, ignoring call (was this unexpected?");
+    }
+  } catch (e) {
+    console.log("Error in updateDoneItemsCache", e);
+  }
+}
+
 export const updateTipsCache = async(item_obj, tip_list_obj) => {
   try {
     if (item_obj && tip_list_obj) {
       const storageKey = `${TIP_LIST_KEY_PREFIX}_${item_obj.uuid}`;
       //console.log('Generated Tips AsyncStorage key: ' + storageKey);
-      //console.log(`Updating tips cache with ${(tip_list_obj) ? tip_list_obj.length : 0} size list.`);
+      console.log(`Updating tips cache with ${(tip_list_obj) ? tip_list_obj.length : 0} size list.`);
       const tip_list_str = JSON.stringify(tip_list_obj);
       await AsyncStorage.setItem(storageKey, tip_list_str);
     } else {
@@ -171,6 +193,19 @@ export const updateTipsCache = async(item_obj, tip_list_obj) => {
     }
   } catch (e) {
     console.log("Error in updateTipsCache", e);
+  }
+}
+
+export const areItemsCached = async(cacheKeyStr = null) => {
+  try {
+    if (cacheKeyStr == null) {
+      throw new Error("Null cache key provided");
+    } else if ((cacheKeyStr != DONE_ITEM_LIST_KEY) && (cacheKeyStr != ITEM_LIST_KEY)) {
+      throw new Error("Unrecognized item list cache key");
+    }
+    return await AsyncStorage.getItem(cacheKeyStr) != null;
+  } catch (e) {
+    console.error("Error in areItemsCached", e);
   }
 }
 
@@ -262,14 +297,15 @@ export const updateItemDoneState = async (item, callback) => {
       {
         anonymous_id : localAnonId,
         item_uuid: item.uuid,
-        is_done: item.is_done
+        is_done: item.is_done,
+        newOpenDoneLists: true
       }
     );
 
     if (callback) {
       callback();
     }
-    //console.log("updateDoneState Response Obj: " + JSON.stringify(response.data.body));
+    console.log("updateDoneState Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateDoneState API:', error);
   }
@@ -363,7 +399,7 @@ export const enrichItem = async (item) => {
   }
 }
 
-export const saveNewTip = async (tip, item_uuid, latest_tip_uuids) => {
+export const saveNewTip = async (tip, item_uuid, latest_tip_uuids, callback) => {
   try {
     //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
@@ -381,13 +417,16 @@ export const saveNewTip = async (tip, item_uuid, latest_tip_uuids) => {
         uuid_array: JSON.stringify(latest_tip_uuids)
       }
     );
+    if (callback) {
+      callback();
+    }
     //console.log("saveNewTip Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling saveNewTip API:', error);
   }
 }
 
-export const saveNewTips = async (tips, item_uuid, latest_tip_uuids) => {
+export const saveNewTips = async (tips, item_uuid, latest_tip_uuids, callback = null) => {
   try {
     //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
@@ -405,7 +444,10 @@ export const saveNewTips = async (tips, item_uuid, latest_tip_uuids) => {
         uuid_array: JSON.stringify(latest_tip_uuids)
       }
     );
-    console.log("saveNewTips Response Obj: " + JSON.stringify(response.data.body));
+    //console.log("saveNewTips Response Obj: " + JSON.stringify(response.data.body));
+    if (callback) {
+      callback();
+    }
   } catch (error) {
     console.error('Error calling saveNewTips API:', error);
   }
@@ -1041,7 +1083,18 @@ const saveTipsToBackend = async(item_obj, tip_list_obj, callback) => {
   }
 }
 
-const loadItemsCache = async() => {
+const loadDoneItemsCache = async () => {
+  try {
+    
+    const items_list_str = await AsyncStorage.getItem(DONE_ITEM_LIST_KEY);
+    //console.log("loadDoneItemsCache: " + items_list_str);
+    return (items_list_str) ? JSON.parse(items_list_str) : [];
+  } catch (e) {
+    console.log("Error in loadDoneItemsCache", e);
+  }
+}
+
+const loadItemsCache = async () => {
   try {
     
     const items_list_str = await AsyncStorage.getItem(ITEM_LIST_KEY);
