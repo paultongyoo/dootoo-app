@@ -9,7 +9,7 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
-import { areItemsCached, DONE_ITEM_LIST_KEY, enrichItem, ITEM_LIST_KEY, loadItemsCounts, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
+import { enrichItem, loadItemsCounts, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
@@ -73,42 +73,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     // 1.6 Reintroducing pagination with the separation of Open and Done lists
     const [page, setPage] = useState(1);
 
-    // const initialCacheCheckMount = useRef(true);
-    // useEffect(() => {
-    //     let ignore = false;
-    //     if (initialCacheCheckMount.current) {
-    //         initialCacheCheckMount.current = false;
-    //     } else {
-    //         const refreshCacheIfNeeded = async () => {
-    //             if (!ignore) {
-    //                 const cacheKey = (thingName == THINGNAME_DONE_ITEM) ? DONE_ITEM_LIST_KEY
-    //                     : (thingName == THINGNAME_ITEM) ? ITEM_LIST_KEY
-    //                         : null;
-    //                 const isListCached = await areItemsCached(cacheKey, page);
-    //                 if (!isListCached) {
-    //                     console.log("Refreshing " + thingName + " page due to empty cache: " + cacheKey);
-    //                     resetListWithFirstPageLoad();
-    //                 } else {
-    //                     //console.log(thingName + " list cached, skipping extra load");
-    //                 }
-    //             } else {
-    //                 //console.log("Ignoring concurrent refreshCacheIfNeeded call");
-    //             }
-    //         }
-    //         refreshCacheIfNeeded();
-    //     }
-
-    //     return () => {
-    //         //console.log(thingName + " Unmounting DootooList.useEffect() render");
-    //         ignore = true;
-    //     }
-    // });
-
     useEffect(() => {
         //console.log("DootooList.useEffect([])");
 
         initializeLocalUser((isNew: boolean) => {
-            console.log("initializeLocalUser callback method: " + shouldInitialLoad);
+            //console.log("initializeLocalUser callback method: " + shouldInitialLoad);
             if (shouldInitialLoad) {
                 initialLoadFadeInOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
                     if (isFinished) {
@@ -226,7 +195,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             const mappedUUIDs = [...itemCountsMap.current.keys()];
                             ListItemEventEmitter.emit(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, mappedUUIDs);
                         } else {
-                            console.log("itemCountsMap.current is null - inspecting itemUUIDs: " + JSON.stringify(itemUUIDs));
+                            console.log("loadItemsCount DB call did not return any counts.  Unexpected?");
                         }
                     } else {
                         console.log("itemUUIDs.length unexpectedly zero given listArray.length > 0 -- is app in bad state?");
@@ -246,20 +215,20 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     // 1.2 This function is modified to always execute the page = 1 scenario on all calls,
     //     whether it is first launch scenario or on refresh pull down
     const resetListWithFirstPageLoad = async (isPullDown = false) => {
-        console.log(`${thingName}: resetListWithFirstPageLoad, page ${page}`);
+        //console.log(`${thingName}: resetListWithFirstPageLoad, page ${page}`);
         if (page == 1) {
             // If current page is already 1, manually invoke LoadThingsForCurrentPage 
             // as useEffect(page) won't be called
             loadThingsForCurrentPage(isPullDown);
          } else {
-             console.log("Setting page var to 1 to trigger loadThingsForCurrentPage().")
+             //console.log("Setting page var to 1 to trigger loadThingsForCurrentPage().")
              setPage(1);
          }
     };
 
     const isInitialPageMount = useRef(true);
     useEffect(() => {
-        console.log("useEffect(page) called for pathname " + Date.now());
+        //console.log("useEffect(page) called for pathname " + Date.now());
         if (isInitialPageMount.current) {
             isInitialPageMount.current = false;
         } else {
@@ -270,29 +239,29 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     }, [page]);
 
     const loadNextPage = () => {
-        console.log("loadNextPage called");
+        //console.log("loadNextPage called");
         if (hasMoreThings.current) {
             if (!isRefreshing && !isPageLoading.current) {
-                console.log(`List end reached, incrementing current page var (currently ${page}).`);
+                //console.log(`List end reached, incrementing current page var (currently ${page}).`);
                 isPageLoading.current = true;
                 setPage((prevPage) => prevPage + 1);
             } else {
-                console.log(`Ignoring pull down action as page ${page} currently loading or full list is refreshing.`);
+                //console.log(`Ignoring pull down action as page ${page} currently loading or full list is refreshing.`);
             }
         } else {
-            console.log(`Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
+            //console.log(`Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
         }
     };
 
     const loadThingsForCurrentPage = async (isPullDown = false) => {
-        console.log(`${thingName}: Calling loadAllThings(page) with page = ${page}.`);
+        //console.log(`${thingName}: Calling loadAllThings(page) with page = ${page}.`);
 
         const loadResponse = await loadAllThings(isPullDown, page);
 
         let things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;
 
-        console.log(`DB load returned ${things.length} item(s) and hasMore is ${hasMore}`);
+        //console.log(`DB load returned ${things.length} item(s) and hasMore is ${hasMore}`);
 
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
         hasMoreThings.current = hasMore;
@@ -304,7 +273,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         // (e.g. on a pull-down-to-refresh action).  If page > 1, assume we want to append the page to what's currently
         // displayed.
         if (page == 1) {
-            console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
+            //console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
 
             // 1.3 Deactivated fade in animation to prevent flicker on launch
             // if (isPullDown) {
@@ -320,7 +289,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             listArraySetter([...things]);
             // }
         } else {
-            console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
+            //console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
             listArraySetter((prevItems) => prevItems.concat(things));
         }
     }
@@ -443,7 +412,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     }
 
     const handleThingDelete = (thing: any) => {
-        console.log("handleThingDelete: " + JSON.stringify(thing));
+        //console.log("handleThingDelete: " + JSON.stringify(thing));
 
 
         //console.log("Entering handle delete item...");
