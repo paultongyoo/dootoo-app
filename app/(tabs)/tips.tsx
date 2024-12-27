@@ -1,5 +1,6 @@
 import {
-  Image, Text, View, StyleSheet, Pressable, Alert
+  Image, Text, View, StyleSheet, Pressable, Alert,
+  Platform
 } from "react-native";
 import { useState, useContext, useEffect } from 'react';
 import { useNavigation, usePathname, useRouter } from 'expo-router';
@@ -21,6 +22,8 @@ import { Trash } from "@/components/svg/trash";
 import { ThumbUp } from "@/components/svg/thumb-up";
 import { ThumbDown } from "@/components/svg/thumb-down";
 import { MoveToTop } from "@/components/svg/move-to-top";
+import { ChevronLeft } from "@/components/svg/chevron-left";
+import { ArrowLeft } from "@/components/svg/arrow-left";
 
 
 export default function ItemTips() {
@@ -447,6 +450,9 @@ export default function ItemTips() {
       backgroundColor: '#FAF3E0',
       borderBottomWidth: 1,
       borderBottomColor: '#3E272333'
+    },
+    tipsBackContainer: {
+      paddingLeft: 10
     }
   });
 
@@ -458,7 +464,10 @@ export default function ItemTips() {
     return (
       <>
         <View style={styles.headerItemContainer}>
-          <Pressable style={[styles.itemCircleOpen, selectedItem.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick()}></Pressable>
+          <Pressable style={styles.tipsBackContainer} onPress={() => handleDoneClick()}>
+                {(Platform.OS == 'ios') ? <ChevronLeft wxh="26" color="#556B2F" />
+                                        : <ArrowLeft wxh="26" color="#556B2F" /> }
+          </Pressable>
           <View style={styles.headerItemNameContainer}>
             <View style={listStyles.itemNamePressable}>
               <Text style={[listStyles.taskTitle, selectedItem.is_done && listStyles.taskTitle_isDone]}>{selectedItem.text}</Text>
