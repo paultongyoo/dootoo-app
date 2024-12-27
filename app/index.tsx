@@ -14,7 +14,7 @@ export default function Index() {
             if (launchStatus === null) {
                 router.replace('/onboarding');
             } else {
-                router.replace('/list');
+                router.replace('/(tabs)/open');
             }
         };
         checkFirstLaunch();

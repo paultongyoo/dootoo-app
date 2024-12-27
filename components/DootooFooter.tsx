@@ -19,7 +19,7 @@ const DootooFooter = ({ state, descriptors, navigation }) => {
 
     const opacity = useSharedValue(0);
 
-    const ITEMS_PATHNAME = "/list";
+    const ITEMS_PATHNAME = "/(tabs)/open";
 
  
     useEffect(() => {

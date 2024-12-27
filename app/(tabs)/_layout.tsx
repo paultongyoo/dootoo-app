@@ -13,7 +13,8 @@ export default function TabLayout() {
         screenOptions={{
           header: (props) => (<DootooHeader {...props} />)
         }}>
-        <Tabs.Screen name="list" />
+        <Tabs.Screen name="open" />
+        <Tabs.Screen name="tips" />
         <Tabs.Screen name="done" />
         <Tabs.Screen name="profile" />
       </Tabs>
