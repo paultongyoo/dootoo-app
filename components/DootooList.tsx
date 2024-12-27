@@ -1328,14 +1328,14 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }
 
         const handleBlur = (thing) => {
-            console.log(`Inside handleBlur for index ${getIndex()}`);
+            //console.log(`Inside handleBlur for index ${getIndex()}`);
 
             const textOnChange = onChangeInputValue.current;
-            console.log("textOnChange: " + textOnChange);
+            //console.log("textOnChange: " + textOnChange);
 
             // If blur after field changed to empty, assume the user wants to delete it
             if (!textOnChange || textOnChange.length == 0) {
-                console.log("Blur occurred on empty field, deleting it!");
+                //console.log("Blur occurred on empty field, deleting it!");
                 handleThingDelete(thing);
             } else if (textOnChange != thing.text) {
                 //console.log("Text changed to: " + textOnChange);
@@ -1373,7 +1373,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
 
             } else {
-                console.log(`Ignoring blur as text has not changed (${textOnChange})`);
+                //console.log(`Ignoring blur as text has not changed (${textOnChange})`);
             }
 
             // Always treat React state as immutable!  
@@ -1430,7 +1430,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }
 
         const handleMoveToTop = async (selectedThing) => {
-            console.log("Starting handleMoveToTop: " + selectedThing.text)
+            //console.log("Starting handleMoveToTop: " + selectedThing.text)
 
             // Save current index prior to move in case user wants to undo operation
             previousIndex.current = getIndex();
