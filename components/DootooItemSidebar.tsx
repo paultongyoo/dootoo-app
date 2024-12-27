@@ -13,11 +13,11 @@ import { UserRound } from './svg/user-round';
 
 
 const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
+    const router = useRouter();
     const pathname = usePathname();
     const { anonymousId, setSelectedItem, itemCountsMap } = useContext(AppContext);
 
-    // 1.6 Deprecated
-    //const TIPS_PATHNAME = '/meDrawer/communityDrawer/stack/tips';
+    const TIPS_PATHNAME = '/(tabs)/tips';
 
     const [tipCount, setTipCount] = 
         useState((itemCountsMap.current && itemCountsMap.current.get(thing.uuid)) ? itemCountsMap.current.get(thing.uuid).tip_count : null);
@@ -92,7 +92,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
 
     const goToTips = () => {
         setSelectedItem(thing);
-        //router.push(TIPS_PATHNAME);           // 1.6 Commented out with deprecation of TIps functionality
+        router.push(TIPS_PATHNAME);           
     }
 
     const sidebarStyles = StyleSheet.create({
@@ -135,7 +135,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
         const greenColorSV = useSharedValue("#556B2F")
         return (
             <Animated.View style={[/*opacityAnimatedStyle,*/ { flexDirection: 'row' }]}>
-                {/* {(tipCount || thing.is_done) ?
+                {(tipCount || thing.is_done) ?
                     <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
                         disabled={disabled || (pathname == TIPS_PATHNAME)}
                         style={sidebarStyles.tipCountContainer}
@@ -144,7 +144,7 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
                         <View style={sidebarStyles.tipIconContainer}>
                             <Bulb wxh="20" opacity="0.8" color="#556B2F" />
                         </View>
-                    </Pressable> : <></>} */}
+                    </Pressable> : <></>}
                 {(similarCount) ?
                     <Pressable hitSlop={{ top: 10, bottom: 10, right: 10 }}
                         disabled={disabled}
