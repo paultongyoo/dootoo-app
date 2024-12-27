@@ -1,15 +1,25 @@
 import { Text, StyleSheet } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
-import Animated, { runOnJS, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 const DootooItemEmptyUX = () => {
 
   const opacity = useSharedValue(0);
 
   const fadeAnimGoals = useSharedValue(0.1);
+  const goalsAnimatedOpacity = useAnimatedStyle(() => {
+    return { opacity: fadeAnimGoals.value }
+  })
   const fadeAnimDreams = useSharedValue(0.1);
+  const dreamsAnimatedOpacity = useAnimatedStyle(() => {
+    return { opacity: fadeAnimDreams.value }
+  })
+
   const fadeAnimChallenges = useSharedValue(0.1);
+  const challengesAnimatedOpacity = useAnimatedStyle(() => {
+    return { opacity: fadeAnimChallenges.value }
+  })
 
   const executeCTAAnimation = async () => {
     await new Promise<void>((resolve) => {
@@ -37,14 +47,12 @@ const DootooItemEmptyUX = () => {
 
   useFocusEffect(
     useCallback(() => {
-      console.log("Inside DootooItemEmptyUX.useFocusEffect()")
       opacity.value = withTiming(1, { duration: 800 }, (isFinished) => {
         if (isFinished) {
           runOnJS(executeCTAAnimation)();
         }
       });
       return () => {
-        console.log("Cleaning up DootooItemEmptyUX.useFocusEffect()")
         opacity.value = withTiming(0, { duration: 800 }, (isFinished) => {
           if (isFinished) {
             fadeAnimGoals.value = 0.1;
@@ -74,13 +82,13 @@ const DootooItemEmptyUX = () => {
     <Animated.View>
       <Text style={[emptyStyles.emptyListContainer_words, { color: '#556B2F' }]}>tasks?</Text>
     </Animated.View>
-    <Animated.View style={[{ opacity: fadeAnimGoals }]}>
+    <Animated.View style={goalsAnimatedOpacity}>
       <Text style={[emptyStyles.emptyListContainer_words, { color: '#556B2F' }]}>goals?</Text>
     </Animated.View>
-    <Animated.View style={[{ opacity: fadeAnimDreams }]}>
+    <Animated.View style={dreamsAnimatedOpacity}>
       <Text style={[emptyStyles.emptyListContainer_words, { color: '#556B2F' }]}>dreams?</Text>
     </Animated.View>
-    <Animated.View style={[{ opacity: fadeAnimChallenges }]}>
+    <Animated.View style={challengesAnimatedOpacity}>
       <Text style={[emptyStyles.emptyListContainer_words, { color: '#556B2F' }]}>challenges?</Text>
     </Animated.View>
   </Animated.View>;
