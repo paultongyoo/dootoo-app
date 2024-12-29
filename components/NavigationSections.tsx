@@ -114,7 +114,7 @@ const NavigationSections = ({navigation}) => {
             borderColor: '#FAF3E0',
             width: (doneCount < 10) ? 20 : (doneCount < 100) ? 26 : 36,
             position: 'absolute',
-            left: 12,
+            left: 16,
             top: -6,
             paddingHorizontal: 3
         },
