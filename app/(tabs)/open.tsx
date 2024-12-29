@@ -121,51 +121,90 @@ export default function ListScreen() {
 
     // Get UUID of nearest parent above item to be made into child
     let nearestParentUUID = '';
+    let nearestParentText = '';
     for (var i = index - 1; i >= 0; i--) {
       const currItem = openItems[i];
       if (!currItem.parent_item_uuid) {
         console.log("Nearest Parent: " + currItem.text);
         nearestParentUUID = currItem.uuid;
+        nearestParentText = currItem.text;
         break;
       }
     }
 
-    amplitude.track("Item Made Into Child", {
-      anonymous_id: anonymousId,
-      item_uuid: item.uuid,
-      parent_item_uuid: nearestParentUUID
-    });
+    const makeChild = () => {
 
-    // Make thing child of nearest parent
-    updateItemHierarchy(item.uuid, nearestParentUUID);
+      amplitude.track("Item Made Into Child", {
+        anonymous_id: anonymousId,
+        item_uuid: item.uuid,
+        parent_item_uuid: nearestParentUUID
+      });
 
-    // If item had children, make those children children of nearest parent too
-    const childrenOfItem = openItems.filter((prevItem) => prevItem.parent_item_uuid == item.uuid);
-    childrenOfItem.forEach((child) => updateItemHierarchy(child.uuid, nearestParentUUID));
+      // Make thing child of nearest parent
+      updateItemHierarchy(item.uuid, nearestParentUUID);
 
-    console.log("Setting new child into list");
-    setOpenItems((prevItems) => {
+      // If item had children, make those children children of nearest parent too
+      const childrenOfItem = openItems.filter((prevItem) => prevItem.parent_item_uuid == item.uuid);
+      childrenOfItem.forEach((child) => updateItemHierarchy(child.uuid, nearestParentUUID));
 
-      // Make selected item child of nearest parent
-      const listWithUpdatedItem = prevItems.map((obj) =>
-        (obj.uuid == item.uuid)
-          ? {
-            ...obj,
-            parent_item_uuid: nearestParentUUID
-          }
-          : obj);
+      console.log("Setting new child into list");
+      setOpenItems((prevItems) => {
 
-      // Make any children of selected item children of nearest parent
-      const listWithUpdatedItemKids = listWithUpdatedItem.map((obj) =>
-        (obj.parent_item_uuid == item.uuid)
-          ? {
-            ...obj,
-            parent_item_uuid: nearestParentUUID
-          }
-          : obj);
+        // Make selected item child of nearest parent
+        const listWithUpdatedItem = prevItems.map((obj) =>
+          (obj.uuid == item.uuid)
+            ? {
+              ...obj,
+              parent_item_uuid: nearestParentUUID
+            }
+            : obj);
 
-      return listWithUpdatedItemKids
-    });
+        // Make any children of selected item children of nearest parent
+        const listWithUpdatedItemKids = listWithUpdatedItem.map((obj) =>
+          (obj.parent_item_uuid == item.uuid)
+            ? {
+              ...obj,
+              parent_item_uuid: nearestParentUUID
+            }
+            : obj);
+
+        return listWithUpdatedItemKids
+      });
+    }
+
+    const hasChildren = openItems.some((existingItem) => existingItem.parent_item_uuid == item.uuid);
+    if (!hasChildren) {
+      makeChild();
+    } else {
+      Alert.alert(
+        "Make Parent into Child?",
+        `Make this item and all of its children subitems of "${nearestParentText}"?`,
+        [
+          {
+            text: 'Cancel',
+            onPress: () => {
+              amplitude.track("Make Parent into Child Cancelled", {
+                anonymous_id: anonymousId,
+                pathname: pathname
+              });
+            },
+            style: 'cancel', // Optional: 'cancel' or 'destructive' (iOS only)
+          },
+          {
+            text: 'Yes',
+            onPress: () => {
+              //console.log('Data Deletion OK Pressed');
+              amplitude.track("Make Parent into Child Confirmed", {
+                anonymous_id: anonymousId,
+                pathname: pathname
+              });
+              makeChild();
+            },
+          },
+        ],
+        { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+      );
+    }
   }
 
   const handleDoneClick = async (item) => {
@@ -343,7 +382,7 @@ export default function ListScreen() {
                       await Promise.all(collapseAnimationPromises);
 
                       delete thingRowPositionXs.current[item.uuid];
-                      delete thingRowHeights.current[item.uuid] 
+                      delete thingRowHeights.current[item.uuid]
                       openChildren.forEach((child) => {
                         delete thingRowPositionXs.current[child.uuid];
                         delete thingRowHeights.current[child.uuid]
@@ -367,8 +406,8 @@ export default function ListScreen() {
                       setOpenItems((prevItems) => {
 
                         // First filter out deleted items and set clicked item to done
-                        var filteredAndDonedList = prevItems.filter((obj) => 
-                            (!subtaskUUIDSet.has(obj.uuid) && (obj.uuid != item.uuid)))
+                        var filteredAndDonedList = prevItems.filter((obj) =>
+                          (!subtaskUUIDSet.has(obj.uuid) && (obj.uuid != item.uuid)))
 
                         // Update Open list order in backend
                         const uuidArray = filteredAndDonedList.map((thing) => ({ uuid: thing.uuid }));
@@ -382,8 +421,8 @@ export default function ListScreen() {
                       // 1.6 TODO handle scenario where list hasnt been populated yet
                       setDoneItems((prevItems) => {
                         return [item,
-                                ...doneChildren,
-                                ...prevItems]
+                          ...doneChildren,
+                          ...prevItems]
                       });
                     }
                   },
@@ -436,8 +475,8 @@ export default function ListScreen() {
                       setOpenItems((prevItems) => {
 
                         // First filter out deleted items and set clicked item to done
-                        var filteredAndDonedList = prevItems.filter((obj) => 
-                            (!subtaskUUIDSet.has(obj.uuid) && (obj.uuid != item.uuid)))
+                        var filteredAndDonedList = prevItems.filter((obj) =>
+                          (!subtaskUUIDSet.has(obj.uuid) && (obj.uuid != item.uuid)))
 
                         // Update order in backend
                         const uuidArray = filteredAndDonedList.map((thing) => ({ uuid: thing.uuid }));
@@ -451,9 +490,9 @@ export default function ListScreen() {
                       // 1.6 TODO handle scenario where list hasnt been populated yet
                       setDoneItems((prevItems) => {
                         return [item,
-                                ...openChildren.map((child) => ({...child, is_done: true})),
-                                ...doneChildren,
-                                ...prevItems]
+                          ...openChildren.map((child) => ({ ...child, is_done: true })),
+                          ...doneChildren,
+                          ...prevItems]
                       });
                     },
                   },
@@ -493,8 +532,8 @@ export default function ListScreen() {
                 setOpenItems((prevItems) => {
 
                   // First filter out deleted items and set clicked item to done
-                  var filteredAndDonedList = prevItems.filter((obj) => 
-                      (!subtaskUUIDSet.has(obj.uuid) && (obj.uuid != item.uuid)))
+                  var filteredAndDonedList = prevItems.filter((obj) =>
+                    (!subtaskUUIDSet.has(obj.uuid) && (obj.uuid != item.uuid)))
 
                   // Update order in backend
                   const uuidArray = filteredAndDonedList.map((thing) => ({ uuid: thing.uuid }));
@@ -508,8 +547,8 @@ export default function ListScreen() {
                 // 1.6 TODO handle scenario where list hasnt been populated yet
                 setDoneItems((prevItems) => {
                   return [item,
-                          ...doneChildren,
-                          ...prevItems]
+                    ...doneChildren,
+                    ...prevItems]
                 });
 
               } else {
@@ -548,7 +587,7 @@ export default function ListScreen() {
             // 1.6 TODO handle scenario where list hasnt been populated yet
             setDoneItems((prevItems) => {
               return [item,
-                      ...prevItems]
+                ...prevItems]
             });
           }
         }
@@ -657,16 +696,19 @@ export default function ListScreen() {
     }
   });
 
+  // 1.7  Turned auto child making OFF as this made it too easy
+  //      to accidentally make a parent into a child, breaking large families and increasing
+  //      chance of orphaning parent's children
   const onSwipeableOpen = (direction, item, index) => {
-    //console.log("opSwipeableOpen: " + direction + " " + item.text + " " + index);
-    if (!item.parent_item_uuid && (direction == "left")) {
-      handleMakeChild(item, index);
-    } else if (item.parent_item_uuid && (direction == "right")) {
+    //   //console.log("opSwipeableOpen: " + direction + " " + item.text + " " + index);
+    //   if (!item.parent_item_uuid && (direction == "left")) {
+    //     handleMakeChild(item, index);
+    //   } else if (item.parent_item_uuid && (direction == "right")) {
 
-      // Don't automatically do parent because the Delete swipe action is available too.
-      // TODO:  Implement snapping(?) to only make parent if fully open
-      // handleMakeParent(item);   
-    }
+    //     // Don't automatically do parent because the Delete swipe action is available too.
+    //     // TODO:  Implement snapping(?) to only make parent if fully open
+    //     // handleMakeParent(item);   
+    //   }
   }
 
   const renderRightActions = (item, index, handleThingDeleteFunc, handleMoveToTopFunc, insertRecordingAction) => {
@@ -723,7 +765,7 @@ export default function ListScreen() {
   };
 
   return (
-    <DootooList 
+    <DootooList
       thingName={THINGNAME_ITEM}
       listArray={openItems}
       listArraySetter={setOpenItems}
