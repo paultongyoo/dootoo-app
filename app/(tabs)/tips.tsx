@@ -27,7 +27,7 @@ import { ArrowLeft } from "@/components/svg/arrow-left";
 
 
 export default function ItemTips() {
-  const router = useRouter();
+  const navigation = useNavigation();
   const { anonymousId, selectedItem, setSelectedItem, itemCountsMap } = useContext(AppContext);
   const [tips, setTips] = useState([]);
   const pathname = usePathname();
@@ -457,7 +457,10 @@ export default function ItemTips() {
     return (
       <>
         <View style={styles.headerItemContainer}>
-          <Pressable style={styles.tipsBackContainer} onPress={() => router.back()}>
+          <Pressable style={styles.tipsBackContainer} onPress={() => {
+            console.log("Tapped back button");
+            navigation.navigate('open');     
+          }}>
                 {(Platform.OS == 'ios') ? <ChevronLeft wxh="26" color="#556B2F" />
                                         : <ArrowLeft wxh="26" color="#556B2F" /> }
           </Pressable>
