@@ -14,7 +14,7 @@ export default function TabLayout() {
           header: (props) => (<DootooHeader {...props} />)
         }}>
         <Tabs.Screen name="open" />
-        <Tabs.Screen name="tips" />
+        <Tabs.Screen name="community" />
         <Tabs.Screen name="done" />
         <Tabs.Screen name="profile" />
       </Tabs>

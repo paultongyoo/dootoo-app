@@ -8,6 +8,7 @@ import { useContext, useEffect, useState } from "react";
 import { ProfileCountEventEmitter } from "./EventEmitters";
 import { loadUsername } from "./Storage";
 import { AppContext } from "./AppContext";
+import { UsersRound } from "./svg/users-round";
 
 const NavigationSections = ({navigation}) => {
 
@@ -52,6 +53,7 @@ const NavigationSections = ({navigation}) => {
     const listIconColor = useSharedValue("#3e2723");
     const doneIconColor = useSharedValue("#3e2723");
     const profileIconColor = useSharedValue("#3e2723");
+    const communityIconColor = useSharedValue("#3e2723");
     const barTranslateX = useSharedValue(0);
     const animateCurrentSectionIndicator = (sectionIndex) => {
         // 0 = First section
@@ -66,11 +68,13 @@ const NavigationSections = ({navigation}) => {
         //
         //console.log("sectionIndex value: " + sectionIndex);
         listIconColor.value = withTiming((sectionIndex == 0) ? "#556b2f" : "#3e2723", { duration: 500 });
-        doneIconColor.value = withTiming((sectionIndex == 1) ? "#556b2f" : "#3e2723", { duration: 500 });
-        profileIconColor.value = withTiming((sectionIndex == 2) ? "#556b2f" : "#3e2723", { duration: 500 });
-    
+        communityIconColor.value = withTiming((sectionIndex == 1) ? "#556b2f" : "#3e2723", { duration: 500 });
+        doneIconColor.value = withTiming((sectionIndex == 2) ? "#556b2f" : "#3e2723", { duration: 500 });
+        profileIconColor.value = withTiming((sectionIndex == 3) ? "#556b2f" : "#3e2723", { duration: 500 });  
+
         navigation.navigate((sectionIndex == 0) ? 'open'
-                                : (sectionIndex == 1) ? 'done' : 'profile');
+                                : (sectionIndex == 1) ? 'community'
+                                : (sectionIndex == 2) ? 'done' : 'profile');
     }
 
     // Pulse the badge on every change of doneCount, even on
@@ -141,6 +145,11 @@ const NavigationSections = ({navigation}) => {
                 </Pressable>
                 <Pressable hitSlop={10} style={styles.sectionIconContainer} onPress={() => {
                     animateCurrentSectionIndicator(1);
+                }}>
+                    <UsersRound wxh="24" color={communityIconColor} />
+                </Pressable>
+                <Pressable hitSlop={10} style={styles.sectionIconContainer} onPress={() => {
+                    animateCurrentSectionIndicator(2);
                 }}><View style={styles.doneIconContainer}>
                         <CircleCheck wxh="24" color={doneIconColor} />
                         {(doneCount > 0) ?
@@ -152,7 +161,7 @@ const NavigationSections = ({navigation}) => {
                     </View>
                 </Pressable>
                 <Pressable hitSlop={10} style={styles.sectionIconContainer} onPress={() => {
-                    animateCurrentSectionIndicator(2);
+                    animateCurrentSectionIndicator(3);
                 }}>
                     <UserRound wxh="24" color={profileIconColor} />
                 </Pressable>
