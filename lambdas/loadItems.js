@@ -86,18 +86,6 @@ export const handler = async (event) => {
       prismaParams.where = { ...prismaParams.where, is_done: true };
     }
 
-    const pageSize = 15   // hardcode this for now
-    if (!event.skipPagination) {
-      const page = event.page || 1;
-      const skip = (page - 1) * pageSize;
-      const take = pageSize + 1;  // Take one more than pageSize to determine if there are more items
-
-      console.log(`Calling item.findMany with skip (${skip}) and take (${take})`);
-      prismaParams = { skip, take, ...prismaParams };
-    } else {
-      console.log("Skipping passing skip/take to item.findMany");
-    }
-
     retrievedItems = await prisma.item.findMany(prismaParams);
 
     const flattenItem = (item) => {
@@ -105,21 +93,29 @@ export const handler = async (event) => {
       return [parent, ...children];
     }
     retrievedItems = retrievedItems.flatMap((item) => flattenItem(item));
+    console.log("retrievedItems array length: " + retrievedItems.length);
 
+    const pageSize = 15   // hardcode this for now
     if (!event.skipPagination) {
+      const page = event.page || 1;
+      const skip = (page - 1) * pageSize;
+      const take = pageSize + 1;  // Take one more than pageSize to determine if there are more items
+
+      console.log(`Applying skip (${skip}) and take (${take})`);
+
+      const startIndex = skip || 0;
+      retrievedItems = retrievedItems.slice(startIndex, startIndex + take);
       hasMore = retrievedItems.length > pageSize;
       console.log(`User does${(!hasMore) ? ' not' : ''} have more items.`);
-
-      // Remove the extra item if it exists
       if (hasMore) {
         retrievedItems.pop();
       }
     } else {
+      console.log("Skipping passing skip/take.");
       hasMore = false;
     }
   }
   console.log(`Returned ${((retrievedItems && retrievedItems.length) || 0)} items.`);
-
 
   for (var i = 0; i < retrievedItems.length; i++) {
     const item = retrievedItems[i];
@@ -197,7 +193,7 @@ export const handler = async (event) => {
     }
   }
 
-  console.log("Retrieved Items prior to orphan removal: " + JSON.stringify(retrievedItems));
+  //console.log("Retrieved Items prior to orphan removal: " + JSON.stringify(retrievedItems));
 
   // HACK ALERT:  Move any orphaned items to top of the list
   //              The UI was built to prevent orphans but they're still occurring occassionally.  
