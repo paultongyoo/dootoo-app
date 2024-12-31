@@ -1,24 +1,20 @@
-import DootooCommunityEmptyUX from "@/components/DootooCommunityEmptyUX";
 import { timeAgo } from "@/components/Helpers";
 import { loadCommunityItems } from "@/components/Storage";
 import { CircleUserRound } from "@/components/svg/circle-user-round";
 import { EllipsisVertical } from "@/components/svg/ellipsis-vertical";
 import { ThumbUp } from "@/components/svg/thumb-up";
-import { UserCircle } from "@/components/svg/user-circle";
-import { UserRound } from "@/components/svg/user-round";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, View, ActivityIndicator, FlatList, Text, Alert, Pressable, RefreshControl } from "react-native";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 const CommunityScreen = () => {
+    const [communityItems, setCommunityItems] = useState(null);
 
-    const [screenInitialized, setScreenInitialized] = useState(false);
     const opacity = useSharedValue(0);
     const animatedOpacity = useAnimatedStyle(() => {
         return { opacity: opacity.value }
     })
-    const [communityItems, setCommunityItems] = useState(null);
     const [page, setPage] = useState(1);
     const [refreshKey, setRefreshKey] = useState(1);
     const [refreshing, setRefreshing] = useState(false);
@@ -28,29 +24,38 @@ const CommunityScreen = () => {
         return { opacity: nextPageLoadingOpacity.value }
     })
 
-    useEffect(() => {
-
-        // The following logic is used to initialize the screen
-        // on first render as well as for re-looking for items if screen was empty (see useFocusEffect)
-        if (!communityItems) {
+    useFocusEffect(
+        useCallback(() => {
+            //console.log("Community.useFocusEffect([]), communityItems: " + JSON.stringify(communityItems));
             initializeCommunityScreen();
-        } else {
-            if (opacity.value == 0) {
-                const fadeInList = async () => {
-                    await new Promise<void>((resolve) =>
-                        opacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
-                            if (isFinished) {
-                                runOnJS(resolve)();
-                            }
-                        }));
-                }
-                fadeInList();
+            return () => {
+                //console.log("Setting communityItems back to null on losing focus");
+                setCommunityItems(null);
             }
+        }, [])
+    )
+
+    const initialItemsMount = useRef(true);
+    useEffect(() => {
+        //console.log("useEffect([communityItems]), length: " + ((communityItems) ? communityItems.length : '<undefined>'));
+
+        if (initialItemsMount.current) {
+            initialItemsMount.current = false;
+        } else if (opacity.value == 0) {
+            const fadeInLayout = async () => {
+                await new Promise<void>((resolve) =>
+                    opacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                        if (isFinished) {
+                            runOnJS(resolve)();
+                        }
+                    }));
+            }
+            fadeInLayout();
         }
     }, [communityItems]);
 
     const initializeCommunityScreen = async () => {
-        console.log("initializeCommunityScreen");
+        //console.log("Initializing Community Screen");
 
         // Fade in layout, which is ASSumed to be displaying loading animation
         await new Promise<void>((resolve) =>
@@ -74,26 +79,6 @@ const CommunityScreen = () => {
         // Update array
         setCommunityItems([...responseObj.items])
     }
-
-    const reinitializeCommunityScreen = async () => {
-        console.log("reinitializeCommunityScreen");
-        await new Promise<void>((resolve) =>
-            opacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
-                if (isFinished) {
-                    runOnJS(resolve)();
-                }
-            }));
-        setCommunityItems(null);    // Intentionally re-invoke initializeCommunityScreen logic
-    }
-
-    useFocusEffect(
-        useCallback(() => {
-            //console.log("communityItems.length: " + communityItems.length);
-            if (communityItems.length == 0) {
-                reinitializeCommunityScreen();
-            }
-        }, [])
-    )
 
     const initialPageMount = useRef(true);
     useEffect(() => {
@@ -214,20 +199,25 @@ const CommunityScreen = () => {
         textContainer: {
             marginVertical: 20,
             marginLeft: 10,
-            marginRight: 100
+            marginRight: 20,
+            alignItems: 'flex-start',
         },
         textLine: {
             fontSize: 16
         },
         textSubLine: {
-            flexDirection: 'row',
+            // flexDirection: 'row',
+            position: 'relative',
+            paddingLeft: 20,
             alignItems: 'center',
             marginTop: 5
         },
         bullet: {
             fontWeight: 'bold',
             color: "#556B2F",
-            marginHorizontal: 10
+            position: 'absolute',
+            left: 5,
+            top: 3
         },
         bottomActions: {
             flexDirection: 'row',
@@ -256,8 +246,8 @@ const CommunityScreen = () => {
         },
         emptyListText: {
             color: "#3e2723",
-            fontSize: 50,
-            lineHeight: 58
+            fontSize: 40,
+            lineHeight: 48
         }
     })
 
@@ -300,9 +290,9 @@ const CommunityScreen = () => {
                 <View style={styles.textContainer}>
                     <Text style={styles.textLine}>{item.text}</Text>
                     {item.children.map((child) => (
-                        <View style={styles.textSubLine}>
-                            <Text style={styles.bullet}>{'\u2022'}</Text>
-                            <Text style={styles.textLine}>{child.text}</Text>
+                        <View key={child.uuid} style={styles.textSubLine}>
+                            <Text key={child.uuid} style={styles.bullet}>{'\u2022'}</Text>
+                            <Text key={child.uuid} style={styles.textLine}>{child.text}</Text>
                         </View>
                     ))}
                 </View>
@@ -349,7 +339,7 @@ const CommunityScreen = () => {
                                         <ActivityIndicator size={"small"} color="#3E3723" />
                                     </Animated.View>
                                 </View>}
-                        /> 
+                        />
                         : <View style={styles.emptyListContainer}>
                             <Text style={styles.emptyListText}>Be the first to share your goals with the community!</Text>
                         </View>
