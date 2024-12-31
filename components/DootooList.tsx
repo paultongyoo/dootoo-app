@@ -224,7 +224,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const loadNextPage = async () => {
         //console.log("loadNextPage called");
         if (hasMoreThings.current) {
-                console.log(`${thingName}: List end reached, incrementing current page var (currently ${currentPage.current}).`);
+                //console.log(`${thingName}: List end reached, incrementing current page var (currently ${currentPage.current}).`);
                 
                 await new Promise<void>((resolve) => {
                     nextPageLoadingOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
@@ -237,19 +237,19 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 currentPage.current = currentPage.current + 1;
                 loadThingsForCurrentPage(false);
         } else {
-            console.log(`${thingName}: Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
+            //console.log(`${thingName}: Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
         }
     };
 
     const loadThingsForCurrentPage = async (isPullDown = false) => {
-        console.log(`${thingName}: Calling loadAllThings with currentPage = ${currentPage.current}.`);
+        //console.log(`${thingName}: Calling loadAllThings with currentPage = ${currentPage.current}.`);
 
         const loadResponse = await loadAllThings(isPullDown, currentPage.current);
 
         let things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;  
         
-        console.log(`${thingName}: DB load returned ${things.length} item(s) and hasMore is ${hasMore}`);
+        //console.log(`${thingName}: DB load returned ${things.length} item(s) and hasMore is ${hasMore}`);
 
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
         hasMoreThings.current = hasMore;
@@ -258,7 +258,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         // (e.g. on a pull-down-to-refresh action).  If page > 1, assume we want to append the page to what's currently
         // displayed.
         if (currentPage.current == 1) {
-            console.log(`${thingName}: (Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
+            //console.log(`${thingName}: (Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
 
             // 1.3 Deactivated fade in animation to prevent flicker on launch
             // if (isPullDown) {
@@ -275,7 +275,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             listArraySetter([...things]);
             // }
         } else {
-            console.log(`${thingName}: Appending ${things.length} ${thingName}(s) from page ${currentPage.current} to current list.`)
+            //console.log(`${thingName}: Appending ${things.length} ${thingName}(s) from page ${currentPage.current} to current list.`)
             
             await new Promise<void>((resolve) => {
                 nextPageLoadingOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
@@ -289,7 +289,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }
 
         currentPage.current = loadResponse.lastPageLoaded;
-        console.log(`${thingName}: CurrentPage updated to last page loaded: ${currentPage.current}`);
+        //console.log(`${thingName}: CurrentPage updated to last page loaded: ${currentPage.current}`);
 
         setRefreshing(false);
     }

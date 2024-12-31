@@ -123,7 +123,7 @@ export const loadItems = async (isPullDown, requestedPage, doneFilterString = nu
     // If an empty / no list is cached (which will occur for returning users too),
     // we'll execute pre-existing logic to look for BE data for the user
     if (cachedItems.length > 0 ) {
-      console.log(`Cached items found ${cachedItems.length}, returning those to user...`)
+      //console.log(`Cached items found ${cachedItems.length}, returning those to user...`)
 
       // Since we're pulling from cache, retrieve the last loaded page number for the UI to increment from
       // if the user scrolls down to retrieve more items
@@ -132,12 +132,12 @@ export const loadItems = async (isPullDown, requestedPage, doneFilterString = nu
       // set hasMore to true to always allow scrolls after cached data to check for more data
       return { hasMore: true, things: cachedItems, lastPageLoaded: lastCachedPage };  
     } else {
-      console.log(doneFilterString + ": No cached items found, proceeding with backend lookup for user");
+      //console.log(doneFilterString + ": No cached items found, proceeding with backend lookup for user");
     }
   } else if (requestedPage != 1) {
-    console.log(`Page ${requestedPage} being requested by app, pulling from backend...`);
+    //console.log(`Page ${requestedPage} being requested by app, pulling from backend...`);
   } else {
-    console.log("Load called on pull down, executing backend load...");
+    //console.log("Load called on pull down, executing backend load...");
   }
 
   try {
@@ -174,7 +174,7 @@ export const loadItems = async (isPullDown, requestedPage, doneFilterString = nu
 export const updateItemsCache = async(item_list_obj) => {
   try {
     if (item_list_obj) {
-      console.log(`Updating Open items cache with ${(item_list_obj) ? item_list_obj.length : 0} size list.`);
+      //console.log(`Updating Open items cache with ${(item_list_obj) ? item_list_obj.length : 0} size list.`);
       const item_list_str = JSON.stringify(item_list_obj);
       await AsyncStorage.setItem(OPEN_ITEM_LIST_KEY, item_list_str);
     } else {
@@ -188,7 +188,7 @@ export const updateItemsCache = async(item_list_obj) => {
 export const updateDoneItemsCache = async(item_list_obj) => {
   try {
     if (item_list_obj) {
-      console.log(`Updating Done items cache with ${(item_list_obj) ? item_list_obj.length : 0} size list.`);
+      //console.log(`Updating Done items cache with ${(item_list_obj) ? item_list_obj.length : 0} size list.`);
       const item_list_str = JSON.stringify(item_list_obj);
       await AsyncStorage.setItem(DONE_ITEM_LIST_KEY, item_list_str);
     } else {
@@ -204,7 +204,7 @@ export const updateTipsCache = async(item_obj, tip_list_obj) => {
     if (item_obj && tip_list_obj) {
       const storageKey = `${TIP_LIST_KEY_PREFIX}_${item_obj.uuid}`;
       //console.log('Generated Tips AsyncStorage key: ' + storageKey);
-      console.log(`Updating tips cache with ${(tip_list_obj) ? tip_list_obj.length : 0} size list.`);
+      //console.log(`Updating tips cache with ${(tip_list_obj) ? tip_list_obj.length : 0} size list.`);
       const tip_list_str = JSON.stringify(tip_list_obj);
       await AsyncStorage.setItem(storageKey, tip_list_str);
     } else {
@@ -324,7 +324,7 @@ export const updateItemDoneState = async (item, callback) => {
     if (callback) {
       callback();
     }
-    console.log("updateDoneState Response Obj: " + JSON.stringify(response.data.body));
+    //console.log("updateDoneState Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateDoneState API:', error);
   }
@@ -370,7 +370,7 @@ export const saveNewItems = async (items, latest_item_uuids) => {
         uuid_array: JSON.stringify(latest_item_uuids)
       }
     );
-    console.log("saveNewItems Response Obj: " + JSON.stringify(response.data.body));
+    //console.log("saveNewItems Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling saveNewItems API:', error);
   }
@@ -408,7 +408,7 @@ export const enrichItem = async (item) => {
         chat_cost: Number(response.data.body.chat_cost)
       });
     } else {
-      console.log("No chat_cost response in enrichItem response.")
+      //console.log("No chat_cost response in enrichItem response.")
     }
 
     //console.log("enrichItem Response Obj: " + JSON.stringify(response.data.body));
@@ -625,13 +625,13 @@ export const loadTips = async (isPullDown, item_uuid) => {
     // we'll execute pre-existing logic to look for BE data for the user WITH THE
     // ADDITION of "skipPagination" boolean to deactivate BE pagination for 1.2+ users
     if (cachedTips.length > 0 ) {
-      console.log(`Cached tips found ${cachedTips.length}, returning those to user...`)
+      //console.log(`Cached tips found ${cachedTips.length}, returning those to user...`)
       return { hasMore: false, things: cachedTips };
     } else {
-      console.log("No cached tips found, proceeding with backend lookup for user");
+      //console.log("No cached tips found, proceeding with backend lookup for user");
     }
   } else {
-    console.log("Load called on pull down, executing backend load...");
+    //console.log("Load called on pull down, executing backend load...");
   }
 
   try {
@@ -665,7 +665,7 @@ export const flushTipsCache = async(item_uuid, callback) => {
     const storageKey = `${TIP_LIST_KEY_PREFIX}_${item_uuid}`;
     //console.log('Generated Tips AsyncStorage key: ' + storageKey);
     await AsyncStorage.removeItem(storageKey);
-    console.log("Tips cache flushed for storage key " + storageKey);
+    //console.log("Tips cache flushed for storage key " + storageKey);
     if (callback) {
       callback();
     }
@@ -992,7 +992,7 @@ export const loadLocalListLastCachedPage = async(doneFilterString) => {
       ? OPEN_ITEM_LIST_LAST_LOADED_PAGE_KEY
       : DONE_ITEM_LIST_LAST_LOADED_PAGE_KEY;
     const lastCachedPageNumStr = await AsyncStorage.getItem(key);
-    console.log(`loadLocalListLastCachedPage: ${doneFilterString}) Last Cached Page (${lastCachedPageNumStr})`);
+    //console.log(`loadLocalListLastCachedPage: ${doneFilterString}) Last Cached Page (${lastCachedPageNumStr})`);
     if (lastCachedPageNumStr) {
       return Number(lastCachedPageNumStr);
     } else {
@@ -1053,7 +1053,7 @@ const updateLocalListLastCachedPage = async(doneFilterString, page) => {
       ? OPEN_ITEM_LIST_LAST_LOADED_PAGE_KEY
       : DONE_ITEM_LIST_LAST_LOADED_PAGE_KEY;
     await AsyncStorage.setItem(key, `${page}`);
-    console.log(`updateLocalListLastCachedPage: ${doneFilterString}) Last Cached Page (${page})`);
+    //console.log(`updateLocalListLastCachedPage: ${doneFilterString}) Last Cached Page (${page})`);
   } catch (e) {
     console.log("updateLocalListLastCachedPage", e);
   }
