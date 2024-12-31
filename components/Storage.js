@@ -102,9 +102,37 @@ const BLOCKUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amaz
 const UPDATEUSERNAME_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateUsername_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateUsername';
 
-// 1.2  This function updated to load items from local cache if isPullDown == false
-//      and load from DB if isPullDown == true.  
-//      -- page parameter removed from loadItems signature
+const LOADCOMMUNITYITEMS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadCommunityItems_Dev'
+                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadCommunityItems';
+
+
+export const loadCommunityItems = async(requestedPage) => {
+  try {
+    const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserStr) {
+      console.log("Received null local anon Id, aborting loadItems!");
+      return { hasMore: false, items: [] };
+    }
+    const localUser = JSON.parse(localUserStr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(LOADCOMMUNITYITEMS_URL,
+      {
+        anonymous_id : localAnonId,
+        page: requestedPage                                                                         
+      }
+    );
+    const item_array = response.data.body.items;
+    const hasMore = response.data.body.hasMore;
+
+    return { hasMore: hasMore, items: item_array};
+  } catch (error) {
+    console.error('Error calling loadCommunityItems API:', error);
+  }
+}                          
+
+
+
+
 export const DONE_ITEM_FILTER_ONLY_OPEN_PARENTS = "onlyOpenParents";
 export const DONE_ITEM_FILTER_ONLY_DONE_PARENTS = "onlyDoneParents";
 export const loadItems = async (isPullDown, requestedPage, doneFilterString = null) => {

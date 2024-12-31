@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { StyleSheet, View, ActivityIndicator } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { loadCommunityItems } from "@/components/Storage";
+import { useEffect, useRef, useState } from "react";
+import { StyleSheet, View, ActivityIndicator, FlatList, Text } from "react-native";
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 const CommunityScreen = () => {
 
@@ -9,14 +10,25 @@ const CommunityScreen = () => {
     const initialLoadAnimatedOpacity = useAnimatedStyle(() => {
         return { opacity: initialLoadFadeInOpacity.value }
     })
+    const [communityItems, setCommunityItems] = useState(null);
+    const [page, setPage] = useState(1);
+    const hasMoreItems = useRef(false);
 
-    useEffect(() => {
-        console.log("Community.useEffect([])");
-        initialLoadFadeInOpacity.value = withTiming(1, { duration: 300});
-        return () => {
-            console.log("Community.useEffect([]) cleanup");
-            initialLoadFadeInOpacity.value = withTiming(0, { duration: 300}); 
+    useEffect(() => {  
+        const initializeCommunityScreen = async() => {
+            await new Promise<void>((resolve) => 
+                initialLoadFadeInOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                    if (isFinished) {
+                        runOnJS(resolve)();
+                    }
+                }));
+            
+            const responseObj = await loadCommunityItems(page);
+            hasMoreItems.current = responseObj.hasMore;
+            console.log("Community Items: " + JSON.stringify(responseObj.items));
+            setCommunityItems([...responseObj.items])
         }
+        initializeCommunityScreen();
     }, []);
     
 
@@ -33,11 +45,13 @@ const CommunityScreen = () => {
     })
     return (
         <View style={styles.container}>
-            {(!screenInitialized) ?
+            {(!communityItems) ?
                 <Animated.View style={[styles.initialLoadAnimContainer, initialLoadAnimatedOpacity]}>
                     <ActivityIndicator size={"large"} color="#3E3723" />
                 </Animated.View>
-                : <></>
+                :       <FlatList data={communityItems}
+                            renderItem={({item}) => <Text>{item.text}</Text> }
+                            keyExtractor={item => `${item.user.name}_${item.text}`} />
             }
         </View>
     )
