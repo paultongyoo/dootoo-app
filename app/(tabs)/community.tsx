@@ -6,7 +6,7 @@ import { ThumbUp } from "@/components/svg/thumb-up";
 import { UserCircle } from "@/components/svg/user-circle";
 import { UserRound } from "@/components/svg/user-round";
 import { useEffect, useRef, useState } from "react";
-import { StyleSheet, View, ActivityIndicator, FlatList, Text, Alert, Pressable } from "react-native";
+import { StyleSheet, View, ActivityIndicator, FlatList, Text, Alert, Pressable, RefreshControl } from "react-native";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 const CommunityScreen = () => {
@@ -18,25 +18,83 @@ const CommunityScreen = () => {
     })
     const [communityItems, setCommunityItems] = useState(null);
     const [page, setPage] = useState(1);
+    const [refreshKey, setRefreshKey] = useState(1);
+    const [refreshing, setRefreshing] = useState(false);
     const hasMoreItems = useRef(false);
+    const nextPageLoadingOpacity = useSharedValue(0);
+    const nextPageAnimatedOpacity = useAnimatedStyle(() => {
+        return { opacity: nextPageLoadingOpacity.value }
+    })
 
-    useEffect(() => {  
-        const initializeCommunityScreen = async() => {
-            await new Promise<void>((resolve) => 
+    useEffect(() => {
+        const initializeCommunityScreen = async () => {
+            await new Promise<void>((resolve) =>
                 initialLoadFadeInOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
                     if (isFinished) {
                         runOnJS(resolve)();
                     }
                 }));
-            
+
             const responseObj = await loadCommunityItems(page);
             hasMoreItems.current = responseObj.hasMore;
-            console.log("Community Items: " + JSON.stringify(responseObj.items));
             setCommunityItems([...responseObj.items])
         }
         initializeCommunityScreen();
     }, []);
-    
+
+    const initialPageMount = useRef(true);
+    useEffect(() => {
+        if (initialPageMount.current) {
+            initialPageMount.current = false;
+        } else {
+            const updateCommunityPage = async (requestedPage) => {
+                const responseObj = await loadCommunityItems(requestedPage);
+                hasMoreItems.current = responseObj.hasMore;
+
+                await new Promise<void>((resolve) => {
+                    nextPageLoadingOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+                        if (isFinished) {
+                            runOnJS(resolve)();
+                        }
+                    })
+                })
+
+                if (requestedPage == 1) {
+                    setCommunityItems([...responseObj.items])
+                } else {
+                    setCommunityItems(prevItems => [
+                        ...responseObj.items,
+                        ...prevItems
+                    ]);
+                }
+                setRefreshing(false);
+            }
+            updateCommunityPage(page);
+        }
+    }, [page, refreshKey])
+
+    const refreshList = () => {
+        if (page != 1) {
+            setPage(1);
+        } else {
+            setRefreshKey(prevVal => prevVal + 1);
+        }
+    }
+
+    const loadNextPage = async () => {
+        if (hasMoreItems.current) {
+            await new Promise<void>((resolve) => {
+                nextPageLoadingOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                    if (isFinished) {
+                        runOnJS(resolve)();
+                    }
+                })
+            })
+            setPage(prevPage => prevPage + 1);
+        } else {
+            console.log(`Ignoring onEndReached call as user doesn't have more items to return`);
+        }
+    }
 
     const styles = StyleSheet.create({
         container: {
@@ -77,7 +135,7 @@ const CommunityScreen = () => {
             flexDirection: 'row'
         },
         timeAgoContainer: {
- 
+
         },
         timeAgo: {
             fontSize: 12,
@@ -124,7 +182,7 @@ const CommunityScreen = () => {
         }
     })
 
-    const renderItem = ({item, index, separators}) => {
+    const renderItem = ({ item, index, separators }) => {
 
         const handleMoreTap = () => {
             Alert.alert("Implement More Menu for item " + item.text);
@@ -139,7 +197,7 @@ const CommunityScreen = () => {
                 <View style={styles.header}>
                     <View style={styles.profile}>
                         <View style={styles.profileIcon}>
-                            <CircleUserRound wxh="32" color="#556B2F"/>
+                            <CircleUserRound wxh="32" color="#556B2F" />
                         </View>
                         <View style={styles.profileNameContainer}>
                             <Text style={styles.profileNameText}>
@@ -162,7 +220,7 @@ const CommunityScreen = () => {
                 </View>
                 <View style={styles.textContainer}>
                     <Text style={styles.textLine}>{item.text}</Text>
-                    { item.children.map((child) => (
+                    {item.children.map((child) => (
                         <View style={styles.textSubLine}>
                             <Text style={styles.bullet}>{'\u2022'}</Text>
                             <Text style={styles.textLine}>{child.text}</Text>
@@ -171,8 +229,8 @@ const CommunityScreen = () => {
                 </View>
                 <View style={styles.bottomActions}>
                     <Pressable style={styles.actionContainer}
-                               onPress={handleReact}>
-                        <ThumbUp wxh="20" color="#556B2F"/>
+                        onPress={handleReact}>
+                        <ThumbUp wxh="20" color="#556B2F" />
                         <Text style={styles.actionLabel}>Like</Text>
                     </Pressable>
                 </View>
@@ -180,17 +238,37 @@ const CommunityScreen = () => {
         )
     }
 
-
-
     return (
         <View style={styles.container}>
             {(!communityItems) ?
                 <Animated.View style={[styles.initialLoadAnimContainer, initialLoadAnimatedOpacity]}>
                     <ActivityIndicator size={"large"} color="#3E3723" />
                 </Animated.View>
-                :       <FlatList data={communityItems}
-                            renderItem={renderItem}
-                            keyExtractor={item => `${item.user.name}_${item.text}`} />
+                : <FlatList data={communityItems}
+                    renderItem={renderItem}
+                    keyExtractor={item => `${item.user.name}_${item.text}`}
+                    refreshControl={
+                        <RefreshControl
+                            tintColor="#3E3723"
+                            onRefresh={() => {
+                                setRefreshing(true);
+                                refreshList();
+                            }}
+                            refreshing={refreshing} />
+                    }
+                    onEndReached={({ distanceFromEnd }) => {
+                        if (distanceFromEnd > 0) {
+                            loadNextPage();
+                        }
+                    }}
+                    onEndReachedThreshold={0.1}
+                    ListFooterComponent={
+                        <View style={{ paddingTop: 10 }}>
+                            <Animated.View style={nextPageAnimatedOpacity}>
+                                <ActivityIndicator size={"small"} color="#3E3723" />
+                            </Animated.View>
+                        </View>}
+                />
             }
         </View>
     )
