@@ -1175,7 +1175,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         const revealListIfLastRowRendered = () => {
 
             if (currentlyTappedThing.current && currentlyTappedThing.current.uuid == item.uuid) {
-                console.log("Attempting to display text input of animated row: " + item.text);
+                //console.log("Attempting to display text input of animated row: " + item.text);
                 renderTappedField.current = true;
                 setRefreshKey(prev => prev + 1);
             }
@@ -1186,7 +1186,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             //  we can afford janky animations the user won't be able to see)
             // 1.3 Needed to include Math.min op to "ensure" boolean was set for long lists
             if (getIndex() == Math.min(15, listArray.length - 1)) {
-                console.log("Setting boolean indicating first list has been rendered");
+                //console.log("Setting boolean indicating first list has been rendered");
                 firstListRendered.value = true;
             }
         }
