@@ -6,16 +6,17 @@ import { EllipsisVertical } from "@/components/svg/ellipsis-vertical";
 import { ThumbUp } from "@/components/svg/thumb-up";
 import { UserCircle } from "@/components/svg/user-circle";
 import { UserRound } from "@/components/svg/user-round";
-import { useEffect, useRef, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, View, ActivityIndicator, FlatList, Text, Alert, Pressable, RefreshControl } from "react-native";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 const CommunityScreen = () => {
 
     const [screenInitialized, setScreenInitialized] = useState(false);
-    const initialLoadFadeInOpacity = useSharedValue(0);
-    const initialLoadAnimatedOpacity = useAnimatedStyle(() => {
-        return { opacity: initialLoadFadeInOpacity.value }
+    const opacity = useSharedValue(0);
+    const animatedOpacity = useAnimatedStyle(() => {
+        return { opacity: opacity.value }
     })
     const [communityItems, setCommunityItems] = useState(null);
     const [page, setPage] = useState(1);
@@ -28,20 +29,71 @@ const CommunityScreen = () => {
     })
 
     useEffect(() => {
-        const initializeCommunityScreen = async () => {
-            await new Promise<void>((resolve) =>
-                initialLoadFadeInOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
-                    if (isFinished) {
-                        runOnJS(resolve)();
-                    }
-                }));
 
-            const responseObj = await loadCommunityItems(page);
-            hasMoreItems.current = responseObj.hasMore;
-            setCommunityItems([...responseObj.items])
+        // The following logic is used to initialize the screen
+        // on first render as well as for re-looking for items if screen was empty (see useFocusEffect)
+        if (!communityItems) {
+            initializeCommunityScreen();
+        } else {
+            if (opacity.value == 0) {
+                const fadeInList = async () => {
+                    await new Promise<void>((resolve) =>
+                        opacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                            if (isFinished) {
+                                runOnJS(resolve)();
+                            }
+                        }));
+                }
+                fadeInList();
+            }
         }
-        initializeCommunityScreen();
-    }, []);
+    }, [communityItems]);
+
+    const initializeCommunityScreen = async () => {
+        console.log("initializeCommunityScreen");
+
+        // Fade in layout, which is ASSumed to be displaying loading animation
+        await new Promise<void>((resolve) =>
+            opacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                if (isFinished) {
+                    runOnJS(resolve)();
+                }
+            }));
+
+        const responseObj = await loadCommunityItems(page);
+        hasMoreItems.current = responseObj.hasMore;
+
+        // Fade out layout, which is ASSumed to be displaying loading animation
+        await new Promise<void>((resolve) =>
+            opacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+                if (isFinished) {
+                    runOnJS(resolve)();
+                }
+            }));
+
+        // Update array
+        setCommunityItems([...responseObj.items])
+    }
+
+    const reinitializeCommunityScreen = async () => {
+        console.log("reinitializeCommunityScreen");
+        await new Promise<void>((resolve) =>
+            opacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+                if (isFinished) {
+                    runOnJS(resolve)();
+                }
+            }));
+        setCommunityItems(null);    // Intentionally re-invoke initializeCommunityScreen logic
+    }
+
+    useFocusEffect(
+        useCallback(() => {
+            //console.log("communityItems.length: " + communityItems.length);
+            if (communityItems.length == 0) {
+                reinitializeCommunityScreen();
+            }
+        }, [])
+    )
 
     const initialPageMount = useRef(true);
     useEffect(() => {
@@ -53,6 +105,16 @@ const CommunityScreen = () => {
                 hasMoreItems.current = responseObj.hasMore;
 
                 if (requestedPage == 1) {
+
+                    if (responseObj.items.length == 0) {
+                        await new Promise<void>((resolve) =>
+                            opacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+                                if (isFinished) {
+                                    runOnJS(resolve)();
+                                }
+                            }));
+                    }
+
                     setCommunityItems([...responseObj.items])
                 } else {
 
@@ -103,7 +165,10 @@ const CommunityScreen = () => {
             backgroundColor: '#DCC7AA',
             flex: 1
         },
-        initialLoadAnimContainer: {
+        animatedContainer: {
+            flex: 1,
+        },
+        loadingAnimContainer: {
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center'
@@ -182,6 +247,17 @@ const CommunityScreen = () => {
             fontSize: 14,
             color: '#556B2F',
             paddingHorizontal: 10
+        },
+        emptyListContainer: {
+            flex: 1,
+            justifyContent: 'center',
+            paddingLeft: 30,
+            paddingRight: 40
+        },
+        emptyListText: {
+            color: "#3e2723",
+            fontSize: 50,
+            lineHeight: 58
         }
     })
 
@@ -242,39 +318,44 @@ const CommunityScreen = () => {
     }
 
     return (
-        <View style={styles.container}>
-            {(!communityItems) ?
-                <Animated.View style={[styles.initialLoadAnimContainer, initialLoadAnimatedOpacity]}>
-                    <ActivityIndicator size={"large"} color="#3E3723" />
-                </Animated.View>
-                : (communityItems.length > 0) ?
-                    <FlatList data={communityItems}
-                    renderItem={renderItem}
-                    keyExtractor={item => `${item.user.name}_${item.text}`}
-                    refreshControl={
-                        <RefreshControl
-                            tintColor="#3E3723"
-                            onRefresh={() => {
-                                setRefreshing(true);
-                                refreshList();
+        <Animated.View style={styles.container}>
+            <Animated.View style={[styles.animatedContainer, animatedOpacity]}>
+                {(!communityItems) ?
+                    <View style={styles.loadingAnimContainer}>
+                        <ActivityIndicator size={"large"} color="#3E3723" />
+                    </View>
+                    : (communityItems.length > 0) ?
+                        <FlatList data={communityItems}
+                            renderItem={renderItem}
+                            keyExtractor={item => `${item.user.name}_${item.text}`}
+                            refreshControl={
+                                <RefreshControl
+                                    tintColor="#3E3723"
+                                    onRefresh={() => {
+                                        setRefreshing(true);
+                                        refreshList();
+                                    }}
+                                    refreshing={refreshing} />
+                            }
+                            onEndReached={({ distanceFromEnd }) => {
+                                if (distanceFromEnd > 0) {
+                                    loadNextPage();
+                                }
                             }}
-                            refreshing={refreshing} />
-                    }
-                    onEndReached={({ distanceFromEnd }) => {
-                        if (distanceFromEnd > 0) {
-                            loadNextPage();
-                        }
-                    }}
-                    onEndReachedThreshold={0.1}
-                    ListFooterComponent={
-                        <View style={{ paddingTop: 10 }}>
-                            <Animated.View style={nextPageAnimatedOpacity}>
-                                <ActivityIndicator size={"small"} color="#3E3723" />
-                            </Animated.View>
-                        </View>}
-                /> : <DootooCommunityEmptyUX />
-            }
-        </View>
+                            onEndReachedThreshold={0.1}
+                            ListFooterComponent={
+                                <View style={{ paddingTop: 10 }}>
+                                    <Animated.View style={nextPageAnimatedOpacity}>
+                                        <ActivityIndicator size={"small"} color="#3E3723" />
+                                    </Animated.View>
+                                </View>}
+                        /> 
+                        : <View style={styles.emptyListContainer}>
+                            <Text style={styles.emptyListText}>Be the first to share your goals with the community!</Text>
+                        </View>
+                }
+            </Animated.View>
+        </Animated.View>
     )
 }
 
