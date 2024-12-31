@@ -1,4 +1,4 @@
-import { View, Text, Platform, ActivityIndicator, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Platform, ActivityIndicator, Pressable, StyleSheet, Alert } from 'react-native';
 import { formatNumber } from './Helpers';
 import Toast from 'react-native-toast-message';
 import { useContext, useEffect, useState } from 'react';
@@ -10,9 +10,10 @@ import { flushTipsCache } from './Storage';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { Bulb } from './svg/bulb';
 import { UserRound } from './svg/user-round';
+import { UsersRound } from './svg/users-round';
 
 
-const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
+const DootooItemSidebar = ({ thing, disabled = false }) => {
     const router = useRouter();
     const pathname = usePathname();
     const { anonymousId, setSelectedItem, itemCountsMap } = useContext(AppContext);
@@ -24,6 +25,8 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
     const [similarCount, setSimilarCount] = 
         useState((itemCountsMap.current && itemCountsMap.current.get(thing.uuid)) ? itemCountsMap.current.get(thing.uuid).similar_count : null);
 
+    const [isPublic, setIsPublic] = useState(thing.is_public == true);
+
     // Update v1.1.1:  Experimenting with not displaying loading anim on item level now that race condition is solved
     const [loading, setLoading] = useState(false);
 
@@ -32,96 +35,40 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
     //     return { opacity: opacitySV.value }
     // })
 
-    useEffect(() => {
-        //console.log("Inside useEffect([]) " + thing.text + " " + Date.now());
+    // 1.7 TODO: Reactivate on community reaction count updates
+    // useEffect(() => {
+    //     //console.log("Inside useEffect([]) " + thing.text + " " + Date.now());
 
-        const eventHandler_countsPolled = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, (uuidArray) => {
-            if (itemCountsMap.current && uuidArray.includes(thing.uuid)) {
-                const updatedCounts = itemCountsMap.current.get(thing.uuid);
-                setTipCount(updatedCounts.tip_count);
-                setSimilarCount(updatedCounts.similar_count); 
-                // opacitySV.value = withTiming(1, {
-                //     duration: 300
-                // });
-            }
-        });
+    //     const eventHandler_countsPolled = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, (uuidArray) => {
+    //         if (itemCountsMap.current && uuidArray.includes(thing.uuid)) {
+    //             const updatedCounts = itemCountsMap.current.get(thing.uuid);
+    //             setTipCount(updatedCounts.tip_count);
+    //             setSimilarCount(updatedCounts.similar_count); 
+    //             // opacitySV.value = withTiming(1, {
+    //             //     duration: 300
+    //             // });
+    //         }
+    //     });
 
-        return () => {
-            eventHandler_countsPolled.remove();
-            // opacitySV.value = withTiming(0, {
-            //     duration: 300
-            // });
-        }
-    }, []);
+    //     return () => {
+    //         eventHandler_countsPolled.remove();
+    //         // opacitySV.value = withTiming(0, {
+    //         //     duration: 300
+    //         // });
+    //     }
+    // }, []);
 
-    const handleSimilarCountTap = () => {
-        amplitude.track(`Item Similar Count Tapped`, {
-            anonymous_id: anonymousId,
-            pathname: pathname,
-            uuid: thing.uuid,
-            similarCount: similarCount,
-            tipCount: tipCount
-        });
-
-        Toast.show({
-            type: 'msgWithLink',
-            text1: `${similarCount} ${(similarCount > 1) ? 'people' : 'person'} had similar thing`,
-            position: 'bottom',
-            bottomOffset: (Platform.OS == 'ios') ? 280 : 260,
-            props: {
-                width: 230
-            }
-        });
-    }
-
-    const handleTipCountTap = () => {
-        amplitude.track(`Item Tip Count Tapped`, {
-            anonymous_id: anonymousId,
-            pathname: pathname,
-            uuid: thing.uuid,
-            similarCount: similarCount,
-            tipCount: tipCount
-        });
-
-        if (thing.is_done) {
-            goToTips();
-        } else {
-            flushTipsCache(thing.uuid, goToTips);
-        }
-    }
-
-    const goToTips = () => {
-        setSelectedItem(thing);
-        router.push(TIPS_PATHNAME);           
+    const handleIsPublicTap = () => {
+        setIsPublic(prevVal => !prevVal);
     }
 
     const sidebarStyles = StyleSheet.create({
         itemCountsRefreshingAnimContainer: {
             justifyContent: 'center'
         },
-        similarCountContainer: {
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'row',
-            paddingLeft: 15
-          },
-          similarCountText: {
-            fontSize: 15,
-            marginRight: 10
-          },
-          tipCountText: {
-            fontSize: 15,
-            marginRight: 8
-          },
-          tipCountContainer: {
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'row'
-          },
-          tipIconContainer: {
-            position: 'relative',
-            top: -2
-          }
+        isPublicContainer: {
+
+        }
     })
 
     // Update v1.1.1:  Experimenting with not displaying loading anim on item level now that race condition is solved
@@ -133,28 +80,23 @@ const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
         );
     } else {
         const greenColorSV = useSharedValue("#556B2F")
-        return (
-            <Animated.View style={[/*opacityAnimatedStyle,*/ { flexDirection: 'row' }]}>
-                {(tipCount || thing.is_done) ?
+
+        if (!thing.parent_item_uuid) {
+            return (
+                <Animated.View style={[/*opacityAnimatedStyle,*/ { flexDirection: 'row' }]}>
                     <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
-                        disabled={disabled || (pathname == TIPS_PATHNAME)}
-                        style={sidebarStyles.tipCountContainer}
-                        onPress={() => handleTipCountTap()}>
-                        <Text style={sidebarStyles.tipCountText}>{formatNumber(tipCount) || '0'}</Text>
-                        <View style={sidebarStyles.tipIconContainer}>
-                            <Bulb wxh="20" opacity="0.8" color="#556B2F" />
-                        </View>
-                    </Pressable> : <></>}
-                {(similarCount) ?
-                    <Pressable hitSlop={{ top: 10, bottom: 10, right: 10 }}
-                        disabled={disabled}
-                        style={sidebarStyles.similarCountContainer}
-                        onPress={() => handleSimilarCountTap()}>
-                        <Text style={sidebarStyles.similarCountText}>{formatNumber(similarCount)}</Text>
-                        <UserRound wxh="18" opacity="0.8" color={greenColorSV} />
-                    </Pressable> : <></>}
-            </Animated.View>
-        );
+                        style={sidebarStyles.isPublicContainer}
+                        onPress={() => handleIsPublicTap()}>
+                        <UsersRound 
+                            wxh="20" 
+                            opacity={(isPublic) ? "1.0" : "0.3"}
+                            color={greenColorSV} />
+                    </Pressable> 
+                </Animated.View> 
+            );
+        } else {
+            return <></>
+        }
     }
 };
 
