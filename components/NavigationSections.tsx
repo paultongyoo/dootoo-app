@@ -3,14 +3,14 @@ import { formatNumber } from "./Helpers";
 import { CircleCheck } from "./svg/circle-check";
 import { List } from "./svg/list";
 import { UserRound } from "./svg/user-round";
-import Animated, { Easing, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
+import Animated, { Easing, runOnJS, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
 import { useContext, useEffect, useState } from "react";
 import { ProfileCountEventEmitter } from "./EventEmitters";
 import { loadUsername } from "./Storage";
 import { AppContext } from "./AppContext";
 import { UsersRound } from "./svg/users-round";
 
-const NavigationSections = ({navigation}) => {
+const NavigationSections = ({ navigation }) => {
 
     const { username, doneCount, setDoneCount, tipCount, setTipCount } = useContext(AppContext);
     const [refreshKey, setRefreshKey] = useState(0);
@@ -50,6 +50,13 @@ const NavigationSections = ({navigation}) => {
         }
     }, [username])
 
+    const navigateToSection = (idx) => {
+        navigation.navigate((idx == 0) ? 'open'
+            : (idx == 1) ? 'community'
+            : (idx == 2) ? 'done' 
+            : 'profile');
+    }
+
     const listIconColor = useSharedValue("#3e2723");
     const doneIconColor = useSharedValue("#3e2723");
     const profileIconColor = useSharedValue("#3e2723");
@@ -62,19 +69,19 @@ const NavigationSections = ({navigation}) => {
         barTranslateX.value = withTiming(sectionIndex * 80, {
             duration: 150,
             easing: Easing.out(Easing.exp)
+        }, (isFinished) => {
+            if (isFinished) {
+                // 1.6 KNOWN ISSUE Colors aren't changing, at least on Android
+                //
+                //console.log("sectionIndex value: " + sectionIndex);
+                // listIconColor.value = withTiming((sectionIndex == 0) ? "#556b2f" : "#3e2723", { duration: 500 });
+                // communityIconColor.value = withTiming((sectionIndex == 1) ? "#556b2f" : "#3e2723", { duration: 500 });
+                // doneIconColor.value = withTiming((sectionIndex == 2) ? "#556b2f" : "#3e2723", { duration: 500 });
+                // profileIconColor.value = withTiming((sectionIndex == 3) ? "#556b2f" : "#3e2723", { duration: 500 });  
+
+                runOnJS(navigateToSection)(sectionIndex);
+            }
         });
-
-        // 1.6 KNOWN ISSUE Colors aren't changing, at least on Android
-        //
-        //console.log("sectionIndex value: " + sectionIndex);
-        listIconColor.value = withTiming((sectionIndex == 0) ? "#556b2f" : "#3e2723", { duration: 500 });
-        communityIconColor.value = withTiming((sectionIndex == 1) ? "#556b2f" : "#3e2723", { duration: 500 });
-        doneIconColor.value = withTiming((sectionIndex == 2) ? "#556b2f" : "#3e2723", { duration: 500 });
-        profileIconColor.value = withTiming((sectionIndex == 3) ? "#556b2f" : "#3e2723", { duration: 500 });  
-
-        navigation.navigate((sectionIndex == 0) ? 'open'
-                                : (sectionIndex == 1) ? 'community'
-                                : (sectionIndex == 2) ? 'done' : 'profile');
     }
 
     // Pulse the badge on every change of doneCount, even on
