@@ -20,9 +20,9 @@ const DootooItemSidebar = ({ thing, disabled = false }) => {
 
     const TIPS_PATHNAME = '/(tabs)/tips';
 
-    const [tipCount, setTipCount] = 
+    const [tipCount, setTipCount] =
         useState((itemCountsMap.current && itemCountsMap.current.get(thing.uuid)) ? itemCountsMap.current.get(thing.uuid).tip_count : null);
-    const [similarCount, setSimilarCount] = 
+    const [similarCount, setSimilarCount] =
         useState((itemCountsMap.current && itemCountsMap.current.get(thing.uuid)) ? itemCountsMap.current.get(thing.uuid).similar_count : null);
 
     const [isPublic, setIsPublic] = useState(thing.is_public == true);
@@ -59,7 +59,93 @@ const DootooItemSidebar = ({ thing, disabled = false }) => {
     // }, []);
 
     const handleIsPublicTap = () => {
-        setIsPublic(prevVal => !prevVal);
+        amplitude.track("Item Go Public Prompt Displayed", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+        if (!isPublic) {
+            Alert.alert(
+                "Share Item with the Community?",
+                "Share this item on the Community Feed to stay motivated, get support, and inspire others working on similar goals.",
+                [
+                    {
+                        text: 'Cancel',
+                        onPress: () => {
+                            amplitude.track("Item Go Public Prompt Cancelled", {
+                                anonymous_id: anonymousId,
+                                pathname: pathname
+                            });
+                        },
+                        style: 'cancel'
+                    },
+                    {
+                        text: 'Yes',
+                        onPress: () => {
+                            amplitude.track("Item Go Public Prompt Approved", {
+                                anonymous_id: anonymousId,
+                                pathname: pathname
+                            });
+                            setIsPublic(true);
+                            Alert.alert(
+                                "Item Posted to the Community",
+                                "Thanks for sharing.  Let's get to work!",
+                                [
+                                    {
+                                        text: 'Go to Post',
+                                        onPress: () => {
+                                            amplitude.track("Item Go Public Success: Went to Post", {
+                                                anonymous_id: anonymousId,
+                                                pathname: pathname
+                                            });
+                                        }
+                                    },
+                                    {
+                                        text: 'Close',
+                                        onPress: () => {
+                                            amplitude.track("Item Go Public Success: Closed", {
+                                                anonymous_id: anonymousId,
+                                                pathname: pathname
+                                            });                                           
+                                        },
+                                    }
+                                ]
+                            )
+                        },
+                    },
+                ]
+            )
+        } else {
+            amplitude.track("Item Hide from Public Prompt Displayed", {
+                anonymous_id: anonymousId,
+                pathname: pathname
+            });
+            Alert.alert(
+                "Hide Item from the Community?",
+                "The item will no longer display in the Community Feed. ",
+                [
+                    {
+                        text: 'Cancel',
+                        onPress: () => {
+                            amplitude.track("Item Hide from Public Prompt Cancelled", {
+                                anonymous_id: anonymousId,
+                                pathname: pathname
+                            });
+                        },
+                        style: 'cancel'
+                    },
+                    {
+                        text: 'Yes',
+                        onPress: () => {
+                            amplitude.track("Item Hide from Public Prompt Approved", {
+                                anonymous_id: anonymousId,
+                                pathname: pathname
+                            });
+                            setIsPublic(false);
+                        },
+                    },
+                ]
+            )
+        }
     }
 
     const sidebarStyles = StyleSheet.create({
@@ -87,12 +173,12 @@ const DootooItemSidebar = ({ thing, disabled = false }) => {
                     <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
                         style={sidebarStyles.isPublicContainer}
                         onPress={() => handleIsPublicTap()}>
-                        <UsersRound 
-                            wxh="20" 
+                        <UsersRound
+                            wxh="20"
                             opacity={(isPublic) ? "1.0" : "0.3"}
                             color={greenColorSV} />
-                    </Pressable> 
-                </Animated.View> 
+                    </Pressable>
+                </Animated.View>
             );
         } else {
             return <></>
