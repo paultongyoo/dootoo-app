@@ -247,21 +247,17 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         const loadResponse = await loadAllThings(isPullDown, currentPage.current);
 
         let things = loadResponse.things || [];
-        const hasMore = loadResponse.hasMore;
-        currentPage.current = loadResponse.lastPageLoaded;
+        const hasMore = loadResponse.hasMore;  
         
         console.log(`${thingName}: DB load returned ${things.length} item(s) and hasMore is ${hasMore}`);
-        console.log(`${thingName}: CurrentPage updated to last page loaded: ${currentPage.current}`);
 
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
         hasMoreThings.current = hasMore;
 
-        setRefreshing(false);
-
         // If we're loading the first page, assume we want to reset the displays list to only the first page
         // (e.g. on a pull-down-to-refresh action).  If page > 1, assume we want to append the page to what's currently
         // displayed.
-        if ((currentPage.current == 1) || isPullDown) {
+        if (currentPage.current == 1) {
             console.log(`${thingName}: (Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
 
             // 1.3 Deactivated fade in animation to prevent flicker on launch
@@ -291,6 +287,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
   
             listArraySetter((prevItems) => prevItems.concat(things));
         }
+
+        currentPage.current = loadResponse.lastPageLoaded;
+        console.log(`${thingName}: CurrentPage updated to last page loaded: ${currentPage.current}`);
+
+        setRefreshing(false);
     }
 
     function handleThingDrag(newData: unknown[], fromIndex, toIndex, draggedThing) {
