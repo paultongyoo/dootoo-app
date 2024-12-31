@@ -186,6 +186,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     }, [listArray]);
 
     const refreshThingCounts = async () => {
+
+        // 1.7 Deactivated with new community MVP!
+        return;
+        
         let ignore = false;
         if (!ignore) {
             ignore = true;
