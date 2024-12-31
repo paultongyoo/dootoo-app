@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, View, ActivityIndicator } from "react-native";
-import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 const CommunityScreen = () => {
 
     const [screenInitialized, setScreenInitialized] = useState(false);
     const initialLoadFadeInOpacity = useSharedValue(0);
+    const initialLoadAnimatedOpacity = useAnimatedStyle(() => {
+        return { opacity: initialLoadFadeInOpacity.value }
+    })
 
     useEffect(() => {
         console.log("Community.useEffect([])");
@@ -31,7 +34,7 @@ const CommunityScreen = () => {
     return (
         <View style={styles.container}>
             {(!screenInitialized) ?
-                <Animated.View style={[styles.initialLoadAnimContainer, { opacity: initialLoadFadeInOpacity }]}>
+                <Animated.View style={[styles.initialLoadAnimContainer, initialLoadAnimatedOpacity]}>
                     <ActivityIndicator size={"large"} color="#3E3723" />
                 </Animated.View>
                 : <></>
