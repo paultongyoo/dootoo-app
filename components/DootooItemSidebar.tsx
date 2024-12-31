@@ -10,7 +10,7 @@ import { UsersRound } from './svg/users-round';
 
 const DootooItemSidebar = ({ thing }) => {
     const pathname = usePathname();
-    const { anonymousId } = useContext(AppContext);
+    const { anonymousId, setOpenItems } = useContext(AppContext);
 
     const [isPublic, setIsPublic] = useState(thing.is_public == true);
 
@@ -69,8 +69,13 @@ const DootooItemSidebar = ({ thing }) => {
                                 anonymous_id: anonymousId,
                                 pathname: pathname
                             });
-                            setIsPublic(true);
-                            updateItemPublicState(thing.uuid, true);                          
+                            
+                            setOpenItems(prevItems => prevItems.map((prevItem) => 
+                                (prevItem.uuid == thing.uuid)
+                                    ? { ...prevItem, is_public: true }
+                                    : prevItem  ));
+                            updateItemPublicState(thing.uuid, true);    
+
                             Alert.alert(
                                 "Item Posted to the Community",
                                 "Thanks for sharing.  Let's get to work!",
@@ -125,7 +130,11 @@ const DootooItemSidebar = ({ thing }) => {
                                 anonymous_id: anonymousId,
                                 pathname: pathname
                             });
-                            setIsPublic(false);
+                            
+                            setOpenItems(prevItems => prevItems.map((prevItem) => 
+                                (prevItem.uuid == thing.uuid)
+                                    ? { ...prevItem, is_public: false }
+                                    : prevItem  ));                            
                             updateItemPublicState(thing.uuid, false);
                         },
                     },
