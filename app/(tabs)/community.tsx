@@ -1,3 +1,4 @@
+import DootooCommunityEmptyUX from "@/components/DootooCommunityEmptyUX";
 import { timeAgo } from "@/components/Helpers";
 import { loadCommunityItems } from "@/components/Storage";
 import { CircleUserRound } from "@/components/svg/circle-user-round";
@@ -51,17 +52,18 @@ const CommunityScreen = () => {
                 const responseObj = await loadCommunityItems(requestedPage);
                 hasMoreItems.current = responseObj.hasMore;
 
-                await new Promise<void>((resolve) => {
-                    nextPageLoadingOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
-                        if (isFinished) {
-                            runOnJS(resolve)();
-                        }
-                    })
-                })
-
                 if (requestedPage == 1) {
                     setCommunityItems([...responseObj.items])
                 } else {
+
+                    await new Promise<void>((resolve) => {
+                        nextPageLoadingOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+                            if (isFinished) {
+                                runOnJS(resolve)();
+                            }
+                        })
+                    })
+
                     setCommunityItems(prevItems => [
                         ...responseObj.items,
                         ...prevItems
@@ -171,6 +173,7 @@ const CommunityScreen = () => {
         },
         actionContainer: {
             justifyContent: 'center',
+            alignItems: 'center',
             flexDirection: 'row',
             padding: 10
         },
@@ -244,7 +247,8 @@ const CommunityScreen = () => {
                 <Animated.View style={[styles.initialLoadAnimContainer, initialLoadAnimatedOpacity]}>
                     <ActivityIndicator size={"large"} color="#3E3723" />
                 </Animated.View>
-                : <FlatList data={communityItems}
+                : (communityItems.length > 0) ?
+                    <FlatList data={communityItems}
                     renderItem={renderItem}
                     keyExtractor={item => `${item.user.name}_${item.text}`}
                     refreshControl={
@@ -268,7 +272,7 @@ const CommunityScreen = () => {
                                 <ActivityIndicator size={"small"} color="#3E3723" />
                             </Animated.View>
                         </View>}
-                />
+                /> : <DootooCommunityEmptyUX />
             }
         </View>
     )
