@@ -9,8 +9,10 @@ import * as amplitude from '@amplitude/analytics-react-native';
 const DONE_COUNT_KEY = "user_done_count";
 const TIP_COUNT_KEY = "user_tip_count";
 const USER_OBJ_KEY = "user_obj";
-export const ITEM_LIST_KEY = "item_list";
+export const OPEN_ITEM_LIST_KEY = "open_item_list";
 export const DONE_ITEM_LIST_KEY = "done_item_list";
+const OPEN_ITEM_LIST_LAST_LOADED_PAGE_KEY = "open_item_list_last_page";
+const DONE_ITEM_LIST_LAST_LOADED_PAGE_KEY = "done_item_list_last_page";
 const TIP_LIST_KEY_PREFIX = "tip_list_";    // Append item UUID to key
 
 const CREATEUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev' 
@@ -105,12 +107,14 @@ const UPDATEUSERNAME_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2
 //      -- page parameter removed from loadItems signature
 export const DONE_ITEM_FILTER_ONLY_OPEN_PARENTS = "onlyOpenParents";
 export const DONE_ITEM_FILTER_ONLY_DONE_PARENTS = "onlyDoneParents";
-export const loadItems = async (isPullDown, page, doneFilterString = null) => {
+export const loadItems = async (isPullDown, requestedPage, doneFilterString = null) => {
   //console.log(`loadItems: isPullDown ${isPullDown}, page ${page}, doneFilterString: ${doneFilterString}`);
   
   // Load local items from cache (or empty list) if
-  // not called from pulldown (i.e. on first and return launches of app
-  if (page == 1 && !isPullDown) {
+  // not called from pulldown (i.e. on first and return launches of app.
+  // Assume we only want to check cache when the caller requests page == 1 (i.e. on initialization).
+  // Requests for any other page will call the backend.
+  if (requestedPage == 1 && !isPullDown) {
     const cachedItems = (doneFilterString == DONE_ITEM_FILTER_ONLY_DONE_PARENTS) 
                            ? await loadDoneItemsCache()
                            : await loadItemsCache();
@@ -121,13 +125,17 @@ export const loadItems = async (isPullDown, page, doneFilterString = null) => {
     if (cachedItems.length > 0 ) {
       console.log(`Cached items found ${cachedItems.length}, returning those to user...`)
 
+      // Since we're pulling from cache, retrieve the last loaded page number for the UI to increment from
+      // if the user scrolls down to retrieve more items
+      const lastCachedPage = await loadLocalListLastCachedPage(doneFilterString);
+
       // set hasMore to true to always allow scrolls after cached data to check for more data
-      return { hasMore: true, things: cachedItems };  
+      return { hasMore: true, things: cachedItems, lastPageLoaded: lastCachedPage };  
     } else {
       console.log(doneFilterString + ": No cached items found, proceeding with backend lookup for user");
     }
-  } else if (page != 1) {
-    console.log("Next page being requested by app, pulling from backend...");
+  } else if (requestedPage != 1) {
+    console.log(`Page ${requestedPage} being requested by app, pulling from backend...`);
   } else {
     console.log("Load called on pull down, executing backend load...");
   }
@@ -143,7 +151,7 @@ export const loadItems = async (isPullDown, page, doneFilterString = null) => {
     const response = await axios.post(LOADITEMS_URL,
       {
         anonymous_id : localAnonId,
-        page: page,                          
+        page: requestedPage,                          
         skipCounts: true,
         onlyOpenParents: (doneFilterString == DONE_ITEM_FILTER_ONLY_OPEN_PARENTS),    //  Added in 1.6 for "list" screen
         onlyDoneParents: (doneFilterString == DONE_ITEM_FILTER_ONLY_DONE_PARENTS) //  Added in 1.6 for "done" screen                                                                           
@@ -151,7 +159,13 @@ export const loadItems = async (isPullDown, page, doneFilterString = null) => {
     );
     const item_array = response.data.body.items;
     const hasMore = response.data.body.hasMore;
-    return { hasMore: hasMore, things: item_array };
+
+    // Save Requested Page number to local storage so that subsequent
+    // launches of app can reset page number state to the requested page number
+    // to resume pulling next page if user continues to scroll downwards
+    updateLocalListLastCachedPage(doneFilterString, requestedPage);    // Async
+
+    return { hasMore: hasMore, things: item_array, lastPageLoaded: requestedPage};
   } catch (error) {
     console.error('Error calling loadItems API:', error);
   }
@@ -162,7 +176,7 @@ export const updateItemsCache = async(item_list_obj) => {
     if (item_list_obj) {
       console.log(`Updating Open items cache with ${(item_list_obj) ? item_list_obj.length : 0} size list.`);
       const item_list_str = JSON.stringify(item_list_obj);
-      await AsyncStorage.setItem(ITEM_LIST_KEY, item_list_str);
+      await AsyncStorage.setItem(OPEN_ITEM_LIST_KEY, item_list_str);
     } else {
       //console.log("Update items cache based null param, ignoring call (was this unexpected?");
     }
@@ -205,7 +219,7 @@ export const areItemsCached = async(cacheKeyStr = null) => {
   try {
     if (cacheKeyStr == null) {
       throw new Error("Null cache key provided");
-    } else if ((cacheKeyStr != DONE_ITEM_LIST_KEY) && (cacheKeyStr != ITEM_LIST_KEY)) {
+    } else if ((cacheKeyStr != DONE_ITEM_LIST_KEY) && (cacheKeyStr != OPEN_ITEM_LIST_KEY)) {
       throw new Error("Unrecognized item list cache key");
     }
     return await AsyncStorage.getItem(cacheKeyStr) != null;
@@ -972,6 +986,23 @@ export const saveUserLocally = async(user_obj) => {
   }
 }
 
+export const loadLocalListLastCachedPage = async(doneFilterString) => {
+  try {
+    const key = (doneFilterString == OPEN_ITEM_LIST_KEY) 
+      ? OPEN_ITEM_LIST_LAST_LOADED_PAGE_KEY
+      : DONE_ITEM_LIST_LAST_LOADED_PAGE_KEY;
+    const lastCachedPageNumStr = await AsyncStorage.getItem(key);
+    console.log(`loadLocalListLastCachedPage: ${doneFilterString}) Last Cached Page (${lastCachedPageNumStr})`);
+    if (lastCachedPageNumStr) {
+      return Number(lastCachedPageNumStr);
+    } else {
+      return '<Should not happen>'
+    }
+  } catch (e) {
+    console.log("loadLocalListLastCachedPage", e);
+  }
+}
+
 // ******** BEGIN Non-EXPORTED METHODS *********
 
 const loadLocalUser = async() => {
@@ -1013,6 +1044,18 @@ const updateLocalUserCounts = async(updatedUser) => {
     //console.log(`Updated local counts: Done Count (${doneCount}) Tip Count (${tipCount})`);
   } catch (e) {
     //console.log("Error updated user counts in local storage.", e);
+  }
+}
+
+const updateLocalListLastCachedPage = async(doneFilterString, page) => {
+  try {
+    const key = (doneFilterString == OPEN_ITEM_LIST_KEY) 
+      ? OPEN_ITEM_LIST_LAST_LOADED_PAGE_KEY
+      : DONE_ITEM_LIST_LAST_LOADED_PAGE_KEY;
+    await AsyncStorage.setItem(key, `${page}`);
+    console.log(`updateLocalListLastCachedPage: ${doneFilterString}) Last Cached Page (${page})`);
+  } catch (e) {
+    console.log("updateLocalListLastCachedPage", e);
   }
 }
 
@@ -1133,7 +1176,7 @@ const loadDoneItemsCache = async () => {
 const loadItemsCache = async () => {
   try {
     
-    const items_list_str = await AsyncStorage.getItem(ITEM_LIST_KEY);
+    const items_list_str = await AsyncStorage.getItem(OPEN_ITEM_LIST_KEY);
     //console.log("loadItemsCache: " + items_list_str);
     return (items_list_str) ? JSON.parse(items_list_str) : [];
   } catch (e) {

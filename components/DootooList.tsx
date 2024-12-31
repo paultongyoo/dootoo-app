@@ -9,7 +9,7 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
-import { enrichItem, loadItemsCounts, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
+import { enrichItem, loadItemsCounts, loadLocalListLastCachedPage, OPEN_ITEM_LIST_KEY, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
@@ -20,6 +20,7 @@ import { Bulb } from './svg/bulb';
 import { Clock } from './svg/clock';
 import MicButton from './MicButton';
 import KeyboardButton from './KeyboardButton';
+import Animated from 'react-native-reanimated';
 
 export const THINGNAME_ITEM = "item";
 export const THINGNAME_DONE_ITEM = "done_item";
@@ -64,14 +65,17 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const selectedCalendar = useRef();
     const selectedTimerThing = useRef(null);
     const blurredOnSubmit = useRef(false);
-    const isPageLoading = useRef(false);
 
     const firstListRendered = useSharedValue(false);
     const initialLoadFadeInOpacity = useSharedValue(0);
     const listOpacity = useSharedValue(0);
+    const nextPageLoadingOpacity = useSharedValue(0);
+    const nextPageAnimatedOpacity = useAnimatedStyle(() => {
+        return { opacity: nextPageLoadingOpacity.value }
+    });
 
     // 1.6 Reintroducing pagination with the separation of Open and Done lists
-    const [page, setPage] = useState(1);
+    const currentPage = useRef(1);
 
     useEffect(() => {
         //console.log("DootooList.useEffect([])");
@@ -81,7 +85,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             if (shouldInitialLoad) {
                 initialLoadFadeInOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
                     if (isFinished) {
-                        runOnJS(resetListWithFirstPageLoad)();
+                        runOnJS(resetListWithFirstPageLoad)(false);
                     }
                 });
             } else {
@@ -212,68 +216,53 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }
     }
 
-    // 1.2 This function is modified to always execute the page = 1 scenario on all calls,
-    //     whether it is first launch scenario or on refresh pull down
     const resetListWithFirstPageLoad = async (isPullDown = false) => {
-        //console.log(`${thingName}: resetListWithFirstPageLoad, page ${page}`);
-        if (page == 1) {
-            // If current page is already 1, manually invoke LoadThingsForCurrentPage 
-            // as useEffect(page) won't be called
-            loadThingsForCurrentPage(isPullDown);
-         } else {
-             //console.log("Setting page var to 1 to trigger loadThingsForCurrentPage().")
-             setPage(1);
-         }
+        currentPage.current = 1;
+        loadThingsForCurrentPage(isPullDown);
     };
 
-    const isInitialPageMount = useRef(true);
-    useEffect(() => {
-        //console.log("useEffect(page) called for pathname " + Date.now());
-        if (isInitialPageMount.current) {
-            isInitialPageMount.current = false;
-        } else {
-
-            // Assume if on effect page == 1 then the page was reset by pulldown
-            loadThingsForCurrentPage(page == 1);
-        }
-    }, [page]);
-
-    const loadNextPage = () => {
+    const loadNextPage = async () => {
         //console.log("loadNextPage called");
         if (hasMoreThings.current) {
-            if (!isRefreshing && !isPageLoading.current) {
-                //console.log(`List end reached, incrementing current page var (currently ${page}).`);
-                isPageLoading.current = true;
-                setPage((prevPage) => prevPage + 1);
-            } else {
-                //console.log(`Ignoring pull down action as page ${page} currently loading or full list is refreshing.`);
-            }
+                console.log(`${thingName}: List end reached, incrementing current page var (currently ${currentPage.current}).`);
+                
+                await new Promise<void>((resolve) => {
+                    nextPageLoadingOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                        if (isFinished) {
+                            runOnJS(resolve)();
+                        }
+                    })
+                })
+
+                currentPage.current = currentPage.current + 1;
+                loadThingsForCurrentPage(false);
         } else {
-            //console.log(`Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
+            console.log(`${thingName}: Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
         }
     };
 
     const loadThingsForCurrentPage = async (isPullDown = false) => {
-        //console.log(`${thingName}: Calling loadAllThings(page) with page = ${page}.`);
+        console.log(`${thingName}: Calling loadAllThings with currentPage = ${currentPage.current}.`);
 
-        const loadResponse = await loadAllThings(isPullDown, page);
+        const loadResponse = await loadAllThings(isPullDown, currentPage.current);
 
         let things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;
-
-        //console.log(`DB load returned ${things.length} item(s) and hasMore is ${hasMore}`);
+        currentPage.current = loadResponse.lastPageLoaded;
+        
+        console.log(`${thingName}: DB load returned ${things.length} item(s) and hasMore is ${hasMore}`);
+        console.log(`${thingName}: CurrentPage updated to last page loaded: ${currentPage.current}`);
 
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
         hasMoreThings.current = hasMore;
 
-        isPageLoading.current = false;
         setRefreshing(false);
 
         // If we're loading the first page, assume we want to reset the displays list to only the first page
         // (e.g. on a pull-down-to-refresh action).  If page > 1, assume we want to append the page to what's currently
         // displayed.
-        if (page == 1) {
-            //console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
+        if ((currentPage.current == 1) || isPullDown) {
+            console.log(`${thingName}: (Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
 
             // 1.3 Deactivated fade in animation to prevent flicker on launch
             // if (isPullDown) {
@@ -286,10 +275,20 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             //fadeInListOnRender.current = true;
 
             //console.log("Loading page 1 outside of pulldown refresh, simply fading in list");
+            //console.log("Outputting Things: " + JSON.stringify(things));
             listArraySetter([...things]);
             // }
         } else {
-            //console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
+            console.log(`${thingName}: Appending ${things.length} ${thingName}(s) from page ${currentPage.current} to current list.`)
+            
+            await new Promise<void>((resolve) => {
+                nextPageLoadingOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+                    if (isFinished) {
+                        runOnJS(resolve)();
+                    }
+                })
+            })
+  
             listArraySetter((prevItems) => prevItems.concat(things));
         }
     }
@@ -1795,7 +1794,9 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                                 ListFooterComponent={
                                     <Pressable onPress={handleBelowListTap} style={{ paddingTop: 10 }}>
-                                        {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />}
+                                        <Animated.View style={nextPageAnimatedOpacity}>
+                                            <ActivityIndicator size={"small"} color="#3E3723" />
+                                        </Animated.View>
                                         <View style={{ height: 110 }} />
                                     </Pressable>}
                             />
