@@ -47,6 +47,7 @@ export const handler = async (event) => {
       },
       select: {
         is_done: true,
+        is_public: true,
         uuid: true,
         text: true,
         scheduled_datetime_utc: true,
@@ -195,7 +196,6 @@ export const handler = async (event) => {
 
   //console.log("Retrieved Items prior to orphan removal: " + JSON.stringify(retrievedItems));
 
-  // 1.7 Future TODO Revise orphan logic for paginated result set
   // HACK ALERT:  Move any orphaned items to top of the list
   //              The UI was built to prevent orphans but they're still occurring occassionally.  
   //              Race conditions maybe?
