@@ -120,7 +120,9 @@ export const loadItems = async (isPullDown, page, doneFilterString = null) => {
     // we'll execute pre-existing logic to look for BE data for the user
     if (cachedItems.length > 0 ) {
       console.log(`Cached items found ${cachedItems.length}, returning those to user...`)
-      return { hasMore: false, things: cachedItems };
+
+      // set hasMore to true to always allow scrolls after cached data to check for more data
+      return { hasMore: true, things: cachedItems };  
     } else {
       console.log(doneFilterString + ": No cached items found, proceeding with backend lookup for user");
     }
