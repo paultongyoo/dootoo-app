@@ -1,6 +1,6 @@
 import Svg, { Path, Circle } from "react-native-svg";
 
-
+// https://lucide.dev/icons/circle-user-round
 export const CircleUserRound = ({wxh, color, opacity="1.0", strokeWidth="2"}) => (
     <Svg width={wxh} height={wxh} viewBox="0 0 24 24" 
          fill="none" stroke={color} opacity={opacity}

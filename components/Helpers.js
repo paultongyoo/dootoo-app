@@ -42,6 +42,11 @@ export const isThingOverdue = (thing) => {
   return utcDateTime < now;
 }
 
+export const timeAgo = (utcDateString) => {
+  const date = DateTime.fromISO(utcDateString);
+  return date.toRelative();
+}
+
 export const momentFromNow = (thing) => {
   const scheduled_datetime_utc = thing.scheduled_datetime_utc;
   return formatLocalizedTime(scheduled_datetime_utc);
