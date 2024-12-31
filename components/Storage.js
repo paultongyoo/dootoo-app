@@ -46,6 +46,9 @@ const UPDATEITEMSCHEDULE_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-ea
 const UPDATEITEMEVENTID_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemEventId_Dev'
                                      : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemEventId';
 
+const UPDATEITEMPUBLICSTATE_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemPublicState_Dev'
+                                     : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemPublicState';
+
 const SAVENEWITEM_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveNewItem_Dev'
                                   : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveNewItem';    // Plan to deprecate
 
@@ -786,6 +789,28 @@ export const updateItemEventId = async(item_uuid, event_id) => {
     //console.log("updateItemEventId Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateItemEventId API:', error);
+  }
+}
+
+export const updateItemPublicState = async(item_uuid, new_public_state) => {
+  try {
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(UPDATEITEMPUBLICSTATE_URL,
+      {
+        anonymous_id : localAnonId,
+        item_uuid: item_uuid,
+        is_public: new_public_state
+      }
+    );
+    //console.log("updateItemPublicState Response Obj: " + JSON.stringify(response.data.body));
+  } catch (error) {
+    console.error('Error calling updateItemPublicState API:', error);
   }
 }
 

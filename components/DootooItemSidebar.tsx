@@ -6,7 +6,7 @@ import { AppContext } from './AppContext';
 import { usePathname, useRouter } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter } from "@/components/EventEmitters";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { flushTipsCache } from './Storage';
+import { flushTipsCache, updateItemPublicState } from './Storage';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { Bulb } from './svg/bulb';
 import { UserRound } from './svg/user-round';
@@ -80,12 +80,13 @@ const DootooItemSidebar = ({ thing, disabled = false }) => {
                     },
                     {
                         text: 'Yes',
-                        onPress: () => {
+                        onPress: async () => {
                             amplitude.track("Item Go Public Prompt Approved", {
                                 anonymous_id: anonymousId,
                                 pathname: pathname
                             });
                             setIsPublic(true);
+                            updateItemPublicState(thing.uuid, true);                          
                             Alert.alert(
                                 "Item Posted to the Community",
                                 "Thanks for sharing.  Let's get to work!",
@@ -141,6 +142,7 @@ const DootooItemSidebar = ({ thing, disabled = false }) => {
                                 pathname: pathname
                             });
                             setIsPublic(false);
+                            updateItemPublicState(thing.uuid, false);
                         },
                     },
                 ]
