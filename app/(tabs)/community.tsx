@@ -9,6 +9,7 @@ import { ThumbUp } from "@/components/svg/thumb-up";
 import { useFocusEffect, usePathname } from "expo-router";
 import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { StyleSheet, View, ActivityIndicator, FlatList, Text, Alert, Pressable, RefreshControl } from "react-native";
+import Modal from "react-native-modal";
 import * as amplitude from '@amplitude/analytics-react-native';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
@@ -16,7 +17,8 @@ const CommunityScreen = () => {
     const pathname = usePathname();
     const [communityItems, setCommunityItems] = useState(null);
     const { username, anonymousId, setOpenItems } = useContext(AppContext);
-    const communityItemRefs = useRef({});
+    const [itemModalVisible, setItemModalVisible] = useState(false);
+    const modalItem = useRef(null);
 
     const opacity = useSharedValue(0);
     const animatedOpacity = useAnimatedStyle(() => {
@@ -262,17 +264,20 @@ const CommunityScreen = () => {
             lineHeight: 48
         },
         moreOverlay: {
-            position: 'absolute',
-            right: 10,
+            // position: 'absolute',
+            // right: 10,
             backgroundColor: '#FAF3E0',
             borderRadius: 5,
-            width: 170,
+            width: '100%',
             paddingHorizontal: 10,
             paddingVertical: 5
         },
         moreOverlayOption: {
             flexDirection: 'row',
-            padding: 10
+            paddingHorizontal: 10,
+            paddingVertical: 15,
+            justifyContent: 'center',
+            alignItems: 'center'
         },
         moreOverlayOptionIcon: {
 
@@ -288,114 +293,15 @@ const CommunityScreen = () => {
         },
     })
 
-    const RenderItem = forwardRef(({ item, index, separators }, ref) => {
+    const RenderItem = ({ item, index, separators }) => {
 
-        const [moreOverlayVisible, setMoreOverlayVisible] = useState(false);
-
-        useImperativeHandle(ref, () => ({
-            hideMoreMenu: () => {
-                setMoreOverlayVisible(false)
-            }
-        }));
-
-        const handleMoreTap = () => {
-            closeAllMoreMenus(item.uuid);
-            setMoreOverlayVisible(true);
+        const handleMoreTap = (item) => {
+            modalItem.current = item;
+            setItemModalVisible(true);
         }
 
         const handleReact = () => {
             Alert.alert("Implement Reaction for item " + item.text);
-        }
-
-        const handleHideFromCommunity = () => {
-            Alert.alert(
-                "Hide Item from the Community?",
-                "The item will no longer display in the Community Feed. ",
-                [
-                    {
-                        text: 'Cancel',
-                        onPress: () => {
-                            amplitude.track("Item Hide from Public Prompt Cancelled", {
-                                anonymous_id: anonymousId,
-                                pathname: pathname
-                            });
-                        },
-                        style: 'cancel'
-                    },
-                    {
-                        text: 'Yes',
-                        onPress: () => {
-                            amplitude.track("Item Hide from Public Prompt Approved", {
-                                anonymous_id: anonymousId,
-                                pathname: pathname
-                            });
-
-                            setCommunityItems(prevItems =>
-                                prevItems.filter(prevItem => prevItem.uuid != item.uuid));
-                            setOpenItems(prevItems => prevItems.map((prevItem) =>
-                                (prevItem.uuid == item.uuid)
-                                    ? { ...prevItem, is_public: false }
-                                    : prevItem));
-                            updateItemPublicState(item.uuid, false);
-                        },
-                    },
-                ]
-            )
-        }
-
-        const handleHideUser = () => {
-            amplitude.track("Hide User Prompt Displayed", {
-                anonymous_id: anonymousId,
-                pathname: pathname
-            });
-            Alert.alert(
-                `Hide All Posts by ${item.user.name}?`,
-                "This currently cannot be undone. ",
-                [
-                    {
-                        text: 'Cancel',
-                        onPress: () => {
-                            amplitude.track("Hide User Prompt Cancelled", {
-                                anonymous_id: anonymousId,
-                                pathname: pathname
-                            });
-                        },
-                        style: 'cancel'
-                    },
-                    {
-                        text: 'Yes',
-                        onPress: async () => {
-                            amplitude.track("Hide User Prompt Approved", {
-                                anonymous_id: anonymousId,
-                                pathname: pathname
-                            });
-
-                            const wasBlockSuccessful = await blockUser(item.user.name, "hide_user");
-                            if (wasBlockSuccessful) {
-
-                                amplitude.track("Block Profile Blocked", {
-                                    anonymous_id: anonymousId,
-                                    pathname: pathname,
-                                    name: item.user.name
-                                });
-
-                                setCommunityItems(prevItems =>
-                                    prevItems.filter(prevItem => prevItem.user.name != item.user.name));
-
-                            } else {
-                                Alert.alert(
-                                    "Unexpected error occurred", 
-                                    "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
-                                    amplitude.track("Block Profile Unexpected Error", {
-                                        anonymous_id: anonymousId,
-                                        pathname: pathname,
-                                        name: item.user.name
-                                    });  
-                            }
-                        },
-                    },
-                ]
-            )
         }
 
         return (
@@ -418,67 +324,9 @@ const CommunityScreen = () => {
                             </Text>
                         </View>
                         <View style={styles.moreIconContainer}>
-                            <Pressable hitSlop={10} onPress={handleMoreTap}>
+                            <Pressable hitSlop={10} onPress={() => handleMoreTap(item)}>
                                 <EllipsisVertical wxh="20" color="#556B2F" />
                             </Pressable>
-                            <View style={[styles.moreOverlay,
-                            {
-                                opacity: (moreOverlayVisible) ? 1 : 0,
-                                zIndex: (moreOverlayVisible) ? 99 : -99
-                            }]}>
-                                {(username == item.user.name)
-                                    ? <Pressable hitSlop={10}
-                                        style={({ pressed }) => [
-                                            styles.moreOverlayOption,
-                                            pressed && { backgroundColor: '#e0e0e0' }]}
-                                        onPress={handleHideFromCommunity}>
-                                        <View style={styles.moreOverlayOptionIcon}>
-                                            <EyeOff wxh="20" color="#3e2723" />
-                                        </View>
-                                        <View style={styles.moreOverlayOptionTextContainer}>
-                                            <Text style={styles.moreOverlayOptionText}>Hide from Community</Text>
-                                        </View>
-                                    </Pressable>
-                                    : <>
-                                        <Pressable hitSlop={10}
-                                            style={({ pressed }) => [
-                                                styles.moreOverlayOption,
-                                                pressed && { backgroundColor: '#3e372310' }]}
-                                            onPress={handleHideUser}>
-                                            <View style={styles.moreOverlayOptionIcon}>
-                                                <EyeOff wxh="20" color="#3e2723" />
-                                            </View>
-                                            <View style={styles.moreOverlayOptionTextContainer}>
-                                                <Text style={styles.moreOverlayOptionText}>Hide User</Text>
-                                            </View>
-                                        </Pressable>
-                                        <Pressable hitSlop={10}
-                                            style={({ pressed }) => [
-                                                styles.moreOverlayOption,
-                                                pressed && { backgroundColor: '#3e372310' }]}
-                                            onPress={() => Alert.alert("Implement Me")}>
-                                            <View style={styles.moreOverlayOptionIcon}>
-                                                <Flag wxh="20" color="#3e2723" />
-                                            </View>
-                                            <View style={styles.moreOverlayOptionTextContainer}>
-                                                <Text style={styles.moreOverlayOptionText}>Report User</Text>
-                                            </View>
-                                        </Pressable>
-                                        <Pressable hitSlop={10}
-                                            style={({ pressed }) => [
-                                                styles.moreOverlayOption,
-                                                pressed && { backgroundColor: '#3e372310' }]}
-                                            onPress={() => Alert.alert("Implement Me")}>
-                                            <View style={styles.moreOverlayOptionIcon}>
-                                                <Flag wxh="20" color="#3e2723" />
-                                            </View>
-                                            <View style={styles.moreOverlayOptionTextContainer}>
-                                                <Text style={styles.moreOverlayOptionText}>Report Post</Text>
-                                            </View>
-                                        </Pressable>
-                                    </>
-                                }
-                            </View>
                         </View>
                     </View>
                 </View>
@@ -500,19 +348,172 @@ const CommunityScreen = () => {
                 </View>
             </View>
         )
-    });
-
-    const closeAllMoreMenus = (current_item_uuid) => {
-        //console.log(`closeAllMoreMenus: ${JSON.stringify(communityItemRefs.current)}`);
-        for (const uuid in communityItemRefs.current) {
-            if ((uuid != current_item_uuid) && communityItemRefs.current.hasOwnProperty(uuid)) {
-                communityItemRefs.current[uuid].hideMoreMenu();
-            }
-        }
     };
 
+    const handleHideFromCommunity = () => {
+        const item = modalItem.current;
+
+        Alert.alert(
+            "Hide Item from the Community?",
+            "The item will no longer display in the Community Feed. ",
+            [
+                {
+                    text: 'Cancel',
+                    onPress: () => {
+                        amplitude.track("Item Hide from Public Prompt Cancelled", {
+                            anonymous_id: anonymousId,
+                            pathname: pathname
+                        });
+                    },
+                    style: 'cancel'
+                },
+                {
+                    text: 'Yes',
+                    onPress: () => {
+                        amplitude.track("Item Hide from Public Prompt Approved", {
+                            anonymous_id: anonymousId,
+                            pathname: pathname
+                        });
+
+                        setCommunityItems(prevItems =>
+                            prevItems.filter(prevItem => prevItem.uuid != item.uuid));
+                        setOpenItems(prevItems => prevItems.map((prevItem) =>
+                            (prevItem.uuid == item.uuid)
+                                ? { ...prevItem, is_public: false }
+                                : prevItem));
+                        updateItemPublicState(item.uuid, false);
+                    },
+                },
+            ]
+        )
+    }
+
+    const handleHideUser = () => {
+        amplitude.track("Hide User Prompt Displayed", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+
+        const item = modalItem.current;
+
+        Alert.alert(
+            `Hide All Posts by ${item.user.name}?`,
+            "This currently cannot be undone. ",
+            [
+                {
+                    text: 'Cancel',
+                    onPress: () => {
+                        amplitude.track("Hide User Prompt Cancelled", {
+                            anonymous_id: anonymousId,
+                            pathname: pathname
+                        });
+                    },
+                    style: 'cancel'
+                },
+                {
+                    text: 'Yes',
+                    onPress: async () => {
+                        amplitude.track("Hide User Prompt Approved", {
+                            anonymous_id: anonymousId,
+                            pathname: pathname
+                        });
+
+                        const wasBlockSuccessful = await blockUser(item.user.name, "hide_user");
+                        if (wasBlockSuccessful) {
+
+                            amplitude.track("Block Profile Blocked", {
+                                anonymous_id: anonymousId,
+                                pathname: pathname,
+                                name: item.user.name
+                            });
+
+                            setCommunityItems(prevItems =>
+                                prevItems.filter(prevItem => prevItem.user.name != item.user.name));
+
+                        } else {
+                            Alert.alert(
+                                "Unexpected error occurred", 
+                                "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
+                                amplitude.track("Block Profile Unexpected Error", {
+                                    anonymous_id: anonymousId,
+                                    pathname: pathname,
+                                    name: item.user.name
+                                });  
+                        }
+                    },
+                },
+            ]
+        )
+    }
+
+    const ItemModal = () => (
+        <Modal isVisible={itemModalVisible}
+            onBackdropPress={() => { setItemModalVisible(false) }}>
+            {(modalItem.current) ?
+                <View style={styles.moreOverlay}>
+                    {(username == modalItem.current.user.name)
+                        ? <Pressable hitSlop={10}
+                            style={({ pressed }) => [
+                                styles.moreOverlayOption,
+                                pressed && { backgroundColor: '#e0e0e0' }
+                            ]}
+                            onPress={handleHideFromCommunity}>
+                            <View style={styles.moreOverlayOptionIcon}>
+                                <EyeOff wxh="20" color="#3e2723" />
+                            </View>
+                            <View style={styles.moreOverlayOptionTextContainer}>
+                                <Text style={styles.moreOverlayOptionText}>Hide from Community</Text>
+                            </View>
+                        </Pressable>
+                        : <>
+                            <Pressable hitSlop={10}
+                                style={({ pressed }) => [
+                                    styles.moreOverlayOption,
+                                    pressed && { backgroundColor: '#3e372310' }
+                                ]}
+                                onPress={handleHideUser}>
+                                <View style={styles.moreOverlayOptionIcon}>
+                                    <EyeOff wxh="20" color="#3e2723" />
+                                </View>
+                                <View style={styles.moreOverlayOptionTextContainer}>
+                                    <Text style={styles.moreOverlayOptionText}>Hide User</Text>
+                                </View>
+                            </Pressable>
+                            <Pressable hitSlop={10}
+                                style={({ pressed }) => [
+                                    styles.moreOverlayOption,
+                                    pressed && { backgroundColor: '#3e372310' }
+                                ]}
+                                onPress={() => Alert.alert("Implement Me")}>
+                                <View style={styles.moreOverlayOptionIcon}>
+                                    <Flag wxh="20" color="#3e2723" />
+                                </View>
+                                <View style={styles.moreOverlayOptionTextContainer}>
+                                    <Text style={styles.moreOverlayOptionText}>Report User</Text>
+                                </View>
+                            </Pressable>
+                            <Pressable hitSlop={10}
+                                style={({ pressed }) => [
+                                    styles.moreOverlayOption,
+                                    pressed && { backgroundColor: '#3e372310' }
+                                ]}
+                                onPress={() => Alert.alert("Implement Me")}>
+                                <View style={styles.moreOverlayOptionIcon}>
+                                    <Flag wxh="20" color="#3e2723" />
+                                </View>
+                                <View style={styles.moreOverlayOptionTextContainer}>
+                                    <Text style={styles.moreOverlayOptionText}>Report Post</Text>
+                                </View>
+                            </Pressable>
+                        </>}
+                </View>
+                :
+                <Text>No modal item selected!</Text>}
+        </Modal>
+    )
+
     return (
-        <Pressable style={styles.container} onPress={closeAllMoreMenus}>
+        <View style={styles.container}>
             <Animated.View style={[styles.animatedContainer, animatedOpacity]}>
                 {(!communityItems) ?
                     <View style={styles.loadingAnimContainer}>
@@ -521,14 +522,7 @@ const CommunityScreen = () => {
                     : (communityItems.length > 0) ?
                         <FlatList data={communityItems}
                             renderItem={({ item, index, separators }) =>
-                                <RenderItem ref={(ref) => {
-                                    if (ref) {
-                                        communityItemRefs.current[item.uuid] = ref;
-                                    } else {
-                                        delete communityItemRefs.current[item.uuid];
-                                    }
-                                }}
-                                    key={item.uuid} item={item} index={index} separators={separators} />
+                                <RenderItem key={item.uuid} item={item} index={index} separators={separators} />
                             }
                             keyExtractor={item => item.uuid}
                             refreshControl={
@@ -557,8 +551,10 @@ const CommunityScreen = () => {
                             <Text style={styles.emptyListText}>Be the first to share your goals with the community!</Text>
                         </View>
                 }
+
             </Animated.View>
-        </Pressable>
+            <ItemModal />
+        </View>
     )
 }
 
