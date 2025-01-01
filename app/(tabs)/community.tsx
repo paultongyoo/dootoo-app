@@ -148,7 +148,7 @@ const CommunityScreen = () => {
             })
             setPage(prevPage => prevPage + 1);
         } else {
-            console.log(`Ignoring onEndReached call as user doesn't have more items to return`);
+            //console.log(`Ignoring onEndReached call as user doesn't have more items to return`);
         }
     }
 
@@ -459,9 +459,9 @@ const CommunityScreen = () => {
                                         delete communityItemRefs.current[item.uuid];
                                     }
                                 }}
-                                    item={item} index={index} separators={separators} />
+                                    key={item.uuid} item={item} index={index} separators={separators} />
                             }
-                            keyExtractor={item => `${item.user.name}_${item.text}`}
+                            keyExtractor={item => item.uuid}
                             refreshControl={
                                 <RefreshControl
                                     tintColor="#3E3723"
