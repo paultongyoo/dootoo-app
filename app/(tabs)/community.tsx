@@ -364,6 +364,7 @@ const CommunityScreen = () => {
                             anonymous_id: anonymousId,
                             pathname: pathname
                         });
+
                     },
                     style: 'cancel'
                 },
@@ -375,6 +376,7 @@ const CommunityScreen = () => {
                             pathname: pathname
                         });
 
+                        setItemModalVisible(false);
                         setCommunityItems(prevItems =>
                             prevItems.filter(prevItem => prevItem.uuid != item.uuid));
                         setOpenItems(prevItems => prevItems.map((prevItem) =>
