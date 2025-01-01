@@ -175,7 +175,9 @@ const CommunityScreen = () => {
         header: {
             flexDirection: 'row',
             justifyContent: 'space-between',
-            alignItems: 'center'
+            alignItems: 'center',
+            position: 'relative',
+            zIndex: 99
         },
         profile: {
             flexDirection: 'row'
@@ -210,8 +212,7 @@ const CommunityScreen = () => {
             marginLeft: 10,
             marginRight: 20,
             alignItems: 'flex-start',
-            position: 'relative',
-            zIndex: 0
+            zIndex: 1
         },
         textLine: {
             fontSize: 16
@@ -265,22 +266,22 @@ const CommunityScreen = () => {
             right: 10,
             backgroundColor: '#FAF3E0',
             borderRadius: 5,
-            width: 150,
+            width: 170,
             paddingHorizontal: 10,
-            paddingTop: 20,
-            paddingBottom: 5
+            paddingVertical: 5
         },
         moreOverlayOption: {
             flexDirection: 'row',
-            marginBottom: 15
+            padding: 10
         },
         moreOverlayOptionIcon: {
-            paddingHorizontal: 5
+
         },
         moreOverlayOptionTextContainer: {
 
         },
         moreOverlayOptionText: {
+            paddingLeft: 10,
             fontSize: 16,
             fontWeight: 'bold',
             color: '#3e2723'
@@ -371,7 +372,10 @@ const CommunityScreen = () => {
                                 zIndex: (moreOverlayVisible) ? 99 : -99
                             }]}>
                                 {(username == item.user.name)
-                                    ? <Pressable hitSlop={10} style={styles.moreOverlayOption}
+                                    ? <Pressable hitSlop={10} 
+                                        style={({pressed}) => [ 
+                                            styles.moreOverlayOption,
+                                            pressed && { backgroundColor: '#e0e0e0'}]}
                                         onPress={handleHideFromCommunity}>
                                         <View style={styles.moreOverlayOptionIcon}>
                                             <EyeOff wxh="20" color="#3e2723" />
@@ -381,7 +385,10 @@ const CommunityScreen = () => {
                                         </View>
                                     </Pressable>
                                     : <>
-                                        <Pressable hitSlop={10} style={styles.moreOverlayOption}
+                                        <Pressable hitSlop={10}
+                                            style={({pressed}) => [ 
+                                                styles.moreOverlayOption,
+                                                pressed && { backgroundColor: '#3e372310'}]}
                                             onPress={() => Alert.alert("Implement Me")}>
                                             <View style={styles.moreOverlayOptionIcon}>
                                                 <EyeOff wxh="20" color="#3e2723" />
@@ -390,7 +397,10 @@ const CommunityScreen = () => {
                                                 <Text style={styles.moreOverlayOptionText}>Hide User</Text>
                                             </View>
                                         </Pressable>
-                                        <Pressable hitSlop={10} style={styles.moreOverlayOption}
+                                        <Pressable hitSlop={10}
+                                            style={({pressed}) => [ 
+                                                styles.moreOverlayOption,
+                                                pressed && { backgroundColor: '#3e372310'}]}
                                             onPress={() => Alert.alert("Implement Me")}>
                                             <View style={styles.moreOverlayOptionIcon}>
                                                 <Flag wxh="20" color="#3e2723" />
@@ -399,7 +409,10 @@ const CommunityScreen = () => {
                                                 <Text style={styles.moreOverlayOptionText}>Report User</Text>
                                             </View>
                                         </Pressable>
-                                        <Pressable hitSlop={10} style={styles.moreOverlayOption}
+                                        <Pressable hitSlop={10} 
+                                            style={({pressed}) => [ 
+                                                styles.moreOverlayOption,
+                                                pressed && { backgroundColor: '#3e372310'}]}
                                             onPress={() => Alert.alert("Implement Me")}>
                                             <View style={styles.moreOverlayOptionIcon}>
                                                 <Flag wxh="20" color="#3e2723" />
