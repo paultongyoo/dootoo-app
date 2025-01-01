@@ -1,19 +1,21 @@
+import { AppContext } from "@/components/AppContext";
 import { timeAgo } from "@/components/Helpers";
-import { loadCommunityItems } from "@/components/Storage";
+import { loadCommunityItems, updateItemPublicState } from "@/components/Storage";
 import { CircleUserRound } from "@/components/svg/circle-user-round";
 import { EllipsisVertical } from "@/components/svg/ellipsis-vertical";
 import { EyeOff } from "@/components/svg/eye-off";
 import { Flag } from "@/components/svg/flag";
 import { ThumbUp } from "@/components/svg/thumb-up";
-import { useFocusEffect } from "expo-router";
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useFocusEffect, usePathname } from "expo-router";
+import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { StyleSheet, View, ActivityIndicator, FlatList, Text, Alert, Pressable, RefreshControl } from "react-native";
-import { TouchableWithoutFeedback } from "react-native-gesture-handler";
+import * as amplitude from '@amplitude/analytics-react-native';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 const CommunityScreen = () => {
+    const pathname = usePathname();
     const [communityItems, setCommunityItems] = useState(null);
-
+    const { username, anonymousId, setOpenItems } = useContext(AppContext);
     const communityItemRefs = useRef({});
 
     const opacity = useSharedValue(0);
@@ -301,6 +303,42 @@ const CommunityScreen = () => {
             Alert.alert("Implement Reaction for item " + item.text);
         }
 
+        const handleHideFromCommunity = () => {
+ Alert.alert(
+                "Hide Item from the Community?",
+                "The item will no longer display in the Community Feed. ",
+                [
+                    {
+                        text: 'Cancel',
+                        onPress: () => {
+                            amplitude.track("Item Hide from Public Prompt Cancelled", {
+                                anonymous_id: anonymousId,
+                                pathname: pathname
+                            });
+                        },
+                        style: 'cancel'
+                    },
+                    {
+                        text: 'Yes',
+                        onPress: () => {
+                            amplitude.track("Item Hide from Public Prompt Approved", {
+                                anonymous_id: anonymousId,
+                                pathname: pathname
+                            });
+
+                            setCommunityItems(prevItems => 
+                                prevItems.filter(prevItem => prevItem.uuid != item.uuid));                           
+                            setOpenItems(prevItems => prevItems.map((prevItem) => 
+                                (prevItem.uuid == item.uuid)
+                                    ? { ...prevItem, is_public: false }
+                                    : prevItem  ));                            
+                            updateItemPublicState(item.uuid, false);
+                        },
+                    },
+                ]
+            )
+        }
+
         return (
             <View style={styles.itemContainer}>
                 <View style={styles.header}>
@@ -329,33 +367,46 @@ const CommunityScreen = () => {
                                 opacity: (moreOverlayVisible) ? 1 : 0,
                                 zIndex: (moreOverlayVisible) ? 99 : -99
                             }]}>
-                                <Pressable hitSlop={10} style={styles.moreOverlayOption}
-                                    onPress={() => Alert.alert("Implement Me")}>
-                                    <View style={styles.moreOverlayOptionIcon}>
-                                        <EyeOff wxh="20" color="#3e2723" />
-                                    </View>
-                                    <View style={styles.moreOverlayOptionTextContainer}>
-                                        <Text style={styles.moreOverlayOptionText}>Hide User</Text>
-                                    </View>
-                                </Pressable>
-                                <Pressable hitSlop={10} style={styles.moreOverlayOption}
-                                    onPress={() => Alert.alert("Implement Me")}>
-                                    <View style={styles.moreOverlayOptionIcon}>
-                                        <Flag wxh="20" color="#3e2723" />
-                                    </View>
-                                    <View style={styles.moreOverlayOptionTextContainer}>
-                                        <Text style={styles.moreOverlayOptionText}>Report User</Text>
-                                    </View>
-                                </Pressable>
-                                <Pressable hitSlop={10} style={styles.moreOverlayOption}
-                                    onPress={() => Alert.alert("Implement Me")}>
-                                    <View style={styles.moreOverlayOptionIcon}>
-                                        <Flag wxh="20" color="#3e2723" />
-                                    </View>
-                                    <View style={styles.moreOverlayOptionTextContainer}>
-                                        <Text style={styles.moreOverlayOptionText}>Report Post</Text>
-                                    </View>
-                                </Pressable>
+                                {(username == item.user.name)
+                                    ? <Pressable hitSlop={10} style={styles.moreOverlayOption}
+                                        onPress={handleHideFromCommunity}>
+                                        <View style={styles.moreOverlayOptionIcon}>
+                                            <EyeOff wxh="20" color="#3e2723" />
+                                        </View>
+                                        <View style={styles.moreOverlayOptionTextContainer}>
+                                            <Text style={styles.moreOverlayOptionText}>Hide from Community</Text>
+                                        </View>
+                                    </Pressable>
+                                    : <>
+                                        <Pressable hitSlop={10} style={styles.moreOverlayOption}
+                                            onPress={() => Alert.alert("Implement Me")}>
+                                            <View style={styles.moreOverlayOptionIcon}>
+                                                <EyeOff wxh="20" color="#3e2723" />
+                                            </View>
+                                            <View style={styles.moreOverlayOptionTextContainer}>
+                                                <Text style={styles.moreOverlayOptionText}>Hide User</Text>
+                                            </View>
+                                        </Pressable>
+                                        <Pressable hitSlop={10} style={styles.moreOverlayOption}
+                                            onPress={() => Alert.alert("Implement Me")}>
+                                            <View style={styles.moreOverlayOptionIcon}>
+                                                <Flag wxh="20" color="#3e2723" />
+                                            </View>
+                                            <View style={styles.moreOverlayOptionTextContainer}>
+                                                <Text style={styles.moreOverlayOptionText}>Report User</Text>
+                                            </View>
+                                        </Pressable>
+                                        <Pressable hitSlop={10} style={styles.moreOverlayOption}
+                                            onPress={() => Alert.alert("Implement Me")}>
+                                            <View style={styles.moreOverlayOptionIcon}>
+                                                <Flag wxh="20" color="#3e2723" />
+                                            </View>
+                                            <View style={styles.moreOverlayOptionTextContainer}>
+                                                <Text style={styles.moreOverlayOptionText}>Report Post</Text>
+                                            </View>
+                                        </Pressable>
+                                    </>
+                                }
                             </View>
                         </View>
                     </View>
