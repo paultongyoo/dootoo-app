@@ -298,6 +298,7 @@ const CommunityScreen = () => {
         }));
 
         const handleMoreTap = () => {
+            closeAllMoreMenus(item.uuid);
             setMoreOverlayVisible(true);
         }
 
@@ -433,10 +434,10 @@ const CommunityScreen = () => {
         )
     });
 
-    const closeAllMoreMenus = () => {
+    const closeAllMoreMenus = (current_item_uuid) => {
         //console.log(`closeAllMoreMenus: ${JSON.stringify(communityItemRefs.current)}`);
         for (const uuid in communityItemRefs.current) {
-            if (communityItemRefs.current.hasOwnProperty(uuid)) {
+            if ((uuid != current_item_uuid) && communityItemRefs.current.hasOwnProperty(uuid)) {
                 communityItemRefs.current[uuid].hideMoreMenu();
             }
         }
