@@ -102,9 +102,8 @@ const DootooItemSidebar = ({ thing }) => {
                                     }
                                 ]
                             )
-                        },     
-                        style: 'cancel'
-                    },
+                        }
+                    }
                 ]
             )
         } else {
