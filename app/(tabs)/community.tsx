@@ -210,6 +210,8 @@ const CommunityScreen = () => {
             marginLeft: 10,
             marginRight: 20,
             alignItems: 'flex-start',
+            position: 'relative',
+            zIndex: 0
         },
         textLine: {
             fontSize: 16
