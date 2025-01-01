@@ -2,14 +2,19 @@ import { timeAgo } from "@/components/Helpers";
 import { loadCommunityItems } from "@/components/Storage";
 import { CircleUserRound } from "@/components/svg/circle-user-round";
 import { EllipsisVertical } from "@/components/svg/ellipsis-vertical";
+import { EyeOff } from "@/components/svg/eye-off";
+import { Flag } from "@/components/svg/flag";
 import { ThumbUp } from "@/components/svg/thumb-up";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { StyleSheet, View, ActivityIndicator, FlatList, Text, Alert, Pressable, RefreshControl } from "react-native";
+import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 const CommunityScreen = () => {
     const [communityItems, setCommunityItems] = useState(null);
+
+    const communityItemRefs = useRef({});
 
     const opacity = useSharedValue(0);
     const animatedOpacity = useAnimatedStyle(() => {
@@ -195,7 +200,8 @@ const CommunityScreen = () => {
             color: '#808080'
         },
         moreIconContainer: {
-            paddingHorizontal: 5
+            paddingHorizontal: 5,
+            position: 'relative'
         },
         textContainer: {
             marginVertical: 20,
@@ -249,13 +255,46 @@ const CommunityScreen = () => {
             color: "#3e2723",
             fontSize: 40,
             lineHeight: 48
-        }
+        },
+        moreOverlay: {
+            position: 'absolute',
+            right: 10,
+            backgroundColor: '#FAF3E0',
+            borderRadius: 5,
+            width: 150,
+            paddingHorizontal: 10,
+            paddingTop: 20,
+            paddingBottom: 5
+        },
+        moreOverlayOption: {
+            flexDirection: 'row',
+            marginBottom: 15
+        },
+        moreOverlayOptionIcon: {
+            paddingHorizontal: 5
+        },
+        moreOverlayOptionTextContainer: {
+
+        },
+        moreOverlayOptionText: {
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: '#3e2723'
+        },
     })
 
-    const renderItem = ({ item, index, separators }) => {
+    const RenderItem = forwardRef(({ item, index, separators }, ref) => {
+
+        const [moreOverlayVisible, setMoreOverlayVisible] = useState(false);
+
+        useImperativeHandle(ref, () => ({
+            hideMoreMenu: () => {
+                setMoreOverlayVisible(false)
+            }
+        }));
 
         const handleMoreTap = () => {
-            Alert.alert("Implement More Menu for item " + item.text);
+            setMoreOverlayVisible(true);
         }
 
         const handleReact = () => {
@@ -285,6 +324,39 @@ const CommunityScreen = () => {
                             <Pressable hitSlop={10} onPress={handleMoreTap}>
                                 <EllipsisVertical wxh="20" color="#556B2F" />
                             </Pressable>
+                            <View style={[styles.moreOverlay,
+                            {
+                                opacity: (moreOverlayVisible) ? 1 : 0,
+                                zIndex: (moreOverlayVisible) ? 99 : -99
+                            }]}>
+                                <Pressable hitSlop={10} style={styles.moreOverlayOption}
+                                    onPress={() => Alert.alert("Implement Me")}>
+                                    <View style={styles.moreOverlayOptionIcon}>
+                                        <EyeOff wxh="20" color="#3e2723" />
+                                    </View>
+                                    <View style={styles.moreOverlayOptionTextContainer}>
+                                        <Text style={styles.moreOverlayOptionText}>Hide User</Text>
+                                    </View>
+                                </Pressable>
+                                <Pressable hitSlop={10} style={styles.moreOverlayOption}
+                                    onPress={() => Alert.alert("Implement Me")}>
+                                    <View style={styles.moreOverlayOptionIcon}>
+                                        <Flag wxh="20" color="#3e2723" />
+                                    </View>
+                                    <View style={styles.moreOverlayOptionTextContainer}>
+                                        <Text style={styles.moreOverlayOptionText}>Report User</Text>
+                                    </View>
+                                </Pressable>
+                                <Pressable hitSlop={10} style={styles.moreOverlayOption}
+                                    onPress={() => Alert.alert("Implement Me")}>
+                                    <View style={styles.moreOverlayOptionIcon}>
+                                        <Flag wxh="20" color="#3e2723" />
+                                    </View>
+                                    <View style={styles.moreOverlayOptionTextContainer}>
+                                        <Text style={styles.moreOverlayOptionText}>Report Post</Text>
+                                    </View>
+                                </Pressable>
+                            </View>
                         </View>
                     </View>
                 </View>
@@ -292,8 +364,8 @@ const CommunityScreen = () => {
                     <Text style={styles.textLine}>{item.text}</Text>
                     {item.children.map((child) => (
                         <View key={child.uuid} style={styles.textSubLine}>
-                            <Text key={child.uuid} style={styles.bullet}>{'\u2022'}</Text>
-                            <Text key={child.uuid} style={styles.textLine}>{child.text}</Text>
+                            <Text style={styles.bullet}>{'\u2022'}</Text>
+                            <Text style={styles.textLine}>{child.text}</Text>
                         </View>
                     ))}
                 </View>
@@ -306,10 +378,19 @@ const CommunityScreen = () => {
                 </View>
             </View>
         )
-    }
+    });
+
+    const closeAllMoreMenus = () => {
+        //console.log(`closeAllMoreMenus: ${JSON.stringify(communityItemRefs.current)}`);
+        for (const uuid in communityItemRefs.current) {
+            if (communityItemRefs.current.hasOwnProperty(uuid)) {
+                communityItemRefs.current[uuid].hideMoreMenu();
+            }
+        }
+    };
 
     return (
-        <Animated.View style={styles.container}>
+        <Pressable style={styles.container} onPress={closeAllMoreMenus}>
             <Animated.View style={[styles.animatedContainer, animatedOpacity]}>
                 {(!communityItems) ?
                     <View style={styles.loadingAnimContainer}>
@@ -317,7 +398,16 @@ const CommunityScreen = () => {
                     </View>
                     : (communityItems.length > 0) ?
                         <FlatList data={communityItems}
-                            renderItem={renderItem}
+                            renderItem={({ item, index, separators }) =>
+                                <RenderItem ref={(ref) => {
+                                    if (ref) {
+                                        communityItemRefs.current[item.uuid] = ref;
+                                    } else {
+                                        delete communityItemRefs.current[item.uuid];
+                                    }
+                                }}
+                                    item={item} index={index} separators={separators} />
+                            }
                             keyExtractor={item => `${item.user.name}_${item.text}`}
                             refreshControl={
                                 <RefreshControl
@@ -346,7 +436,7 @@ const CommunityScreen = () => {
                         </View>
                 }
             </Animated.View>
-        </Animated.View>
+        </Pressable>
     )
 }
 
