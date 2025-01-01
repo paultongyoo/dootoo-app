@@ -32,6 +32,7 @@ export const handler = async (event) => {
       parent_item_id: null
     },
     select: {
+      uuid: true,
       is_done: true,
       text: true,
       updatedAt: true,
