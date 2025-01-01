@@ -1,6 +1,6 @@
 import { AppContext } from "@/components/AppContext";
 import { timeAgo } from "@/components/Helpers";
-import { loadCommunityItems, updateItemPublicState } from "@/components/Storage";
+import { blockUser, loadCommunityItems, updateItemPublicState } from "@/components/Storage";
 import { CircleUserRound } from "@/components/svg/circle-user-round";
 import { EllipsisVertical } from "@/components/svg/ellipsis-vertical";
 import { EyeOff } from "@/components/svg/eye-off";
@@ -308,7 +308,7 @@ const CommunityScreen = () => {
         }
 
         const handleHideFromCommunity = () => {
- Alert.alert(
+            Alert.alert(
                 "Hide Item from the Community?",
                 "The item will no longer display in the Community Feed. ",
                 [
@@ -330,13 +330,68 @@ const CommunityScreen = () => {
                                 pathname: pathname
                             });
 
-                            setCommunityItems(prevItems => 
-                                prevItems.filter(prevItem => prevItem.uuid != item.uuid));                           
-                            setOpenItems(prevItems => prevItems.map((prevItem) => 
+                            setCommunityItems(prevItems =>
+                                prevItems.filter(prevItem => prevItem.uuid != item.uuid));
+                            setOpenItems(prevItems => prevItems.map((prevItem) =>
                                 (prevItem.uuid == item.uuid)
                                     ? { ...prevItem, is_public: false }
-                                    : prevItem  ));                            
+                                    : prevItem));
                             updateItemPublicState(item.uuid, false);
+                        },
+                    },
+                ]
+            )
+        }
+
+        const handleHideUser = () => {
+            amplitude.track("Hide User Prompt Displayed", {
+                anonymous_id: anonymousId,
+                pathname: pathname
+            });
+            Alert.alert(
+                `Hide All Posts by ${item.user.name}?`,
+                "This currently cannot be undone. ",
+                [
+                    {
+                        text: 'Cancel',
+                        onPress: () => {
+                            amplitude.track("Hide User Prompt Cancelled", {
+                                anonymous_id: anonymousId,
+                                pathname: pathname
+                            });
+                        },
+                        style: 'cancel'
+                    },
+                    {
+                        text: 'Yes',
+                        onPress: async () => {
+                            amplitude.track("Hide User Prompt Approved", {
+                                anonymous_id: anonymousId,
+                                pathname: pathname
+                            });
+
+                            const wasBlockSuccessful = await blockUser(item.user.name, "hide_user");
+                            if (wasBlockSuccessful) {
+
+                                amplitude.track("Block Profile Blocked", {
+                                    anonymous_id: anonymousId,
+                                    pathname: pathname,
+                                    name: item.user.name
+                                });
+
+                                setCommunityItems(prevItems =>
+                                    prevItems.filter(prevItem => prevItem.user.name != item.user.name));
+
+                            } else {
+                                Alert.alert(
+                                    "Unexpected error occurred", 
+                                    "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
+                                    amplitude.track("Block Profile Unexpected Error", {
+                                        anonymous_id: anonymousId,
+                                        pathname: pathname,
+                                        name: item.user.name
+                                    });  
+                            }
                         },
                     },
                 ]
@@ -372,10 +427,10 @@ const CommunityScreen = () => {
                                 zIndex: (moreOverlayVisible) ? 99 : -99
                             }]}>
                                 {(username == item.user.name)
-                                    ? <Pressable hitSlop={10} 
-                                        style={({pressed}) => [ 
+                                    ? <Pressable hitSlop={10}
+                                        style={({ pressed }) => [
                                             styles.moreOverlayOption,
-                                            pressed && { backgroundColor: '#e0e0e0'}]}
+                                            pressed && { backgroundColor: '#e0e0e0' }]}
                                         onPress={handleHideFromCommunity}>
                                         <View style={styles.moreOverlayOptionIcon}>
                                             <EyeOff wxh="20" color="#3e2723" />
@@ -386,10 +441,10 @@ const CommunityScreen = () => {
                                     </Pressable>
                                     : <>
                                         <Pressable hitSlop={10}
-                                            style={({pressed}) => [ 
+                                            style={({ pressed }) => [
                                                 styles.moreOverlayOption,
-                                                pressed && { backgroundColor: '#3e372310'}]}
-                                            onPress={() => Alert.alert("Implement Me")}>
+                                                pressed && { backgroundColor: '#3e372310' }]}
+                                            onPress={handleHideUser}>
                                             <View style={styles.moreOverlayOptionIcon}>
                                                 <EyeOff wxh="20" color="#3e2723" />
                                             </View>
@@ -398,9 +453,9 @@ const CommunityScreen = () => {
                                             </View>
                                         </Pressable>
                                         <Pressable hitSlop={10}
-                                            style={({pressed}) => [ 
+                                            style={({ pressed }) => [
                                                 styles.moreOverlayOption,
-                                                pressed && { backgroundColor: '#3e372310'}]}
+                                                pressed && { backgroundColor: '#3e372310' }]}
                                             onPress={() => Alert.alert("Implement Me")}>
                                             <View style={styles.moreOverlayOptionIcon}>
                                                 <Flag wxh="20" color="#3e2723" />
@@ -409,10 +464,10 @@ const CommunityScreen = () => {
                                                 <Text style={styles.moreOverlayOptionText}>Report User</Text>
                                             </View>
                                         </Pressable>
-                                        <Pressable hitSlop={10} 
-                                            style={({pressed}) => [ 
+                                        <Pressable hitSlop={10}
+                                            style={({ pressed }) => [
                                                 styles.moreOverlayOption,
-                                                pressed && { backgroundColor: '#3e372310'}]}
+                                                pressed && { backgroundColor: '#3e372310' }]}
                                             onPress={() => Alert.alert("Implement Me")}>
                                             <View style={styles.moreOverlayOptionIcon}>
                                                 <Flag wxh="20" color="#3e2723" />
