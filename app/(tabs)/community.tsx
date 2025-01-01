@@ -161,7 +161,8 @@ const CommunityScreen = () => {
         itemContainer: {
             backgroundColor: "#FAF3E099",
             padding: 10,
-            margin: 10,
+            marginTop: 10,
+            marginHorizontal: 10,
             borderRadius: 10
         },
         header: {
