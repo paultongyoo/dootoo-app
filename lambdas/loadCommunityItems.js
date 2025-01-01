@@ -29,7 +29,16 @@ export const handler = async (event) => {
     where: {
       is_deleted: false,
       is_public: true,
-      parent_item_id: null
+      parent_item_id: null,
+      user: {
+        NOT: {
+          blockedBys: {
+            some: {
+              blocking_user_id: user.id, // Exclude items where the user is blocked by the current user
+            },
+          },
+        },
+      }
     },
     select: {
       uuid: true,
