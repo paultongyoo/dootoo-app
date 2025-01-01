@@ -114,7 +114,8 @@ const NavigationSections = ({ navigation }) => {
         sectionIconContainer: {
             position: 'relative',   // For positioning any badging
             paddingRight: 28,       // Keep these synced with currentSectionIndicator margin
-            paddingLeft: 28
+            paddingLeft: 28,
+            top: -2
         },
         currentSectionIndicator: {
             marginLeft: 18,         // Keep these synced with sectionIcon padding
