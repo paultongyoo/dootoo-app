@@ -61,8 +61,7 @@ const DootooItemSidebar = ({ thing }) => {
                                 anonymous_id: anonymousId,
                                 pathname: pathname
                             });
-                        },
-                        style: 'cancel'
+                        }
                     },
                     {
                         text: 'Yes',
@@ -103,7 +102,8 @@ const DootooItemSidebar = ({ thing }) => {
                                     }
                                 ]
                             )
-                        },
+                        },     
+                        style: 'cancel'
                     },
                 ]
             )
