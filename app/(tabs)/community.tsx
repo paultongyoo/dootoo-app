@@ -429,6 +429,7 @@ const CommunityScreen = () => {
                                 name: item.user.name
                             });
 
+                            setItemModalVisible(false);
                             setCommunityItems(prevItems =>
                                 prevItems.filter(prevItem => prevItem.user.name != item.user.name));
 
