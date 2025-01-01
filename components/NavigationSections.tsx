@@ -5,7 +5,7 @@ import { List } from "./svg/list";
 import { UserRound } from "./svg/user-round";
 import Animated, { Easing, runOnJS, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
 import { useContext, useEffect, useState } from "react";
-import { ProfileCountEventEmitter } from "./EventEmitters";
+import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter, ProfileCountEventEmitter } from "./EventEmitters";
 import { loadUsername } from "./Storage";
 import { AppContext } from "./AppContext";
 import { UsersRound } from "./svg/users-round";
@@ -30,9 +30,16 @@ const NavigationSections = ({ navigation }) => {
             }
         });
 
+        const navigation_event_listener = NavigationEventEmitter.addListener(
+            NAVIGATION_EVENT__GO_TO_SECTION, (sectionIndex) => {
+                animateCurrentSectionIndicator(sectionIndex);
+            }
+        )
+
         return () => {
             listener_incr_done.remove();
             listener_descr_done.remove();
+            navigation_event_listener.remove();
         }
     }, [])
 

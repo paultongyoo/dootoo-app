@@ -1,14 +1,16 @@
 import { View, ActivityIndicator, Pressable, StyleSheet, Alert } from 'react-native';
 import { useContext, useState } from 'react';
 import { AppContext } from './AppContext';
-import { usePathname } from 'expo-router';
+import { useNavigation, usePathname } from 'expo-router';
 import Animated, { useSharedValue } from 'react-native-reanimated';
 import { updateItemPublicState } from './Storage';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { UsersRound } from './svg/users-round';
+import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter } from './EventEmitters';
 
 
 const DootooItemSidebar = ({ thing }) => {
+    const COMMUNITY_SECTION_IDX = 1;
     const pathname = usePathname();
     const { anonymousId, setOpenItems } = useContext(AppContext);
 
@@ -87,6 +89,7 @@ const DootooItemSidebar = ({ thing }) => {
                                                 anonymous_id: anonymousId,
                                                 pathname: pathname
                                             });
+                                            NavigationEventEmitter.emit(NAVIGATION_EVENT__GO_TO_SECTION, COMMUNITY_SECTION_IDX);
                                         }
                                     },
                                     {
