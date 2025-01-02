@@ -1,6 +1,6 @@
 import { AppContext } from "@/components/AppContext";
 import { timeAgo } from "@/components/Helpers";
-import { blockUser, loadCommunityItems, updateItemPublicState } from "@/components/Storage";
+import { blockItem, blockUser, loadCommunityItems, updateItemPublicState } from "@/components/Storage";
 import { CircleUserRound } from "@/components/svg/circle-user-round";
 import { EllipsisVertical } from "@/components/svg/ellipsis-vertical";
 import { EyeOff } from "@/components/svg/eye-off";
@@ -427,6 +427,32 @@ const CommunityScreen = () => {
         }
     }
 
+    const submitItemBlock = async (item_uuid, block_reason_str) => {
+        const wasBlockSuccessful = await blockItem(item_uuid, block_reason_str);
+        if (wasBlockSuccessful) {
+
+            amplitude.track("Item Blocked", {
+                anonymous_id: anonymousId,
+                pathname: pathname,
+                uuid: item_uuid
+            });
+
+            setReportPostModalVisible(false);
+            setCommunityItems(prevItems =>
+                prevItems.filter(prevItem => prevItem.uuid != item_uuid));
+
+        } else {
+            Alert.alert(
+                "Unexpected error occurred",
+                "An unexpected error occurred when attempting to block the post.  We will fix this issue as soon as possible.");
+            amplitude.track("Block Item Unexpected Error", {
+                anonymous_id: anonymousId,
+                pathname: pathname,
+                uuid: item_uuid
+            });
+        }
+    }
+
     const handleHideUser = () => {
         amplitude.track("Hide User Prompt Displayed", {
             anonymous_id: anonymousId,
@@ -474,6 +500,19 @@ const CommunityScreen = () => {
     const handleReportPost = () => {
         setItemMoreModalVisible(false);
         setReportPostModalVisible(true);
+    }
+
+    const handleReportPostCancel = () => {
+        setReportPostModalVisible(false);
+    }
+
+    const handleReportPostSubmit = async () => {
+        if (selectedBlockReason == 'other') {
+            await submitItemBlock(modalItem.current.uuid, `${selectedBlockReason}: ${blockReasonOtherText}`);
+        } else {
+            await submitItemBlock(modalItem.current.uuid, selectedBlockReason);
+        }   
+        setReportPostModalVisible(false);
     }
 
     const ItemMoreModal = () => (
@@ -652,6 +691,33 @@ const CommunityScreen = () => {
                 }
                 <Dialog.Button label="Cancel" onPress={handleReportUserCancel} />
                 <Dialog.Button label="Submit" onPress={handleReportUserSubmit} />
+            </Dialog.Container>
+            <Dialog.Container visible={reportPostModalVisible} onBackdropPress={handleReportPostCancel}>
+                <Dialog.Title>Hide & Report Post</Dialog.Title>
+                <Dialog.Description>This currently cannot be undone.</Dialog.Description>
+                <RNPickerSelect
+                    onValueChange={(value) => setSelectedBlockReason(value)}
+                    placeholder={{ label: 'Select a reason', value: 'no_reason' }}
+                    style={pickerSelectStyles}
+                    items={[
+                        { label: 'Hate Speech', value: 'hate_speech' },
+                        { label: 'Cyberbullying', value: 'cyberbulling' },
+                        { label: 'Violent threats', value: 'violent_threats' },
+                        { label: 'Promoting Services, Spam', value: 'sell_promote_spam' },
+                        { label: 'Other', value: 'other' },
+                    ]} />
+                {(selectedBlockReason == 'other') ?
+                    <Dialog.Input
+                        multiline={true}
+                        numberOfLines={2}
+                        style={styles.blockedReasonTextInput}
+                        placeholder={'Enter reason'}
+                        onChangeText={(text) => {
+                            setBlockReasonOtherText(text);
+                        }} /> : <></>
+                }
+                <Dialog.Button label="Cancel" onPress={handleReportPostCancel} />
+                <Dialog.Button label="Submit" onPress={handleReportPostSubmit} />
             </Dialog.Container>
         </View>
     )
