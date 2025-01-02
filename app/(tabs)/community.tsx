@@ -522,7 +522,7 @@ const CommunityScreen = () => {
                                     <Flag wxh="20" color="#3e2723" />
                                 </View>
                                 <View style={styles.moreOverlayOptionTextContainer}>
-                                    <Text style={styles.moreOverlayOptionText}>Report User</Text>
+                                    <Text style={styles.moreOverlayOptionText}>Hide & Report User</Text>
                                 </View>
                             </Pressable>
                             <Pressable hitSlop={10}
@@ -535,7 +535,7 @@ const CommunityScreen = () => {
                                     <Flag wxh="20" color="#3e2723" />
                                 </View>
                                 <View style={styles.moreOverlayOptionTextContainer}>
-                                    <Text style={styles.moreOverlayOptionText}>Report Post</Text>
+                                    <Text style={styles.moreOverlayOptionText}>Hide & Report Post</Text>
                                 </View>
                             </Pressable>
                         </>}
@@ -627,7 +627,7 @@ const CommunityScreen = () => {
                 <Dialog.Button label="Yes" onPress={handleHideUserSubmit} />
             </Dialog.Container>
             <Dialog.Container visible={reportUserDialogVisible} onBackdropPress={handleReportUserCancel}>
-                <Dialog.Title>Report User</Dialog.Title>
+                <Dialog.Title>Hide & Report User</Dialog.Title>
                 <Dialog.Description>This currently cannot be undone.</Dialog.Description>
                 <RNPickerSelect
                     onValueChange={(value) => setSelectedBlockReason(value)}
