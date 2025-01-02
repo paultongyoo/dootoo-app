@@ -374,8 +374,8 @@ const CommunityScreen = () => {
                         onPress={handleReact}>
                             {(item.userReactions.length == 0) || !(item.userReactions.some(reaction => reaction.user.name == username))
                                 ?<>
-                                <ThumbUp wxh="20" color="#3e2723" />
-                                <Text style={[styles.actionLabel, {color: '#3E2723'}]}>Like</Text>
+                                <ThumbUp wxh="20" color="#3E272399" />
+                                <Text style={[styles.actionLabel, {color: '#3E272399'}]}>Like</Text>
                                 </>
                                 :<>
                                 <ThumbUp wxh="20" color="#556B2F" fill="#556B2F" />
