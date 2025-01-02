@@ -252,7 +252,9 @@ const CommunityScreen = () => {
             justifyContent: 'center',
             alignItems: 'center',
             flexDirection: 'row',
-            padding: 10
+            padding: 5,
+            margin: 5,
+            width: '100%'
         },
         actionLabel: {
             fontWeight: 'bold',
@@ -325,7 +327,11 @@ const CommunityScreen = () => {
         }
 
         const handleReact = () => {
-            Alert.alert("Implement Reaction for item " + item.text);
+            Alert.alert("Implement Press Reaction for item " + item.text);
+        }
+
+        const handleLongReact = () => {
+            Alert.alert("Implement LongPress Reaction for item " + item.text);
         }
 
         return (
@@ -364,7 +370,8 @@ const CommunityScreen = () => {
                     ))}
                 </View>
                 <View style={styles.bottomActions}>
-                    <Pressable style={styles.actionContainer}
+                    <Pressable style={({pressed}) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310'}]}
+                        onLongPress={handleLongReact}
                         onPress={handleReact}>
                         <ThumbUp wxh="20" color="#556B2F" />
                         <Text style={styles.actionLabel}>Like</Text>
@@ -532,7 +539,7 @@ const CommunityScreen = () => {
                         ? <Pressable hitSlop={10}
                             style={({ pressed }) => [
                                 styles.moreOverlayOption,
-                                pressed && { backgroundColor: '#e0e0e0' }
+                                pressed && { backgroundColor: '#3e372310' }
                             ]}
                             onPress={handleHideFromCommunity}>
                             <View style={styles.moreOverlayOptionIcon}>
@@ -678,6 +685,7 @@ const CommunityScreen = () => {
                     placeholder={{ label: 'Select a reason', value: 'no_reason' }}
                     style={pickerSelectStyles}
                     items={[
+                        { label: 'Select a reason', value: 'no_reason' },
                         { label: 'Hate Speech', value: 'hate_speech' },
                         { label: 'Cyberbullying', value: 'cyberbulling' },
                         { label: 'Violent threats', value: 'violent_threats' },
@@ -705,6 +713,7 @@ const CommunityScreen = () => {
                     placeholder={{ label: 'Select a reason', value: 'no_reason' }}
                     style={pickerSelectStyles}
                     items={[
+                        { label: 'Select a reason', value: 'no_reason' },
                         { label: 'Hate Speech', value: 'hate_speech' },
                         { label: 'Cyberbullying', value: 'cyberbulling' },
                         { label: 'Violent threats', value: 'violent_threats' },
