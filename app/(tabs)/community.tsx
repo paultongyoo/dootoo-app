@@ -14,6 +14,10 @@ import * as amplitude from '@amplitude/analytics-react-native';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
+import { Heart } from "@/components/svg/heart";
+import { Laugh } from "@/components/svg/laugh";
+import { HandHeart } from "@/components/svg/hand-heart";
+import { PartyPopper } from "@/components/svg/party-popper";
 
 const CommunityScreen = () => {
     const REACTION_LIKE = 'like';
@@ -320,8 +324,19 @@ const CommunityScreen = () => {
         taskTitle_isDone: {
             color: '#556B2F',
             textDecorationLine: 'line-through'
+        },
+        reactions: {
+            flexDirection: 'row',
+            paddingBottom: 10,
+            marginHorizontal: 10,
+            alignItems: 'center'
+        },
+        reactionCount: {
+            fontWeight: 'bold',
+            color: '#556b2F',
+            fontSize: 16,
+            paddingLeft: 5
         }
-
     })
 
     const RenderItem = ({ item, index, separators }) => {
@@ -387,6 +402,18 @@ const CommunityScreen = () => {
                         </View>
                     ))}
                 </View>
+                {(item.userReactions.length > 0) ?
+                    <View style={styles.reactions}>
+                        {[...new Set(item.userReactions.map((ur) => ur.reaction.name))].map(reaction_name => (
+                            (reaction_name == REACTION_LIKE) ? <ThumbUp key={reaction_name} wxh="20" color="#556B2F" />
+                                : (reaction_name == REACTION_LOVE) ? <Heart key={reaction_name} wxh="20" color="#556B2F" />
+                                    : (reaction_name == REACTION_LAUGH) ? <Laugh key={reaction_name} wxh="20" color="#556B2F" />
+                                        : (reaction_name == REACTION_SUPPORT) ? <HandHeart key={reaction_name} wxh="20" color="#556B2F" />
+                                            :  <PartyPopper key={reaction_name} wxh="20" color="#556B2F" />
+                        ))}
+                        <Text style={styles.reactionCount}>{item.userReactions.length}</Text>
+                    </View>     
+                : <></>}
                 <View style={styles.bottomActions}>
                     <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
                         onLongPress={() => handleLongReact(item)}
