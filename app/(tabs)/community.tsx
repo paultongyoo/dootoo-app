@@ -36,6 +36,7 @@ const CommunityScreen = () => {
     const [reportPostModalVisible, setReportPostModalVisible] = useState(false);
     const [selectedBlockReason, setSelectedBlockReason] = useState('no_reason');
     const [blockReasonOtherText, setBlockReasonOtherText] = useState('');
+    const [reactorsModalVisible, setReactorsModalVisible] = useState(false);
     const modalItem = useRef(null);
 
     const opacity = useSharedValue(0);
@@ -359,6 +360,9 @@ const CommunityScreen = () => {
         reactionModalCopyText: {
             color: '#3e2723',
             fontWeight: 'bold'
+        },
+        reactorsModal: {
+
         }
     })
 
@@ -428,16 +432,16 @@ const CommunityScreen = () => {
                     ))}
                 </View>
                 {(item.userReactions.length > 0) ?
-                    <View style={styles.reactions}>
+                    <Pressable style={styles.reactions} onPress={() => handleReactionsTap(item)}>
                         {[...new Set(item.userReactions.map((ur) => ur.reaction.name))].map(reaction_name => (
-                            (reaction_name == REACTION_LIKE) ? <View style={styles.reaction}><ThumbUp key={reaction_name} wxh="20" color="#556B2F" /></View>
-                                : (reaction_name == REACTION_LOVE) ? <View style={styles.reaction}><Heart key={reaction_name} wxh="20" color="#556B2F" /></View>
-                                    : (reaction_name == REACTION_LAUGH) ? <View style={styles.reaction}><Laugh key={reaction_name} wxh="20" color="#556B2F" /></View>
-                                        : (reaction_name == REACTION_SUPPORT) ? <View style={styles.reaction}><HandHeart key={reaction_name} wxh="20" color="#556B2F" /></View>
-                                            : <View style={styles.reaction}><PartyPopper key={reaction_name} wxh="20" color="#556B2F" /></View>
+                            (reaction_name == REACTION_LIKE) ? <View key={reaction_name} style={styles.reaction}><ThumbUp wxh="20" color="#556B2F" /></View>
+                                : (reaction_name == REACTION_LOVE) ? <View key={reaction_name} style={styles.reaction}><Heart wxh="20" color="#556B2F" /></View>
+                                    : (reaction_name == REACTION_LAUGH) ? <View key={reaction_name} style={styles.reaction}><Laugh wxh="20" color="#556B2F" /></View>
+                                        : (reaction_name == REACTION_SUPPORT) ? <View key={reaction_name} style={styles.reaction}><HandHeart wxh="20" color="#556B2F" /></View>
+                                            : <View key={reaction_name} style={styles.reaction}><PartyPopper wxh="20" color="#556B2F" /></View>
                         ))}
                         <Text style={styles.reactionCount}>{item.userReactions.length}</Text>
-                    </View>
+                    </Pressable>
                     : <></>}
                 <View style={styles.bottomActions}>
 
@@ -519,6 +523,11 @@ const CommunityScreen = () => {
             </View >
         )
     };
+
+const handleReactionsTap = (item) => {
+    modalItem.current = item;
+    setReactorsModalVisible(true);
+}
 
 const handleHideFromCommunity = () => {
     amplitude.track("Item Hide from Public Prompt Displayed", {
@@ -734,6 +743,18 @@ const ItemMoreModal = () => (
             <Text>No modal item selected!</Text>}
     </Modal>
 )
+
+const ReactorsModal = (item) => {
+    <Modal
+    isVisible={reactorsModalVisible}
+    onBackdropPress={() => { setReactorsModalVisible(false) }}
+    backdropOpacity={0.3}
+    animationIn="fadeIn">
+        <View style={styles.reactorsModal}>
+            <Text>Insert reactors list UX here</Text>
+        </View>
+    </Modal>
+}
 
 const pickerSelectStyles = StyleSheet.create({
     inputIOS: {
