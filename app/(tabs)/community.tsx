@@ -259,7 +259,6 @@ const CommunityScreen = () => {
         actionLabel: {
             fontWeight: 'bold',
             fontSize: 14,
-            color: '#556B2F',
             paddingHorizontal: 10
         },
         emptyListContainer: {
@@ -373,8 +372,16 @@ const CommunityScreen = () => {
                     <Pressable style={({pressed}) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310'}]}
                         onLongPress={handleLongReact}
                         onPress={handleReact}>
-                        <ThumbUp wxh="20" color="#556B2F" />
-                        <Text style={styles.actionLabel}>Like</Text>
+                            {(item.userReactions.length == 0) || !(item.userReactions.some(reaction => reaction.user.name == username))
+                                ?<>
+                                <ThumbUp wxh="20" color="#3e2723" />
+                                <Text style={[styles.actionLabel, {color: '#3E2723'}]}>Like</Text>
+                                </>
+                                :<>
+                                <ThumbUp wxh="20" color="#556B2F" fill="#556B2F" />
+                                <Text style={[styles.actionLabel, {color: '#556B2F'}]}>Like</Text>
+                                </>
+    }
                     </Pressable>
                 </View>
             </View>
