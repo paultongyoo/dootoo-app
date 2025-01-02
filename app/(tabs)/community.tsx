@@ -20,6 +20,7 @@ const CommunityScreen = () => {
     const [communityItems, setCommunityItems] = useState(null);
     const { username, anonymousId, setOpenItems } = useContext(AppContext);
     const [itemMoreModalVisible, setItemMoreModalVisible] = useState(false);
+    const [hideUserDialogVisible, setHideUserDialogVisible] = useState(false);
     const [reportUserDialogVisible, setReportUserModalVisible] = useState(false);
     const [reportPostModalVisible, setReportPostModalVisible] = useState(false);
     const [selectedBlockReason, setSelectedBlockReason] = useState('no_reason');
@@ -303,10 +304,6 @@ const CommunityScreen = () => {
         modalTitleText: {
 
         },
-        dialogBoxContainer: {
-            justifyContent: 'center',
-            alignItems: 'center'
-        },
         blockedReasonTextInput: {
             height: 50,
             padding: 10,
@@ -411,43 +408,6 @@ const CommunityScreen = () => {
         )
     }
 
-    const handleHideUser = () => {
-        amplitude.track("Hide User Prompt Displayed", {
-            anonymous_id: anonymousId,
-            pathname: pathname
-        });
-
-        const item = modalItem.current;
-
-        Alert.alert(
-            `Hide All Posts by ${item.user.name}?`,
-            "This currently cannot be undone. ",
-            [
-                {
-                    text: 'Cancel',
-                    onPress: () => {
-                        amplitude.track("Hide User Prompt Cancelled", {
-                            anonymous_id: anonymousId,
-                            pathname: pathname
-                        });
-                    },
-                    style: 'cancel'
-                },
-                {
-                    text: 'Yes',
-                    onPress: async () => {
-                        amplitude.track("Hide User Prompt Approved", {
-                            anonymous_id: anonymousId,
-                            pathname: pathname
-                        });
-
-                        submitBlock(item.user.name, "hide_user");
-                    },
-                },
-            ]
-        )
-    }
-
     const submitBlock = async (username, block_reason_str) => {
         const wasBlockSuccessful = await blockUser(username, block_reason_str);
         if (wasBlockSuccessful) {
@@ -474,6 +434,32 @@ const CommunityScreen = () => {
         }
     }
 
+    const handleHideUser = () => {
+        amplitude.track("Hide User Prompt Displayed", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+        setItemMoreModalVisible(false);
+        setHideUserDialogVisible(true);
+    }
+
+    const handleHideUserCancel = () => {
+        amplitude.track("Hide User Prompt Cancelled", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+        setHideUserDialogVisible(false);
+    }
+
+    const handleHideUserSubmit = async () => {
+        amplitude.track("Hide User Prompt Approved", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+        await submitBlock(modalItem.current.user.name, "hide_user");
+        setHideUserDialogVisible(false);
+    }
+
     const handleReportUser = () => {
         setItemMoreModalVisible(false);
         setReportUserModalVisible(true);
@@ -498,8 +484,11 @@ const CommunityScreen = () => {
     }
 
     const ItemMoreModal = () => (
-        <Modal isVisible={itemMoreModalVisible}
-            onBackdropPress={() => { setItemMoreModalVisible(false) }}>
+        <Modal 
+            isVisible={itemMoreModalVisible}
+            onBackdropPress={() => { setItemMoreModalVisible(false) }}
+            backdropOpacity={0.3}
+            animationIn="fadeIn">
             {(modalItem.current) ?
                 <View style={styles.communityModal}>
                     {(username == modalItem.current.user.name)
@@ -540,7 +529,7 @@ const CommunityScreen = () => {
                                     <Flag wxh="20" color="#3e2723" />
                                 </View>
                                 <View style={styles.moreOverlayOptionTextContainer}>
-                                    <Text style={styles.moreOverlayOptionText}>Hide & Report User</Text>
+                                    <Text style={styles.moreOverlayOptionText}>Report User</Text>
                                 </View>
                             </Pressable>
                             <Pressable hitSlop={10}
@@ -553,7 +542,7 @@ const CommunityScreen = () => {
                                     <Flag wxh="20" color="#3e2723" />
                                 </View>
                                 <View style={styles.moreOverlayOptionTextContainer}>
-                                    <Text style={styles.moreOverlayOptionText}>Hide & Report Post</Text>
+                                    <Text style={styles.moreOverlayOptionText}>Report Post</Text>
                                 </View>
                             </Pressable>
                         </>}
@@ -632,8 +621,14 @@ const CommunityScreen = () => {
 
             </Animated.View>
             <ItemMoreModal />
-            <Dialog.Container contentStyle={styles.dialogBoxContainer} visible={reportUserDialogVisible} onBackdropPress={handleReportUserCancel}>
-                <Dialog.Title>Hide & Report User</Dialog.Title>
+            <Dialog.Container visible={hideUserDialogVisible} onBackdropPress={handleHideUserCancel}>
+                <Dialog.Title>Hide All Posts by {(modalItem.current) ? modalItem.current.user.name : 'Not Initialized Yet'}?</Dialog.Title>
+                <Dialog.Description>This currently cannot be undone.</Dialog.Description>
+                <Dialog.Button label="Cancel" onPress={handleHideUserCancel} />
+                <Dialog.Button label="Yes" onPress={handleHideUserSubmit} />
+            </Dialog.Container>
+            <Dialog.Container visible={reportUserDialogVisible} onBackdropPress={handleReportUserCancel}>
+                <Dialog.Title>Report User</Dialog.Title>
                 <Dialog.Description>This currently cannot be undone.</Dialog.Description>
                 <RNPickerSelect
                     onValueChange={(value) => setSelectedBlockReason(value)}
