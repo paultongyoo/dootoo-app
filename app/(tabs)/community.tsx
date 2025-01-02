@@ -362,7 +362,13 @@ const CommunityScreen = () => {
             fontWeight: 'bold'
         },
         reactorsModal: {
-
+            position: 'absolute',
+            bottom: 148,                        // HACK: Depends on Footer Height!
+            backgroundColor: '#FAF3E0',
+            borderTopLeftRadius: 10,
+            borderTopRightRadius: 10,
+            width: '100%',
+            padding: 10
         }
     })
 
@@ -447,7 +453,7 @@ const CommunityScreen = () => {
 
                     {(item.userReactions.length == 0) || !(item.userReactions.some(reaction => reaction.user.name == username))
                         ? <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
-                            onLongPress={() => handleLongReact(item)}
+                            onLongPress={() => handleLongReact(item)} delayLongPress={300}
                             onPress={() => handleReact(item, REACTION_LIKE)}>
                             <ThumbUp wxh="20" color="#3E272399" />
                             <Text style={[styles.actionLabel, { color: '#3E272399' }]}>Like</Text>
@@ -456,34 +462,34 @@ const CommunityScreen = () => {
                             {(item.userReactions.filter(reaction => reaction.user.name == username).map(reaction => (
                                 (reaction.reaction.name == REACTION_LIKE)
                                     ? <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
-                                        onLongPress={() => handleLongReact(item)}
+                                        onLongPress={() => handleLongReact(item)} delayLongPress={300}
                                         onPress={() => handleReact(item, REACTION_LIKE)}>
                                         <ThumbUp wxh="20" color="#556B2F" fill="#556B2F60" />
                                         <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Like</Text>
                                     </Pressable>
                                     : (reaction.reaction.name == REACTION_LOVE)
                                         ? <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
-                                            onLongPress={() => handleLongReact(item)}
+                                            onLongPress={() => handleLongReact(item)} delayLongPress={300}
                                             onPress={() => handleReact(item, REACTION_LOVE)}>
                                             <Heart wxh="20" color="#556B2F" fill="#556B2F60" />
                                             <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Love</Text>
                                         </Pressable>
                                         : (reaction.reaction.name == REACTION_LAUGH)
                                             ? <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
-                                                onLongPress={() => handleLongReact(item)}
+                                                onLongPress={() => handleLongReact(item)} delayLongPress={300}
                                                 onPress={() => handleReact(item, REACTION_LAUGH)}>
                                                 <Laugh wxh="20" color="#556B2F" fill="#556B2F60" />
                                                 <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Laugh</Text>
                                             </Pressable>
                                             : (reaction.reaction.name == REACTION_SUPPORT)
                                                 ? <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
-                                                    onLongPress={() => handleLongReact(item)}
+                                                    onLongPress={() => handleLongReact(item)} delayLongPress={300}
                                                     onPress={() => handleReact(item, REACTION_SUPPORT)}>
                                                     <HandHeart wxh="20" color="#556B2F" fill="#556B2F60" />
                                                     <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Support</Text>
                                                 </Pressable>
                                                 : <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
-                                                    onLongPress={() => handleLongReact(item)}
+                                                    onLongPress={() => handleLongReact(item)} delayLongPress={300}
                                                     onPress={() => handleReact(item, REACTION_CELEBRATE)}>
                                                     <PartyPopper wxh="20" color="#556B2F" fill="#556B2F60" />
                                                     <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Celebrate</Text>
@@ -744,17 +750,17 @@ const ItemMoreModal = () => (
     </Modal>
 )
 
-const ReactorsModal = (item) => {
+const ReactorsModal = (item) => (
     <Modal
-    isVisible={reactorsModalVisible}
-    onBackdropPress={() => { setReactorsModalVisible(false) }}
-    backdropOpacity={0.3}
-    animationIn="fadeIn">
+        isVisible={reactorsModalVisible}
+        onBackdropPress={() => { setReactorsModalVisible(false) }}
+        backdropOpacity={0}
+        animationIn="fadeIn">
         <View style={styles.reactorsModal}>
             <Text>Insert reactors list UX here</Text>
         </View>
     </Modal>
-}
+)
 
 const pickerSelectStyles = StyleSheet.create({
     inputIOS: {
@@ -825,6 +831,7 @@ return (
 
         </Animated.View>
         <ItemMoreModal />
+        <ReactorsModal />
         <Dialog.Container visible={hideFromCommunityDialogVisible} onBackdropPress={handleHideFromCommunityCancel}>
             <Dialog.Title>Hide Item from the Community?</Dialog.Title>
             <Dialog.Description>The item will no longer display in the Community Feed.</Dialog.Description>
