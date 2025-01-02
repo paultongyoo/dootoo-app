@@ -38,6 +38,13 @@ export const handler = async (event) => {
             },
           },
         },
+      },
+      NOT: {
+        blockedBys: {
+          some: {
+            blocking_user_id: user.id, // Exclude items that the current user has blocked
+          },
+        },
       }
     },
     select: {
