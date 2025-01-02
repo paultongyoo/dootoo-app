@@ -37,6 +37,10 @@ const CommunityScreen = () => {
     const [selectedBlockReason, setSelectedBlockReason] = useState('no_reason');
     const [blockReasonOtherText, setBlockReasonOtherText] = useState('');
     const [reactorsModalVisible, setReactorsModalVisible] = useState(false);
+    const reactorsModalNextPageLoadingOpacity = useSharedValue(0);
+    const reactorsModalNextPageAnimatedOpacity = useAnimatedStyle(() => {
+        return { opacity: reactorsModalNextPageLoadingOpacity.value }
+    })
     const modalItem = useRef(null);
 
     const opacity = useSharedValue(0);
@@ -363,12 +367,16 @@ const CommunityScreen = () => {
         },
         reactorsModal: {
             position: 'absolute',
-            bottom: 148,                        // HACK: Depends on Footer Height!
+            bottom: -20,                        // HACK: Depends on Footer Height!
             backgroundColor: '#FAF3E0',
             borderTopLeftRadius: 10,
             borderTopRightRadius: 10,
             width: '100%',
+            height: '50%',
             padding: 10
+        },
+        reactorsModalHeader: {
+
         }
     })
 
@@ -750,17 +758,35 @@ const ItemMoreModal = () => (
     </Modal>
 )
 
-const ReactorsModal = (item) => (
-    <Modal
-        isVisible={reactorsModalVisible}
-        onBackdropPress={() => { setReactorsModalVisible(false) }}
-        backdropOpacity={0}
-        animationIn="fadeIn">
-        <View style={styles.reactorsModal}>
-            <Text>Insert reactors list UX here</Text>
-        </View>
-    </Modal>
-)
+const ReactorsModal = () => {
+
+    const reactionNameSet = (modalItem.current && modalItem.current.userReactions) 
+                                ? [...new Set(modalItem.current.userReactions.map((ur) => ur.reaction.name as string))]
+                                : ['shouldnt_happen'];     // This should only happen when a user hasn't tapped an item yet
+
+    return (
+        <Modal
+            isVisible={reactorsModalVisible}
+            onBackdropPress={() => { setReactorsModalVisible(false) }}
+            onSwipeComplete={() => { setReactorsModalVisible(false) }}
+            swipeDirection={"down"}
+            backdropOpacity={0.3}
+            animationIn={"slideInUp"}
+            animationOut={"slideOutDown"}>
+            <View style={styles.reactorsModal}>
+                <View style={styles.reactorsModalHeader}>
+                    { reactionNameSet.map(reaction => <View key={reaction}><Text>{reaction as string}</Text></View>)}
+                </View>
+                <FlatList data={(modalItem.current && modalItem.current.userReactions) ? modalItem.current.userReactions : []}
+                        renderItem={({ item, index, separators }) =>
+                            <Text>{item.user.name}: {item.user.name}</Text>
+                        }
+                        keyExtractor={item => item.uuid}
+                    />
+            </View>
+        </Modal>
+    )
+}
 
 const pickerSelectStyles = StyleSheet.create({
     inputIOS: {
