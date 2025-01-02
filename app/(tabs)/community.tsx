@@ -315,7 +315,7 @@ const CommunityScreen = () => {
             color: '#556B2F',
             textDecorationLine: 'line-through'
         }
-        
+
     })
 
     const RenderItem = ({ item, index, separators }) => {
@@ -369,19 +369,19 @@ const CommunityScreen = () => {
                     ))}
                 </View>
                 <View style={styles.bottomActions}>
-                    <Pressable style={({pressed}) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310'}]}
+                    <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
                         onLongPress={handleLongReact}
                         onPress={handleReact}>
-                            {(item.userReactions.length == 0) || !(item.userReactions.some(reaction => reaction.user.name == username))
-                                ?<>
+                        {(item.userReactions.length == 0) || !(item.userReactions.some(reaction => reaction.user.name == username))
+                            ? <>
                                 <ThumbUp wxh="20" color="#3E272399" />
-                                <Text style={[styles.actionLabel, {color: '#3E272399'}]}>Like</Text>
-                                </>
-                                :<>
+                                <Text style={[styles.actionLabel, { color: '#3E272399' }]}>Like</Text>
+                            </>
+                            : <>
                                 <ThumbUp wxh="20" color="#556B2F" fill="#556B2F" />
-                                <Text style={[styles.actionLabel, {color: '#556B2F'}]}>Like</Text>
-                                </>
-    }
+                                <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Like</Text>
+                            </>
+                        }
                     </Pressable>
                 </View>
             </View>
@@ -512,7 +512,7 @@ const CommunityScreen = () => {
             await submitBlock(modalItem.current.user.name, `${selectedBlockReason}: ${blockReasonOtherText}`);
         } else {
             await submitBlock(modalItem.current.user.name, selectedBlockReason);
-        }   
+        }
         setReportUserModalVisible(false);
     }
 
@@ -530,12 +530,12 @@ const CommunityScreen = () => {
             await submitItemBlock(modalItem.current.uuid, `${selectedBlockReason}: ${blockReasonOtherText}`);
         } else {
             await submitItemBlock(modalItem.current.uuid, selectedBlockReason);
-        }   
+        }
         setReportPostModalVisible(false);
     }
 
     const ItemMoreModal = () => (
-        <Modal 
+        <Modal
             isVisible={itemMoreModalVisible}
             onBackdropPress={() => { setItemMoreModalVisible(false) }}
             backdropOpacity={0.3}
