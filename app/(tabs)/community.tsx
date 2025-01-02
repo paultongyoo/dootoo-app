@@ -12,12 +12,18 @@ import { StyleSheet, View, ActivityIndicator, FlatList, Text, Alert, Pressable, 
 import Modal from "react-native-modal";
 import * as amplitude from '@amplitude/analytics-react-native';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Dialog from "react-native-dialog";
+import RNPickerSelect from 'react-native-picker-select';
 
 const CommunityScreen = () => {
     const pathname = usePathname();
     const [communityItems, setCommunityItems] = useState(null);
     const { username, anonymousId, setOpenItems } = useContext(AppContext);
-    const [itemModalVisible, setItemModalVisible] = useState(false);
+    const [itemMoreModalVisible, setItemMoreModalVisible] = useState(false);
+    const [reportUserDialogVisible, setReportUserModalVisible] = useState(false);
+    const [reportPostModalVisible, setReportPostModalVisible] = useState(false);
+    const [selectedBlockReason, setSelectedBlockReason] = useState('no_reason');
+    const [blockReasonOtherText, setBlockReasonOtherText] = useState('');
     const modalItem = useRef(null);
 
     const opacity = useSharedValue(0);
@@ -263,7 +269,7 @@ const CommunityScreen = () => {
             fontSize: 40,
             lineHeight: 48
         },
-        moreOverlay: {
+        communityModal: {
             // position: 'absolute',
             // right: 10,
             backgroundColor: '#FAF3E0',
@@ -291,13 +297,28 @@ const CommunityScreen = () => {
             fontWeight: 'bold',
             color: '#3e2723'
         },
+        modalTitleContainer: {
+
+        },
+        modalTitleText: {
+
+        },
+        dialogBoxContainer: {
+            justifyContent: 'center',
+            alignItems: 'center'
+        },
+        blockedReasonTextInput: {
+            height: 50,
+            padding: 10,
+            width: 200
+        }
     })
 
     const RenderItem = ({ item, index, separators }) => {
 
         const handleMoreTap = (item) => {
             modalItem.current = item;
-            setItemModalVisible(true);
+            setItemMoreModalVisible(true);
         }
 
         const handleReact = () => {
@@ -376,7 +397,7 @@ const CommunityScreen = () => {
                             pathname: pathname
                         });
 
-                        setItemModalVisible(false);
+                        setItemMoreModalVisible(false);
                         setCommunityItems(prevItems =>
                             prevItems.filter(prevItem => prevItem.uuid != item.uuid));
                         setOpenItems(prevItems => prevItems.map((prevItem) =>
@@ -420,40 +441,67 @@ const CommunityScreen = () => {
                             pathname: pathname
                         });
 
-                        const wasBlockSuccessful = await blockUser(item.user.name, "hide_user");
-                        if (wasBlockSuccessful) {
-
-                            amplitude.track("Block Profile Blocked", {
-                                anonymous_id: anonymousId,
-                                pathname: pathname,
-                                name: item.user.name
-                            });
-
-                            setItemModalVisible(false);
-                            setCommunityItems(prevItems =>
-                                prevItems.filter(prevItem => prevItem.user.name != item.user.name));
-
-                        } else {
-                            Alert.alert(
-                                "Unexpected error occurred", 
-                                "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
-                                amplitude.track("Block Profile Unexpected Error", {
-                                    anonymous_id: anonymousId,
-                                    pathname: pathname,
-                                    name: item.user.name
-                                });  
-                        }
+                        submitBlock(item.user.name, "hide_user");
                     },
                 },
             ]
         )
     }
 
-    const ItemModal = () => (
-        <Modal isVisible={itemModalVisible}
-            onBackdropPress={() => { setItemModalVisible(false) }}>
+    const submitBlock = async (username, block_reason_str) => {
+        const wasBlockSuccessful = await blockUser(username, block_reason_str);
+        if (wasBlockSuccessful) {
+
+            amplitude.track("Block Profile Blocked", {
+                anonymous_id: anonymousId,
+                pathname: pathname,
+                name: username
+            });
+
+            setItemMoreModalVisible(false);
+            setCommunityItems(prevItems =>
+                prevItems.filter(prevItem => prevItem.user.name != username));
+
+        } else {
+            Alert.alert(
+                "Unexpected error occurred",
+                "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
+            amplitude.track("Block Profile Unexpected Error", {
+                anonymous_id: anonymousId,
+                pathname: pathname,
+                name: username
+            });
+        }
+    }
+
+    const handleReportUser = () => {
+        setItemMoreModalVisible(false);
+        setReportUserModalVisible(true);
+    }
+
+    const handleReportUserCancel = () => {
+        setReportUserModalVisible(false);
+    }
+
+    const handleReportUserSubmit = async () => {
+        if (selectedBlockReason == 'other') {
+            await submitBlock(modalItem.current.user.name, `${selectedBlockReason}: ${blockReasonOtherText}`);
+        } else {
+            await submitBlock(modalItem.current.user.name, selectedBlockReason);
+        }   
+        setReportUserModalVisible(false);
+    }
+
+    const handleReportPost = () => {
+        setItemMoreModalVisible(false);
+        setReportPostModalVisible(true);
+    }
+
+    const ItemMoreModal = () => (
+        <Modal isVisible={itemMoreModalVisible}
+            onBackdropPress={() => { setItemMoreModalVisible(false) }}>
             {(modalItem.current) ?
-                <View style={styles.moreOverlay}>
+                <View style={styles.communityModal}>
                     {(username == modalItem.current.user.name)
                         ? <Pressable hitSlop={10}
                             style={({ pressed }) => [
@@ -487,12 +535,12 @@ const CommunityScreen = () => {
                                     styles.moreOverlayOption,
                                     pressed && { backgroundColor: '#3e372310' }
                                 ]}
-                                onPress={() => Alert.alert("Implement Me")}>
+                                onPress={handleReportUser}>
                                 <View style={styles.moreOverlayOptionIcon}>
                                     <Flag wxh="20" color="#3e2723" />
                                 </View>
                                 <View style={styles.moreOverlayOptionTextContainer}>
-                                    <Text style={styles.moreOverlayOptionText}>Report User</Text>
+                                    <Text style={styles.moreOverlayOptionText}>Hide & Report User</Text>
                                 </View>
                             </Pressable>
                             <Pressable hitSlop={10}
@@ -500,12 +548,12 @@ const CommunityScreen = () => {
                                     styles.moreOverlayOption,
                                     pressed && { backgroundColor: '#3e372310' }
                                 ]}
-                                onPress={() => Alert.alert("Implement Me")}>
+                                onPress={handleReportPost}>
                                 <View style={styles.moreOverlayOptionIcon}>
                                     <Flag wxh="20" color="#3e2723" />
                                 </View>
                                 <View style={styles.moreOverlayOptionTextContainer}>
-                                    <Text style={styles.moreOverlayOptionText}>Report Post</Text>
+                                    <Text style={styles.moreOverlayOptionText}>Hide & Report Post</Text>
                                 </View>
                             </Pressable>
                         </>}
@@ -514,6 +562,33 @@ const CommunityScreen = () => {
                 <Text>No modal item selected!</Text>}
         </Modal>
     )
+
+    const pickerSelectStyles = StyleSheet.create({
+        inputIOS: {
+            fontSize: 14,
+            paddingVertical: 12,
+            paddingHorizontal: 10,
+            borderWidth: 1,
+            borderColor: 'gray',
+            borderRadius: 4,
+            color: 'black',
+            textAlign: 'center',
+            marginLeft: 20,
+            marginRight: 20,
+            marginBottom: 20,
+            backgroundColor: 'white'
+        },
+        inputAndroid: {
+            fontSize: 14,
+            paddingHorizontal: 10,
+            paddingVertical: 8,
+            borderWidth: 0.5,
+            borderColor: 'purple',
+            borderRadius: 8,
+            color: 'black',
+            paddingRight: 30, // to ensure the text is never behind the icon
+        }
+    });
 
     return (
         <View style={styles.container}>
@@ -556,7 +631,34 @@ const CommunityScreen = () => {
                 }
 
             </Animated.View>
-            <ItemModal />
+            <ItemMoreModal />
+            <Dialog.Container contentStyle={styles.dialogBoxContainer} visible={reportUserDialogVisible} onBackdropPress={handleReportUserCancel}>
+                <Dialog.Title>Hide & Report User</Dialog.Title>
+                <Dialog.Description>This currently cannot be undone.</Dialog.Description>
+                <RNPickerSelect
+                    onValueChange={(value) => setSelectedBlockReason(value)}
+                    placeholder={{ label: 'Select a reason', value: 'no_reason' }}
+                    style={pickerSelectStyles}
+                    items={[
+                        { label: 'Hate Speech', value: 'hate_speech' },
+                        { label: 'Cyberbullying', value: 'cyberbulling' },
+                        { label: 'Violent threats', value: 'violent_threats' },
+                        { label: 'Promoting Services, Spam', value: 'sell_promote_spam' },
+                        { label: 'Other', value: 'other' },
+                    ]} />
+                {(selectedBlockReason == 'other') ?
+                    <Dialog.Input
+                        multiline={true}
+                        numberOfLines={2}
+                        style={styles.blockedReasonTextInput}
+                        placeholder={'Enter reason'}
+                        onChangeText={(text) => {
+                            setBlockReasonOtherText(text);
+                        }} /> : <></>
+                }
+                <Dialog.Button label="Cancel" onPress={handleReportUserCancel} />
+                <Dialog.Button label="Submit" onPress={handleReportUserSubmit} />
+            </Dialog.Container>
         </View>
     )
 }
