@@ -1,6 +1,6 @@
 import { AppContext } from "@/components/AppContext";
 import { timeAgo } from "@/components/Helpers";
-import { blockItem, blockUser, loadCommunityItems, updateItemPublicState } from "@/components/Storage";
+import { blockItem, blockUser, loadCommunityItems, reactToItem, updateItemPublicState } from "@/components/Storage";
 import { CircleUserRound } from "@/components/svg/circle-user-round";
 import { EllipsisVertical } from "@/components/svg/ellipsis-vertical";
 import { EyeOff } from "@/components/svg/eye-off";
@@ -16,6 +16,12 @@ import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 
 const CommunityScreen = () => {
+    const REACTION_LIKE = 'like';
+    const REACTION_LOVE = 'love';
+    const REACTION_SUPPORT = 'support';
+    const REACTION_CELEBRATE = 'celebrate';
+    const REACTION_LAUGH = 'laugh';
+
     const pathname = usePathname();
     const [communityItems, setCommunityItems] = useState(null);
     const { username, anonymousId, setOpenItems } = useContext(AppContext);
@@ -325,11 +331,24 @@ const CommunityScreen = () => {
             setItemMoreModalVisible(true);
         }
 
-        const handleReact = () => {
-            Alert.alert("Implement Press Reaction for item " + item.text);
+        const handleReact = async (item) => {
+            const hasReaction = item.userReactions.some(reaction => (reaction.user.name == username) && (reaction.reaction.name == REACTION_LIKE));
+            if (!hasReaction) {
+                await reactToItem(item.uuid, REACTION_LIKE);
+                setCommunityItems(prevItems => prevItems.map(prevItem =>
+                        (prevItem.uuid == item.uuid)
+                            ? {...prevItem, userReactions: [{reaction: { name: REACTION_LIKE }, user: { name: username }}, ...prevItem.userReactions]}
+                            : prevItem));
+            } else {
+                await reactToItem(item.uuid, REACTION_LIKE, true);
+                setCommunityItems(prevItems => prevItems.map(prevItem =>
+                        (prevItem.uuid == item.uuid)
+                            ? {...prevItem, userReactions: prevItem.userReactions.filter(reaction => !((reaction.user.name == username) && (reaction.reaction.name == REACTION_LIKE)))}
+                            : prevItem));
+            }
         }
 
-        const handleLongReact = () => {
+        const handleLongReact = (item) => {
             Alert.alert("Implement LongPress Reaction for item " + item.text);
         }
 
@@ -370,15 +389,15 @@ const CommunityScreen = () => {
                 </View>
                 <View style={styles.bottomActions}>
                     <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
-                        onLongPress={handleLongReact}
-                        onPress={handleReact}>
+                        onLongPress={() => handleLongReact(item)}
+                        onPress={() => handleReact(item)}>
                         {(item.userReactions.length == 0) || !(item.userReactions.some(reaction => reaction.user.name == username))
                             ? <>
                                 <ThumbUp wxh="20" color="#3E272399" />
                                 <Text style={[styles.actionLabel, { color: '#3E272399' }]}>Like</Text>
                             </>
                             : <>
-                                <ThumbUp wxh="20" color="#556B2F" fill="#556B2F" />
+                                <ThumbUp wxh="20" color="#556B2F" fill="#556B2F60" />
                                 <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Like</Text>
                             </>
                         }
