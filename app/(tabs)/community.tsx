@@ -309,7 +309,12 @@ const CommunityScreen = () => {
             height: 50,
             padding: 10,
             width: 200
+        },
+        taskTitle_isDone: {
+            color: '#556B2F',
+            textDecorationLine: 'line-through'
         }
+        
     })
 
     const RenderItem = ({ item, index, separators }) => {
@@ -350,11 +355,11 @@ const CommunityScreen = () => {
                     </View>
                 </View>
                 <View style={styles.textContainer}>
-                    <Text style={styles.textLine}>{item.text}</Text>
+                    <Text style={[styles.textLine, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
                     {item.children.map((child) => (
                         <View key={child.uuid} style={styles.textSubLine}>
                             <Text style={styles.bullet}>{'\u2022'}</Text>
-                            <Text style={styles.textLine}>{child.text}</Text>
+                            <Text style={[styles.textLine, child.is_done && styles.taskTitle_isDone]}>{child.text}</Text>
                         </View>
                     ))}
                 </View>
