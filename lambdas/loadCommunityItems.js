@@ -24,13 +24,33 @@ export const handler = async (event) => {
 
   console.log(`Applying skip (${skip}) and take (${take})`);
 
+  const blockedItemIds = await prisma.$queryRaw`
+    SELECT "blocked_item_id"
+    FROM "ItemBlock"
+    GROUP BY "blocked_item_id"
+    HAVING COUNT(*) > 2`;
+  console.log("Number of Items blocked more than twice: " + blockedItemIds.length);
+
+  const blockedUserIds = await prisma.$queryRaw`
+  SELECT "blocked_user_id"
+  FROM "UserBlock"
+  GROUP BY "blocked_user_id"
+  HAVING COUNT(*) > 2`;
+  console.log("Number of Users blocked more than twice: " + blockedUserIds.length);
+
   let prismaParams = {
     skip, take,
     where: {
+      id: {
+        notIn: blockedItemIds.map((row) => row.blocked_item_id)
+      },
       is_deleted: false,
       is_public: true,
       parent_item_id: null,
       user: {
+        id: {
+          notIn: blockedUserIds.map((row) => row.blocked_user_id)
+        },
         NOT: {
           blockedBys: {
             some: {
@@ -107,7 +127,7 @@ export const handler = async (event) => {
   try {
 
     for (var i = 0; i < retrievedItems.length; i++) {
-      
+
       // Decrypt item text
       retrievedItems[i].text = await decryptText(retrievedItems[i].text);
 
