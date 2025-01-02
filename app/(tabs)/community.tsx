@@ -20,6 +20,7 @@ const CommunityScreen = () => {
     const [communityItems, setCommunityItems] = useState(null);
     const { username, anonymousId, setOpenItems } = useContext(AppContext);
     const [itemMoreModalVisible, setItemMoreModalVisible] = useState(false);
+    const [hideFromCommunityDialogVisible, setHideFromCommunityDialogVisible] = useState(false);
     const [hideUserDialogVisible, setHideUserDialogVisible] = useState(false);
     const [reportUserDialogVisible, setReportUserModalVisible] = useState(false);
     const [reportPostModalVisible, setReportPostModalVisible] = useState(false);
@@ -369,43 +370,35 @@ const CommunityScreen = () => {
     };
 
     const handleHideFromCommunity = () => {
-        const item = modalItem.current;
+        amplitude.track("Item Hide from Public Prompt Displayed", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+        setItemMoreModalVisible(false);
+        setHideFromCommunityDialogVisible(true);
+    }
 
-        Alert.alert(
-            "Hide Item from the Community?",
-            "The item will no longer display in the Community Feed. ",
-            [
-                {
-                    text: 'Cancel',
-                    onPress: () => {
-                        amplitude.track("Item Hide from Public Prompt Cancelled", {
-                            anonymous_id: anonymousId,
-                            pathname: pathname
-                        });
+    const handleHideFromCommunityCancel = () => {
+        amplitude.track("Item Hide from Public Prompt Cancelled", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+        setHideFromCommunityDialogVisible(false);
+    }
 
-                    },
-                    style: 'cancel'
-                },
-                {
-                    text: 'Yes',
-                    onPress: () => {
-                        amplitude.track("Item Hide from Public Prompt Approved", {
-                            anonymous_id: anonymousId,
-                            pathname: pathname
-                        });
-
-                        setItemMoreModalVisible(false);
-                        setCommunityItems(prevItems =>
-                            prevItems.filter(prevItem => prevItem.uuid != item.uuid));
-                        setOpenItems(prevItems => prevItems.map((prevItem) =>
-                            (prevItem.uuid == item.uuid)
-                                ? { ...prevItem, is_public: false }
-                                : prevItem));
-                        updateItemPublicState(item.uuid, false);
-                    },
-                },
-            ]
-        )
+    const handleHideFromCommunitySubmit = () => {
+        amplitude.track("Item Hide from Public Prompt Approved", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+        setHideFromCommunityDialogVisible(false);
+        setCommunityItems(prevItems =>
+            prevItems.filter(prevItem => prevItem.uuid != modalItem.current.uuid));
+        setOpenItems(prevItems => prevItems.map((prevItem) =>
+            (prevItem.uuid == modalItem.current.uuid)
+                ? { ...prevItem, is_public: false }
+                : prevItem));
+        updateItemPublicState(modalItem.current.uuid, false);
     }
 
     const submitBlock = async (username, block_reason_str) => {
@@ -621,6 +614,12 @@ const CommunityScreen = () => {
 
             </Animated.View>
             <ItemMoreModal />
+            <Dialog.Container visible={hideFromCommunityDialogVisible} onBackdropPress={handleHideFromCommunityCancel}>
+                <Dialog.Title>Hide Item from the Community?</Dialog.Title>
+                <Dialog.Description>The item will no longer display in the Community Feed.</Dialog.Description>
+                <Dialog.Button label="Cancel" onPress={handleHideFromCommunityCancel} />
+                <Dialog.Button label="Yes" onPress={handleHideFromCommunitySubmit} />
+            </Dialog.Container>
             <Dialog.Container visible={hideUserDialogVisible} onBackdropPress={handleHideUserCancel}>
                 <Dialog.Title>Hide All Posts by {(modalItem.current) ? modalItem.current.user.name : 'Not Initialized Yet'}?</Dialog.Title>
                 <Dialog.Description>This currently cannot be undone.</Dialog.Description>
