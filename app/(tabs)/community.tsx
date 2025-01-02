@@ -374,13 +374,13 @@ const CommunityScreen = () => {
         const handleReact = async (item, reaction_str = REACTION_LIKE) => {
             const hasReaction = item.userReactions.some(reaction => (reaction.user.name == username) && (reaction.reaction.name == reaction_str));
             if (!hasReaction) {
-                await reactToItem(item.uuid, reaction_str);
+                reactToItem(item.uuid, reaction_str);
                 setCommunityItems(prevItems => prevItems.map(prevItem =>
                     (prevItem.uuid == item.uuid)
                         ? { ...prevItem, userReactions: [{ reaction: { name: reaction_str }, user: { name: username } }, ...prevItem.userReactions.filter(reaction => reaction.user.name != username)] }
                         : prevItem));
             } else {
-                await reactToItem(item.uuid, reaction_str, true);
+                reactToItem(item.uuid, reaction_str, true);
                 setCommunityItems(prevItems => prevItems.map(prevItem =>
                     (prevItem.uuid == item.uuid)
                         ? { ...prevItem, userReactions: prevItem.userReactions.filter(reaction => !((reaction.user.name == username) && (reaction.reaction.name == reaction_str))) }
