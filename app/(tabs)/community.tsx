@@ -525,7 +525,7 @@ const CommunityScreen = () => {
                     : (communityItems.length > 0) ?
                         <FlatList data={communityItems}
                             renderItem={({ item, index, separators }) =>
-                                <RenderItem key={item.uuid} item={item} index={index} separators={separators} />
+                                <RenderItem item={item} index={index} separators={separators} />
                             }
                             keyExtractor={item => item.uuid}
                             refreshControl={

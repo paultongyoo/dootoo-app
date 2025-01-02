@@ -69,6 +69,7 @@ export const handler = async (event) => {
       },
       children: {
         select: {
+          uuid: true,
           text: true,
           is_done: true
         },
