@@ -20,6 +20,7 @@ import { Laugh } from "@/components/svg/laugh";
 import { HandHeart } from "@/components/svg/hand-heart";
 import { PartyPopper } from "@/components/svg/party-popper";
 import ReactionsModal from "@/components/ReactionsModal";
+import { ReactionsDisplay } from "@/components/ReactionsDisplay";
 
 const CommunityScreen = () => {
     const pathname = usePathname();
@@ -325,21 +326,6 @@ const CommunityScreen = () => {
             color: '#556B2F',
             textDecorationLine: 'line-through'
         },
-        reactions: {
-            flexDirection: 'row',
-            paddingBottom: 10,
-            marginHorizontal: 10,
-            alignItems: 'center'
-        },
-        reaction: {
-            paddingRight: 5
-        },
-        reactionCount: {
-            fontWeight: 'bold',
-            color: '#556b2F',
-            fontSize: 16,
-            paddingLeft: 5
-        },
         reactionsModal: {
             backgroundColor: '#FAF3E0',
             justifyContent: 'center',
@@ -426,18 +412,7 @@ const CommunityScreen = () => {
                         </View>
                     ))}
                 </View>
-                {(item.userReactions.length > 0) ?
-                    <Pressable style={styles.reactions} onPress={() => handleReactionsTap(item)}>
-                        {[...new Set(item.userReactions.map((ur) => ur.reaction.name))].map(reaction_name => (
-                            (reaction_name == Constants.REACTION_LIKE) ? <View key={reaction_name} style={styles.reaction}><ThumbUp wxh="20" color="#556B2F" /></View>
-                                : (reaction_name == Constants.REACTION_LOVE) ? <View key={reaction_name} style={styles.reaction}><Heart wxh="20" color="#556B2F" /></View>
-                                    : (reaction_name == Constants.REACTION_LAUGH) ? <View key={reaction_name} style={styles.reaction}><Laugh wxh="20" color="#556B2F" /></View>
-                                        : (reaction_name == Constants.REACTION_SUPPORT) ? <View key={reaction_name} style={styles.reaction}><HandHeart wxh="20" color="#556B2F" /></View>
-                                            : <View key={reaction_name} style={styles.reaction}><PartyPopper wxh="20" color="#556B2F" /></View>
-                        ))}
-                        <Text style={styles.reactionCount}>{item.userReactions.length}</Text>
-                    </Pressable>
-                    : <></>}
+                <ReactionsDisplay reactions={item.userReactions} onReactionsPress={() => handleReactionsTap(item)} />
                 <View style={styles.bottomActions}>
 
                     {(item.userReactions.length == 0) || !(item.userReactions.some(reaction => reaction.user.name == username))
