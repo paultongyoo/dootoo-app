@@ -346,7 +346,7 @@ const ProfileScreen = ({ navigation }) => {
                     onPress={handleEditUsername}>
                     {(loadingNewUsername)
                         ? <ActivityIndicator size={"small"} color="#3E3723" />
-                        : <Edit wxh="21" color="#556B2F" opacity="0.6" />
+                        : <Edit wxh="21" color="#556B2F" />
                     }
                 </Pressable>
             </View>
