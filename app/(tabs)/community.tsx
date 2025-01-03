@@ -327,6 +327,9 @@ const CommunityScreen = () => {
             color: '#556B2F',
             textDecorationLine: 'line-through'
         },
+        reactionsDisplay: {
+            paddingLeft: 10
+        },
         reactionsModal: {
             backgroundColor: '#FAF3E0',
             justifyContent: 'center',
@@ -413,7 +416,9 @@ const CommunityScreen = () => {
                         </View>
                     ))}
                 </View>
-                <ReactionsDisplay reactions={item.userReactions} onReactionsPress={() => handleReactionsTap(item)} />
+                <View style={styles.reactionsDisplay}>
+                    <ReactionsDisplay reactions={item.userReactions} onReactionsPress={() => handleReactionsTap(item)} />
+                </View>
                 <View style={styles.bottomActions}>
 
                     {(item.userReactions.length == 0) || !(item.userReactions.some(reaction => reaction.user.name == username))

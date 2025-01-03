@@ -11,7 +11,6 @@ export const ReactionsDisplay = ({reactions, onReactionsPress}) => {
     const styles = StyleSheet.create({
         reactions: {
             flexDirection: 'row',
-            marginHorizontal: 10,
             alignItems: 'center'
         },
         reaction: {
