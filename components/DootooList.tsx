@@ -86,6 +86,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const modalItemReactions = useRef([]);
     const [hideFromCommunityDialogVisible, setHideFromCommunityDialogVisible] = useState(false);
     const [itemMoreModalVisible, setItemMoreModalVisible] = useState(false);
+    const showMoreModalOnReactionsModalHide = useRef(false);
     
     const hasReactionsBeenRefreshedOnLaunch = useRef(false);
     const [appState, setAppState] = useState(AppState.currentState);
@@ -1931,8 +1932,14 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             <ReactionsModal modalVisible={reactorsModalVisible} modalVisibleSetter={setReactorsModalVisible}
                 reactions={modalItemReactions.current} reactionCounts={modelItemReactionCounts.current} 
                 onMoreIconPress={() => {
+                    showMoreModalOnReactionsModalHide.current = true;
                     setReactorsModalVisible(false);
-                    setItemMoreModalVisible(true);
+                }}
+                onModalHide={() => {
+                    if (showMoreModalOnReactionsModalHide.current) {
+                        setItemMoreModalVisible(true);
+                        showMoreModalOnReactionsModalHide.current = false;
+                    }
                 }}/>
             <Dialog.Container visible={hideFromCommunityDialogVisible} onBackdropPress={handleHideFromCommunityCancel}>
                 <Dialog.Title>Hide Item from the Community?</Dialog.Title>

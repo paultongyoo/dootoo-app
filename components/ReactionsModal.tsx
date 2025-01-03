@@ -10,7 +10,8 @@ import Animated, { Easing, runOnJS, useSharedValue, withTiming } from "react-nat
 import { useEffect, useState } from "react";
 import { EllipsisVertical } from "./svg/ellipsis-vertical";
 
-const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionCounts, onMoreIconPress = null }) => {
+const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionCounts, 
+    onMoreIconPress = null, onModalHide = null}) => {
 
     const [displayedReactions, setDisplayedReactions] = useState(reactions);
 
@@ -104,6 +105,7 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
             isVisible={modalVisible}
             onBackdropPress={() => { modalVisibleSetter(false) }}
             onSwipeComplete={() => { modalVisibleSetter(false) }}
+            onModalHide={onModalHide}
             swipeDirection={"down"}
             backdropOpacity={0.3}
             animationIn={"slideInUp"}
