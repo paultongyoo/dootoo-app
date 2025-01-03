@@ -22,6 +22,7 @@ export const AppProvider = ({ children }) => {
     const lastRecordedCount = useRef(0);
     const [username, setUsername] = useState(null);
     const [anonymousId, setAnonymousId] = useState(null);
+    const [affirmation, setAffirmation] = useState(null);
     const [doneCount, setDoneCount] = useState(0);
     const [tipCount, setTipCount] = useState(0);
     const itemCountsMap = useRef(new Map());
@@ -46,6 +47,7 @@ export const AppProvider = ({ children }) => {
       const userData = await initalizeUser();
       setUsername(userData.name);
       setAnonymousId(userData.anonymous_id);
+      setAffirmation(userData.affirmation);
       //console.log("username/anonymousId.current values set: " + JSON.stringify(userData));
       if (callback) {
         callback(userData.isNew);
@@ -74,6 +76,7 @@ export const AppProvider = ({ children }) => {
             communityItems, setCommunityItems,
             username, setUsername,
             anonymousId, setAnonymousId,
+            affirmation, setAffirmation,
             doneCount, setDoneCount,
             tipCount, setTipCount,
             lastRecordedCount,

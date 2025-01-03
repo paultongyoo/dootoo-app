@@ -14,7 +14,7 @@ import { NAVIGATION_SECTION_IDX_DONE } from "@/components/Constants";
 
 const ProfileScreen = ({ navigation }) => {
     const pathname = usePathname();
-    const { username, doneCount, tipCount, setTipCount, anonymousId, resetUserContext } = useContext(AppContext);
+    const { username, affirmation, doneCount, tipCount, setTipCount, anonymousId, resetUserContext } = useContext(AppContext);
 
     //const [username, setUsername] = useState('');
     // const [doneCount, setDoneCount] = useState(0);
@@ -22,7 +22,7 @@ const ProfileScreen = ({ navigation }) => {
     const [loadingNewUsername, setLoadingNewUsername] = useState(false);
     const [usernameDialogVisible, setUsernameDialogVisible] = useState(false);
     const [usernameInvalid, setUsernameInvalid] = useState(false);
-    const usernameTextInputValue = useRef(username.current);
+    const usernameTextInputValue = useRef(username);
     const [dupeUsernameDialogVisible, setDupeUsernameDialogVisible] = useState(false);
     const [usernameModerationFailedDialogVisible, setUsernameModerationFailedDialogVisible] = useState(false);
     const [usernameSpammingFailedDialogVisible, setUsernameSpammingFailedDialogVisible] = useState(false);
