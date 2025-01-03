@@ -430,34 +430,34 @@ const CommunityScreen = () => {
                         : <>
                             {(item.userReactions.filter(reaction => reaction.user.name == username).map(reaction => (
                                 (reaction.reaction.name == Constants.REACTION_LIKE)
-                                    ? <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
+                                    ? <Pressable key={reaction.reaction.name} style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
                                         onLongPress={() => handleLongReact(item)} delayLongPress={300}
                                         onPress={() => handleReact(item, Constants.REACTION_LIKE)}>
                                         <ThumbUp wxh="20" color="#556B2F" fill="#556B2F60" />
                                         <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Like</Text>
                                     </Pressable>
                                     : (reaction.reaction.name == Constants.REACTION_LOVE)
-                                        ? <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
+                                        ? <Pressable key={reaction.reaction.name} style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
                                             onLongPress={() => handleLongReact(item)} delayLongPress={300}
                                             onPress={() => handleReact(item, Constants.REACTION_LOVE)}>
                                             <Heart wxh="20" color="#556B2F" fill="#556B2F60" />
                                             <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Love</Text>
                                         </Pressable>
                                         : (reaction.reaction.name == Constants.REACTION_LAUGH)
-                                            ? <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
+                                            ? <Pressable key={reaction.reaction.name} style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
                                                 onLongPress={() => handleLongReact(item)} delayLongPress={300}
                                                 onPress={() => handleReact(item, Constants.REACTION_LAUGH)}>
                                                 <Laugh wxh="20" color="#556B2F" fill="#556B2F60" />
                                                 <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Laugh</Text>
                                             </Pressable>
                                             : (reaction.reaction.name == Constants.REACTION_SUPPORT)
-                                                ? <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
+                                                ? <Pressable key={reaction.reaction.name} style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
                                                     onLongPress={() => handleLongReact(item)} delayLongPress={300}
                                                     onPress={() => handleReact(item, Constants.REACTION_SUPPORT)}>
                                                     <HandHeart wxh="20" color="#556B2F" fill="#556B2F60" />
                                                     <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Support</Text>
                                                 </Pressable>
-                                                : <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
+                                                : <Pressable key={reaction.reaction.name} style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
                                                     onLongPress={() => handleLongReact(item)} delayLongPress={300}
                                                     onPress={() => handleReact(item, Constants.REACTION_CELEBRATE)}>
                                                     <PartyPopper wxh="20" color="#556B2F" fill="#556B2F60" />
