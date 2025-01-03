@@ -1,5 +1,5 @@
 import { AppContext } from "@/components/AppContext";
-import { timeAgo } from "@/components/Helpers";
+import { generateReactionCountObject, timeAgo } from "@/components/Helpers";
 import { blockItem, blockUser, loadCommunityItems, reactToItem, updateItemPublicState } from "@/components/Storage";
 import { CircleUserRound } from "@/components/svg/circle-user-round";
 import { EllipsisVertical } from "@/components/svg/ellipsis-vertical";
@@ -42,6 +42,8 @@ const CommunityScreen = () => {
         return { opacity: reactorsModalNextPageLoadingOpacity.value }
     })
     const modalItem = useRef(null);
+    const modelItemReactionCounts = useRef({});
+    const modalItemReactions = useRef([]);
 
     const opacity = useSharedValue(0);
     const animatedOpacity = useAnimatedStyle(() => {
@@ -377,6 +379,9 @@ const CommunityScreen = () => {
         },
         reactorsModalHeader: {
 
+        },
+        reactorsModalHeaderSection: {
+
         }
     })
 
@@ -540,6 +545,10 @@ const CommunityScreen = () => {
 
 const handleReactionsTap = (item) => {
     modalItem.current = item;
+    modelItemReactionCounts.current = generateReactionCountObject(item.userReactions);
+    modalItemReactions.current = item.userReactions;
+    // console.log("modelItemCounts: " + JSON.stringify(modalItemCounts.current));
+    // console.log("modalItemReactions: " + JSON.stringify(modalItemReactions.current));
     setReactorsModalVisible(true);
 }
 
@@ -759,11 +768,6 @@ const ItemMoreModal = () => (
 )
 
 const ReactorsModal = () => {
-
-    const reactionNameSet = (modalItem.current && modalItem.current.userReactions) 
-                                ? [...new Set(modalItem.current.userReactions.map((ur) => ur.reaction.name as string))]
-                                : ['shouldnt_happen'];     // This should only happen when a user hasn't tapped an item yet
-
     return (
         <Modal
             isVisible={reactorsModalVisible}
@@ -775,14 +779,43 @@ const ReactorsModal = () => {
             animationOut={"slideOutDown"}>
             <View style={styles.reactorsModal}>
                 <View style={styles.reactorsModalHeader}>
-                    { reactionNameSet.map(reaction => <View key={reaction}><Text>{reaction as string}</Text></View>)}
+                    { (Object.keys(modelItemReactionCounts.current).length > 1) 
+                            ? <>
+                                <Pressable style={styles.reactorsModalHeaderSection}>
+                                    <Text>All</Text>
+                                </Pressable>
+                                {Object.keys(modelItemReactionCounts.current).map(reaction  => (
+                                    <>
+                                        <Pressable style={styles.reactorsModalHeaderSection}>
+                                            {(reaction == REACTION_LIKE) ? <ThumbUp wxh="20" color="#556B2F" />
+                                                : (reaction == REACTION_LOVE) ? <Heart wxh="20" color="#556B2F" />
+                                                    : (reaction == REACTION_LAUGH) ? <Laugh wxh="20" color="#556B2F" />
+                                                        : (reaction == REACTION_SUPPORT) ? <HandHeart wxh="20" color="#556B2F" />
+                                                            : <PartyPopper wxh="20" color="#556B2F" />
+                                            }
+                                        </Pressable>
+                                        <Text>{modelItemReactionCounts.current[reaction as string]}</Text>
+                                    </>
+                                ))}
+                              </>
+                            :                                     <>
+                            <Pressable style={styles.reactorsModalHeaderSection}>
+                                {(Object.keys(modelItemReactionCounts.current)[0] == REACTION_LIKE) ? <ThumbUp wxh="20" color="#556B2F" />
+                                    : (Object.keys(modelItemReactionCounts.current)[0] == REACTION_LIKE) ? <ThumbUp wxh="20" color="#556B2F" />
+                                        : (Object.keys(modelItemReactionCounts.current)[0] == REACTION_LIKE) ? <ThumbUp wxh="20" color="#556B2F" />
+                                            : (Object.keys(modelItemReactionCounts.current)[0] == REACTION_LIKE) ? <ThumbUp wxh="20" color="#556B2F" />
+                                                : <ThumbUp wxh="20" color="#556B2F" />
+                                }
+                            </Pressable>
+                            <Text>{modelItemReactionCounts.current[Object.keys(modelItemReactionCounts.current)[0]] as string}</Text>
+                        </>
+                    }
                 </View>
-                <FlatList data={(modalItem.current && modalItem.current.userReactions) ? modalItem.current.userReactions : []}
+                <FlatList data={modalItemReactions.current}
                         renderItem={({ item, index, separators }) =>
-                            <Text>{item.user.name}: {item.user.name}</Text>
+                            <Text>{item.reaction.name}: {item.user.name}</Text>
                         }
-                        keyExtractor={item => item.uuid}
-                    />
+                        keyExtractor={(item, index) => `${item.user.name}_${item.reaction.name}`} />
             </View>
         </Modal>
     )

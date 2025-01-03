@@ -399,3 +399,10 @@ export const stringizeThingName = (thingName) => {
     return thingName;
   }
 }
+
+export const generateReactionCountObject = (userReactions) => {
+  return userReactions.reduce((acc, { reaction }) => {
+    acc[reaction.name] = (acc[reaction.name] || 0) + 1;
+    return acc;
+  }, {});
+}
