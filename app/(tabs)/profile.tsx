@@ -5,10 +5,11 @@ import { AppContext } from "@/components/AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, showComingSoonAlert } from '@/components/Helpers';
 import { overrideUserAnonId as overrideUser, saveUserLocally, updateUsername } from "@/components/Storage";
-import { ProfileCountEventEmitter } from "@/components/EventEmitters";
+import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import Dialog from "react-native-dialog";
 import { Bulb } from "@/components/svg/bulb";
 import { Edit } from "@/components/svg/edit";
+import { NAVIGATION_SECTION_IDX_DONE } from "@/components/Constants";
 
 
 const ProfileScreen = ({ navigation }) => {
@@ -325,6 +326,10 @@ const ProfileScreen = ({ navigation }) => {
         }
     }
 
+    const handleDoneStatTap = () => {
+        NavigationEventEmitter.emit(NAVIGATION_EVENT__GO_TO_SECTION, NAVIGATION_SECTION_IDX_DONE);
+    }
+
     return (
         <View style={styles.profileDrawerContainer}>
             <View style={styles.profileDrawerProfileIconContainer}>
@@ -347,7 +352,7 @@ const ProfileScreen = ({ navigation }) => {
             </View>
             <View style={styles.statsContainer}>
                 <Pressable style={styles.statContainer}
-                    onPress={() => showComingSoonAlert(anonymousId, "'Done'", pathname)}>
+                    onPress={handleDoneStatTap}>
                     <View style={styles.statIconContainer}>
                         <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
                     </View>

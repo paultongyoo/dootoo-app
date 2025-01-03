@@ -8,10 +8,11 @@ import * as amplitude from '@amplitude/analytics-react-native';
 import { UsersRound } from './svg/users-round';
 import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter } from './EventEmitters';
 import { ReactionsDisplay } from './ReactionsDisplay';
+import { NAVIGATION_SECTION_IDX_COMMUNITY } from './Constants';
 
 
 const DootooItemSidebar = ({ thing, onReactionsPress }) => {
-    const COMMUNITY_SECTION_IDX = 1;
+   
     const pathname = usePathname();
     const { anonymousId, setOpenItems } = useContext(AppContext);
 
@@ -89,7 +90,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                                                 anonymous_id: anonymousId,
                                                 pathname: pathname
                                             });
-                                            NavigationEventEmitter.emit(NAVIGATION_EVENT__GO_TO_SECTION, COMMUNITY_SECTION_IDX);
+                                            NavigationEventEmitter.emit(NAVIGATION_EVENT__GO_TO_SECTION, NAVIGATION_SECTION_IDX_COMMUNITY);
                                         }
                                     },
                                     {
