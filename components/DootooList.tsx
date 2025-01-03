@@ -1177,7 +1177,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 <EyeOff wxh="20" color="#3e2723" />
                             </View>
                             <View>
-                                <Text style={listStyles.moreOverlayOptionText}>Hide from Community</Text>
+                                <Text style={listStyles.moreOverlayOptionText}>Hide Item from Community</Text>
                             </View>
                     </Pressable>
                 </View>
@@ -1907,7 +1907,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             <ItemMoreModal />
             <ReactionsModal modalVisible={reactorsModalVisible} modalVisibleSetter={setReactorsModalVisible}
                 reactions={modalItemReactions.current} reactionCounts={modelItemReactionCounts.current} 
-                onMoreIconPress={() => setItemMoreModalVisible(true)}/>
+                onMoreIconPress={() => {
+                    setReactorsModalVisible(false);
+                    setItemMoreModalVisible(true);
+                }}/>
             <Dialog.Container visible={hideFromCommunityDialogVisible} onBackdropPress={handleHideFromCommunityCancel}>
                 <Dialog.Title>Hide Item from the Community?</Dialog.Title>
                 <Dialog.Description>The item will no longer display in the Community Feed.</Dialog.Description>
