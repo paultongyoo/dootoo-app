@@ -133,6 +133,24 @@ const ProfileScreen = ({ navigation }) => {
             paddingLeft: 20,
             paddingRight: 20
         },
+        profileDrawerProfileAffirmationCTAContainer: {
+            marginTop: 10,
+            paddingTop: 10,
+            width: '75%',
+            justifyContent: 'center',
+            alignItems: 'center'
+        },
+        profileDrawerProfileAffirmationCTAText: {
+            textAlign: 'center',
+            color: '#556B2F',
+            fontWeight: 'bold'
+        },
+        profileDrawerProfileAffirmationContainer: {
+
+        },
+        profileDrawerProfileAffirmationText: {
+
+        },
         privacyContainer: {
             position: 'absolute',
             bottom: 40
@@ -330,6 +348,14 @@ const ProfileScreen = ({ navigation }) => {
         NavigationEventEmitter.emit(NAVIGATION_EVENT__GO_TO_SECTION, NAVIGATION_SECTION_IDX_DONE);
     }
 
+    const handleCreateAffirmation = () => {
+        Alert.alert("Implement Me!");
+    }
+
+    const handleEditAffirmation = () => {
+        Alert.alert("Implement Me!");
+    }
+
     return (
         <View style={styles.profileDrawerContainer}>
             <View style={styles.profileDrawerProfileIconContainer}>
@@ -349,6 +375,28 @@ const ProfileScreen = ({ navigation }) => {
                         : <Edit wxh="21" color="#556B2F" strokeWidth="2" />
                     }
                 </Pressable>
+                {(!affirmation || affirmation.length == 0) ?
+                    <Pressable onPress={handleCreateAffirmation}
+                        style={styles.profileDrawerProfileAffirmationCTAContainer}>
+                        <Text style={styles.profileDrawerProfileAffirmationCTAText}>Tap here to add your latest positive affirmation to your public profile</Text>
+                    </Pressable>
+                    : <>
+                        <View style={styles.profileDrawerProfileAffirmationContainer}>
+                            {(!affirmation || affirmation.length == 0) ?
+                                <ActivityIndicator size={"large"} color="#3E3723" />
+                                :
+                                <Text style={styles.profileDrawerProfileAffirmationText}>{username}</Text>
+                            }
+                        </View>
+                        <Pressable hitSlop={10} style={styles.refreshNameContainer}
+                            onPress={handleEditAffirmation}>
+                            {(loadingNewUsername)
+                                ? <ActivityIndicator size={"small"} color="#3E3723" />
+                                : <Edit wxh="21" color="#556B2F" strokeWidth="2" />
+                            }
+                        </Pressable>
+                    </>
+                }
             </View>
             <View style={styles.statsContainer}>
                 <Pressable style={styles.statContainer}
@@ -426,7 +474,7 @@ const ProfileScreen = ({ navigation }) => {
             </Dialog.Container>
             <Dialog.Container visible={overrideUserDialogVisible} onBackdropPress={handleUserOverrideDialogCancel}>
                 <Dialog.Title>Override User</Dialog.Title>
-                <Dialog.Description>Submit new user info in the format <Text style={{fontWeight: 'bold'}}>user:anonId</Text> to override the current user.</Dialog.Description>
+                <Dialog.Description>Submit new user info in the format <Text style={{ fontWeight: 'bold' }}>user:anonId</Text> to override the current user.</Dialog.Description>
                 <Dialog.Input
                     multiline={false}
                     autoFocus={true}
