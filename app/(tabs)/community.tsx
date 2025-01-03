@@ -11,6 +11,7 @@ import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, us
 import { StyleSheet, View, ActivityIndicator, FlatList, Text, Alert, Pressable, RefreshControl } from "react-native";
 import Modal from "react-native-modal";
 import * as amplitude from '@amplitude/analytics-react-native';
+import * as Constants from '@/components/Constants';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
@@ -18,14 +19,9 @@ import { Heart } from "@/components/svg/heart";
 import { Laugh } from "@/components/svg/laugh";
 import { HandHeart } from "@/components/svg/hand-heart";
 import { PartyPopper } from "@/components/svg/party-popper";
+import ReactionsModal from "@/components/ReactionsModal";
 
 const CommunityScreen = () => {
-    const REACTION_LIKE = 'like';
-    const REACTION_LOVE = 'love';
-    const REACTION_SUPPORT = 'support';
-    const REACTION_CELEBRATE = 'celebrate';
-    const REACTION_LAUGH = 'laugh';
-
     const pathname = usePathname();
     const [communityItems, setCommunityItems] = useState(null);
     const { username, anonymousId, setOpenItems } = useContext(AppContext);
@@ -362,22 +358,6 @@ const CommunityScreen = () => {
         reactionModalCopyText: {
             color: '#3e2723',
             fontWeight: 'bold'
-        },
-        reactorsModal: {
-            position: 'absolute',
-            bottom: -20,                        // HACK: Depends on Footer Height!
-            backgroundColor: '#FAF3E0',
-            borderTopLeftRadius: 10,
-            borderTopRightRadius: 10,
-            width: '100%',
-            height: '50%',
-            padding: 10
-        },
-        reactorsModalHeader: {
-
-        },
-        reactorsModalHeaderSection: {
-
         }
     })
 
@@ -390,7 +370,7 @@ const CommunityScreen = () => {
             setItemMoreModalVisible(true);
         }
 
-        const handleReact = async (item, reaction_str = REACTION_LIKE) => {
+        const handleReact = async (item, reaction_str = Constants.REACTION_LIKE) => {
             const hasReaction = item.userReactions.some(reaction => (reaction.user.name == username) && (reaction.reaction.name == reaction_str));
             if (!hasReaction) {
                 reactToItem(item.uuid, reaction_str);
@@ -449,10 +429,10 @@ const CommunityScreen = () => {
                 {(item.userReactions.length > 0) ?
                     <Pressable style={styles.reactions} onPress={() => handleReactionsTap(item)}>
                         {[...new Set(item.userReactions.map((ur) => ur.reaction.name))].map(reaction_name => (
-                            (reaction_name == REACTION_LIKE) ? <View key={reaction_name} style={styles.reaction}><ThumbUp wxh="20" color="#556B2F" /></View>
-                                : (reaction_name == REACTION_LOVE) ? <View key={reaction_name} style={styles.reaction}><Heart wxh="20" color="#556B2F" /></View>
-                                    : (reaction_name == REACTION_LAUGH) ? <View key={reaction_name} style={styles.reaction}><Laugh wxh="20" color="#556B2F" /></View>
-                                        : (reaction_name == REACTION_SUPPORT) ? <View key={reaction_name} style={styles.reaction}><HandHeart wxh="20" color="#556B2F" /></View>
+                            (reaction_name == Constants.REACTION_LIKE) ? <View key={reaction_name} style={styles.reaction}><ThumbUp wxh="20" color="#556B2F" /></View>
+                                : (reaction_name == Constants.REACTION_LOVE) ? <View key={reaction_name} style={styles.reaction}><Heart wxh="20" color="#556B2F" /></View>
+                                    : (reaction_name == Constants.REACTION_LAUGH) ? <View key={reaction_name} style={styles.reaction}><Laugh wxh="20" color="#556B2F" /></View>
+                                        : (reaction_name == Constants.REACTION_SUPPORT) ? <View key={reaction_name} style={styles.reaction}><HandHeart wxh="20" color="#556B2F" /></View>
                                             : <View key={reaction_name} style={styles.reaction}><PartyPopper wxh="20" color="#556B2F" /></View>
                         ))}
                         <Text style={styles.reactionCount}>{item.userReactions.length}</Text>
@@ -463,43 +443,43 @@ const CommunityScreen = () => {
                     {(item.userReactions.length == 0) || !(item.userReactions.some(reaction => reaction.user.name == username))
                         ? <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
                             onLongPress={() => handleLongReact(item)} delayLongPress={300}
-                            onPress={() => handleReact(item, REACTION_LIKE)}>
+                            onPress={() => handleReact(item, Constants.REACTION_LIKE)}>
                             <ThumbUp wxh="20" color="#3E272399" />
                             <Text style={[styles.actionLabel, { color: '#3E272399' }]}>Like</Text>
                         </Pressable>
                         : <>
                             {(item.userReactions.filter(reaction => reaction.user.name == username).map(reaction => (
-                                (reaction.reaction.name == REACTION_LIKE)
+                                (reaction.reaction.name == Constants.REACTION_LIKE)
                                     ? <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
                                         onLongPress={() => handleLongReact(item)} delayLongPress={300}
-                                        onPress={() => handleReact(item, REACTION_LIKE)}>
+                                        onPress={() => handleReact(item, Constants.REACTION_LIKE)}>
                                         <ThumbUp wxh="20" color="#556B2F" fill="#556B2F60" />
                                         <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Like</Text>
                                     </Pressable>
-                                    : (reaction.reaction.name == REACTION_LOVE)
+                                    : (reaction.reaction.name == Constants.REACTION_LOVE)
                                         ? <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
                                             onLongPress={() => handleLongReact(item)} delayLongPress={300}
-                                            onPress={() => handleReact(item, REACTION_LOVE)}>
+                                            onPress={() => handleReact(item, Constants.REACTION_LOVE)}>
                                             <Heart wxh="20" color="#556B2F" fill="#556B2F60" />
                                             <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Love</Text>
                                         </Pressable>
-                                        : (reaction.reaction.name == REACTION_LAUGH)
+                                        : (reaction.reaction.name == Constants.REACTION_LAUGH)
                                             ? <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
                                                 onLongPress={() => handleLongReact(item)} delayLongPress={300}
-                                                onPress={() => handleReact(item, REACTION_LAUGH)}>
+                                                onPress={() => handleReact(item, Constants.REACTION_LAUGH)}>
                                                 <Laugh wxh="20" color="#556B2F" fill="#556B2F60" />
                                                 <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Laugh</Text>
                                             </Pressable>
-                                            : (reaction.reaction.name == REACTION_SUPPORT)
+                                            : (reaction.reaction.name == Constants.REACTION_SUPPORT)
                                                 ? <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
                                                     onLongPress={() => handleLongReact(item)} delayLongPress={300}
-                                                    onPress={() => handleReact(item, REACTION_SUPPORT)}>
+                                                    onPress={() => handleReact(item, Constants.REACTION_SUPPORT)}>
                                                     <HandHeart wxh="20" color="#556B2F" fill="#556B2F60" />
                                                     <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Support</Text>
                                                 </Pressable>
                                                 : <Pressable style={({ pressed }) => [styles.actionContainer, pressed && { backgroundColor: '#3e372310' }]}
                                                     onLongPress={() => handleLongReact(item)} delayLongPress={300}
-                                                    onPress={() => handleReact(item, REACTION_CELEBRATE)}>
+                                                    onPress={() => handleReact(item, Constants.REACTION_CELEBRATE)}>
                                                     <PartyPopper wxh="20" color="#556B2F" fill="#556B2F60" />
                                                     <Text style={[styles.actionLabel, { color: '#556B2F' }]}>Celebrate</Text>
                                                 </Pressable>
@@ -512,19 +492,19 @@ const CommunityScreen = () => {
                     onBackdropPress={() => { setReactionModalVisible(false) }}>
                     <View style={styles.reactionsModal}>
                         <View style={styles.modalReactions}>
-                            <Pressable style={({pressed}) => [styles.modalReaction, pressed && { backgroundColor: '#3e372310' }]} onPress={() => handleReact(item, REACTION_LIKE)}>
+                            <Pressable style={({pressed}) => [styles.modalReaction, pressed && { backgroundColor: '#3e372310' }]} onPress={() => handleReact(item, Constants.REACTION_LIKE)}>
                                 <ThumbUp wxh="30" color="#556B2F" />
                             </Pressable>
-                            <Pressable style={({pressed}) => [styles.modalReaction, pressed && { backgroundColor: '#3e372310' }]} onPress={() => handleReact(item, REACTION_LOVE)}>
+                            <Pressable style={({pressed}) => [styles.modalReaction, pressed && { backgroundColor: '#3e372310' }]} onPress={() => handleReact(item, Constants.REACTION_LOVE)}>
                                 <Heart wxh="30" color="#556B2F" />
                             </Pressable>
-                            <Pressable style={({pressed}) => [styles.modalReaction, pressed && { backgroundColor: '#3e372310' }]} onPress={() => handleReact(item, REACTION_LAUGH)}>
+                            <Pressable style={({pressed}) => [styles.modalReaction, pressed && { backgroundColor: '#3e372310' }]} onPress={() => handleReact(item, Constants.REACTION_LAUGH)}>
                                 <Laugh wxh="30" color="#556B2F" />
                             </Pressable>
-                            <Pressable style={({pressed}) => [styles.modalReaction, pressed && { backgroundColor: '#3e372310' }]} onPress={() => handleReact(item, REACTION_SUPPORT)}>
+                            <Pressable style={({pressed}) => [styles.modalReaction, pressed && { backgroundColor: '#3e372310' }]} onPress={() => handleReact(item, Constants.REACTION_SUPPORT)}>
                                 <HandHeart wxh="30" color="#556B2F" />
                             </Pressable>
-                            <Pressable style={({pressed}) => [styles.modalReaction, pressed && { backgroundColor: '#3e372310' }]} onPress={() => handleReact(item, REACTION_CELEBRATE)}>
+                            <Pressable style={({pressed}) => [styles.modalReaction, pressed && { backgroundColor: '#3e372310' }]} onPress={() => handleReact(item, Constants.REACTION_CELEBRATE)}>
                                 <PartyPopper wxh="30" color="#556B2F" />
                             </Pressable>
                         </View>
@@ -763,59 +743,7 @@ const ItemMoreModal = () => (
     </Modal>
 )
 
-const ReactorsModal = () => {
-    return (
-        <Modal
-            isVisible={reactorsModalVisible}
-            onBackdropPress={() => { setReactorsModalVisible(false) }}
-            onSwipeComplete={() => { setReactorsModalVisible(false) }}
-            swipeDirection={"down"}
-            backdropOpacity={0.3}
-            animationIn={"slideInUp"}
-            animationOut={"slideOutDown"}>
-            <View style={styles.reactorsModal}>
-                <View style={styles.reactorsModalHeader}>
-                    { (Object.keys(modelItemReactionCounts.current).length > 1) 
-                            ? <>
-                                <Pressable style={styles.reactorsModalHeaderSection}>
-                                    <Text>All</Text>
-                                </Pressable>
-                                {Object.keys(modelItemReactionCounts.current).map(reaction  => (
-                                    <>
-                                        <Pressable style={styles.reactorsModalHeaderSection}>
-                                            {(reaction == REACTION_LIKE) ? <ThumbUp wxh="20" color="#556B2F" />
-                                                : (reaction == REACTION_LOVE) ? <Heart wxh="20" color="#556B2F" />
-                                                    : (reaction == REACTION_LAUGH) ? <Laugh wxh="20" color="#556B2F" />
-                                                        : (reaction == REACTION_SUPPORT) ? <HandHeart wxh="20" color="#556B2F" />
-                                                            : <PartyPopper wxh="20" color="#556B2F" />
-                                            }
-                                        </Pressable>
-                                        <Text>{modelItemReactionCounts.current[reaction as string]}</Text>
-                                    </>
-                                ))}
-                              </>
-                            :                                     <>
-                            <Pressable style={styles.reactorsModalHeaderSection}>
-                                {(Object.keys(modelItemReactionCounts.current)[0] == REACTION_LIKE) ? <ThumbUp wxh="20" color="#556B2F" />
-                                    : (Object.keys(modelItemReactionCounts.current)[0] == REACTION_LIKE) ? <ThumbUp wxh="20" color="#556B2F" />
-                                        : (Object.keys(modelItemReactionCounts.current)[0] == REACTION_LIKE) ? <ThumbUp wxh="20" color="#556B2F" />
-                                            : (Object.keys(modelItemReactionCounts.current)[0] == REACTION_LIKE) ? <ThumbUp wxh="20" color="#556B2F" />
-                                                : <ThumbUp wxh="20" color="#556B2F" />
-                                }
-                            </Pressable>
-                            <Text>{modelItemReactionCounts.current[Object.keys(modelItemReactionCounts.current)[0]] as string}</Text>
-                        </>
-                    }
-                </View>
-                <FlatList data={modalItemReactions.current}
-                        renderItem={({ item, index, separators }) =>
-                            <Text>{item.reaction.name}: {item.user.name}</Text>
-                        }
-                        keyExtractor={(item, index) => `${item.user.name}_${item.reaction.name}`} />
-            </View>
-        </Modal>
-    )
-}
+
 
 const pickerSelectStyles = StyleSheet.create({
     inputIOS: {
@@ -886,7 +814,8 @@ return (
 
         </Animated.View>
         <ItemMoreModal />
-        <ReactorsModal />
+        <ReactionsModal modalVisible={reactorsModalVisible} modalVisibleSetter={setReactorsModalVisible} 
+                        reactions={modalItemReactions.current} reactionCounts={modelItemReactionCounts.current} />
         <Dialog.Container visible={hideFromCommunityDialogVisible} onBackdropPress={handleHideFromCommunityCancel}>
             <Dialog.Title>Hide Item from the Community?</Dialog.Title>
             <Dialog.Description>The item will no longer display in the Community Feed.</Dialog.Description>
