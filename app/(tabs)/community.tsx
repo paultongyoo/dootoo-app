@@ -24,7 +24,7 @@ import { ReactionsDisplay } from "@/components/ReactionsDisplay";
 
 const CommunityScreen = () => {
     const pathname = usePathname();
-    const { username, anonymousId, setOpenItems, communityItems, setCommunityItems } = useContext(AppContext);
+    const { username, anonymousId, setOpenItems, setDoneItems, communityItems, setCommunityItems } = useContext(AppContext);
     const [itemMoreModalVisible, setItemMoreModalVisible] = useState(false);
     const [hideFromCommunityDialogVisible, setHideFromCommunityDialogVisible] = useState(false);
     const [hideUserDialogVisible, setHideUserDialogVisible] = useState(false);
@@ -533,10 +533,17 @@ const handleHideFromCommunitySubmit = () => {
     setHideFromCommunityDialogVisible(false);
     setCommunityItems(prevItems =>
         prevItems.filter(prevItem => prevItem.uuid != modalItem.current.uuid));
-    setOpenItems(prevItems => prevItems.map((prevItem) =>
-        (prevItem.uuid == modalItem.current.uuid)
-            ? { ...prevItem, is_public: false }
-            : prevItem));
+    if (modalItem.current.is_done) {
+        setDoneItems(prevItems => prevItems.map((prevItem) =>
+            (prevItem.uuid == modalItem.current.uuid)
+                ? { ...prevItem, is_public: false }
+                : prevItem));
+    } else {
+        setOpenItems(prevItems => prevItems.map((prevItem) =>
+            (prevItem.uuid == modalItem.current.uuid)
+                ? { ...prevItem, is_public: false }
+                : prevItem));
+    }
     updateItemPublicState(modalItem.current.uuid, false);
 }
 

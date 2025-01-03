@@ -50,7 +50,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, initializeLocalUser,
         thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap: itemReactionsMap, selectedItem,
-        currentlyTappedThing, emptyListCTAFadeOutAnimation, setOpenItems, communityItems, setCommunityItems
+        currentlyTappedThing, emptyListCTAFadeOutAnimation, setOpenItems, communityItems, setCommunityItems, setDoneItems
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [isRefreshing, setRefreshing] = useState(false);
@@ -1168,10 +1168,17 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             setCommunityItems(prevItems =>
                 prevItems.filter(prevItem => prevItem.uuid != modalItem.current.uuid));
         }
-        setOpenItems(prevItems => prevItems.map((prevItem) =>
-            (prevItem.uuid == modalItem.current.uuid)
-                ? { ...prevItem, is_public: false }
-                : prevItem));
+        if (modalItem.current.is_done) {
+            setDoneItems(prevItems => prevItems.map((prevItem) =>
+                (prevItem.uuid == modalItem.current.uuid)
+                    ? { ...prevItem, is_public: false }
+                    : prevItem));
+        } else {
+            setOpenItems(prevItems => prevItems.map((prevItem) =>
+                (prevItem.uuid == modalItem.current.uuid)
+                    ? { ...prevItem, is_public: false }
+                    : prevItem));
+        }
         updateItemPublicState(modalItem.current.uuid, false);
     }
 
