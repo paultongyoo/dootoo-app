@@ -49,6 +49,7 @@ export const handler = async (event) => {
         statusCode: 200,
         body: {
           name: loadedUser.name,
+          affirmation: loadedUser.affirmation,
           doneCount: loadedUser.doneCount,
           tipCount: loadedUser.tipCount
         }

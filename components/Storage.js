@@ -1185,6 +1185,7 @@ const createUser = async () => {
     // Create username, anonymous ID, and initial user counts
     const newUsername = generateUsername();
     const newAnonymousId = uuid.v4();
+    const affirmation = null;
     const doneCountStr = '0';
     const tipCountStr = '0';
     //console.log(`Username created ${newUsername} with Anon ID ${newAnonymousId}`);
@@ -1199,6 +1200,7 @@ const createUser = async () => {
     return { 
       name: newUsername, 
       anonymous_id: newAnonymousId, 
+      affirmation: affirmation,
       doneCountStr: doneCountStr, 
       tipCountStr: tipCountStr 
     }
@@ -1328,6 +1330,7 @@ const saveUserToBackend = async(newUsername, newAnonymousId, callback) => {
     username: newUsername,
     anonymous_id: newAnonymousId
   });
+  console.log("User creation backend response: " + JSON.stringify(response.data.body));
 
   if (callback) {
     callback(response.data.body);

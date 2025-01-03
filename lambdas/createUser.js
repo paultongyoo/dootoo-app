@@ -30,6 +30,11 @@ const saveUser = async(username, anonymousId) => {
     data: {
       name: username,
       anonymous_id : anonymousId
+    },
+    select: {
+      name: true,
+      anonymous_id: true,
+      affirmation: true
     }
   });
 };
