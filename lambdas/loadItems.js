@@ -52,6 +52,23 @@ export const handler = async (event) => {
         text: true,
         scheduled_datetime_utc: true,
         event_id: true,
+        userReactions: {
+          select: {
+            user: {
+              select: {
+                name: true
+              }
+            },
+            reaction: {
+              select: {
+                name: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        },
         children: {
           select: {
             uuid: true,

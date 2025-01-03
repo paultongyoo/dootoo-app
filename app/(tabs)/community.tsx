@@ -255,6 +255,7 @@ const CommunityScreen = () => {
             flexDirection: 'row',
             borderTopWidth: 1,
             borderTopColor: "#3E272333",
+            marginTop: 10,
             marginHorizontal: 10,
             justifyContent: 'center',
             position: 'relative'

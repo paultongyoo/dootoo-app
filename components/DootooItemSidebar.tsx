@@ -7,9 +7,10 @@ import { updateItemPublicState } from './Storage';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { UsersRound } from './svg/users-round';
 import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter } from './EventEmitters';
+import { ReactionsDisplay } from './ReactionsDisplay';
 
 
-const DootooItemSidebar = ({ thing }) => {
+const DootooItemSidebar = ({ thing, onReactionsPress }) => {
     const COMMUNITY_SECTION_IDX = 1;
     const pathname = usePathname();
     const { anonymousId, setOpenItems } = useContext(AppContext);
@@ -157,18 +158,24 @@ const DootooItemSidebar = ({ thing }) => {
     const greenColorSV = useSharedValue("#556B2F")
 
     if (!thing.parent_item_uuid) {
-        return (
-            <Animated.View style={[{ flexDirection: 'row' }]}>
-                <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
-                    style={sidebarStyles.isPublicContainer}
-                    onPress={() => handleIsPublicTap()}>
-                    <UsersRound
-                        wxh="20"
-                        opacity={(isPublic) ? "1.0" : "0.3"}
-                        color={greenColorSV} />
-                </Pressable>
-            </Animated.View>
-        );
+        if (!thing.userReactions || thing.userReactions.length == 0) {
+            return (
+                <Animated.View style={[{ flexDirection: 'row' }]}>
+                    <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
+                        style={sidebarStyles.isPublicContainer}
+                        onPress={() => handleIsPublicTap()}>
+                        <UsersRound
+                            wxh="20"
+                            opacity={(isPublic) ? "1.0" : "0.3"}
+                            color={greenColorSV} />
+                    </Pressable>
+                </Animated.View>
+            );
+        } else {
+            return (
+                <ReactionsDisplay reactions={thing.userReactions} onReactionsPress={onReactionsPress} />
+            )
+        }
     } else {
         return <></>
     }
