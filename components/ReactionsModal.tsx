@@ -7,6 +7,7 @@ import { HandHeart } from "./svg/hand-heart";
 import { PartyPopper } from "./svg/party-popper";
 import * as Constants from './Constants';
 import Animated, { Easing, runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
+import { useEffect } from "react";
 
 const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionCounts }) => {
 
@@ -33,7 +34,8 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
             flexDirection: 'row',
             paddingBottom: 10,
             paddingRight: 5,
-            marginRight: 15
+            marginRight: 15,
+            alignItems: 'center'
         },
         reactorsModalHeaderSectionText: {
             fontWeight: 'bold',
@@ -49,6 +51,10 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
             backgroundColor: "#556b2f"
         }
     });
+
+    useEffect(() => {
+        animateCurrentSectionIndicator(-1);
+    }, [reactionCounts])
 
     const updateReactionsFilter = (idx) => {
         //Alert.alert("Update reactions filter to idx: " + idx);
@@ -111,8 +117,8 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
                                                 : (Object.keys(reactionCounts)[0] == Constants.REACTION_SUPPORT) ? <HandHeart wxh="20" color="#556B2F" />
                                                     : <PartyPopper wxh="20" color="#556B2F" />
                                     }
+                                    <Text style={[styles.reactorsModalHeaderSectionText, styles.reactorsModalHeaderSectionCount]}>{reactionCounts[Object.keys(reactionCounts)[0]] as string}</Text>
                                 </View>
-                                <Text style={[styles.reactorsModalHeaderSectionText, styles.reactorsModalHeaderSectionCount]}>{reactionCounts[Object.keys(reactionCounts)[0]] as string}</Text>
                             </>
                         }
                     </View>
