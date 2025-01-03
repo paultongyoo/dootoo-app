@@ -25,7 +25,7 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
         reactorsModalHeader: {
             borderBottomWidth: 1,
             borderBottomColor: "#3E272333",
-            marginBottom: 15
+            marginBottom: 20
         },
         reactorsModalHeaderSections: {
             flexDirection: 'row'
@@ -49,6 +49,18 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
             width: 38,
             height: 4,
             backgroundColor: "#556b2f"
+        },
+        reactionContainer: {
+            flexDirection: 'row',
+            paddingBottom: 10
+        },
+        reactionIcon: {
+            paddingRight: 10
+        },
+        reactionUsername: {
+            fontWeight: 'bold',
+            fontSize: 16,
+            color: '#3e2723'
         }
     });
 
@@ -126,7 +138,17 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
                 </View>
                 <FlatList data={reactions}
                     renderItem={({ item, index, separators }) =>
-                        <Text>{item.reaction.name}: {item.user.name}</Text>
+                        <View style={styles.reactionContainer}>
+                            <View style={styles.reactionIcon}>
+                                {(item.reaction.name == Constants.REACTION_LIKE) ? <ThumbUp wxh="26" color="#556B2F" />
+                                        : (item.reaction.name == Constants.REACTION_LOVE) ? <Heart wxh="26" color="#556B2F" />
+                                            : (item.reaction.name == Constants.REACTION_LAUGH) ? <Laugh wxh="26" color="#556B2F" />
+                                                : (item.reaction.name == Constants.REACTION_SUPPORT) ? <HandHeart wxh="26" color="#556B2F" />
+                                                    : <PartyPopper wxh="26" color="#556B2F" />
+                                }                                   
+                            </View>
+                            <Text style={styles.reactionUsername}>{item.user.name}</Text>
+                        </View>
                     }
                     keyExtractor={(item, index) => `${item.user.name}_${item.reaction.name}`} />
             </View>
