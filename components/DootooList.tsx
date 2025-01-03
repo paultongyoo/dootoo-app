@@ -14,13 +14,14 @@ import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, insertArrayAfter, isThingOverdue, pluralize, stringizeThingName } from './Helpers';
+import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, generateReactionCountObject, getLocalDateObj, insertArrayAfter, isThingOverdue, pluralize, stringizeThingName } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Bulb } from './svg/bulb';
 import { Clock } from './svg/clock';
 import MicButton from './MicButton';
 import KeyboardButton from './KeyboardButton';
 import Animated from 'react-native-reanimated';
+import ReactionsModal from './ReactionsModal';
 
 export const THINGNAME_ITEM = "item";
 export const THINGNAME_DONE_ITEM = "done_item";
@@ -76,6 +77,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
     // 1.6 Reintroducing pagination with the separation of Open and Done lists
     const currentPage = useRef(1);
+
+    const [reactorsModalVisible, setReactorsModalVisible] = useState(false);
+    const modalItem = useRef(null);
+    const modelItemReactionCounts = useRef({});
+    const modalItemReactions = useRef([]);
 
     useEffect(() => {
         //console.log("DootooList.useEffect([])");
@@ -1105,6 +1111,15 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }
     }
 
+    const handleReactionsTap = (item) => {
+        modalItem.current = item;
+        modelItemReactionCounts.current = generateReactionCountObject(item.userReactions);
+        modalItemReactions.current = item.userReactions;
+        // console.log("modelItemCounts: " + JSON.stringify(modalItemCounts.current));
+        // console.log("modalItemReactions: " + JSON.stringify(modalItemReactions.current));
+        setReactorsModalVisible(true);
+    }
+
     const renderThing = ({ item, getIndex, drag, isActive }) => {
         const textInputRef = useRef(null);
         const rowPositionX = useSharedValue(0);
@@ -1680,7 +1695,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                                 <Text style={[listStyles.taskTitle]}>{item.text}</Text>
                                             </View>
                                     )}
-                                <ListThingSidebar thing={item} styles={styles} />
+                                <ListThingSidebar thing={item} styles={styles} onReactionsPress={() => handleReactionsTap(item)} />
                             </View>
                         </View>
                     </ScaleDecorator>
@@ -1823,6 +1838,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 </View>
                 : <></>
             }
+            <ReactionsModal modalVisible={reactorsModalVisible} modalVisibleSetter={setReactorsModalVisible} 
+                        reactions={modalItemReactions.current} reactionCounts={modelItemReactionCounts.current} />
             <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
                 <Dialog.Title>Select Calendar</Dialog.Title>
                 <Dialog.Description>Which calendar to put this item?</Dialog.Description>
