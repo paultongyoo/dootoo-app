@@ -4,7 +4,7 @@ import { CircleCheck } from "./svg/circle-check";
 import { List } from "./svg/list";
 import { UserRound } from "./svg/user-round";
 import Animated, { Easing, runOnJS, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter, ProfileCountEventEmitter } from "./EventEmitters";
 import { loadUsername } from "./Storage";
 import { AppContext } from "./AppContext";
@@ -43,17 +43,23 @@ const NavigationSections = ({ navigation }) => {
         }
     }, [])
 
+
+    const initialUsernameMount = useRef(true);
     useEffect(() => {
-        //console.log("NavigationSections.useEffect([username])");
-        if (username) {
-            const initUsername = async () => {
-                const usernameCounts = await loadUsername(username);
-                setDoneCount(usernameCounts.doneCount);
-                setTipCount(usernameCounts.tipCount);
-            }
-            initUsername();
+        //console.log("NavigationSections.useEffect([username]), username " + username);
+        if (initialUsernameMount.current) {
+            initialUsernameMount.current = false
         } else {
-            console.log("NavigationSections.useEffect([username]) called with null username.current");
+            if (username) {
+                const initUsername = async () => {
+                    const usernameCounts = await loadUsername(username);
+                    setDoneCount(usernameCounts.doneCount);
+                    setTipCount(usernameCounts.tipCount);
+                }
+                initUsername();
+            } else {
+               console.log("NavigationSections.useEffect([username]) called with null username, unexpected?");
+            }
         }
     }, [username])
 

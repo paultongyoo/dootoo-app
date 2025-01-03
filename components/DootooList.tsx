@@ -86,6 +86,9 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const modalItemReactions = useRef([]);
     const [hideFromCommunityDialogVisible, setHideFromCommunityDialogVisible] = useState(false);
     const [itemMoreModalVisible, setItemMoreModalVisible] = useState(false);
+    
+    const hasReactionsBeenRefreshedOnLaunch = useRef(false);
+    const [appState, setAppState] = useState(AppState.currentState);
 
     useEffect(() => {
         //console.log("DootooList.useEffect([])");
@@ -102,32 +105,15 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 //console.log("Skipping initial load for user per shouldInitialLoad == false.");
             }
         });
-
-        const handleAppStateChange = (nextAppState) => {
-            //console.log("App State Changed: " + nextAppState);
-            if (nextAppState === "active") {
-                refreshThingReactions();
-
-                // Asynchronously check if updated any events in Calendar app
-                if (thingName == THINGNAME_ITEM) {
-                    syncItemCalendarUpdates();
-                }
-            }
-        };
-        const subscription = AppState.addEventListener("change", handleAppStateChange);
-
-        return () => {
-            subscription.remove();
-        }
     }, []);
 
     const initialListArrayMount = useRef(true);
     useEffect(() => {
         if (initialListArrayMount.current) {
-            //console.log("useEffect([listArray]) discarding call on initial mount");
+            //console.log(thingName + " useEffect([listArray]) discarding call on initial mount, listArray: " + listArray.length);
             initialListArrayMount.current = false;
         } else {
-            //console.log(`useEffect[listArray] called: List length ${listArray.length}`);
+            //console.log(thingName + ` useEffect([listArray]) called: List length ${listArray.length}`);
             //console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
 
             // Asyncronously update local cache with latest listArray update
@@ -188,8 +174,28 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     }
                 });
             }
+
+            if (!hasReactionsBeenRefreshedOnLaunch.current) {
+                refreshThingReactions();
+                hasReactionsBeenRefreshedOnLaunch.current = true;
+            }      
         }
     }, [listArray]);
+
+    useEffect(() => {
+        const subscription = AppState.addEventListener('change', (nextAppState) => {
+          if (appState.match(/inactive|background/) && nextAppState === 'active') {
+            //console.log('App has come to the foreground!');
+            refreshThingReactions();
+          }
+          setAppState(nextAppState);
+        });
+    
+        return () => {
+          subscription.remove();
+        };
+      }, [appState]);
+
 
     // 1.7:  Currently refreshThingReactions will only be called on foregrounding the app from background
     //       otherwise reactions are expected to be refreshed on full pull downs (i.e. as part of loadItems result)
@@ -203,14 +209,13 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             console.log(`Refreshing latest ${thingName} reactions: ${new Date(Date.now()).toLocaleString()}`);
             if (listArray.filter(thing => thing.is_public && !thing.newKeyboardEntry).length > 0) {
                 const filteredItemUUIDs = listArray.filter(thing => thing.is_public && !thing.newKeyboardEntry).map(thing => thing.uuid);
-                // console.log("listArray length: " + listArray.length);
-                // console.log("filteredItemUUIDs length: " + filteredItemUUIDs.length);
                 if (filteredItemUUIDs.length > 0) {
                     itemReactionsMap.current = await loadItemsReactions(filteredItemUUIDs);
-                    // console.log("Loaded Reactions: " + JSON.stringify(itemReactionsMap.current));
+                    //console.log("Loaded Reactions: " + JSON.stringify(itemReactionsMap.current));
                     if (itemReactionsMap.current) {
                         listArraySetter(prevItems => {
                             let arrayToUpdate = [...prevItems];
+                            let itemsRefreshed = 0
                             for (const uuid in itemReactionsMap.current) {
                                 if (itemReactionsMap.current.hasOwnProperty(uuid)) { 
                                     const returnedReactions = itemReactionsMap.current[uuid];
@@ -220,8 +225,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                             ? { ...item, userReactions: returnedReactions }
                                             : item
                                     )
+                                    itemsRefreshed += 1;
                                 }
                             }
+                            console.log(`${pluralize('reaction', itemsRefreshed)} refreshed.`)
                             return arrayToUpdate;
                         })
                     } else {
