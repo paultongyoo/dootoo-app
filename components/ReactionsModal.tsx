@@ -7,9 +7,11 @@ import { HandHeart } from "./svg/hand-heart";
 import { PartyPopper } from "./svg/party-popper";
 import * as Constants from './Constants';
 import Animated, { Easing, runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionCounts }) => {
+
+    const [displayedReactions, setDisplayedReactions] = useState(reactions);
 
     const styles = StyleSheet.create({
         reactorsModal: {
@@ -69,7 +71,13 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
     }, [reactionCounts])
 
     const updateReactionsFilter = (idx) => {
-        //Alert.alert("Update reactions filter to idx: " + idx);
+        if (idx == -1) {
+            setDisplayedReactions(reactions);
+        } else {
+            const selectedReactionName = Object.keys(reactionCounts)[idx];
+            setDisplayedReactions(
+                reactions.filter(reaction => reaction.reaction.name == selectedReactionName));
+        }
     }
 
     const barTranslateX = useSharedValue(0);
@@ -136,7 +144,7 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
                     </View>
                     <Animated.View style={[styles.currentSectionIndicator, { transform: [{ translateX: barTranslateX }] }]}></Animated.View>
                 </View>
-                <FlatList data={reactions}
+                <FlatList data={displayedReactions}
                     renderItem={({ item, index, separators }) =>
                         <View style={styles.reactionContainer}>
                             <View style={styles.reactionIcon}>
