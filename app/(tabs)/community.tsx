@@ -700,7 +700,7 @@ const ItemMoreModal = () => (
                                 <Flag wxh="20" color="#3e2723" />
                             </View>
                             <View style={styles.moreOverlayOptionTextContainer}>
-                                <Text style={styles.moreOverlayOptionText}>Hide & Report User</Text>
+                                <Text style={styles.moreOverlayOptionText}>Report User</Text>
                             </View>
                         </Pressable>
                         <Pressable hitSlop={10}
@@ -713,7 +713,7 @@ const ItemMoreModal = () => (
                                 <Flag wxh="20" color="#3e2723" />
                             </View>
                             <View style={styles.moreOverlayOptionTextContainer}>
-                                <Text style={styles.moreOverlayOptionText}>Hide & Report Post</Text>
+                                <Text style={styles.moreOverlayOptionText}>Report Post</Text>
                             </View>
                         </Pressable>
                     </>}
@@ -809,8 +809,8 @@ return (
             <Dialog.Button label="Yes" onPress={handleHideUserSubmit} />
         </Dialog.Container>
         <Dialog.Container visible={reportUserDialogVisible} onBackdropPress={handleReportUserCancel}>
-            <Dialog.Title>Hide & Report User</Dialog.Title>
-            <Dialog.Description>This currently cannot be undone.</Dialog.Description>
+            <Dialog.Title>Report User</Dialog.Title>
+            <Dialog.Description>This hides the user as well and currently cannot be undone.</Dialog.Description>
             <RNPickerSelect
                 onValueChange={(value) => setSelectedBlockReason(value)}
                 placeholder={{ label: 'Select a reason', value: 'no_reason' }}
@@ -837,8 +837,8 @@ return (
             <Dialog.Button label="Submit" onPress={handleReportUserSubmit} />
         </Dialog.Container>
         <Dialog.Container visible={reportPostModalVisible} onBackdropPress={handleReportPostCancel}>
-            <Dialog.Title>Hide & Report Post</Dialog.Title>
-            <Dialog.Description>This currently cannot be undone.</Dialog.Description>
+            <Dialog.Title>Report Post</Dialog.Title>
+            <Dialog.Description>This hides the post as well and currently cannot be undone.</Dialog.Description>
             <RNPickerSelect
                 onValueChange={(value) => setSelectedBlockReason(value)}
                 placeholder={{ label: 'Select a reason', value: 'no_reason' }}
