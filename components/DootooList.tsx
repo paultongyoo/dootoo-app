@@ -9,7 +9,7 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
-import { enrichItem, loadItemsCounts, loadLocalListLastCachedPage, OPEN_ITEM_LIST_KEY, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
+import { enrichItem, loadItemsCounts, loadLocalListLastCachedPage, OPEN_ITEM_LIST_KEY, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemPublicState, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
@@ -22,6 +22,8 @@ import MicButton from './MicButton';
 import KeyboardButton from './KeyboardButton';
 import Animated from 'react-native-reanimated';
 import ReactionsModal from './ReactionsModal';
+import Modal from 'react-native-modal';
+import { EyeOff } from './svg/eye-off';
 
 export const THINGNAME_ITEM = "item";
 export const THINGNAME_DONE_ITEM = "done_item";
@@ -48,7 +50,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, initializeLocalUser,
         thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap, selectedItem,
-        currentlyTappedThing, emptyListCTAFadeOutAnimation,
+        currentlyTappedThing, emptyListCTAFadeOutAnimation, setOpenItems, communityItems, setCommunityItems
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [isRefreshing, setRefreshing] = useState(false);
@@ -82,6 +84,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const modalItem = useRef(null);
     const modelItemReactionCounts = useRef({});
     const modalItemReactions = useRef([]);
+    const [hideFromCommunityDialogVisible, setHideFromCommunityDialogVisible] = useState(false);
+    const [itemMoreModalVisible, setItemMoreModalVisible] = useState(false);
 
     useEffect(() => {
         //console.log("DootooList.useEffect([])");
@@ -195,7 +199,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
         // 1.7 Deactivated with new community MVP!
         return;
-        
+
         let ignore = false;
         if (!ignore) {
             ignore = true;
@@ -234,18 +238,18 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const loadNextPage = async () => {
         //console.log("loadNextPage called");
         if (hasMoreThings.current) {
-                //console.log(`${thingName}: List end reached, incrementing current page var (currently ${currentPage.current}).`);
-                
-                await new Promise<void>((resolve) => {
-                    nextPageLoadingOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
-                        if (isFinished) {
-                            runOnJS(resolve)();
-                        }
-                    })
-                })
+            //console.log(`${thingName}: List end reached, incrementing current page var (currently ${currentPage.current}).`);
 
-                currentPage.current = currentPage.current + 1;
-                loadThingsForCurrentPage(false);
+            await new Promise<void>((resolve) => {
+                nextPageLoadingOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                    if (isFinished) {
+                        runOnJS(resolve)();
+                    }
+                })
+            })
+
+            currentPage.current = currentPage.current + 1;
+            loadThingsForCurrentPage(false);
         } else {
             //console.log(`${thingName}: Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
         }
@@ -257,8 +261,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         const loadResponse = await loadAllThings(isPullDown, currentPage.current);
 
         let things = loadResponse.things || [];
-        const hasMore = loadResponse.hasMore;  
-        
+        const hasMore = loadResponse.hasMore;
+
         //console.log(`${thingName}: DB load returned ${things.length} item(s) and hasMore is ${hasMore}`);
 
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
@@ -286,7 +290,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             // }
         } else {
             //console.log(`${thingName}: Appending ${things.length} ${thingName}(s) from page ${currentPage.current} to current list.`)
-            
+
             await new Promise<void>((resolve) => {
                 nextPageLoadingOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
                     if (isFinished) {
@@ -294,7 +298,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     }
                 })
             })
-  
+
             listArraySetter((prevItems) => prevItems.concat(things));
         }
 
@@ -450,7 +454,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             // Call asyncronous delete to mark item as deleted in backend to sync database
                             // 1.2  Deleting parent thing will delete its children too in DB
                             // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
-                            if (!thing.newKeyboardEntry) deleteThing(thing.uuid);                               
+                            if (!thing.newKeyboardEntry) deleteThing(thing.uuid);
 
                             const animationPromises = [];
                             for (var i = index; i <= index + thingSubtasks.length; i++) {
@@ -1120,6 +1124,68 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         setReactorsModalVisible(true);
     }
 
+    const handleHideFromCommunity = () => {
+        amplitude.track("Item Hide from Public Prompt Displayed", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+        setItemMoreModalVisible(false);
+        setHideFromCommunityDialogVisible(true);
+    }
+    
+    const handleHideFromCommunityCancel = () => {
+        amplitude.track("Item Hide from Public Prompt Cancelled", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+        setHideFromCommunityDialogVisible(false);
+    }
+    
+    const handleHideFromCommunitySubmit = () => {
+        amplitude.track("Item Hide from Public Prompt Approved", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+        setHideFromCommunityDialogVisible(false);
+        setReactorsModalVisible(false);
+        if (communityItems) {
+            setCommunityItems(prevItems =>
+                prevItems.filter(prevItem => prevItem.uuid != modalItem.current.uuid));
+        }
+        setOpenItems(prevItems => prevItems.map((prevItem) =>
+            (prevItem.uuid == modalItem.current.uuid)
+                ? { ...prevItem, is_public: false }
+                : prevItem));
+        updateItemPublicState(modalItem.current.uuid, false);
+    }
+
+    const ItemMoreModal = () => (
+        <Modal
+            isVisible={itemMoreModalVisible}
+            onBackdropPress={() => { setItemMoreModalVisible(false) }}
+            backdropOpacity={0.7}
+            animationIn="fadeIn">
+            {(modalItem.current) ?
+                <View style={listStyles.communityModal}>
+                    <Pressable hitSlop={10}
+                            style={({ pressed }) => [
+                                listStyles.moreOverlayOption,
+                                pressed && { backgroundColor: '#3e372310' }
+                            ]}
+                            onPress={handleHideFromCommunity}>
+                            <View>
+                                <EyeOff wxh="20" color="#3e2723" />
+                            </View>
+                            <View>
+                                <Text style={listStyles.moreOverlayOptionText}>Hide from Community</Text>
+                            </View>
+                    </Pressable>
+                </View>
+                :
+                <Text>No modal item selected!</Text>}
+        </Modal>
+    )
+
     const renderThing = ({ item, getIndex, drag, isActive }) => {
         const textInputRef = useRef(null);
         const rowPositionX = useSharedValue(0);
@@ -1625,7 +1691,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             }
                             {(isDoneable && !((thingName == THINGNAME_DONE_ITEM) && item.parent_item_uuid)) ?
                                 <Pressable style={[styles.itemCircleOpen, item.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(item)}></Pressable>
-                                : ((thingName == THINGNAME_DONE_ITEM) && item.parent_item_uuid) 
+                                : ((thingName == THINGNAME_DONE_ITEM) && item.parent_item_uuid)
                                     ? <View style={styles.childDoneSpacer}></View>
                                     : <></>
                             }
@@ -1838,8 +1904,16 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 </View>
                 : <></>
             }
-            <ReactionsModal modalVisible={reactorsModalVisible} modalVisibleSetter={setReactorsModalVisible} 
-                        reactions={modalItemReactions.current} reactionCounts={modelItemReactionCounts.current} />
+            <ItemMoreModal />
+            <ReactionsModal modalVisible={reactorsModalVisible} modalVisibleSetter={setReactorsModalVisible}
+                reactions={modalItemReactions.current} reactionCounts={modelItemReactionCounts.current} 
+                onMoreIconPress={() => setItemMoreModalVisible(true)}/>
+            <Dialog.Container visible={hideFromCommunityDialogVisible} onBackdropPress={handleHideFromCommunityCancel}>
+                <Dialog.Title>Hide Item from the Community?</Dialog.Title>
+                <Dialog.Description>The item will no longer display in the Community Feed.</Dialog.Description>
+                <Dialog.Button label="Cancel" onPress={handleHideFromCommunityCancel} />
+                <Dialog.Button label="Yes" onPress={handleHideFromCommunitySubmit} />
+            </Dialog.Container>            
             <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
                 <Dialog.Title>Select Calendar</Dialog.Title>
                 <Dialog.Description>Which calendar to put this item?</Dialog.Description>
@@ -2010,6 +2084,28 @@ export const listStyles = StyleSheet.create({
         position: 'absolute',
         top: 0,
         backgroundColor: 'black'
+    },
+    communityModal: {
+        // position: 'absolute',
+        // right: 10,
+        backgroundColor: '#FAF3E0',
+        borderRadius: 5,
+        width: '100%',
+        paddingHorizontal: 10,
+        paddingVertical: 5
+    },
+    moreOverlayOption: {
+        flexDirection: 'row',
+        paddingHorizontal: 10,
+        paddingVertical: 15,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    moreOverlayOptionText: {
+        paddingLeft: 10,
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#3e2723'
     }
 })
 

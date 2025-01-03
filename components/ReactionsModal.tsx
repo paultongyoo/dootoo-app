@@ -8,8 +8,9 @@ import { PartyPopper } from "./svg/party-popper";
 import * as Constants from './Constants';
 import Animated, { Easing, runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
 import { useEffect, useState } from "react";
+import { EllipsisVertical } from "./svg/ellipsis-vertical";
 
-const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionCounts }) => {
+const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionCounts, onMoreIconPress = null }) => {
 
     const [displayedReactions, setDisplayedReactions] = useState(reactions);
 
@@ -63,6 +64,9 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
             fontWeight: 'bold',
             fontSize: 16,
             color: '#3e2723'
+        },
+        moreIconContainer: {
+            
         }
     });
 
@@ -141,6 +145,13 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
                                 </View>
                             </>
                         }
+                        { (onMoreIconPress) ?
+                            <View style={styles.moreIconContainer}>
+                                <Pressable hitSlop={10} onPress={onMoreIconPress}>
+                                    <EllipsisVertical wxh="20" color="#556B2F" />
+                                </Pressable>
+                            </View>
+                        : <></>}
                     </View>
                     <Animated.View style={[styles.currentSectionIndicator, { transform: [{ translateX: barTranslateX }] }]}></Animated.View>
                 </View>

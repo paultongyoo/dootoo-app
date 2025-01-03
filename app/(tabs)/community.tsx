@@ -24,8 +24,7 @@ import { ReactionsDisplay } from "@/components/ReactionsDisplay";
 
 const CommunityScreen = () => {
     const pathname = usePathname();
-    const [communityItems, setCommunityItems] = useState(null);
-    const { username, anonymousId, setOpenItems } = useContext(AppContext);
+    const { username, anonymousId, setOpenItems, communityItems, setCommunityItems } = useContext(AppContext);
     const [itemMoreModalVisible, setItemMoreModalVisible] = useState(false);
     const [hideFromCommunityDialogVisible, setHideFromCommunityDialogVisible] = useState(false);
     const [hideUserDialogVisible, setHideUserDialogVisible] = useState(false);

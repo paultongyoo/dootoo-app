@@ -11,6 +11,7 @@ export const AppProvider = ({ children }) => {
     // State Variables:  Changing these SHOULD intentionally cause components to re-render
     const [openItems, setOpenItems] = useState([]);
     const [doneItems, setDoneItems] = useState([]);
+    const [communityItems, setCommunityItems] = useState(null); 
     const [selectedItem, setSelectedItem] = useState(null);         // Selected Item context of Tips pages
     const [selectedProfile, setSelectedProfile] = useState(null);   // Selected Profile from Tip pages
 
@@ -70,6 +71,7 @@ export const AppProvider = ({ children }) => {
         <AppContext.Provider value={{ 
             openItems, setOpenItems,
             doneItems, setDoneItems,
+            communityItems, setCommunityItems,
             username, setUsername,
             anonymousId, setAnonymousId,
             doneCount, setDoneCount,

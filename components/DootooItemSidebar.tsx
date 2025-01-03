@@ -158,7 +158,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
     const greenColorSV = useSharedValue("#556B2F")
 
     if (!thing.parent_item_uuid) {
-        if (!thing.userReactions || thing.userReactions.length == 0) {
+        if (!thing.is_public) {
             return (
                 <Animated.View style={[{ flexDirection: 'row' }]}>
                     <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
@@ -166,7 +166,20 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                         onPress={() => handleIsPublicTap()}>
                         <UsersRound
                             wxh="20"
-                            opacity={(isPublic) ? "1.0" : "0.3"}
+                            opacity="0.3"
+                            color={greenColorSV} />
+                    </Pressable>
+                </Animated.View>
+            );
+        } else if (!thing.userReactions || thing.userReactions.length == 0) {
+            return (
+                <Animated.View style={[{ flexDirection: 'row' }]}>
+                    <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
+                        style={sidebarStyles.isPublicContainer}
+                        onPress={() => handleIsPublicTap()}>
+                        <UsersRound
+                            wxh="20"
+                            opacity="1.0"
                             color={greenColorSV} />
                     </Pressable>
                 </Animated.View>
