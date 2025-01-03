@@ -1873,7 +1873,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 }}
                                 nestedScrollEnabled={true}
                                 keyboardShouldPersistTaps="handled"
-                                keyExtractor={(item, index) => item.uuid}
+                                keyExtractor={(item, index) => `${item.uuid}_${item.is_done}`}
                                 ListHeaderComponent={<View style={{ height: 0 }} />}
                                 refreshControl={
                                     <RefreshControl
