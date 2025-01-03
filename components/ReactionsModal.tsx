@@ -146,11 +146,14 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
                             </>
                         }
                         { (onMoreIconPress) ?
-                            <View style={styles.moreIconContainer}>
-                                <Pressable hitSlop={10} onPress={onMoreIconPress}>
-                                    <EllipsisVertical wxh="20" color="#556B2F" />
-                                </Pressable>
-                            </View>
+                            <>
+                                <View style={{flex: 1}}></View>
+                                <View style={styles.moreIconContainer}>
+                                    <Pressable hitSlop={10} onPress={onMoreIconPress}>
+                                        <EllipsisVertical wxh="20" color="#556B2F" />
+                                    </Pressable>
+                                </View>
+                            </>
                         : <></>}
                     </View>
                     <Animated.View style={[styles.currentSectionIndicator, { transform: [{ translateX: barTranslateX }] }]}></Animated.View>
