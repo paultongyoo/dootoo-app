@@ -149,7 +149,9 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
                             <>
                                 <View style={{flex: 1}}></View>
                                 <View style={styles.moreIconContainer}>
-                                    <Pressable hitSlop={10} onPress={onMoreIconPress}>
+                                    <Pressable hitSlop={10} 
+                                               style={({pressed}) => (pressed && { backgroundColor: '#3e272310'})} 
+                                               onPress={onMoreIconPress}>
                                         <EllipsisVertical wxh="20" color="#556B2F" />
                                     </Pressable>
                                 </View>
