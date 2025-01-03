@@ -8,9 +8,6 @@ import * as Constants from "@/components/Constants";
 
 
 export const ReactionsDisplay = ({reactions, onReactionsPress}) => {
-
-    console.log("Inside ReactionsDisplay: " + JSON.stringify(reactions));
-
     const styles = StyleSheet.create({
         reactions: {
             flexDirection: 'row',
