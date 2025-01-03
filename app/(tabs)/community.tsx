@@ -37,10 +37,6 @@ const CommunityScreen = () => {
     const [selectedBlockReason, setSelectedBlockReason] = useState('no_reason');
     const [blockReasonOtherText, setBlockReasonOtherText] = useState('');
     const [reactorsModalVisible, setReactorsModalVisible] = useState(false);
-    const reactorsModalNextPageLoadingOpacity = useSharedValue(0);
-    const reactorsModalNextPageAnimatedOpacity = useAnimatedStyle(() => {
-        return { opacity: reactorsModalNextPageLoadingOpacity.value }
-    })
     const modalItem = useRef(null);
     const modelItemReactionCounts = useRef({});
     const modalItemReactions = useRef([]);
