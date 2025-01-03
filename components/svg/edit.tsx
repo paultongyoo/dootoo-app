@@ -1,5 +1,6 @@
 import Svg, { Path } from "react-native-svg";
 
+// https://boxicons.com/?query=edit
 export const Edit = ({ wxh, color, opacity }) => (
     <Svg width={wxh} height={wxh} viewBox="0 0 24 24" opacity={opacity}
         fill={color}>
