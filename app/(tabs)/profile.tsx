@@ -354,14 +354,14 @@ const ProfileScreen = ({ navigation }) => {
                     <Text style={styles.statNumber}>{formatNumber(doneCount) || '0'}</Text>
                     <Text style={styles.statName}>Done</Text>
                 </Pressable>
-                <Pressable style={styles.statContainer}
+                {/* <Pressable style={styles.statContainer}
                     onPress={() => showComingSoonAlert(anonymousId, "'Tips'", pathname)}>
                     <View style={styles.statIconContainer}>
                         <Bulb wxh="40" color="#556B2F" strokeWidth="1.5" />
                     </View>
                     <Text style={styles.statNumber}>{formatNumber(tipCount) || '0'}</Text>
                     <Text style={styles.statName}>Tips</Text>
-                </Pressable>
+                </Pressable> */}
             </View>
             <View style={styles.privacyContainer}>
                 {/* <View style={styles.anonIdDisplayContainer}>
