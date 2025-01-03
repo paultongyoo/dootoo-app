@@ -1,12 +1,12 @@
 import { View, ActivityIndicator, Pressable, StyleSheet, Alert } from 'react-native';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { AppContext } from './AppContext';
 import { useNavigation, usePathname } from 'expo-router';
 import Animated, { useSharedValue } from 'react-native-reanimated';
 import { updateItemPublicState } from './Storage';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { UsersRound } from './svg/users-round';
-import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter } from './EventEmitters';
+import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter } from './EventEmitters';
 import { ReactionsDisplay } from './ReactionsDisplay';
 import { NAVIGATION_SECTION_IDX_COMMUNITY } from './Constants';
 
@@ -17,34 +17,6 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
     const { anonymousId, setOpenItems } = useContext(AppContext);
 
     const [isPublic, setIsPublic] = useState(thing.is_public == true);
-
-    // const opacitySV = useSharedValue(1);
-    // const opacityAnimatedStyle = useAnimatedStyle(() => {
-    //     return { opacity: opacitySV.value }
-    // })
-
-    // 1.7 TODO: Reactivate on community reaction count updates
-    // useEffect(() => {
-    //     //console.log("Inside useEffect([]) " + thing.text + " " + Date.now());
-
-    //     const eventHandler_countsPolled = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, (uuidArray) => {
-    //         if (itemCountsMap.current && uuidArray.includes(thing.uuid)) {
-    //             const updatedCounts = itemCountsMap.current.get(thing.uuid);
-    //             setTipCount(updatedCounts.tip_count);
-    //             setSimilarCount(updatedCounts.similar_count); 
-    //             // opacitySV.value = withTiming(1, {
-    //             //     duration: 300
-    //             // });
-    //         }
-    //     });
-
-    //     return () => {
-    //         eventHandler_countsPolled.remove();
-    //         // opacitySV.value = withTiming(0, {
-    //         //     duration: 300
-    //         // });
-    //     }
-    // }, []);
 
     const handleIsPublicTap = () => {
         amplitude.track("Item Go Public Prompt Displayed", {

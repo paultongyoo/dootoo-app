@@ -111,6 +111,9 @@ const LOADCOMMUNITYITEMS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-ea
 const REACTTOITEM_URL = (__DEV__) ?  'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/reactToItem_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/reactToItem';
 
+const LOADITEMSREACTIONS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItemsReactions_Dev'
+                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadItemsReactions';
+
 
 export const loadCommunityItems = async(requestedPage) => {
   try {
@@ -618,6 +621,36 @@ export const loadItemsCounts = async (item_uuids) => {
     }
   } catch (error) {
     console.error('Error calling loadItemsCounts API:', error);
+  }
+};
+
+export const loadItemsReactions = async (item_uuids) => {
+  try {
+    const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserStr) {
+      console.log("Received null local anon Id, aborting loadItems!");
+      return [];
+    }
+    const localUser = JSON.parse(localUserStr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(LOADITEMSREACTIONS_URL,
+      {
+        anonymous_id : localAnonId,
+        item_uuids: item_uuids
+      }
+    );
+    const statusCode = response.data.statusCode;
+    const itemData = response.data.body;
+    // console.log("Parsed itemData: " + JSON.stringify(JSON.parse(itemData)));
+    if (statusCode == 200) {
+      const itemDataMap = JSON.parse(itemData);
+      return itemDataMap;
+    } else {
+      console.log("HTTP 403 returned: " + itemData);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error calling loadItemsReactions API:', error);
   }
 };
 

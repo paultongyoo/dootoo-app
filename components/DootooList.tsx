@@ -9,7 +9,7 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
-import { enrichItem, loadItemsCounts, loadLocalListLastCachedPage, OPEN_ITEM_LIST_KEY, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemPublicState, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
+import { enrichItem, loadItemsCounts, loadItemsReactions, loadLocalListLastCachedPage, OPEN_ITEM_LIST_KEY, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemPublicState, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
@@ -49,7 +49,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
     const pathname = usePathname();
     const { anonymousId, lastRecordedCount, initializeLocalUser,
-        thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap, selectedItem,
+        thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap: itemReactionsMap, selectedItem,
         currentlyTappedThing, emptyListCTAFadeOutAnimation, setOpenItems, communityItems, setCommunityItems
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
@@ -103,11 +103,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             }
         });
 
-
         const handleAppStateChange = (nextAppState) => {
             //console.log("App State Changed: " + nextAppState);
             if (nextAppState === "active") {
-                refreshThingCounts();
+                refreshThingReactions();
 
                 // Asynchronously check if updated any events in Calendar app
                 if (thingName == THINGNAME_ITEM) {
@@ -189,37 +188,47 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     }
                 });
             }
-
-            // Check for count updates since user just made an list update action
-            refreshThingCounts();
         }
     }, [listArray]);
 
-    const refreshThingCounts = async () => {
-
-        // 1.7 Deactivated with new community MVP!
-        return;
-
+    // 1.7:  Currently refreshThingReactions will only be called on foregrounding the app from background
+    //       otherwise reactions are expected to be refreshed on full pull downs (i.e. as part of loadItems result)
+    //       FUTURE TODO if traction:  Poll refreshThingReactions to refresh more frequently
+    //       NOTE:  because refreshThingReactions update listArray, the refreshThingReactions call CANNOT be placed in the
+    //       listArray effect to prevent infinite loop
+    const refreshThingReactions = async () => {
         let ignore = false;
         if (!ignore) {
             ignore = true;
-            console.log(`Refreshing latest ${thingName} counts: ${new Date(Date.now()).toLocaleString()}`);
-            if (listArray.filter(thing => !thing.newKeyboardEntry).length > 0) {
-                if ((thingName == THINGNAME_ITEM) || (thingName == THINGNAME_DONE_ITEM)) {
-                    const itemUUIDs = listArray.map(thing => thing.uuid);
-                    if (itemUUIDs.length > 0) {
-                        itemCountsMap.current = await loadItemsCounts(itemUUIDs);
-                        if (itemCountsMap.current) {
-                            const mappedUUIDs = [...itemCountsMap.current.keys()];
-                            ListItemEventEmitter.emit(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, mappedUUIDs);
-                        } else {
-                            console.log("loadItemsCount DB call did not return any counts.  Unexpected?");
-                        }
+            console.log(`Refreshing latest ${thingName} reactions: ${new Date(Date.now()).toLocaleString()}`);
+            if (listArray.filter(thing => thing.is_public && !thing.newKeyboardEntry).length > 0) {
+                const filteredItemUUIDs = listArray.filter(thing => thing.is_public && !thing.newKeyboardEntry).map(thing => thing.uuid);
+                // console.log("listArray length: " + listArray.length);
+                // console.log("filteredItemUUIDs length: " + filteredItemUUIDs.length);
+                if (filteredItemUUIDs.length > 0) {
+                    itemReactionsMap.current = await loadItemsReactions(filteredItemUUIDs);
+                    // console.log("Loaded Reactions: " + JSON.stringify(itemReactionsMap.current));
+                    if (itemReactionsMap.current) {
+                        listArraySetter(prevItems => {
+                            let arrayToUpdate = [...prevItems];
+                            for (const uuid in itemReactionsMap.current) {
+                                if (itemReactionsMap.current.hasOwnProperty(uuid)) { 
+                                    const returnedReactions = itemReactionsMap.current[uuid];
+                                    //console.log("Updating array with returnedReactions for item " + uuid + ", returnReactions: " + JSON.stringify(returnedReactions));
+                                    arrayToUpdate = arrayToUpdate.map(item => 
+                                        (item.uuid == uuid)
+                                            ? { ...item, userReactions: returnedReactions }
+                                            : item
+                                    )
+                                }
+                            }
+                            return arrayToUpdate;
+                        })
                     } else {
-                        console.log("itemUUIDs.length unexpectedly zero given listArray.length > 0 -- is app in bad state?");
+                        console.log("Unexpected null result from loadItemsReactions!");
                     }
                 } else {
-                    console.log("Ignoring counts refresh call for tips, not supported at this time");
+                    console.log("itemUUIDs.length unexpectedly zero given listArray.length > 0 -- is app in bad state?");
                 }
             } else {
                 console.log(`${thingName} list empty, no counts to refresh.`);
