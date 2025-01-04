@@ -38,6 +38,7 @@ const ProfileModal = ({ username, modalVisible, modalVisibleSetter }) => {
 
     useEffect(() => {
         if (username && username.length > 0) {
+            setUser(null);
             retrieveUser();
         }
     }, [username]);
@@ -52,7 +53,6 @@ const ProfileModal = ({ username, modalVisible, modalVisibleSetter }) => {
             paddingBottom: 30
         },
         profileDrawerProfileIconContainer: {
-            
             alignItems: 'center'
         },
         profileDrawerProfileIcon: {
@@ -112,7 +112,8 @@ const ProfileModal = ({ username, modalVisible, modalVisibleSetter }) => {
         },
         loadingAnimContainer: {
             justifyContent: 'center',
-            flex: 1
+            flex: 1,
+            paddingBottom: 30
         }
     });
 

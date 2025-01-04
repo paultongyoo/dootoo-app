@@ -24,6 +24,7 @@ import Animated from 'react-native-reanimated';
 import ReactionsModal from './ReactionsModal';
 import Modal from 'react-native-modal';
 import { EyeOff } from './svg/eye-off';
+import ProfileModal from './ProfileModal';
 
 export const THINGNAME_ITEM = "item";
 export const THINGNAME_DONE_ITEM = "done_item";
@@ -87,6 +88,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const [hideFromCommunityDialogVisible, setHideFromCommunityDialogVisible] = useState(false);
     const [itemMoreModalVisible, setItemMoreModalVisible] = useState(false);
     const showMoreModalOnReactionsModalHide = useRef(false);
+    const modalUsername = useRef(null);
+    const [profileModalVisible, setProfileModalVisible] = useState(false);
     
     const hasReactionsBeenRefreshedOnLaunch = useRef(false);
     const [appState, setAppState] = useState(AppState.currentState);
@@ -1941,6 +1944,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         showMoreModalOnReactionsModalHide.current = false;
                     }
                 }}/>
+            <ProfileModal username={modalUsername.current} modalVisible={profileModalVisible} modalVisibleSetter={setProfileModalVisible} />
             <Dialog.Container visible={hideFromCommunityDialogVisible} onBackdropPress={handleHideFromCommunityCancel}>
                 <Dialog.Title>Hide Item from the Community?</Dialog.Title>
                 <Dialog.Description>The item will no longer display in the Community Feed.</Dialog.Description>
