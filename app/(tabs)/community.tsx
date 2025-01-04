@@ -54,6 +54,7 @@ const CommunityScreen = () => {
     const modalUsername = useRef(null);
     const [profileModalVisible, setProfileModalVisible] = useState(false);
     const showProfileModalOnReactionsModalHide = useRef(false);
+    const showMoreModalOnProfileModalHide = useRef(false);
 
     useFocusEffect(
         useCallback(() => {
@@ -419,8 +420,8 @@ const CommunityScreen = () => {
                         <View style={styles.profileIcon}>
                             <CircleUserRound wxh="32" color="#556B2F" />
                         </View>
-                        <Pressable  onPress={() => handleUsernameTap(item.user.name)}
-                                    style={({pressed}) => [styles.profileNameContainer, pressed && { backgroundColor: '#3e272310' }]}>
+                        <Pressable onPress={() => handleUsernameTap(item.user.name)}
+                            style={({ pressed }) => [styles.profileNameContainer, pressed && { backgroundColor: '#3e272310' }]}>
                             <Text style={styles.profileNameText}>
                                 {item.user.name}
                             </Text>
@@ -654,7 +655,7 @@ const CommunityScreen = () => {
             anonymous_id: anonymousId,
             pathname: pathname
         });
-        await submitBlock(modalItem.current.user.name, "hide_user");
+        await submitBlock((modalItem.current) ? modalItem.current.user.name : modalUsername.current, "hide_user");
         setHideUserDialogVisible(false);
     }
 
@@ -669,9 +670,9 @@ const CommunityScreen = () => {
 
     const handleReportUserSubmit = async () => {
         if (selectedBlockReason == 'other') {
-            await submitBlock(modalItem.current.user.name, `${selectedBlockReason}: ${blockReasonOtherText}`);
+            await submitBlock((modalItem.current) ? modalItem.current.user.name : modalUsername.current, `${selectedBlockReason}: ${blockReasonOtherText}`);
         } else {
-            await submitBlock(modalItem.current.user.name, selectedBlockReason);
+            await submitBlock((modalItem.current) ? modalItem.current.user.name : modalUsername.current, selectedBlockReason);
         }
         setReportUserModalVisible(false);
     }
@@ -694,6 +695,9 @@ const CommunityScreen = () => {
         setReportPostModalVisible(false);
     }
 
+    // Using this modal for two use cases:
+    // 1) More Icon click on Post (modalItem.current is NOT null)
+    // 2) More Icon click on Profile modal (modalItem.current IS null)
     const ItemMoreModal = () => (
         <Modal
             isVisible={itemMoreModalVisible}
@@ -701,66 +705,64 @@ const CommunityScreen = () => {
             backdropOpacity={0.3}
             animationIn="fadeIn"
             animationOut="fadeOut">
-            {(modalItem.current) ?
-                <View style={styles.communityModal}>
-                    {(username == modalItem.current.user.name)
-                        ? <Pressable hitSlop={10}
-                            style={({ pressed }) => [
-                                styles.moreOverlayOption,
-                                pressed && { backgroundColor: '#3e372310' }
-                            ]}
-                            onPress={handleHideFromCommunity}>
-                            <View style={styles.moreOverlayOptionIcon}>
-                                <EyeOff wxh="20" color="#3e2723" />
-                            </View>
-                            <View style={styles.moreOverlayOptionTextContainer}>
-                                <Text style={styles.moreOverlayOptionText}>Hide from Community</Text>
-                            </View>
-                        </Pressable>
-                        : <>
-                            <Pressable hitSlop={10}
-                                style={({ pressed }) => [
-                                    styles.moreOverlayOption,
-                                    pressed && { backgroundColor: '#3e372310' }
-                                ]}
-                                onPress={handleHideUser}>
-                                <View style={styles.moreOverlayOptionIcon}>
-                                    <EyeOff wxh="20" color="#3e2723" />
-                                </View>
-                                <View style={styles.moreOverlayOptionTextContainer}>
-                                    <Text style={styles.moreOverlayOptionText}>Hide User</Text>
-                                </View>
-                            </Pressable>
-                            <Pressable hitSlop={10}
-                                style={({ pressed }) => [
-                                    styles.moreOverlayOption,
-                                    pressed && { backgroundColor: '#3e372310' }
-                                ]}
-                                onPress={handleReportUser}>
-                                <View style={styles.moreOverlayOptionIcon}>
-                                    <Flag wxh="20" color="#3e2723" />
-                                </View>
-                                <View style={styles.moreOverlayOptionTextContainer}>
-                                    <Text style={styles.moreOverlayOptionText}>Report User</Text>
-                                </View>
-                            </Pressable>
-                            <Pressable hitSlop={10}
-                                style={({ pressed }) => [
-                                    styles.moreOverlayOption,
-                                    pressed && { backgroundColor: '#3e372310' }
-                                ]}
-                                onPress={handleReportPost}>
-                                <View style={styles.moreOverlayOptionIcon}>
-                                    <Flag wxh="20" color="#3e2723" />
-                                </View>
-                                <View style={styles.moreOverlayOptionTextContainer}>
-                                    <Text style={styles.moreOverlayOptionText}>Report Post</Text>
-                                </View>
-                            </Pressable>
-                        </>}
-                </View>
-                :
-                <Text>No modal item selected!</Text>}
+            <View style={styles.communityModal}>
+                {(modalItem.current) && (username == modalItem.current.user.name)
+                    ? <Pressable hitSlop={10}
+                        style={({ pressed }) => [
+                            styles.moreOverlayOption,
+                            pressed && { backgroundColor: '#3e372310' }
+                        ]}
+                        onPress={handleHideFromCommunity}>
+                        <View style={styles.moreOverlayOptionIcon}>
+                            <EyeOff wxh="20" color="#3e2723" />
+                        </View>
+                        <View style={styles.moreOverlayOptionTextContainer}>
+                            <Text style={styles.moreOverlayOptionText}>Hide from Community</Text>
+                        </View>
+                    </Pressable>
+                    : <></>}
+                <Pressable hitSlop={10}
+                    style={({ pressed }) => [
+                        styles.moreOverlayOption,
+                        pressed && { backgroundColor: '#3e372310' }
+                    ]}
+                    onPress={handleHideUser}>
+                    <View style={styles.moreOverlayOptionIcon}>
+                        <EyeOff wxh="20" color="#3e2723" />
+                    </View>
+                    <View style={styles.moreOverlayOptionTextContainer}>
+                        <Text style={styles.moreOverlayOptionText}>Hide User</Text>
+                    </View>
+                </Pressable>
+                <Pressable hitSlop={10}
+                    style={({ pressed }) => [
+                        styles.moreOverlayOption,
+                        pressed && { backgroundColor: '#3e372310' }
+                    ]}
+                    onPress={handleReportUser}>
+                    <View style={styles.moreOverlayOptionIcon}>
+                        <Flag wxh="20" color="#3e2723" />
+                    </View>
+                    <View style={styles.moreOverlayOptionTextContainer}>
+                        <Text style={styles.moreOverlayOptionText}>Report User</Text>
+                    </View>
+                </Pressable>
+                {(modalItem.current) && (username != modalItem.current.user.name) ?
+                    <Pressable hitSlop={10}
+                        style={({ pressed }) => [
+                            styles.moreOverlayOption,
+                            pressed && { backgroundColor: '#3e372310' }
+                        ]}
+                        onPress={handleReportPost}>
+                        <View style={styles.moreOverlayOptionIcon}>
+                            <Flag wxh="20" color="#3e2723" />
+                        </View>
+                        <View style={styles.moreOverlayOptionTextContainer}>
+                            <Text style={styles.moreOverlayOptionText}>Report Post</Text>
+                        </View>
+                    </Pressable>
+                    : <></>}
+            </View>
         </Modal>
     )
 
@@ -836,7 +838,7 @@ const CommunityScreen = () => {
             </Animated.View>
             <ItemMoreModal />
             <ReactionsModal modalVisible={reactorsModalVisible} modalVisibleSetter={setReactorsModalVisible}
-                reactions={modalItemReactions.current} reactionCounts={modelItemReactionCounts.current} 
+                reactions={modalItemReactions.current} reactionCounts={modelItemReactionCounts.current}
                 onUsernamePress={(username) => {
                     showProfileModalOnReactionsModalHide.current = true;
                     modalUsername.current = username;
@@ -848,7 +850,20 @@ const CommunityScreen = () => {
                         showProfileModalOnReactionsModalHide.current = false;
                     }
                 }} />
-            <ProfileModal username={modalUsername.current} modalVisible={profileModalVisible} modalVisibleSetter={setProfileModalVisible} />
+            <ProfileModal username={modalUsername.current} modalVisible={profileModalVisible} modalVisibleSetter={setProfileModalVisible}
+                onMoreIconPress={(username) => {
+                    showMoreModalOnProfileModalHide.current = true;
+                    modalItem.current = null;
+                    modalUsername.current = username;
+                    setProfileModalVisible(false);
+                }}
+                onModalHide={() => {
+                    if (showMoreModalOnProfileModalHide.current) {
+                        setItemMoreModalVisible(true);
+                        showMoreModalOnProfileModalHide.current = false;
+                    }
+                }}
+            />
             <Dialog.Container visible={hideFromCommunityDialogVisible} onBackdropPress={handleHideFromCommunityCancel}>
                 <Dialog.Title>Hide Item from the Community?</Dialog.Title>
                 <Dialog.Description>The item will no longer display in the Community Feed.</Dialog.Description>
@@ -856,20 +871,19 @@ const CommunityScreen = () => {
                 <Dialog.Button label="Yes" onPress={handleHideFromCommunitySubmit} />
             </Dialog.Container>
             <Dialog.Container visible={hideUserDialogVisible} onBackdropPress={handleHideUserCancel}>
-                <Dialog.Title>Hide All Posts by {(modalItem.current) ? modalItem.current.user.name : 'Not Initialized Yet'}?</Dialog.Title>
+                <Dialog.Title>Hide All Posts by {(modalItem.current) ? modalItem.current.user.name : modalUsername.current }?</Dialog.Title>
                 <Dialog.Description>This currently cannot be undone.</Dialog.Description>
                 <Dialog.Button label="Cancel" onPress={handleHideUserCancel} />
                 <Dialog.Button label="Yes" onPress={handleHideUserSubmit} />
             </Dialog.Container>
             <Dialog.Container visible={reportUserDialogVisible} onBackdropPress={handleReportUserCancel}>
-                <Dialog.Title>Report User</Dialog.Title>
-                <Dialog.Description>This hides the user as well and currently cannot be undone.</Dialog.Description>
+                <Dialog.Title>Report {(modalItem.current) ? modalItem.current.user.name : modalUsername.current }?</Dialog.Title>
+                <Dialog.Description>This will hide {(modalItem.current) ? modalItem.current.user.name : modalUsername.current }'s posts as well and currently cannot be undone.</Dialog.Description>
                 <RNPickerSelect
                     onValueChange={(value) => setSelectedBlockReason(value)}
                     placeholder={{ label: 'Select a reason', value: 'no_reason' }}
                     style={pickerSelectStyles}
                     items={[
-                        { label: 'Select a reason', value: 'no_reason' },
                         { label: 'Hate Speech', value: 'hate_speech' },
                         { label: 'Cyberbullying', value: 'cyberbulling' },
                         { label: 'Violent threats', value: 'violent_threats' },

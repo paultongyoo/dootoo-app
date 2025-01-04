@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, View, Image, Text, ActivityIndicator } from "react-native";
+import { StyleSheet, View, Image, Text, ActivityIndicator, Pressable } from "react-native";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { formatNumber } from "./Helpers";
 import { CircleCheck } from "./svg/circle-check";
 import { loadUsername } from "./Storage";
 import Modal from "react-native-modal";
+import { EllipsisVertical } from "./svg/ellipsis-vertical";
 
-const ProfileModal = ({ username, modalVisible, modalVisibleSetter }) => {
+const ProfileModal = ({ username, modalVisible, modalVisibleSetter,
+    onMoreIconPress = null,
+    onModalHide = () => { return } }) => {
 
     const [user, setUser] = useState(null);
     const opacity = useSharedValue(0);
@@ -50,7 +53,13 @@ const ProfileModal = ({ username, modalVisible, modalVisibleSetter }) => {
             alignItems: 'center',
             borderRadius: 10,
             paddingTop: 40,
-            paddingBottom: 30
+            paddingBottom: 30,
+            position: 'relative'
+        },
+        moreIconContainer: {
+            position: 'absolute',
+            right: 20,
+            top: 20
         },
         profileDrawerProfileIconContainer: {
             alignItems: 'center'
@@ -121,6 +130,7 @@ const ProfileModal = ({ username, modalVisible, modalVisibleSetter }) => {
         <Modal
             isVisible={modalVisible}
             onBackdropPress={() => { modalVisibleSetter(false) }}
+            onModalHide={onModalHide}
             backdropOpacity={0.3}
             animationIn="fadeIn"
             animationOut="fadeOut">
@@ -131,6 +141,16 @@ const ProfileModal = ({ username, modalVisible, modalVisibleSetter }) => {
                         <ActivityIndicator size={"large"} color={"#3E2723"} />
                     </Animated.View>
                     : <>
+                        {(onMoreIconPress) ?
+                            <View style={styles.moreIconContainer}>
+                                <Pressable hitSlop={10}
+                                    style={({ pressed }) => (pressed && { backgroundColor: '#3e272310' })}
+                                    onPress={() => onMoreIconPress(user.name)}>
+                                    <EllipsisVertical wxh="20" color="#556B2F" />
+                                </Pressable>
+                            </View>
+                            : <></>
+                        }
                         <View style={styles.profileDrawerProfileIconContainer}>
                             <Image source={require("@/assets/images/profile_icon_red.png")} />
                             <View style={styles.profileDrawerProfileNameContainer}>
