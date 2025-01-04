@@ -699,7 +699,8 @@ const CommunityScreen = () => {
             isVisible={itemMoreModalVisible}
             onBackdropPress={() => { setItemMoreModalVisible(false) }}
             backdropOpacity={0.3}
-            animationIn="fadeIn">
+            animationIn="fadeIn"
+            animationOut="fadeOut">
             {(modalItem.current) ?
                 <View style={styles.communityModal}>
                     {(username == modalItem.current.user.name)
