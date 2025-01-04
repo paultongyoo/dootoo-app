@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { usePathname } from 'expo-router';
 import { loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_ONLY_OPEN_PARENTS } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
@@ -10,6 +10,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 
 import {
   StyleSheet, Pressable, Alert,
+  Platform,
 } from "react-native";
 import { AppContext } from '@/components/AppContext';
 import Reanimated, {
@@ -23,10 +24,13 @@ import { IndentIncrease } from "@/components/svg/indent-increase";
 import { IndentDecrease } from "@/components/svg/indent-decrease";
 import { Trash } from "@/components/svg/trash";
 import { MoveToTop } from "@/components/svg/move-to-top";
+import { check, PERMISSIONS, request, RESULTS } from "react-native-permissions";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import DootooFirstLaunchUX from "@/components/DootooFirstLaunchUX";
 
 export default function ListScreen() {
   const pathname = usePathname();
-  const { anonymousId, openItems, setOpenItems, setDoneItems,
+  const { anonymousId, openItems, setOpenItems, setDoneItems, isFirstLaunch,
     thingRowHeights, thingRowPositionXs } = useContext(AppContext);
 
   configureReanimatedLogger({
@@ -34,28 +38,29 @@ export default function ListScreen() {
     strict: false
   });
 
-  // useEffect(() => {
-  //   console.log("ListScreen.useEffect([])");
-  // }, []);
+  useEffect(() => {
+    const displayATTPrompt = async() => {
+        if (Platform.OS == 'ios') {
+            const result = await check(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
+            if (result === RESULTS.DENIED) {
 
+                // The permission has not been requested, so request it.
+                amplitude.track("iOS ATT Prompt Started");
+                const result = await request(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
+                amplitude.track("iOS ATT Prompt Completed", { result: result });
+            }
+        }
+    }
+    displayATTPrompt();
 
-  // 1.5 Deprecated, remove in future
-  // const saveAllItems = async (latestItems, callback) => {
-
-  //   // console.log("saveAllItems called with latestItems length: " + openItems.length);
-  //   if (latestItems && latestItems.length > 0) {
-  //     //console.log(`Passing ${latestItems.length} to saveItems method...`);
-
-  //     //console.log("saveAllItems started...");
-  //     // Asynchronously sync DB with latest items
-  //     saveItems(latestItems, () => {
-  //       if (callback) {
-  //         callback();
-  //       }
-  //     });
-  //     //console.log("saveAllItems successful.");
-  //   }
-  // };
+    const checkFirstLaunch = async () => {
+        const launchStatus = await AsyncStorage.getItem('isFirstLaunch');
+        if (launchStatus === null) {
+          isFirstLaunch.current = true;
+        } 
+    };
+    checkFirstLaunch();
+  }, []);
 
   const saveTextUpdate = async (item) => {
     updateItemText(item, async () => {
@@ -782,7 +787,7 @@ export default function ListScreen() {
       saveNewThing={saveNewItem}
       transcribeAudioToThings={transcribeAudioToTasks}
       ListThingSidebar={DootooItemSidebar}
-      EmptyThingUX={DootooItemEmptyUX}
+      EmptyThingUX={(isFirstLaunch.current) ? DootooFirstLaunchUX : DootooItemEmptyUX}
       isThingPressable={() => { return true }}
       isThingDraggable={true} />
   );

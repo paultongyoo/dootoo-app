@@ -16,6 +16,7 @@ export const AppProvider = ({ children }) => {
     const [selectedProfile, setSelectedProfile] = useState(null);   // Selected Profile from Tip pages
 
     // Reference variables:  Changing these should intentionally NOT cause components to re-render
+    const isFirstLaunch = useRef(false);
     const swipeableRefs = useRef({});
     const thingRowPositionXs = useRef({});
     const thingRowHeights = useRef({});
@@ -57,6 +58,7 @@ export const AppProvider = ({ children }) => {
     const resetUserContext = async () => {
       await resetAllData();
       await initializeLocalUser(); 
+      isFirstLaunch.current = true;
       setOpenItems([]);
       setDoneItems([]);
     };
@@ -93,7 +95,8 @@ export const AppProvider = ({ children }) => {
             itemCountsMap,
             currentlyTappedThing,
             clearOpenItems,
-            clearDoneItems
+            clearDoneItems,
+            isFirstLaunch
              }}>
           {children}
         </AppContext.Provider>
