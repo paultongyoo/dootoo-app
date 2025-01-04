@@ -59,9 +59,9 @@ export const handler = async (event) => {
           "content": `
                 ${currentDateStringPrompt}
                 The user has submitted a description of a task.
-                If the task includes time, date, or temporal adverbs, remove that text from the task and represent it in the scheduled_datetime_utc field below.
-                If the task only contains time info, assume the scheduled date is the current date in the user's timezone.
-                If the task only contains a date or temporal adverbs, assume the scheduled time is 12:00AM in the user's timezone.
+                If the task includes time, date, and/or temporal adverb information, translate the info into the scheduled_datetime_utc field below.
+                If the task only contains time info, assume the date is the current date in the user's timezone.
+                If the task only contains a date or temporal adverbs, assume the time is 6:00AM in the user's timezone.
                 Respond only in English.
                 Return your analysis in the following JSON format:
                 {
