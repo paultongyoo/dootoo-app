@@ -977,7 +977,7 @@ export const updateAffirmation = async(new_affirmation) => {
       }
     );
     console.log("updateAffirmation Response Obj: " + JSON.stringify(response.data.body));
-    return response.data.statusCode
+    return response.data
   } catch (error) {
     console.error('Error calling updateAffirmation API:', error);
   }

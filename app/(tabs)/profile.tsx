@@ -41,6 +41,8 @@ const ProfileScreen = ({ navigation }) => {
     const affirmationTextInputValue = useRef(affirmation);
     const [affirmationModerationFailedDialogVisible, setAffirmationModerationFailedDialogVisible] = useState(false);
     const [affirmationSpammingFailedDialogVisible, setAffirmationSpammingFailedDialogVisible] = useState(false);
+    const [affirmationInvalidOtherDialogVisible, setAffirmationInvalidOtherDialogVisible] = useState(false);
+    const affirmationInvalidReason = useRef(null);
     const [affirmationUnexpectedDialogVisible, setAffirmationUnexpectedDialogVisible] = useState(false);
 
     useEffect(() => {
@@ -380,7 +382,7 @@ const ProfileScreen = ({ navigation }) => {
     const handleAffirmationDialogSubmit = async () => {
         setAffirmationDialogVisible(false);
         setLoadingNewAffirmation(true);
-        const statusCode = await updateAffirmation(affirmationTextInputValue.current);
+        const { statusCode, body } = await updateAffirmation(affirmationTextInputValue.current);
         if (statusCode == 200) {
             setAffirmation(affirmationTextInputValue.current);
 
@@ -417,6 +419,18 @@ const ProfileScreen = ({ navigation }) => {
                 anonymous_id: anonymousId,
                 pathname: pathname,
                 error_type: 'spam',
+                affirmation: affirmationTextInputValue.current
+            });
+        } else if (statusCode == 424) {
+            setLoadingNewAffirmation(false);
+            affirmationInvalidReason.current = body;
+            setAffirmationInvalidOtherDialogVisible(true);
+
+            amplitude.track("Edit Headline Submission Invalid", {
+                anonymous_id: anonymousId,
+                pathname: pathname,
+                error_type: 'other',
+                error_reason: body,
                 affirmation: affirmationTextInputValue.current
             });
         } else {
@@ -589,6 +603,11 @@ const ProfileScreen = ({ navigation }) => {
                 <Dialog.Title>Headline Violates Community Guidelines</Dialog.Title>
                 <Dialog.Description>Please refrain from spamming or appearing to promote any products or services.</Dialog.Description>
                 <Dialog.Button label="OK" onPress={() => setAffirmationSpammingFailedDialogVisible(false)} />
+            </Dialog.Container>
+            <Dialog.Container visible={affirmationInvalidOtherDialogVisible} onBackdropPress={() => setAffirmationInvalidOtherDialogVisible(false)}>
+                <Dialog.Title>Headline Invalid</Dialog.Title>
+                <Dialog.Description>{affirmationInvalidReason.current}</Dialog.Description>
+                <Dialog.Button label="OK" onPress={() => setAffirmationInvalidOtherDialogVisible(false)} />
             </Dialog.Container>
             <Dialog.Container visible={affirmationUnexpectedDialogVisible} onBackdropPress={() => setAffirmationUnexpectedDialogVisible(false)}>
                 <Dialog.Title>Unable To Edit Headline</Dialog.Title>
