@@ -4,7 +4,7 @@ import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Lin
 import { AppContext } from "@/components/AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, showComingSoonAlert } from '@/components/Helpers';
-import { overrideUserAnonId as overrideUser, saveUserLocally, updateUsername } from "@/components/Storage";
+import { overrideUserAnonId as overrideUser, saveUserLocally, updateAffirmation, updateUsername } from "@/components/Storage";
 import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import Dialog from "react-native-dialog";
 import { Bulb } from "@/components/svg/bulb";
@@ -12,12 +12,13 @@ import { Edit } from "@/components/svg/edit";
 import { NAVIGATION_SECTION_IDX_DONE } from "@/components/Constants";
 import { useSharedValue } from "react-native-reanimated";
 import { CircleCheck } from "@/components/svg/circle-check";
+import { Trash } from "@/components/svg/trash";
 
 
 const ProfileScreen = ({ navigation }) => {
     const pathname = usePathname();
     const { username, setUsername, affirmation, setAffirmation,
-            doneCount, tipCount, setTipCount, anonymousId, resetUserContext } = useContext(AppContext);
+        doneCount, tipCount, setTipCount, anonymousId, resetUserContext } = useContext(AppContext);
 
     //const [username, setUsername] = useState('');
     // const [doneCount, setDoneCount] = useState(0);
@@ -144,7 +145,7 @@ const ProfileScreen = ({ navigation }) => {
             paddingLeft: 20,
             paddingRight: 20
         },
-        profileDrawerProfileAffirmationCTAContainer: {
+        profileDrawerProfileAffirmationContainer: {
             marginTop: 20,
             padding: 15,
             width: '75%',
@@ -155,17 +156,11 @@ const ProfileScreen = ({ navigation }) => {
             borderBottomWidth: 1,
             borderBottomColor: '#556B2F30'
         },
-        profileDrawerProfileAffirmationCTAText: {
+        profileDrawerProfileAffirmationText: {
             textAlign: 'center',
             color: '#556B2F',
             fontWeight: 'bold',
             fontSize: 20
-        },
-        profileDrawerProfileAffirmationContainer: {
-
-        },
-        profileDrawerProfileAffirmationText: {
-
         },
         privacyContainer: {
             marginHorizontal: 20,
@@ -231,7 +226,8 @@ const ProfileScreen = ({ navigation }) => {
             fontSize: 18
         },
         refreshNameContainer: {
-            paddingTop: 5
+            paddingTop: 10,
+            paddingHorizontal: 15
         },
         refreshNameIcon: {
             width: 21,
@@ -248,7 +244,7 @@ const ProfileScreen = ({ navigation }) => {
             anonymous_id: anonymousId,
             pathname: pathname
         });
-        usernameTextInputValue.current = username.current;
+        usernameTextInputValue.current = username;
         setUsernameDialogVisible(true);
     }
 
@@ -278,7 +274,7 @@ const ProfileScreen = ({ navigation }) => {
         setLoadingNewUsername(true);
         const statusCode = await updateUsername(usernameTextInputValue.current);
         if (statusCode == 200) {
-            username.current = usernameTextInputValue.current;
+            setUsername(usernameTextInputValue.current);
 
             const updatedUserObj = {
                 name: usernameTextInputValue.current,
@@ -338,8 +334,42 @@ const ProfileScreen = ({ navigation }) => {
         usernameTextInputValue.current = username;
     }
 
+    const handleDeleteAffirmation = () => {
+        amplitude.track("Delete Headline Started", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+
+        Alert.alert("Delete Headline?",
+            "Are you sure you want to delete your headline?",
+            [
+                {
+                    text: 'Cancel',
+                    onPress: async () => {
+                        amplitude.track("Delete Headline Cancelled", {
+                            anonymous_id: anonymousId,
+                            pathname: pathname
+                        });
+                    },
+                    style: 'cancel'
+                },
+                {
+                    text: 'Yes',
+                    onPress: async () => {
+                        amplitude.track("Delete Headline Approved", {
+                            anonymous_id: anonymousId,
+                            pathname: pathname
+                        });
+                        affirmationTextInputValue.current = null;
+                        handleAffirmationDialogSubmit();
+                    }
+                },
+            ]
+        )
+    }
+
     const handleEditAffirmation = () => {
-        amplitude.track("Edit Affirmation Started", {
+        amplitude.track("Edit Headline Started", {
             anonymous_id: anonymousId,
             pathname: pathname
         });
@@ -364,7 +394,7 @@ const ProfileScreen = ({ navigation }) => {
             await saveUserLocally(updatedUserObj);
             setLoadingNewAffirmation(false);
 
-            amplitude.track("Edit Affirmation Completed", {
+            amplitude.track("Edit Headline Completed", {
                 anonymous_id: anonymousId,
                 pathname: pathname,
                 affirmation: affirmationTextInputValue.current
@@ -373,7 +403,7 @@ const ProfileScreen = ({ navigation }) => {
             setLoadingNewAffirmation(false);
             setAffirmationModerationFailedDialogVisible(true);
 
-            amplitude.track("Edit Affirmation Submission Invalid", {
+            amplitude.track("Edit Headline Submission Invalid", {
                 anonymous_id: anonymousId,
                 pathname: pathname,
                 error_type: 'moderation_failed',
@@ -383,7 +413,7 @@ const ProfileScreen = ({ navigation }) => {
             setLoadingNewAffirmation(false);
             setAffirmationSpammingFailedDialogVisible(true);
 
-            amplitude.track("Edit Affirmation Submission Invalid", {
+            amplitude.track("Edit Headline Submission Invalid", {
                 anonymous_id: anonymousId,
                 pathname: pathname,
                 error_type: 'spam',
@@ -393,7 +423,7 @@ const ProfileScreen = ({ navigation }) => {
             setLoadingNewAffirmation(false);
             setAffirmationUnexpectedDialogVisible(true);
 
-            amplitude.track("Edit Affirmation Submission Invalid", {
+            amplitude.track("Edit Headline Submission Invalid", {
                 anonymous_id: anonymousId,
                 pathname: pathname,
                 error_type: 'unexpected',
@@ -469,25 +499,31 @@ const ProfileScreen = ({ navigation }) => {
                 </Pressable>
                 {(!affirmation || affirmation.length == 0) ?
                     <Pressable onPress={handleEditAffirmation}
-                        style={styles.profileDrawerProfileAffirmationCTAContainer}>
-                        <Text style={styles.profileDrawerProfileAffirmationCTAText}>Tap here to add your latest positive affirmation to your public profile</Text>
+                        style={styles.profileDrawerProfileAffirmationContainer}>
+                        <Text style={styles.profileDrawerProfileAffirmationText}>Tap here to add an affirmation, piece of advice, or personal motto to your public profile</Text>
                     </Pressable>
-                    : <>
-                        <View style={styles.profileDrawerProfileAffirmationContainer}>
-                            {(!affirmation || affirmation.length == 0) ?
-                                <ActivityIndicator size={"large"} color="#3E3723" />
+                    :
+                    <View style={styles.profileDrawerProfileAffirmationContainer}>
+                        <Text style={styles.profileDrawerProfileAffirmationText}>{affirmation}</Text>
+                        <View style={{ flexDirection: 'row' }}>
+                            {(loadingNewAffirmation) ?
+                                <View style={styles.refreshNameContainer}>
+                                    <ActivityIndicator size={"small"} color="#3E3723" />
+                                </View>
                                 :
-                                <Text style={styles.profileDrawerProfileAffirmationText}>{username}</Text>
+                                <>
+                                    <Pressable hitSlop={10} style={styles.refreshNameContainer}
+                                        onPress={handleDeleteAffirmation}>
+                                        <Trash wxh="21" color="#556B2F" strokeWidth="2" />
+                                    </Pressable>
+                                    <Pressable hitSlop={10} style={styles.refreshNameContainer}
+                                        onPress={handleEditAffirmation}>
+                                        <Edit wxh="21" color="#556B2F" strokeWidth="2" />
+                                    </Pressable>
+                                </>
                             }
                         </View>
-                        <Pressable hitSlop={10} style={styles.refreshNameContainer}
-                            onPress={handleEditAffirmation}>
-                            {(loadingNewUsername)
-                                ? <ActivityIndicator size={"small"} color="#3E3723" />
-                                : <Edit wxh="21" color="#556B2F" strokeWidth="2" />
-                            }
-                        </Pressable>
-                    </>
+                    </View>
                 }
             </View>
             <View style={styles.statsContainer}>
@@ -508,7 +544,7 @@ const ProfileScreen = ({ navigation }) => {
                     <Text style={styles.statName}>Tips</Text>
                 </Pressable> */}
             </View>
-            <View style={{ flex: 1}}></View>
+            <View style={{ flex: 1 }}></View>
             <View style={styles.privacyContainer}>
                 {/* <View style={styles.anonIdDisplayContainer}>
                     <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
@@ -530,7 +566,7 @@ const ProfileScreen = ({ navigation }) => {
                 </View>
             </View>
             <Dialog.Container visible={affirmationDialogVisible} onBackdropPress={handleAffirmationDialogCancel}>
-                <Dialog.Title>Edit Affirmation</Dialog.Title>
+                <Dialog.Title>Edit Headline</Dialog.Title>
                 <Dialog.Input
                     multiline={true}
                     style={affirmationInvalid && styles.dialogTextInput_Invalid}
@@ -540,9 +576,24 @@ const ProfileScreen = ({ navigation }) => {
                     onChangeText={(text) => {
                         handleAffirmationEditTextInputChange(text);
                     }} />
-                <Dialog.Description>Must be a positive affirmation between 4 to 100 characters long and follow community guidelines: No profanity, impersonation, spamming, or harmful content.</Dialog.Description>
+                <Dialog.Description>Must be between 4 to 100 characters long and follow community guidelines: No profanity, impersonation, spamming, or harmful content.</Dialog.Description>
                 <Dialog.Button label="Cancel" onPress={handleAffirmationDialogCancel} />
                 <Dialog.Button label="Submit" onPress={handleAffirmationDialogSubmit} disabled={affirmationInvalid} />
+            </Dialog.Container>
+            <Dialog.Container visible={affirmationModerationFailedDialogVisible} onBackdropPress={() => setAffirmationModerationFailedDialogVisible(false)}>
+                <Dialog.Title>Headline Violates Community Guidelines</Dialog.Title>
+                <Dialog.Description>Please refrain from entering profanity or harmful content.</Dialog.Description>
+                <Dialog.Button label="OK" onPress={() => setAffirmationModerationFailedDialogVisible(false)} />
+            </Dialog.Container>
+            <Dialog.Container visible={affirmationSpammingFailedDialogVisible} onBackdropPress={() => setAffirmationSpammingFailedDialogVisible(false)}>
+                <Dialog.Title>Headline Violates Community Guidelines</Dialog.Title>
+                <Dialog.Description>Please refrain from spamming or appearing to promote any products or services.</Dialog.Description>
+                <Dialog.Button label="OK" onPress={() => setAffirmationSpammingFailedDialogVisible(false)} />
+            </Dialog.Container>
+            <Dialog.Container visible={affirmationUnexpectedDialogVisible} onBackdropPress={() => setAffirmationUnexpectedDialogVisible(false)}>
+                <Dialog.Title>Unable To Edit Headline</Dialog.Title>
+                <Dialog.Description>An unexpected error occurred while trying to save your new headline.  Please try again later.</Dialog.Description>
+                <Dialog.Button label="OK" onPress={() => setAffirmationUnexpectedDialogVisible(false)} />
             </Dialog.Container>
             <Dialog.Container visible={usernameDialogVisible} onBackdropPress={handleUsernameDialogCancel}>
                 <Dialog.Title>Change Username</Dialog.Title>
