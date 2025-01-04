@@ -10,6 +10,8 @@ import Dialog from "react-native-dialog";
 import { Bulb } from "@/components/svg/bulb";
 import { Edit } from "@/components/svg/edit";
 import { NAVIGATION_SECTION_IDX_DONE } from "@/components/Constants";
+import { useSharedValue } from "react-native-reanimated";
+import { CircleCheck } from "@/components/svg/circle-check";
 
 
 const ProfileScreen = ({ navigation }) => {
@@ -134,16 +136,21 @@ const ProfileScreen = ({ navigation }) => {
             paddingRight: 20
         },
         profileDrawerProfileAffirmationCTAContainer: {
-            marginTop: 10,
-            paddingTop: 10,
+            marginTop: 20,
+            padding: 15,
             width: '75%',
             justifyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
+            borderTopWidth: 1,
+            borderTopColor: '#556B2F30',
+            borderBottomWidth: 1,
+            borderBottomColor: '#556B2F30'
         },
         profileDrawerProfileAffirmationCTAText: {
             textAlign: 'center',
             color: '#556B2F',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            fontSize: 20
         },
         profileDrawerProfileAffirmationContainer: {
 
@@ -152,8 +159,11 @@ const ProfileScreen = ({ navigation }) => {
 
         },
         privacyContainer: {
-            position: 'absolute',
-            bottom: 40
+            marginHorizontal: 20,
+            borderTopWidth: 1,
+            borderTopColor: "#556B2F30",
+            padding: 15,
+            flexDirection: 'row'
         },
         anonIdDisplayContainer: {
             alignItems: 'center',
@@ -163,16 +173,13 @@ const ProfileScreen = ({ navigation }) => {
         anonIdDisplayText: {
             textAlign: 'center'
         },
-        deleteDataLinkContainer: {
-            alignItems: 'center'
+        linkContainer: {
+            alignItems: 'center',
+            padding: 10
         },
         deleteDataLinkText: {
             color: "#A23E48",
             textDecorationLine: 'underline'
-        },
-        feedbackLinkContainer: {
-            paddingTop: 20,
-            alignItems: 'center'
         },
         feedbackLinkText: {
             color: "#556B2F",
@@ -183,14 +190,10 @@ const ProfileScreen = ({ navigation }) => {
         },
         statContainer: {
             alignItems: 'center',
-            paddingTop: 20,
-            paddingRight: 30,
-            paddingLeft: 30
+            paddingVertical: 15
         },
         statIconContainer: {
-            paddingTop: 20,
-            paddingBottom: 20,
-            height: 60,
+            paddingTop: 10,
             justifyContent: 'center'
         },
         statIconTask: {
@@ -211,12 +214,12 @@ const ProfileScreen = ({ navigation }) => {
         statNumber: {
             fontWeight: 'bold',
             fontSize: 30,
-            color: "#556B2F"
+            color: "#556B2F",
+            paddingVertical: 7
         },
         statName: {
             fontWeight: 'normal',
-            fontSize: 18,
-            paddingTop: 5
+            fontSize: 18
         },
         refreshNameContainer: {
             paddingTop: 5
@@ -402,7 +405,7 @@ const ProfileScreen = ({ navigation }) => {
                 <Pressable style={styles.statContainer}
                     onPress={handleDoneStatTap}>
                     <View style={styles.statIconContainer}>
-                        <View style={[styles.statIconTask, styles.statIconTask_Done]}></View>
+                        <CircleCheck wxh="40" color={useSharedValue('#556B2F')} />
                     </View>
                     <Text style={styles.statNumber}>{formatNumber(doneCount) || '0'}</Text>
                     <Text style={styles.statName}>Done</Text>
@@ -416,6 +419,7 @@ const ProfileScreen = ({ navigation }) => {
                     <Text style={styles.statName}>Tips</Text>
                 </Pressable> */}
             </View>
+            <View style={{ flex: 1}}></View>
             <View style={styles.privacyContainer}>
                 {/* <View style={styles.anonIdDisplayContainer}>
                     <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
@@ -424,12 +428,13 @@ const ProfileScreen = ({ navigation }) => {
                         <Text style={styles.deleteDataLinkText}>Override User</Text>
                     </Pressable>
                 </View> */}
-                <View style={styles.deleteDataLinkContainer}>
+                <View style={styles.linkContainer}>
                     <Pressable onPress={showConfirmationPrompt}>
                         <Text style={styles.deleteDataLinkText}>Delete My Data</Text>
                     </Pressable>
                 </View>
-                <View style={styles.feedbackLinkContainer}>
+                <View style={{ flex: 1 }}></View>
+                <View style={styles.linkContainer}>
                     <Pressable onPress={sendEmail}>
                         <Text style={styles.feedbackLinkText}>Email Feedback</Text>
                     </Pressable>
