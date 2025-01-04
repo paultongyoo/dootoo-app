@@ -1187,7 +1187,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         <Modal
             isVisible={itemMoreModalVisible}
             onBackdropPress={() => { setItemMoreModalVisible(false) }}
-            backdropOpacity={0.7}
+            backdropOpacity={0.3}
             animationIn="fadeIn">
             {(modalItem.current) ?
                 <View style={listStyles.communityModal}>
