@@ -50,7 +50,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const FOOTER_BUTTON_HEIGHT = 50;
 
     const pathname = usePathname();
-    const { anonymousId, lastRecordedCount, initializeLocalUser,
+    const { anonymousId, username, lastRecordedCount, initializeLocalUser,
         thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap: itemReactionsMap, selectedItem,
         currentlyTappedThing, emptyListCTAFadeOutAnimation, setOpenItems, communityItems, setCommunityItems, setDoneItems
     } = useContext(AppContext);
@@ -2059,12 +2059,17 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     }
                 }} />
             <ProfileModal username={modalUsername.current} modalVisible={profileModalVisible} modalVisibleSetter={setProfileModalVisible}
-                onMoreIconPress={(username) => {
-                    showMoreModalOnProfileModalHide.current = true;
-                    modalItem.current = null;
-                    modalUsername.current = username;
-                    setProfileModalVisible(false);
-                }}
+                onMoreIconPress={
+                    // Only display the more icon if the profile modal is depicting ANOTHER user
+                    (username != modalUsername.current) 
+                        ? (modalUsername) => {
+                                showMoreModalOnProfileModalHide.current = true;
+                                modalItem.current = null;
+                                modalUsername.current = modalUsername;
+                                setProfileModalVisible(false);
+                            } 
+                        : null
+                }
                 onModalHide={() => {
                     if (showMoreModalOnProfileModalHide.current) {
                         setItemMoreModalVisible(true);
