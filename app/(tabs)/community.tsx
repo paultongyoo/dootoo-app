@@ -21,6 +21,7 @@ import { HandHeart } from "@/components/svg/hand-heart";
 import { PartyPopper } from "@/components/svg/party-popper";
 import ReactionsModal from "@/components/ReactionsModal";
 import { ReactionsDisplay } from "@/components/ReactionsDisplay";
+import ProfileModal from "@/components/ProfileModal";
 
 const CommunityScreen = () => {
     const pathname = usePathname();
@@ -49,6 +50,9 @@ const CommunityScreen = () => {
     const nextPageAnimatedOpacity = useAnimatedStyle(() => {
         return { opacity: nextPageLoadingOpacity.value }
     })
+
+    const modalUsername = useRef(null);
+    const [profileModalVisible, setProfileModalVisible] = useState(false);
 
     useFocusEffect(
         useCallback(() => {
@@ -402,6 +406,11 @@ const CommunityScreen = () => {
             setReactionModalVisible(true);
         }
 
+        const handleUsernameTap = (username) => {
+            modalUsername.current = username;
+            setProfileModalVisible(true);
+        }
+
         return (
             <View style={styles.itemContainer}>
                 <View style={styles.header}>
@@ -409,11 +418,12 @@ const CommunityScreen = () => {
                         <View style={styles.profileIcon}>
                             <CircleUserRound wxh="32" color="#556B2F" />
                         </View>
-                        <View style={styles.profileNameContainer}>
+                        <Pressable  onPress={() => handleUsernameTap(item.user.name)}
+                                    style={styles.profileNameContainer}>
                             <Text style={styles.profileNameText}>
                                 {item.user.name}
                             </Text>
-                        </View>
+                        </Pressable>
                     </View>
                     <View style={styles.rightCorner}>
                         <View style={styles.timeAgoContainer}>
@@ -825,6 +835,7 @@ const CommunityScreen = () => {
             <ItemMoreModal />
             <ReactionsModal modalVisible={reactorsModalVisible} modalVisibleSetter={setReactorsModalVisible}
                 reactions={modalItemReactions.current} reactionCounts={modelItemReactionCounts.current} />
+            <ProfileModal username={modalUsername.current} modalVisible={profileModalVisible} modalVisibleSetter={setProfileModalVisible} />
             <Dialog.Container visible={hideFromCommunityDialogVisible} onBackdropPress={handleHideFromCommunityCancel}>
                 <Dialog.Title>Hide Item from the Community?</Dialog.Title>
                 <Dialog.Description>The item will no longer display in the Community Feed.</Dialog.Description>
