@@ -133,7 +133,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
     if (!thing.parent_item_uuid) {
         if (!thing.is_public) {
             return (
-                <Animated.View style={[{ flexDirection: 'row' }]}>
+                <Animated.View style={[{ flexDirection: 'row', alignItems: 'center' }]}>
                     <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
                         style={sidebarStyles.isPublicContainer}
                         onPress={() => handleIsPublicTap()}>
@@ -146,7 +146,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
             );
         } else if (!thing.userReactions || thing.userReactions.length == 0) {
             return (
-                <Animated.View style={[{ flexDirection: 'row' }]}>
+                <Animated.View style={[{ flexDirection: 'row', alignItems: 'center' }]}>
                     <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
                         style={sidebarStyles.isPublicContainer}
                         onPress={() => handleIsPublicTap()}>
