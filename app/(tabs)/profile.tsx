@@ -479,7 +479,7 @@ const ProfileScreen = ({ navigation }) => {
     }
 
     return (
-        <ScrollView style={styles.profileDrawerContainer}>
+        <ScrollView contentContainerStyle={styles.profileDrawerContainer}>
             <View style={styles.profileDrawerProfileIconContainer}>
                 <Image source={require("@/assets/images/profile_icon_green.png")} />
                 <View style={styles.profileDrawerProfileNameContainer}>
