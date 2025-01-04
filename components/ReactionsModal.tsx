@@ -60,7 +60,7 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
             paddingBottom: 10
         },
         reactionIcon: {
-            paddingRight: 10
+       
         },
         reactionUsername: {
             fontWeight: 'bold',
@@ -174,7 +174,8 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
                                                     : <PartyPopper wxh="26" color="#556B2F" />
                                 }                                   
                             </View>
-                            <Pressable onPress={() => onUsernamePress(item.user.name)}>
+                            <Pressable onPress={() => onUsernamePress(item.user.name)} 
+                                       style={({pressed}) => [{ paddingHorizontal: 10 }, pressed && { backgroundColor: '#3e272310'}]}>
                                 <Text style={styles.reactionUsername}>{item.user.name}</Text>
                             </Pressable>
                         </View>
