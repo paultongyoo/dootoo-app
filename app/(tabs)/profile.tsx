@@ -16,7 +16,8 @@ import { CircleCheck } from "@/components/svg/circle-check";
 
 const ProfileScreen = ({ navigation }) => {
     const pathname = usePathname();
-    const { username, affirmation, doneCount, tipCount, setTipCount, anonymousId, resetUserContext } = useContext(AppContext);
+    const { username, setUsername, affirmation, setAffirmation,
+            doneCount, tipCount, setTipCount, anonymousId, resetUserContext } = useContext(AppContext);
 
     //const [username, setUsername] = useState('');
     // const [doneCount, setDoneCount] = useState(0);
@@ -32,6 +33,14 @@ const ProfileScreen = ({ navigation }) => {
     //const isInitialMount = useRef(true);
     const [overrideUserDialogVisible, setOverrideUserDialogVisible] = useState(false);
     const [overrideUserDialogInputValue, setOverrideUserDialogInputValue] = useState('');
+
+    const [loadingNewAffirmation, setLoadingNewAffirmation] = useState(false);
+    const [affirmationDialogVisible, setAffirmationDialogVisible] = useState(false);
+    const [affirmationInvalid, setAffirmationInvalid] = useState(false);
+    const affirmationTextInputValue = useRef(affirmation);
+    const [affirmationModerationFailedDialogVisible, setAffirmationModerationFailedDialogVisible] = useState(false);
+    const [affirmationSpammingFailedDialogVisible, setAffirmationSpammingFailedDialogVisible] = useState(false);
+    const [affirmationUnexpectedDialogVisible, setAffirmationUnexpectedDialogVisible] = useState(false);
 
     useEffect(() => {
         //console.log("ProfileScreen.useEffect([])");
@@ -229,7 +238,7 @@ const ProfileScreen = ({ navigation }) => {
             height: 21,
             opacity: 0.6
         },
-        usernameDialogTextInput_Invalid: {
+        dialogTextInput_Invalid: {
             color: 'red'
         }
     });
@@ -329,6 +338,90 @@ const ProfileScreen = ({ navigation }) => {
         usernameTextInputValue.current = username;
     }
 
+    const handleEditAffirmation = () => {
+        amplitude.track("Edit Affirmation Started", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+        affirmationTextInputValue.current = affirmation;
+        setAffirmationDialogVisible(true);
+    }
+
+    const handleAffirmationDialogSubmit = async () => {
+        setAffirmationDialogVisible(false);
+        setLoadingNewAffirmation(true);
+        const statusCode = await updateAffirmation(affirmationTextInputValue.current);
+        if (statusCode == 200) {
+            setAffirmation(affirmationTextInputValue.current);
+
+            const updatedUserObj = {
+                name: username,
+                anonymous_id: anonymousId,
+                affirmation: affirmationTextInputValue.current,
+                tipCount: tipCount,
+                doneCount: doneCount
+            };
+            await saveUserLocally(updatedUserObj);
+            setLoadingNewAffirmation(false);
+
+            amplitude.track("Edit Affirmation Completed", {
+                anonymous_id: anonymousId,
+                pathname: pathname,
+                affirmation: affirmationTextInputValue.current
+            });
+        } else if (statusCode == 422) {
+            setLoadingNewAffirmation(false);
+            setAffirmationModerationFailedDialogVisible(true);
+
+            amplitude.track("Edit Affirmation Submission Invalid", {
+                anonymous_id: anonymousId,
+                pathname: pathname,
+                error_type: 'moderation_failed',
+                affirmation: affirmationTextInputValue.current
+            });
+        } else if (statusCode == 423) {
+            setLoadingNewAffirmation(false);
+            setAffirmationSpammingFailedDialogVisible(true);
+
+            amplitude.track("Edit Affirmation Submission Invalid", {
+                anonymous_id: anonymousId,
+                pathname: pathname,
+                error_type: 'spam',
+                affirmation: affirmationTextInputValue.current
+            });
+        } else {
+            setLoadingNewAffirmation(false);
+            setAffirmationUnexpectedDialogVisible(true);
+
+            amplitude.track("Edit Affirmation Submission Invalid", {
+                anonymous_id: anonymousId,
+                pathname: pathname,
+                error_type: 'unexpected',
+                affirmation: affirmationTextInputValue.current
+            });
+        }
+        affirmationTextInputValue.current = affirmation;
+    }
+
+    function handleAffirmationDialogCancel(): void {
+        setAffirmationDialogVisible(false);
+        affirmationTextInputValue.current = affirmation;
+    }
+
+    function handleAffirmationEditTextInputChange(text: string) {
+        affirmationTextInputValue.current = text;
+
+        if (text.trim().length >= 5 && text.trim().length <= 100) {
+            setAffirmationInvalid(false);
+            return;
+        }
+
+        if (text.length < 5 || text.length > 100) {
+            setAffirmationInvalid(true);
+            return;
+        }
+    }
+
     const showOverrideUserPrompt = () => {
         setOverrideUserDialogVisible(true);
     }
@@ -355,10 +448,6 @@ const ProfileScreen = ({ navigation }) => {
         Alert.alert("Implement Me!");
     }
 
-    const handleEditAffirmation = () => {
-        Alert.alert("Implement Me!");
-    }
-
     return (
         <View style={styles.profileDrawerContainer}>
             <View style={styles.profileDrawerProfileIconContainer}>
@@ -379,7 +468,7 @@ const ProfileScreen = ({ navigation }) => {
                     }
                 </Pressable>
                 {(!affirmation || affirmation.length == 0) ?
-                    <Pressable onPress={handleCreateAffirmation}
+                    <Pressable onPress={handleEditAffirmation}
                         style={styles.profileDrawerProfileAffirmationCTAContainer}>
                         <Text style={styles.profileDrawerProfileAffirmationCTAText}>Tap here to add your latest positive affirmation to your public profile</Text>
                     </Pressable>
@@ -440,20 +529,33 @@ const ProfileScreen = ({ navigation }) => {
                     </Pressable>
                 </View>
             </View>
+            <Dialog.Container visible={affirmationDialogVisible} onBackdropPress={handleAffirmationDialogCancel}>
+                <Dialog.Title>Edit Affirmation</Dialog.Title>
+                <Dialog.Input
+                    multiline={true}
+                    style={affirmationInvalid && styles.dialogTextInput_Invalid}
+                    autoFocus={true}
+                    onSubmitEditing={handleAffirmationDialogSubmit}
+                    defaultValue={affirmationTextInputValue.current}
+                    onChangeText={(text) => {
+                        handleAffirmationEditTextInputChange(text);
+                    }} />
+                <Dialog.Description>Must be a positive affirmation between 4 to 100 characters long and follow community guidelines: No profanity, impersonation, spamming, or harmful content.</Dialog.Description>
+                <Dialog.Button label="Cancel" onPress={handleAffirmationDialogCancel} />
+                <Dialog.Button label="Submit" onPress={handleAffirmationDialogSubmit} disabled={affirmationInvalid} />
+            </Dialog.Container>
             <Dialog.Container visible={usernameDialogVisible} onBackdropPress={handleUsernameDialogCancel}>
                 <Dialog.Title>Change Username</Dialog.Title>
                 <Dialog.Input
                     multiline={false}
-                    style={usernameInvalid && styles.usernameDialogTextInput_Invalid}
+                    style={usernameInvalid && styles.dialogTextInput_Invalid}
                     autoFocus={true}
                     onSubmitEditing={handleUsernameDialogSubmit}
                     defaultValue={usernameTextInputValue.current}
                     onChangeText={(text) => {
                         handleUsernameEditTextInputChange(text);
                     }} />
-                <Dialog.Description>
-                    Must be between 5 to 20 characters long, use only letters and numbers (no spaces or special characters) and follow community guidelines: no profanity, impersonation, spamming, or harmful content.
-                </Dialog.Description>
+                <Dialog.Description>Must be between 5 to 20 characters long, use only letters and numbers (no spaces or special characters) and follow community guidelines: no profanity, impersonation, spamming, or harmful content.</Dialog.Description>
                 <Dialog.Button label="Cancel" onPress={handleUsernameDialogCancel} />
                 <Dialog.Button label="Submit" onPress={handleUsernameDialogSubmit} disabled={usernameInvalid} />
             </Dialog.Container>
