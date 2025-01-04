@@ -73,6 +73,20 @@ export const handler = async (event) => {
       text: true,
       updatedAt: true,
       userReactions: {
+        where: {
+          user: {
+            id: {
+              notIn: blockedUserIds.map((row) => row.blocked_user_id),
+            },
+            NOT: {
+              blockedBys: {
+                some: {
+                  blocking_user_id: user.id, // Exclude reactions where the user is blocked by the current user
+                },
+              },
+            }
+          },
+        },
         select: {
           user: {
             select: {

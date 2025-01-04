@@ -39,6 +39,13 @@ export const handler = async (event) => {
     });
   } else {
 
+    const blockedUserIds = await prisma.$queryRaw`
+    SELECT "blocked_user_id"
+    FROM "UserBlock"
+    GROUP BY "blocked_user_id"
+    HAVING COUNT(*) > 2`;
+    console.log("Number of Users blocked more than twice: " + blockedUserIds.length);
+
     let prismaParams = {
       where: {
         user: { id: user.id },
@@ -53,6 +60,20 @@ export const handler = async (event) => {
         scheduled_datetime_utc: true,
         event_id: true,
         userReactions: {
+          where: {
+            user: {
+              id: {
+                notIn: blockedUserIds.map((row) => row.blocked_user_id),
+              },
+              NOT: {
+                blockedBys: {
+                  some: {
+                    blocking_user_id: user.id, // Exclude reactions where the user is blocked by the current user
+                  },
+                },
+              }
+            },
+          },
           select: {
             user: {
               select: {
