@@ -9,6 +9,7 @@ export default function TabLayout() {
   return (
     <>
       <Tabs
+        initialRouteName="open" 
         tabBar={(props) => (<DootooFooter {...props} />)}
         screenOptions={{
           header: (props) => (<DootooHeader {...props} />)
