@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import { EllipsisVertical } from "./svg/ellipsis-vertical";
 
 const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionCounts, 
-    onMoreIconPress = null, onModalHide = null}) => {
+    onMoreIconPress = () => { return }, onModalHide = () => { return }}) => {
 
     const [displayedReactions, setDisplayedReactions] = useState(reactions);
 
