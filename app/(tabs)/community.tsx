@@ -215,7 +215,7 @@ const CommunityScreen = () => {
         profileNameText: {
             fontSize: 16,
             fontWeight: 'bold',
-            paddingLeft: 10
+            paddingHorizontal: 10
         },
         rightCorner: {
             flexDirection: 'row'
@@ -420,7 +420,7 @@ const CommunityScreen = () => {
                             <CircleUserRound wxh="32" color="#556B2F" />
                         </View>
                         <Pressable  onPress={() => handleUsernameTap(item.user.name)}
-                                    style={styles.profileNameContainer}>
+                                    style={({pressed}) => [styles.profileNameContainer, pressed && { backgroundColor: '#3e272310' }]}>
                             <Text style={styles.profileNameText}>
                                 {item.user.name}
                             </Text>
