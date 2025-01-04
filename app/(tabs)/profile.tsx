@@ -511,12 +511,18 @@ const ProfileScreen = ({ navigation }) => {
                             : <Edit wxh="21" color="#556B2F" strokeWidth="2" />
                         }
                     </Pressable>
-                    {(!affirmation || affirmation.length == 0) ?
+                    {(!affirmation || affirmation.length == 0) ? (<>
                         <Pressable onPress={handleEditAffirmation}
                             style={styles.profileDrawerProfileAffirmationContainer}>
                             <Text style={styles.profileDrawerProfileAffirmationText}>Tap here to add an affirmation, piece of advice, or personal motto to your public profile</Text>
+                            {loadingNewAffirmation && (
+                                <View style={styles.refreshNameContainer}>
+                                    <ActivityIndicator size={"small"} color="#3E3723" />
+                                </View>
+                            )}
                         </Pressable>
-                        :
+                    </>
+                    ) : (
                         <View style={styles.profileDrawerProfileAffirmationContainer}>
                             <Text style={styles.profileDrawerProfileAffirmationText}>{affirmation}</Text>
                             <View style={{ flexDirection: 'row' }}>
@@ -538,7 +544,7 @@ const ProfileScreen = ({ navigation }) => {
                                 }
                             </View>
                         </View>
-                    }
+                    )}
                 </View>
                 <View style={styles.statsContainer}>
                     <Pressable style={styles.statContainer}
