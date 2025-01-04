@@ -90,6 +90,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const showMoreModalOnReactionsModalHide = useRef(false);
     const modalUsername = useRef(null);
     const [profileModalVisible, setProfileModalVisible] = useState(false);
+    const showProfileModalOnReactionsModalHide = useRef(false);
     
     const hasReactionsBeenRefreshedOnLaunch = useRef(false);
     const [appState, setAppState] = useState(AppState.currentState);
@@ -1938,10 +1939,18 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     showMoreModalOnReactionsModalHide.current = true;
                     setReactorsModalVisible(false);
                 }}
+                onUsernamePress={(username) => {
+                    showProfileModalOnReactionsModalHide.current = true;
+                    modalUsername.current = username;
+                    setReactorsModalVisible(false);
+                }}
                 onModalHide={() => {
                     if (showMoreModalOnReactionsModalHide.current) {
                         setItemMoreModalVisible(true);
                         showMoreModalOnReactionsModalHide.current = false;
+                    } else if (showProfileModalOnReactionsModalHide.current) {
+                        setProfileModalVisible(true);
+                        showProfileModalOnReactionsModalHide.current = false;
                     }
                 }}/>
             <ProfileModal username={modalUsername.current} modalVisible={profileModalVisible} modalVisibleSetter={setProfileModalVisible} />

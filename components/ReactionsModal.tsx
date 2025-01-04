@@ -11,7 +11,8 @@ import { useEffect, useState } from "react";
 import { EllipsisVertical } from "./svg/ellipsis-vertical";
 
 const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionCounts, 
-    onMoreIconPress = () => { return }, onModalHide = () => { return }}) => {
+    onMoreIconPress = () => { return }, onModalHide = () => { return },
+    onUsernamePress = (username) => { return }}) => {
 
     const [displayedReactions, setDisplayedReactions] = useState(reactions);
 
@@ -173,7 +174,9 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
                                                     : <PartyPopper wxh="26" color="#556B2F" />
                                 }                                   
                             </View>
-                            <Text style={styles.reactionUsername}>{item.user.name}</Text>
+                            <Pressable onPress={() => onUsernamePress(item.user.name)}>
+                                <Text style={styles.reactionUsername}>{item.user.name}</Text>
+                            </Pressable>
                         </View>
                     }
                     keyExtractor={(item, index) => `${item.user.name}_${item.reaction.name}`} />

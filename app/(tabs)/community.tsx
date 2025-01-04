@@ -53,6 +53,7 @@ const CommunityScreen = () => {
 
     const modalUsername = useRef(null);
     const [profileModalVisible, setProfileModalVisible] = useState(false);
+    const showProfileModalOnReactionsModalHide = useRef(false);
 
     useFocusEffect(
         useCallback(() => {
@@ -834,7 +835,18 @@ const CommunityScreen = () => {
             </Animated.View>
             <ItemMoreModal />
             <ReactionsModal modalVisible={reactorsModalVisible} modalVisibleSetter={setReactorsModalVisible}
-                reactions={modalItemReactions.current} reactionCounts={modelItemReactionCounts.current} />
+                reactions={modalItemReactions.current} reactionCounts={modelItemReactionCounts.current} 
+                onUsernamePress={(username) => {
+                    showProfileModalOnReactionsModalHide.current = true;
+                    modalUsername.current = username;
+                    setReactorsModalVisible(false);
+                }}
+                onModalHide={() => {
+                    if (showProfileModalOnReactionsModalHide.current) {
+                        setProfileModalVisible(true);
+                        showProfileModalOnReactionsModalHide.current = false;
+                    }
+                }} />
             <ProfileModal username={modalUsername.current} modalVisible={profileModalVisible} modalVisibleSetter={setProfileModalVisible} />
             <Dialog.Container visible={hideFromCommunityDialogVisible} onBackdropPress={handleHideFromCommunityCancel}>
                 <Dialog.Title>Hide Item from the Community?</Dialog.Title>
