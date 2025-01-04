@@ -1286,7 +1286,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         </View>
                     </Pressable>
                     : <></>}
-                {(modalUsername.current) ? <>
+                {(modalUsername.current) && (modalUsername.current != username) ? <>
                     <Pressable hitSlop={10}
                         style={({ pressed }) => [
                             listStyles.moreOverlayOption,
