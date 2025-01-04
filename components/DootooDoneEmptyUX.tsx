@@ -17,7 +17,7 @@ const DootooDoneEmptyUX = () => {
     useCallback(() => {
       opacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
         if (isFinished) {
-          workOpacity.value = withTiming(1, { duration: 1500 });
+          workOpacity.value = withTiming(1, { duration: 400 });
         }
       })
       return () => {

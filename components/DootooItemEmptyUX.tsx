@@ -23,21 +23,21 @@ const DootooItemEmptyUX = () => {
 
   const executeCTAAnimation = async () => {
     await new Promise<void>((resolve) => {
-      fadeAnimGoals.value = withTiming(1, { duration: 1500 }, (isFinished) => {
+      fadeAnimGoals.value = withTiming(1, { duration: 400 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
       })
     });
     await new Promise<void>((resolve) => {
-      fadeAnimDreams.value = withTiming(1, { duration: 1500 }, (isFinished) => {
+      fadeAnimDreams.value = withTiming(1, { duration: 400 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
       })
     });
     await new Promise<void>((resolve) => {
-      fadeAnimChallenges.value = withTiming(1, { duration: 1500 }, (isFinished) => {
+      fadeAnimChallenges.value = withTiming(1, { duration: 400 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
@@ -47,13 +47,13 @@ const DootooItemEmptyUX = () => {
 
   useFocusEffect(
     useCallback(() => {
-      opacity.value = withTiming(1, { duration: 800 }, (isFinished) => {
+      opacity.value = withTiming(1, { duration: 400 }, (isFinished) => {
         if (isFinished) {
           runOnJS(executeCTAAnimation)();
         }
       });
       return () => {
-        opacity.value = withTiming(0, { duration: 800 }, (isFinished) => {
+        opacity.value = withTiming(0, { duration: 400 }, (isFinished) => {
           if (isFinished) {
             fadeAnimGoals.value = 0;
             fadeAnimDreams.value = 0;
