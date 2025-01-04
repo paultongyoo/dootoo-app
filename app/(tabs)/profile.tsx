@@ -1,6 +1,6 @@
 import { usePathname } from "expo-router";
 import { useContext, useEffect, useRef, useState } from "react";
-import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Linking, Platform } from "react-native";
+import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Linking, Platform, ScrollView } from "react-native";
 import { AppContext } from "@/components/AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, showComingSoonAlert } from '@/components/Helpers';
@@ -479,7 +479,7 @@ const ProfileScreen = ({ navigation }) => {
     }
 
     return (
-        <View style={styles.profileDrawerContainer}>
+        <ScrollView style={styles.profileDrawerContainer}>
             <View style={styles.profileDrawerProfileIconContainer}>
                 <Image source={require("@/assets/images/profile_icon_green.png")} />
                 <View style={styles.profileDrawerProfileNameContainer}>
@@ -643,7 +643,7 @@ const ProfileScreen = ({ navigation }) => {
                 <Dialog.Button label="Cancel" onPress={handleUserOverrideDialogCancel} />
                 <Dialog.Button label="Submit" onPress={handleUserOverrideDialogSubmit} disabled={overrideUserDialogInputValue.length == 0} />
             </Dialog.Container>
-        </View>
+        </ScrollView>
     );
 }
 
