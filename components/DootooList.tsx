@@ -9,7 +9,7 @@ import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
-import { enrichItem, loadItemsCounts, loadItemsReactions, loadLocalListLastCachedPage, OPEN_ITEM_LIST_KEY, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemPublicState, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
+import { blockUser, enrichItem, loadItemsCounts, loadItemsReactions, loadLocalListLastCachedPage, OPEN_ITEM_LIST_KEY, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemPublicState, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
@@ -25,6 +25,7 @@ import ReactionsModal from './ReactionsModal';
 import Modal from 'react-native-modal';
 import { EyeOff } from './svg/eye-off';
 import ProfileModal from './ProfileModal';
+import { Flag } from './svg/flag';
 
 export const THINGNAME_ITEM = "item";
 export const THINGNAME_DONE_ITEM = "done_item";
@@ -91,9 +92,15 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const modalUsername = useRef(null);
     const [profileModalVisible, setProfileModalVisible] = useState(false);
     const showProfileModalOnReactionsModalHide = useRef(false);
-    
+
     const hasReactionsBeenRefreshedOnLaunch = useRef(false);
     const [appState, setAppState] = useState(AppState.currentState);
+
+    const showMoreModalOnProfileModalHide = useRef(false);
+    const [hideUserDialogVisible, setHideUserDialogVisible] = useState(false);
+    const [reportUserDialogVisible, setReportUserModalVisible] = useState(false);
+    const [selectedBlockReason, setSelectedBlockReason] = useState('no_reason');
+    const [blockReasonOtherText, setBlockReasonOtherText] = useState('');
 
     useEffect(() => {
         //console.log("DootooList.useEffect([])");
@@ -183,23 +190,23 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             if (!hasReactionsBeenRefreshedOnLaunch.current) {
                 refreshThingReactions();
                 hasReactionsBeenRefreshedOnLaunch.current = true;
-            }      
+            }
         }
     }, [listArray]);
 
     useEffect(() => {
         const subscription = AppState.addEventListener('change', (nextAppState) => {
-          if (appState.match(/inactive|background/) && nextAppState === 'active') {
-            //console.log('App has come to the foreground!');
-            refreshThingReactions();
-          }
-          setAppState(nextAppState);
+            if (appState.match(/inactive|background/) && nextAppState === 'active') {
+                //console.log('App has come to the foreground!');
+                refreshThingReactions();
+            }
+            setAppState(nextAppState);
         });
-    
+
         return () => {
-          subscription.remove();
+            subscription.remove();
         };
-      }, [appState]);
+    }, [appState]);
 
 
     // 1.7:  Currently refreshThingReactions will only be called on foregrounding the app from background
@@ -222,10 +229,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             let arrayToUpdate = [...prevItems];
                             let itemsRefreshed = 0
                             for (const uuid in itemReactionsMap.current) {
-                                if (itemReactionsMap.current.hasOwnProperty(uuid)) { 
+                                if (itemReactionsMap.current.hasOwnProperty(uuid)) {
                                     const returnedReactions = itemReactionsMap.current[uuid];
                                     //console.log("Updating array with returnedReactions for item " + uuid + ", returnReactions: " + JSON.stringify(returnedReactions));
-                                    arrayToUpdate = arrayToUpdate.map(item => 
+                                    arrayToUpdate = arrayToUpdate.map(item =>
                                         (item.uuid == uuid)
                                             ? { ...item, userReactions: returnedReactions }
                                             : item
@@ -1153,7 +1160,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         setItemMoreModalVisible(false);
         setHideFromCommunityDialogVisible(true);
     }
-    
+
     const handleHideFromCommunityCancel = () => {
         amplitude.track("Item Hide from Public Prompt Cancelled", {
             anonymous_id: anonymousId,
@@ -1161,7 +1168,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         });
         setHideFromCommunityDialogVisible(false);
     }
-    
+
     const handleHideFromCommunitySubmit = () => {
         amplitude.track("Item Hide from Public Prompt Approved", {
             anonymous_id: anonymousId,
@@ -1187,30 +1194,128 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         updateItemPublicState(modalItem.current.uuid, false);
     }
 
+    const submitBlock = async (username, block_reason_str) => {
+        const wasBlockSuccessful = await blockUser(username, block_reason_str);
+        if (wasBlockSuccessful) {
+
+            amplitude.track("Block Profile Blocked", {
+                anonymous_id: anonymousId,
+                pathname: pathname,
+                name: username
+            });
+
+            setItemMoreModalVisible(false);
+            setCommunityItems(prevItems =>
+                (prevItems) ? prevItems.filter(prevItem => prevItem.user.name != username) : prevItems);
+
+        } else {
+            Alert.alert(
+                "Unexpected error occurred",
+                "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
+            amplitude.track("Block Profile Unexpected Error", {
+                anonymous_id: anonymousId,
+                pathname: pathname,
+                name: username
+            });
+        }
+    }
+
+    const handleHideUser = () => {
+        amplitude.track("Hide User Prompt Displayed", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+        setItemMoreModalVisible(false);
+        setHideUserDialogVisible(true);
+    }
+
+    const handleHideUserCancel = () => {
+        amplitude.track("Hide User Prompt Cancelled", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+        setHideUserDialogVisible(false);
+    }
+
+    const handleHideUserSubmit = async () => {
+        amplitude.track("Hide User Prompt Approved", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
+        await submitBlock(modalUsername.current, "hide_user");
+        setHideUserDialogVisible(false);
+    }
+
+    const handleReportUser = () => {
+        setItemMoreModalVisible(false);
+        setReportUserModalVisible(true);
+    }
+
+    const handleReportUserCancel = () => {
+        setReportUserModalVisible(false);
+    }
+
+    const handleReportUserSubmit = async () => {
+        if (selectedBlockReason == 'other') {
+            await submitBlock(modalUsername.current, `${selectedBlockReason}: ${blockReasonOtherText}`);
+        } else {
+            await submitBlock(modalUsername.current, selectedBlockReason);
+        }
+        setReportUserModalVisible(false);
+    }
+
     const ItemMoreModal = () => (
         <Modal
             isVisible={itemMoreModalVisible}
             onBackdropPress={() => { setItemMoreModalVisible(false) }}
             backdropOpacity={0.3}
             animationIn="fadeIn">
-            {(modalItem.current) ?
-                <View style={listStyles.communityModal}>
+            <View style={listStyles.communityModal}>
+                {(modalItem.current) ?
                     <Pressable hitSlop={10}
-                            style={({ pressed }) => [
-                                listStyles.moreOverlayOption,
-                                pressed && { backgroundColor: '#3e372310' }
-                            ]}
-                            onPress={handleHideFromCommunity}>
-                            <View>
-                                <EyeOff wxh="20" color="#3e2723" />
-                            </View>
-                            <View>
-                                <Text style={listStyles.moreOverlayOptionText}>Hide Item from Community</Text>
-                            </View>
+                        style={({ pressed }) => [
+                            listStyles.moreOverlayOption,
+                            pressed && { backgroundColor: '#3e372310' }
+                        ]}
+                        onPress={handleHideFromCommunity}>
+                        <View>
+                            <EyeOff wxh="20" color="#3e2723" />
+                        </View>
+                        <View>
+                            <Text style={listStyles.moreOverlayOptionText}>Hide Item from Community</Text>
+                        </View>
                     </Pressable>
-                </View>
-                :
-                <Text>No modal item selected!</Text>}
+                    : <></>}
+                {(modalUsername.current) ? <>
+                    <Pressable hitSlop={10}
+                        style={({ pressed }) => [
+                            listStyles.moreOverlayOption,
+                            pressed && { backgroundColor: '#3e372310' }
+                        ]}
+                        onPress={handleHideUser}>
+                        <View style={styles.moreOverlayOptionIcon}>
+                            <EyeOff wxh="20" color="#3e2723" />
+                        </View>
+                        <View>
+                            <Text style={listStyles.moreOverlayOptionText}>Hide User</Text>
+                        </View>
+                    </Pressable>
+                    <Pressable hitSlop={10}
+                        style={({ pressed }) => [
+                            listStyles.moreOverlayOption,
+                            pressed && { backgroundColor: '#3e372310' }
+                        ]}
+                        onPress={handleReportUser}>
+                        <View style={styles.moreOverlayOptionIcon}>
+                            <Flag wxh="20" color="#3e2723" />
+                        </View>
+                        <View>
+                            <Text style={listStyles.moreOverlayOptionText}>Report User</Text>
+                        </View>
+                    </Pressable>
+                </>
+                    : <></>}
+            </View>
         </Modal>
     )
 
@@ -1934,7 +2039,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             }
             <ItemMoreModal />
             <ReactionsModal modalVisible={reactorsModalVisible} modalVisibleSetter={setReactorsModalVisible}
-                reactions={modalItemReactions.current} reactionCounts={modelItemReactionCounts.current} 
+                reactions={modalItemReactions.current} reactionCounts={modelItemReactionCounts.current}
                 onMoreIconPress={() => {
                     showMoreModalOnReactionsModalHide.current = true;
                     setReactorsModalVisible(false);
@@ -1952,14 +2057,59 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         setProfileModalVisible(true);
                         showProfileModalOnReactionsModalHide.current = false;
                     }
-                }}/>
-            <ProfileModal username={modalUsername.current} modalVisible={profileModalVisible} modalVisibleSetter={setProfileModalVisible} />
+                }} />
+            <ProfileModal username={modalUsername.current} modalVisible={profileModalVisible} modalVisibleSetter={setProfileModalVisible}
+                onMoreIconPress={(username) => {
+                    showMoreModalOnProfileModalHide.current = true;
+                    modalItem.current = null;
+                    modalUsername.current = username;
+                    setProfileModalVisible(false);
+                }}
+                onModalHide={() => {
+                    if (showMoreModalOnProfileModalHide.current) {
+                        setItemMoreModalVisible(true);
+                        showMoreModalOnProfileModalHide.current = false;
+                    }
+                }} />
+            <Dialog.Container visible={hideUserDialogVisible} onBackdropPress={handleHideUserCancel}>
+                <Dialog.Title>Hide All Posts by {modalUsername.current}?</Dialog.Title>
+                <Dialog.Description>This currently cannot be undone.</Dialog.Description>
+                <Dialog.Button label="Cancel" onPress={handleHideUserCancel} />
+                <Dialog.Button label="Yes" onPress={handleHideUserSubmit} />
+            </Dialog.Container>
+            <Dialog.Container visible={reportUserDialogVisible} onBackdropPress={handleReportUserCancel}>
+                <Dialog.Title>Report {modalUsername.current}?</Dialog.Title>
+                <Dialog.Description>This will hide {modalUsername.current}'s posts as well and currently cannot be undone.</Dialog.Description>
+                <RNPickerSelect
+                    onValueChange={(value) => setSelectedBlockReason(value)}
+                    placeholder={{ label: 'Select a reason', value: 'no_reason' }}
+                    style={pickerSelectStyles}
+                    items={[
+                        { label: 'Hate Speech', value: 'hate_speech' },
+                        { label: 'Cyberbullying', value: 'cyberbulling' },
+                        { label: 'Violent threats', value: 'violent_threats' },
+                        { label: 'Promoting Services, Spam', value: 'sell_promote_spam' },
+                        { label: 'Other', value: 'other' },
+                    ]} />
+                {(selectedBlockReason == 'other') ?
+                    <Dialog.Input
+                        multiline={true}
+                        numberOfLines={2}
+                        style={styles.blockedReasonTextInput}
+                        placeholder={'Enter reason'}
+                        onChangeText={(text) => {
+                            setBlockReasonOtherText(text);
+                        }} /> : <></>
+                }
+                <Dialog.Button label="Cancel" onPress={handleReportUserCancel} />
+                <Dialog.Button label="Submit" onPress={handleReportUserSubmit} />
+            </Dialog.Container>
             <Dialog.Container visible={hideFromCommunityDialogVisible} onBackdropPress={handleHideFromCommunityCancel}>
                 <Dialog.Title>Hide Item from the Community?</Dialog.Title>
                 <Dialog.Description>The item will no longer display in the Community Feed.</Dialog.Description>
                 <Dialog.Button label="Cancel" onPress={handleHideFromCommunityCancel} />
                 <Dialog.Button label="Yes" onPress={handleHideFromCommunitySubmit} />
-            </Dialog.Container>            
+            </Dialog.Container>
             <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
                 <Dialog.Title>Select Calendar</Dialog.Title>
                 <Dialog.Description>Which calendar to put this item?</Dialog.Description>
