@@ -721,6 +721,7 @@ const CommunityScreen = () => {
                         </View>
                     </Pressable>
                     : <></>}
+                { (username != modalItem.current.user.name) ? <>
                 <Pressable hitSlop={10}
                     style={({ pressed }) => [
                         styles.moreOverlayOption,
@@ -746,7 +747,7 @@ const CommunityScreen = () => {
                     <View style={styles.moreOverlayOptionTextContainer}>
                         <Text style={styles.moreOverlayOptionText}>Report User</Text>
                     </View>
-                </Pressable>
+                </Pressable></> : <></> }
                 {(modalItem.current) && (username != modalItem.current.user.name) ?
                     <Pressable hitSlop={10}
                         style={({ pressed }) => [
