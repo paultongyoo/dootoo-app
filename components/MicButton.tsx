@@ -1,7 +1,6 @@
 import { View, Pressable, ActivityIndicator, StyleSheet, Platform, Alert } from "react-native";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import { Microphone } from "./svg/microphone";
-import { Plus } from "./svg/plus";
 import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useContext, useRef, useState } from "react";
 import * as amplitude from '@amplitude/analytics-react-native';
@@ -9,6 +8,7 @@ import { usePathname } from "expo-router";
 import { AppContext } from "./AppContext";
 import { calculateAndroidButtonScale, deleteFile, insertArrayAfter } from "./Helpers";
 import Toast from "react-native-toast-message";
+import { Asterisk } from "./svg/asterisk";
 
 const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle, 
                     selectedThing = null, listArray, listArraySetterFunc, transcribeFunc, saveNewThingsFunc }) => {
@@ -473,7 +473,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                             : <View style={styles.iconPlusContainer}>
                                 <Microphone wxh={27} />
                                 <View style={styles.plusContainer}>
-                                    <Plus wxh="15" color="white" bgColor="#556B2F" bgStrokeWidth="8" />
+                                    <Asterisk wxh="15" color="white" bgColor="#556B2F" bgStrokeWidth="8" />
                                 </View>
                             </View>
                     }
