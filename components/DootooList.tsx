@@ -1768,10 +1768,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         }}
                                         onSubmitEditing={(event) => {
                                             blurredOnSubmit.current = true;
-                                            onChangeInputValue.current = event.nativeEvent.text;
+                                            onChangeInputValue.current = event.nativeEvent.text.trim();
                                         }}
                                         onChangeText={(text) => {
-                                            onChangeInputValue.current = text;
+                                            onChangeInputValue.current = text.trim();
                                         }}
                                         onBlur={() => handleBlur(item)}
                                     />
