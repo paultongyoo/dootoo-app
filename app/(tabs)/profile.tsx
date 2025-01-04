@@ -125,10 +125,13 @@ const ProfileScreen = ({ navigation }) => {
     };
 
     const styles = StyleSheet.create({
+        scrollView: {   
+            backgroundColor: '#DCC7AA'
+        },
         profileDrawerContainer: {
             backgroundColor: '#DCC7AA',
             flex: 1,
-            alignItems: 'center'
+            alignItems: 'center',
         },
         profileDrawerProfileIconContainer: {
             marginTop: 50,
@@ -165,6 +168,7 @@ const ProfileScreen = ({ navigation }) => {
             fontSize: 20
         },
         privacyContainer: {
+            marginTop: 40,
             marginHorizontal: 20,
             borderTopWidth: 1,
             borderTopColor: "#556B2F30",
@@ -492,7 +496,7 @@ const ProfileScreen = ({ navigation }) => {
     }
 
     return (
-        <ScrollView style={{ flex: 1 }} bounces={false} overScrollMode="never">
+        <ScrollView style={styles.scrollView} bounces={false} overScrollMode="never">
             <View style={styles.profileDrawerContainer}>
                 <View style={styles.profileDrawerProfileIconContainer}>
                     <Image source={require("@/assets/images/profile_icon_green.png")} />
@@ -511,41 +515,41 @@ const ProfileScreen = ({ navigation }) => {
                             : <Edit wxh="21" color="#556B2F" strokeWidth="2" />
                         }
                     </Pressable>
-                    {(!affirmation || affirmation.length == 0) ? (<>
-                        <Pressable onPress={handleEditAffirmation}
-                            style={styles.profileDrawerProfileAffirmationContainer}>
-                            <Text style={styles.profileDrawerProfileAffirmationText}>Tap here to add an affirmation, piece of advice, or personal motto to your public profile</Text>
-                            {loadingNewAffirmation && (
+                </View>
+                {(!affirmation || affirmation.length == 0) ? (<>
+                    <Pressable onPress={handleEditAffirmation}
+                        style={styles.profileDrawerProfileAffirmationContainer}>
+                        <Text style={styles.profileDrawerProfileAffirmationText}>Tap here to add an affirmation, piece of advice, or personal motto to your public profile</Text>
+                        {loadingNewAffirmation && (
+                            <View style={styles.refreshNameContainer}>
+                                <ActivityIndicator size={"small"} color="#3E3723" />
+                            </View>
+                        )}
+                    </Pressable>
+                </>
+                ) : (
+                    <View style={styles.profileDrawerProfileAffirmationContainer}>
+                        <Text style={styles.profileDrawerProfileAffirmationText}>{affirmation}</Text>
+                        <View style={{ flexDirection: 'row' }}>
+                            {(loadingNewAffirmation) ?
                                 <View style={styles.refreshNameContainer}>
                                     <ActivityIndicator size={"small"} color="#3E3723" />
                                 </View>
-                            )}
-                        </Pressable>
-                    </>
-                    ) : (
-                        <View style={styles.profileDrawerProfileAffirmationContainer}>
-                            <Text style={styles.profileDrawerProfileAffirmationText}>{affirmation}</Text>
-                            <View style={{ flexDirection: 'row' }}>
-                                {(loadingNewAffirmation) ?
-                                    <View style={styles.refreshNameContainer}>
-                                        <ActivityIndicator size={"small"} color="#3E3723" />
-                                    </View>
-                                    :
-                                    <>
-                                        <Pressable hitSlop={10} style={styles.refreshNameContainer}
-                                            onPress={handleDeleteAffirmation}>
-                                            <Trash wxh="21" color="#556B2F" strokeWidth="2" />
-                                        </Pressable>
-                                        <Pressable hitSlop={10} style={styles.refreshNameContainer}
-                                            onPress={handleEditAffirmation}>
-                                            <Edit wxh="21" color="#556B2F" strokeWidth="2" />
-                                        </Pressable>
-                                    </>
-                                }
-                            </View>
+                                :
+                                <>
+                                    <Pressable hitSlop={10} style={styles.refreshNameContainer}
+                                        onPress={handleDeleteAffirmation}>
+                                        <Trash wxh="21" color="#556B2F" strokeWidth="2" />
+                                    </Pressable>
+                                    <Pressable hitSlop={10} style={styles.refreshNameContainer}
+                                        onPress={handleEditAffirmation}>
+                                        <Edit wxh="21" color="#556B2F" strokeWidth="2" />
+                                    </Pressable>
+                                </>
+                            }
                         </View>
-                    )}
-                </View>
+                    </View>
+                )}
                 <View style={styles.statsContainer}>
                     <Pressable style={styles.statContainer}
                         onPress={handleDoneStatTap}>
@@ -564,7 +568,6 @@ const ProfileScreen = ({ navigation }) => {
                     <Text style={styles.statName}>Tips</Text>
                 </Pressable> */}
                 </View>
-                <View style={{ flex: 1 }}></View>
                 <View style={styles.privacyContainer}>
                     {/* <View style={styles.anonIdDisplayContainer}>
                     <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
