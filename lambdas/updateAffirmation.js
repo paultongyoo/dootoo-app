@@ -21,7 +21,7 @@ export const handler = async (event) => {
     console.log("User loaded: " + JSON.stringify(loadedUser));
 
     // If affirmation is non-blank, evaluate it.  If it's blank, assume the caller wants to clear the affirmation.
-    if (event.affirmation && event.affirmation.length == 0) {
+    if (event.affirmation && event.affirmation.length > 0) {
 
       const moderation = await openai.moderations.create({
         model: "omni-moderation-latest",
