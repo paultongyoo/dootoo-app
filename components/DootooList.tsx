@@ -1456,7 +1456,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 //// Make a deep copy of thing before editting to ensure
                 //// we don't accidentally change React state and cause re-renders
                 const updatedThing = JSON.parse(JSON.stringify(thing));
-                updatedThing.text = textOnChange;
+                updatedThing.text = textOnChange.trim();
 
                 if (thing.newKeyboardEntry) {
 
