@@ -199,7 +199,6 @@ const ProfileScreen = ({ navigation }) => {
             paddingVertical: 15
         },
         statIconContainer: {
-            paddingTop: 10,
             justifyContent: 'center'
         },
         statIconTask: {
@@ -493,63 +492,64 @@ const ProfileScreen = ({ navigation }) => {
     }
 
     return (
-        <ScrollView contentContainerStyle={styles.profileDrawerContainer}>
-            <View style={styles.profileDrawerProfileIconContainer}>
-                <Image source={require("@/assets/images/profile_icon_green.png")} />
-                <View style={styles.profileDrawerProfileNameContainer}>
-                    {(!username || username.length == 0) ?
-                        <ActivityIndicator size={"large"} color="#3E3723" />
+        <ScrollView style={{ flex: 1 }} bounces={false} overScrollMode="never">
+            <View style={styles.profileDrawerContainer}>
+                <View style={styles.profileDrawerProfileIconContainer}>
+                    <Image source={require("@/assets/images/profile_icon_green.png")} />
+                    <View style={styles.profileDrawerProfileNameContainer}>
+                        {(!username || username.length == 0) ?
+                            <ActivityIndicator size={"large"} color="#3E3723" />
+                            :
+                            <Text style={styles.profileDrawerProfileNameText}>{username}</Text>
+                        }
+                    </View>
+                    <Pressable hitSlop={10} style={styles.refreshNameContainer}
+                        disabled={loadingNewUsername}
+                        onPress={handleEditUsername}>
+                        {(loadingNewUsername)
+                            ? <ActivityIndicator size={"small"} color="#3E3723" />
+                            : <Edit wxh="21" color="#556B2F" strokeWidth="2" />
+                        }
+                    </Pressable>
+                    {(!affirmation || affirmation.length == 0) ?
+                        <Pressable onPress={handleEditAffirmation}
+                            style={styles.profileDrawerProfileAffirmationContainer}>
+                            <Text style={styles.profileDrawerProfileAffirmationText}>Tap here to add an affirmation, piece of advice, or personal motto to your public profile</Text>
+                        </Pressable>
                         :
-                        <Text style={styles.profileDrawerProfileNameText}>{username}</Text>
+                        <View style={styles.profileDrawerProfileAffirmationContainer}>
+                            <Text style={styles.profileDrawerProfileAffirmationText}>{affirmation}</Text>
+                            <View style={{ flexDirection: 'row' }}>
+                                {(loadingNewAffirmation) ?
+                                    <View style={styles.refreshNameContainer}>
+                                        <ActivityIndicator size={"small"} color="#3E3723" />
+                                    </View>
+                                    :
+                                    <>
+                                        <Pressable hitSlop={10} style={styles.refreshNameContainer}
+                                            onPress={handleDeleteAffirmation}>
+                                            <Trash wxh="21" color="#556B2F" strokeWidth="2" />
+                                        </Pressable>
+                                        <Pressable hitSlop={10} style={styles.refreshNameContainer}
+                                            onPress={handleEditAffirmation}>
+                                            <Edit wxh="21" color="#556B2F" strokeWidth="2" />
+                                        </Pressable>
+                                    </>
+                                }
+                            </View>
+                        </View>
                     }
                 </View>
-                <Pressable hitSlop={10} style={styles.refreshNameContainer}
-                    disabled={loadingNewUsername}
-                    onPress={handleEditUsername}>
-                    {(loadingNewUsername)
-                        ? <ActivityIndicator size={"small"} color="#3E3723" />
-                        : <Edit wxh="21" color="#556B2F" strokeWidth="2" />
-                    }
-                </Pressable>
-                {(!affirmation || affirmation.length == 0) ?
-                    <Pressable onPress={handleEditAffirmation}
-                        style={styles.profileDrawerProfileAffirmationContainer}>
-                        <Text style={styles.profileDrawerProfileAffirmationText}>Tap here to add an affirmation, piece of advice, or personal motto to your public profile</Text>
-                    </Pressable>
-                    :
-                    <View style={styles.profileDrawerProfileAffirmationContainer}>
-                        <Text style={styles.profileDrawerProfileAffirmationText}>{affirmation}</Text>
-                        <View style={{ flexDirection: 'row' }}>
-                            {(loadingNewAffirmation) ?
-                                <View style={styles.refreshNameContainer}>
-                                    <ActivityIndicator size={"small"} color="#3E3723" />
-                                </View>
-                                :
-                                <>
-                                    <Pressable hitSlop={10} style={styles.refreshNameContainer}
-                                        onPress={handleDeleteAffirmation}>
-                                        <Trash wxh="21" color="#556B2F" strokeWidth="2" />
-                                    </Pressable>
-                                    <Pressable hitSlop={10} style={styles.refreshNameContainer}
-                                        onPress={handleEditAffirmation}>
-                                        <Edit wxh="21" color="#556B2F" strokeWidth="2" />
-                                    </Pressable>
-                                </>
-                            }
+                <View style={styles.statsContainer}>
+                    <Pressable style={styles.statContainer}
+                        onPress={handleDoneStatTap}>
+                        <View style={styles.statIconContainer}>
+                            <CircleCheck wxh="40" color={useSharedValue('#556B2F')} />
                         </View>
-                    </View>
-                }
-            </View>
-            <View style={styles.statsContainer}>
-                <Pressable style={styles.statContainer}
-                    onPress={handleDoneStatTap}>
-                    <View style={styles.statIconContainer}>
-                        <CircleCheck wxh="40" color={useSharedValue('#556B2F')} />
-                    </View>
-                    <Text style={styles.statNumber}>{formatNumber(doneCount) || '0'}</Text>
-                    <Text style={styles.statName}>Done</Text>
-                </Pressable>
-                {/* <Pressable style={styles.statContainer}
+                        <Text style={styles.statNumber}>{formatNumber(doneCount) || '0'}</Text>
+                        <Text style={styles.statName}>Done</Text>
+                    </Pressable>
+                    {/* <Pressable style={styles.statContainer}
                     onPress={() => showComingSoonAlert(anonymousId, "'Tips'", pathname)}>
                     <View style={styles.statIconContainer}>
                         <Bulb wxh="40" color="#556B2F" strokeWidth="1.5" />
@@ -557,111 +557,112 @@ const ProfileScreen = ({ navigation }) => {
                     <Text style={styles.statNumber}>{formatNumber(tipCount) || '0'}</Text>
                     <Text style={styles.statName}>Tips</Text>
                 </Pressable> */}
-            </View>
-            <View style={{ flex: 1 }}></View>
-            <View style={styles.privacyContainer}>
-                {/* <View style={styles.anonIdDisplayContainer}>
+                </View>
+                <View style={{ flex: 1 }}></View>
+                <View style={styles.privacyContainer}>
+                    {/* <View style={styles.anonIdDisplayContainer}>
                     <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
                     <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId}</Text>
                     <Pressable onPress={showOverrideUserPrompt}>
                         <Text style={styles.deleteDataLinkText}>Override User</Text>
                     </Pressable>
                 </View> */}
-                <View style={styles.linkContainer}>
-                    <Pressable onPress={showConfirmationPrompt}>
-                        <Text style={styles.deleteDataLinkText}>Delete My Data</Text>
-                    </Pressable>
+                    <View style={styles.linkContainer}>
+                        <Pressable onPress={showConfirmationPrompt}>
+                            <Text style={styles.deleteDataLinkText}>Delete My Data</Text>
+                        </Pressable>
+                    </View>
+                    <View style={{ flex: 1 }}></View>
+                    <View style={styles.linkContainer}>
+                        <Pressable onPress={sendEmail}>
+                            <Text style={styles.feedbackLinkText}>Email Feedback</Text>
+                        </Pressable>
+                    </View>
                 </View>
-                <View style={{ flex: 1 }}></View>
-                <View style={styles.linkContainer}>
-                    <Pressable onPress={sendEmail}>
-                        <Text style={styles.feedbackLinkText}>Email Feedback</Text>
-                    </Pressable>
-                </View>
+                <Dialog.Container visible={affirmationDialogVisible} onBackdropPress={handleAffirmationDialogCancel}>
+                    <Dialog.Title>Edit Headline</Dialog.Title>
+                    <Dialog.Input
+                        multiline={true}
+                        style={affirmationInvalid && styles.dialogTextInput_Invalid}
+                        autoFocus={true}
+                        onSubmitEditing={handleAffirmationDialogSubmit}
+                        defaultValue={affirmationTextInputValue.current}
+                        onChangeText={(text) => {
+                            handleAffirmationEditTextInputChange(text);
+                        }} />
+                    <Dialog.Description>Must be between 4 to 100 characters long and follow community guidelines: No profanity, impersonation, spamming, or harmful content.</Dialog.Description>
+                    <Dialog.Button label="Cancel" onPress={handleAffirmationDialogCancel} />
+                    <Dialog.Button label="Submit" onPress={handleAffirmationDialogSubmit} disabled={affirmationInvalid} />
+                </Dialog.Container>
+                <Dialog.Container visible={affirmationModerationFailedDialogVisible} onBackdropPress={() => setAffirmationModerationFailedDialogVisible(false)}>
+                    <Dialog.Title>Headline Violates Community Guidelines</Dialog.Title>
+                    <Dialog.Description>Please refrain from entering profanity or harmful content.</Dialog.Description>
+                    <Dialog.Button label="OK" onPress={() => setAffirmationModerationFailedDialogVisible(false)} />
+                </Dialog.Container>
+                <Dialog.Container visible={affirmationSpammingFailedDialogVisible} onBackdropPress={() => setAffirmationSpammingFailedDialogVisible(false)}>
+                    <Dialog.Title>Headline Violates Community Guidelines</Dialog.Title>
+                    <Dialog.Description>Please refrain from spamming or appearing to promote any products or services.</Dialog.Description>
+                    <Dialog.Button label="OK" onPress={() => setAffirmationSpammingFailedDialogVisible(false)} />
+                </Dialog.Container>
+                <Dialog.Container visible={affirmationInvalidOtherDialogVisible} onBackdropPress={() => setAffirmationInvalidOtherDialogVisible(false)}>
+                    <Dialog.Title>Headline Invalid</Dialog.Title>
+                    <Dialog.Description>{affirmationInvalidReason.current}</Dialog.Description>
+                    <Dialog.Button label="OK" onPress={() => setAffirmationInvalidOtherDialogVisible(false)} />
+                </Dialog.Container>
+                <Dialog.Container visible={affirmationUnexpectedDialogVisible} onBackdropPress={() => setAffirmationUnexpectedDialogVisible(false)}>
+                    <Dialog.Title>Unable To Edit Headline</Dialog.Title>
+                    <Dialog.Description>An unexpected error occurred while trying to save your new headline.  Please try again later.</Dialog.Description>
+                    <Dialog.Button label="OK" onPress={() => setAffirmationUnexpectedDialogVisible(false)} />
+                </Dialog.Container>
+                <Dialog.Container visible={usernameDialogVisible} onBackdropPress={handleUsernameDialogCancel}>
+                    <Dialog.Title>Change Username</Dialog.Title>
+                    <Dialog.Input
+                        multiline={false}
+                        style={usernameInvalid && styles.dialogTextInput_Invalid}
+                        autoFocus={true}
+                        onSubmitEditing={handleUsernameDialogSubmit}
+                        defaultValue={usernameTextInputValue.current}
+                        onChangeText={(text) => {
+                            handleUsernameEditTextInputChange(text);
+                        }} />
+                    <Dialog.Description>Must be between 5 to 20 characters long, use only letters and numbers (no spaces or special characters) and follow community guidelines: no profanity, impersonation, spamming, or harmful content.</Dialog.Description>
+                    <Dialog.Button label="Cancel" onPress={handleUsernameDialogCancel} />
+                    <Dialog.Button label="Submit" onPress={handleUsernameDialogSubmit} disabled={usernameInvalid} />
+                </Dialog.Container>
+                <Dialog.Container visible={dupeUsernameDialogVisible} onBackdropPress={() => setDupeUsernameDialogVisible(false)}>
+                    <Dialog.Title>Username Already Taken</Dialog.Title>
+                    <Dialog.Description>Please choose another username.</Dialog.Description>
+                    <Dialog.Button label="OK" onPress={() => setDupeUsernameDialogVisible(false)} />
+                </Dialog.Container>
+                <Dialog.Container visible={usernameModerationFailedDialogVisible} onBackdropPress={() => setUsernameModerationFailedDialogVisible(false)}>
+                    <Dialog.Title>Username Violates Community Guidelines</Dialog.Title>
+                    <Dialog.Description>Please choose a username that refrains from containing profanity or harmful content.</Dialog.Description>
+                    <Dialog.Button label="OK" onPress={() => setUsernameModerationFailedDialogVisible(false)} />
+                </Dialog.Container>
+                <Dialog.Container visible={usernameSpammingFailedDialogVisible} onBackdropPress={() => setUsernameSpammingFailedDialogVisible(false)}>
+                    <Dialog.Title>Username Violates Community Guidelines</Dialog.Title>
+                    <Dialog.Description>Please choose a username that refrains from spamming or appearing to promote any products or services.</Dialog.Description>
+                    <Dialog.Button label="OK" onPress={() => setUsernameSpammingFailedDialogVisible(false)} />
+                </Dialog.Container>
+                <Dialog.Container visible={usernameUnexpectedDialogVisible} onBackdropPress={() => setUsernameUnexpectedDialogVisible(false)}>
+                    <Dialog.Title>Unable To Change Username</Dialog.Title>
+                    <Dialog.Description>An unexpected error occurred while trying to save your new username.  Please try again later.</Dialog.Description>
+                    <Dialog.Button label="OK" onPress={() => setUsernameUnexpectedDialogVisible(false)} />
+                </Dialog.Container>
+                <Dialog.Container visible={overrideUserDialogVisible} onBackdropPress={handleUserOverrideDialogCancel}>
+                    <Dialog.Title>Override User</Dialog.Title>
+                    <Dialog.Description>Submit new user info in the format <Text style={{ fontWeight: 'bold' }}>user:anonId</Text> to override the current user.</Dialog.Description>
+                    <Dialog.Input
+                        multiline={false}
+                        autoFocus={true}
+                        onSubmitEditing={handleUserOverrideDialogSubmit}
+                        onChangeText={(text) => {
+                            setOverrideUserDialogInputValue(text);
+                        }} />
+                    <Dialog.Button label="Cancel" onPress={handleUserOverrideDialogCancel} />
+                    <Dialog.Button label="Submit" onPress={handleUserOverrideDialogSubmit} disabled={overrideUserDialogInputValue.length == 0} />
+                </Dialog.Container>
             </View>
-            <Dialog.Container visible={affirmationDialogVisible} onBackdropPress={handleAffirmationDialogCancel}>
-                <Dialog.Title>Edit Headline</Dialog.Title>
-                <Dialog.Input
-                    multiline={true}
-                    style={affirmationInvalid && styles.dialogTextInput_Invalid}
-                    autoFocus={true}
-                    onSubmitEditing={handleAffirmationDialogSubmit}
-                    defaultValue={affirmationTextInputValue.current}
-                    onChangeText={(text) => {
-                        handleAffirmationEditTextInputChange(text);
-                    }} />
-                <Dialog.Description>Must be between 4 to 100 characters long and follow community guidelines: No profanity, impersonation, spamming, or harmful content.</Dialog.Description>
-                <Dialog.Button label="Cancel" onPress={handleAffirmationDialogCancel} />
-                <Dialog.Button label="Submit" onPress={handleAffirmationDialogSubmit} disabled={affirmationInvalid} />
-            </Dialog.Container>
-            <Dialog.Container visible={affirmationModerationFailedDialogVisible} onBackdropPress={() => setAffirmationModerationFailedDialogVisible(false)}>
-                <Dialog.Title>Headline Violates Community Guidelines</Dialog.Title>
-                <Dialog.Description>Please refrain from entering profanity or harmful content.</Dialog.Description>
-                <Dialog.Button label="OK" onPress={() => setAffirmationModerationFailedDialogVisible(false)} />
-            </Dialog.Container>
-            <Dialog.Container visible={affirmationSpammingFailedDialogVisible} onBackdropPress={() => setAffirmationSpammingFailedDialogVisible(false)}>
-                <Dialog.Title>Headline Violates Community Guidelines</Dialog.Title>
-                <Dialog.Description>Please refrain from spamming or appearing to promote any products or services.</Dialog.Description>
-                <Dialog.Button label="OK" onPress={() => setAffirmationSpammingFailedDialogVisible(false)} />
-            </Dialog.Container>
-            <Dialog.Container visible={affirmationInvalidOtherDialogVisible} onBackdropPress={() => setAffirmationInvalidOtherDialogVisible(false)}>
-                <Dialog.Title>Headline Invalid</Dialog.Title>
-                <Dialog.Description>{affirmationInvalidReason.current}</Dialog.Description>
-                <Dialog.Button label="OK" onPress={() => setAffirmationInvalidOtherDialogVisible(false)} />
-            </Dialog.Container>
-            <Dialog.Container visible={affirmationUnexpectedDialogVisible} onBackdropPress={() => setAffirmationUnexpectedDialogVisible(false)}>
-                <Dialog.Title>Unable To Edit Headline</Dialog.Title>
-                <Dialog.Description>An unexpected error occurred while trying to save your new headline.  Please try again later.</Dialog.Description>
-                <Dialog.Button label="OK" onPress={() => setAffirmationUnexpectedDialogVisible(false)} />
-            </Dialog.Container>
-            <Dialog.Container visible={usernameDialogVisible} onBackdropPress={handleUsernameDialogCancel}>
-                <Dialog.Title>Change Username</Dialog.Title>
-                <Dialog.Input
-                    multiline={false}
-                    style={usernameInvalid && styles.dialogTextInput_Invalid}
-                    autoFocus={true}
-                    onSubmitEditing={handleUsernameDialogSubmit}
-                    defaultValue={usernameTextInputValue.current}
-                    onChangeText={(text) => {
-                        handleUsernameEditTextInputChange(text);
-                    }} />
-                <Dialog.Description>Must be between 5 to 20 characters long, use only letters and numbers (no spaces or special characters) and follow community guidelines: no profanity, impersonation, spamming, or harmful content.</Dialog.Description>
-                <Dialog.Button label="Cancel" onPress={handleUsernameDialogCancel} />
-                <Dialog.Button label="Submit" onPress={handleUsernameDialogSubmit} disabled={usernameInvalid} />
-            </Dialog.Container>
-            <Dialog.Container visible={dupeUsernameDialogVisible} onBackdropPress={() => setDupeUsernameDialogVisible(false)}>
-                <Dialog.Title>Username Already Taken</Dialog.Title>
-                <Dialog.Description>Please choose another username.</Dialog.Description>
-                <Dialog.Button label="OK" onPress={() => setDupeUsernameDialogVisible(false)} />
-            </Dialog.Container>
-            <Dialog.Container visible={usernameModerationFailedDialogVisible} onBackdropPress={() => setUsernameModerationFailedDialogVisible(false)}>
-                <Dialog.Title>Username Violates Community Guidelines</Dialog.Title>
-                <Dialog.Description>Please choose a username that refrains from containing profanity or harmful content.</Dialog.Description>
-                <Dialog.Button label="OK" onPress={() => setUsernameModerationFailedDialogVisible(false)} />
-            </Dialog.Container>
-            <Dialog.Container visible={usernameSpammingFailedDialogVisible} onBackdropPress={() => setUsernameSpammingFailedDialogVisible(false)}>
-                <Dialog.Title>Username Violates Community Guidelines</Dialog.Title>
-                <Dialog.Description>Please choose a username that refrains from spamming or appearing to promote any products or services.</Dialog.Description>
-                <Dialog.Button label="OK" onPress={() => setUsernameSpammingFailedDialogVisible(false)} />
-            </Dialog.Container>
-            <Dialog.Container visible={usernameUnexpectedDialogVisible} onBackdropPress={() => setUsernameUnexpectedDialogVisible(false)}>
-                <Dialog.Title>Unable To Change Username</Dialog.Title>
-                <Dialog.Description>An unexpected error occurred while trying to save your new username.  Please try again later.</Dialog.Description>
-                <Dialog.Button label="OK" onPress={() => setUsernameUnexpectedDialogVisible(false)} />
-            </Dialog.Container>
-            <Dialog.Container visible={overrideUserDialogVisible} onBackdropPress={handleUserOverrideDialogCancel}>
-                <Dialog.Title>Override User</Dialog.Title>
-                <Dialog.Description>Submit new user info in the format <Text style={{ fontWeight: 'bold' }}>user:anonId</Text> to override the current user.</Dialog.Description>
-                <Dialog.Input
-                    multiline={false}
-                    autoFocus={true}
-                    onSubmitEditing={handleUserOverrideDialogSubmit}
-                    onChangeText={(text) => {
-                        setOverrideUserDialogInputValue(text);
-                    }} />
-                <Dialog.Button label="Cancel" onPress={handleUserOverrideDialogCancel} />
-                <Dialog.Button label="Submit" onPress={handleUserOverrideDialogSubmit} disabled={overrideUserDialogInputValue.length == 0} />
-            </Dialog.Container>
         </ScrollView>
     );
 }
