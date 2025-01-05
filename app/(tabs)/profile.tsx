@@ -134,8 +134,12 @@ const ProfileScreen = ({ navigation }) => {
             alignItems: 'center',
         },
         profileDrawerProfileIconContainer: {
-            marginTop: 50,
-            alignItems: 'center'
+            marginTop: 40,
+            paddingBottom: 20,
+            alignItems: 'center',
+            width: '75%',
+            borderBottomWidth: 1,
+            borderBottomColor: '#556B2F30',
         },
         profileDrawerProfileIcon: {
             height: 150,
@@ -150,16 +154,32 @@ const ProfileScreen = ({ navigation }) => {
             paddingLeft: 20,
             paddingRight: 20
         },
+        profileDrawerAffirmationCTAButtonContainer: {
+            marginVertical: 20,
+            padding: 10,
+            width: '75%',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexDirection: 'row',
+            borderRadius: 15,
+            backgroundColor: '#556B2F',
+            shadowColor: '#000',
+            shadowOffset: { width: 2, height: 4 },
+            shadowOpacity: 0.6,
+            shadowRadius: 4,
+            elevation: 4, // Elevation for Android   
+        },
+        profileDrawerAffirmationCTAButtonText: {
+            textAlign: 'center',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: 20
+        },
         profileDrawerProfileAffirmationContainer: {
-            marginTop: 20,
             padding: 15,
             width: '75%',
             justifyContent: 'center',
             alignItems: 'center',
-            borderTopWidth: 1,
-            borderTopColor: '#556B2F30',
-            borderBottomWidth: 1,
-            borderBottomColor: '#556B2F30'
         },
         profileDrawerProfileAffirmationText: {
             textAlign: 'center',
@@ -172,7 +192,7 @@ const ProfileScreen = ({ navigation }) => {
             marginHorizontal: 20,
             borderTopWidth: 1,
             borderTopColor: "#556B2F30",
-            padding: 15,
+            padding: 10,
             flexDirection: 'row'
         },
         anonIdDisplayContainer: {
@@ -196,11 +216,15 @@ const ProfileScreen = ({ navigation }) => {
             textDecorationLine: 'underline'
         },
         statsContainer: {
+            justifyContent: 'center',
             flexDirection: 'row',
+            borderTopWidth: 1,
+            borderTopColor: '#556B2F30',
+            width: '75%',
+            padding: 20
         },
         statContainer: {
-            alignItems: 'center',
-            paddingVertical: 15
+            alignItems: 'center'
         },
         statIconContainer: {
             justifyContent: 'center'
@@ -243,8 +267,7 @@ const ProfileScreen = ({ navigation }) => {
             color: 'red'
         },
         firstDooDateContainer: {
-            flexDirection: 'row',
-            paddingTop: 20
+            flexDirection: 'row'
         },
         firstDooDatePrefix: {
             paddingRight: 5,
@@ -529,17 +552,11 @@ const ProfileScreen = ({ navigation }) => {
                         }
                     </Pressable>
                 </View>
-                {(!affirmation || affirmation.length == 0) ? (<>
+                {(!affirmation || affirmation.length == 0) ? (
                     <Pressable onPress={handleEditAffirmation}
-                        style={styles.profileDrawerProfileAffirmationContainer}>
-                        <Text style={styles.profileDrawerProfileAffirmationText}>Tap here to add an affirmation, piece of advice, or personal motto to your public profile</Text>
-                        {loadingNewAffirmation && (
-                            <View style={styles.refreshNameContainer}>
-                                <ActivityIndicator size={"small"} color="#3E3723" />
-                            </View>
-                        )}
+                        style={({pressed}) => [styles.profileDrawerAffirmationCTAButtonContainer, pressed && { backgroundColor: '#455723'}]}>
+                        <Text style={[styles.profileDrawerAffirmationCTAButtonText, loadingNewAffirmation && { paddingRight: 10 }]}>Add your Headline</Text>{loadingNewAffirmation && (<ActivityIndicator size={"small"} color="white" />)}
                     </Pressable>
-                </>
                 ) : (
                     <View style={styles.profileDrawerProfileAffirmationContainer}>
                         <Text style={styles.profileDrawerProfileAffirmationText}>{affirmation}</Text>
@@ -581,10 +598,11 @@ const ProfileScreen = ({ navigation }) => {
                     <Text style={styles.statName}>Tips</Text>
                 </Pressable> */}
                 </View>
+                {dooDate && (
                 <View style={styles.firstDooDateContainer}>
                     <Text style={styles.firstDooDatePrefix}>Dooing things since:</Text>
                     <Text style={styles.firstDooDate}>{getDate(dooDate)}</Text>
-                </View>
+                </View>)}
                 <View style={styles.privacyContainer}>
                     {/* <View style={styles.anonIdDisplayContainer}>
                     <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
@@ -616,7 +634,7 @@ const ProfileScreen = ({ navigation }) => {
                         onChangeText={(text) => {
                             handleAffirmationEditTextInputChange(text);
                         }} />
-                    <Dialog.Description>Must be between 4 to 100 characters long and follow community guidelines: No profanity, impersonation, spamming, or harmful content.</Dialog.Description>
+                    <Dialog.Description>Add an <Text style={{ fontWeight: 'bold'}}>affirmation, piece of advice, or personal motto</Text> between 4 to 100 characters long: No profanity, impersonation, spamming, or harmful content.</Dialog.Description>
                     <Dialog.Button label="Cancel" onPress={handleAffirmationDialogCancel} />
                     <Dialog.Button label="Submit" onPress={handleAffirmationDialogSubmit} disabled={affirmationInvalid} />
                 </Dialog.Container>
