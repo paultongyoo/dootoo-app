@@ -41,6 +41,9 @@ export const handler = async (event) => {
   let prismaParams = {
     skip, take,
     where: {
+      public_updatedAt: {
+        not: null
+      },
       id: {
         notIn: blockedItemIds.map((row) => row.blocked_item_id)
       },
@@ -71,7 +74,8 @@ export const handler = async (event) => {
       uuid: true,
       is_done: true,
       text: true,
-      updatedAt: true,
+      public_update_desc: true,
+      public_updatedAt: true,
       userReactions: {
         where: {
           user: {
@@ -123,7 +127,7 @@ export const handler = async (event) => {
       }
     },
     orderBy: {
-      updatedAt: 'desc'
+      public_updatedAt: 'desc'
     }
   };
 

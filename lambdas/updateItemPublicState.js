@@ -28,10 +28,16 @@ export const handler = async (event) => {
 
         const updatedItem = await prisma.item.update({
             where: { id: item.id },
-            data: { is_public: event.is_public },
+            data: { 
+                is_public: event.is_public,
+                public_update_desc: (event.is_public) ? 'posted' : 'hidden',
+                public_updatedAt: new Date()
+            },
             select: {
                is_public: true,
-               uuid: true 
+               uuid: true,
+               public_update_desc: true,
+               public_updatedAt: true 
             }
         });
         console.log("Updated Item: " + JSON.stringify(updatedItem));

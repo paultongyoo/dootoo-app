@@ -132,7 +132,11 @@ const CommunityScreen = () => {
                             }));
                     }
 
-                    setCommunityItems([...responseObj.items])
+                    // 1.7 Null check needed to prevent null error when resaving files in dev
+                    //     -- Hack or required?
+                    if (responseObj.items) {
+                        setCommunityItems([...responseObj.items])
+                    }
                 } else {
 
                     await new Promise<void>((resolve) => {
@@ -143,10 +147,14 @@ const CommunityScreen = () => {
                         })
                     })
 
-                    setCommunityItems(prevItems => [
-                        ...responseObj.items,
-                        ...prevItems
-                    ]);
+                    // 1.7 Null check needed to prevent null error when resaving files in dev
+                    //     -- Hack or required?
+                    if (responseObj.items) {
+                        setCommunityItems(prevItems => [
+                            ...prevItems,
+                            ...responseObj.items
+                        ]);
+                    }
                 }
                 setRefreshing(false);
             }
@@ -222,11 +230,17 @@ const CommunityScreen = () => {
             flexDirection: 'row'
         },
         timeAgoContainer: {
-
+            paddingRight: 4
+        },
+        timeAgoDesc: {
+            fontSize: 12,
+            color: '#808080',
+            textAlign: 'right'
         },
         timeAgo: {
             fontSize: 12,
-            color: '#808080'
+            color: '#808080',
+            textAlign: 'right'
         },
         moreIconContainer: {
             paddingHorizontal: 5,
@@ -429,8 +443,11 @@ const CommunityScreen = () => {
                     </View>
                     <View style={styles.rightCorner}>
                         <View style={styles.timeAgoContainer}>
+                            <Text style={styles.timeAgoDesc}>
+                                {item.public_update_desc}
+                            </Text>
                             <Text style={styles.timeAgo}>
-                                {timeAgo(item.updatedAt)}
+                                {item.public_updatedAt && (timeAgo(item.public_updatedAt))}
                             </Text>
                         </View>
                         <View style={styles.moreIconContainer}>
@@ -721,34 +738,34 @@ const CommunityScreen = () => {
                         </View>
                     </Pressable>
                     : <></>}
-                { ((modalItem.current) && (username != modalItem.current.user.name)) ||
-                  ( (!modalItem.current) && (username != modalUsername.current)) ? <>
-                <Pressable hitSlop={10}
-                    style={({ pressed }) => [
-                        styles.moreOverlayOption,
-                        pressed && { backgroundColor: '#3e372310' }
-                    ]}
-                    onPress={handleHideUser}>
-                    <View style={styles.moreOverlayOptionIcon}>
-                        <EyeOff wxh="20" color="#3e2723" />
-                    </View>
-                    <View style={styles.moreOverlayOptionTextContainer}>
-                        <Text style={styles.moreOverlayOptionText}>Hide User</Text>
-                    </View>
-                </Pressable>
-                <Pressable hitSlop={10}
-                    style={({ pressed }) => [
-                        styles.moreOverlayOption,
-                        pressed && { backgroundColor: '#3e372310' }
-                    ]}
-                    onPress={handleReportUser}>
-                    <View style={styles.moreOverlayOptionIcon}>
-                        <Flag wxh="20" color="#3e2723" />
-                    </View>
-                    <View style={styles.moreOverlayOptionTextContainer}>
-                        <Text style={styles.moreOverlayOptionText}>Report User</Text>
-                    </View>
-                </Pressable></> : <></> }
+                {((modalItem.current) && (username != modalItem.current.user.name)) ||
+                    ((!modalItem.current) && (username != modalUsername.current)) ? <>
+                    <Pressable hitSlop={10}
+                        style={({ pressed }) => [
+                            styles.moreOverlayOption,
+                            pressed && { backgroundColor: '#3e372310' }
+                        ]}
+                        onPress={handleHideUser}>
+                        <View style={styles.moreOverlayOptionIcon}>
+                            <EyeOff wxh="20" color="#3e2723" />
+                        </View>
+                        <View style={styles.moreOverlayOptionTextContainer}>
+                            <Text style={styles.moreOverlayOptionText}>Hide User</Text>
+                        </View>
+                    </Pressable>
+                    <Pressable hitSlop={10}
+                        style={({ pressed }) => [
+                            styles.moreOverlayOption,
+                            pressed && { backgroundColor: '#3e372310' }
+                        ]}
+                        onPress={handleReportUser}>
+                        <View style={styles.moreOverlayOptionIcon}>
+                            <Flag wxh="20" color="#3e2723" />
+                        </View>
+                        <View style={styles.moreOverlayOptionTextContainer}>
+                            <Text style={styles.moreOverlayOptionText}>Report User</Text>
+                        </View>
+                    </Pressable></> : <></>}
                 {(modalItem.current) && (username != modalItem.current.user.name) ?
                     <Pressable hitSlop={10}
                         style={({ pressed }) => [
@@ -873,14 +890,14 @@ const CommunityScreen = () => {
                 <Dialog.Button label="Yes" onPress={handleHideFromCommunitySubmit} />
             </Dialog.Container>
             <Dialog.Container visible={hideUserDialogVisible} onBackdropPress={handleHideUserCancel}>
-                <Dialog.Title>Hide All Posts by {(modalItem.current) ? modalItem.current.user.name : modalUsername.current }?</Dialog.Title>
+                <Dialog.Title>Hide All Posts by {(modalItem.current) ? modalItem.current.user.name : modalUsername.current}?</Dialog.Title>
                 <Dialog.Description>This currently cannot be undone.</Dialog.Description>
                 <Dialog.Button label="Cancel" onPress={handleHideUserCancel} />
                 <Dialog.Button label="Yes" onPress={handleHideUserSubmit} />
             </Dialog.Container>
             <Dialog.Container visible={reportUserDialogVisible} onBackdropPress={handleReportUserCancel}>
-                <Dialog.Title>Report {(modalItem.current) ? modalItem.current.user.name : modalUsername.current }?</Dialog.Title>
-                <Dialog.Description>This will hide {(modalItem.current) ? modalItem.current.user.name : modalUsername.current }'s posts as well and currently cannot be undone.</Dialog.Description>
+                <Dialog.Title>Report {(modalItem.current) ? modalItem.current.user.name : modalUsername.current}?</Dialog.Title>
+                <Dialog.Description>This will hide {(modalItem.current) ? modalItem.current.user.name : modalUsername.current}'s posts as well and currently cannot be undone.</Dialog.Description>
                 <RNPickerSelect
                     onValueChange={(value) => setSelectedBlockReason(value)}
                     placeholder={{ label: 'Select a reason', value: 'no_reason' }}

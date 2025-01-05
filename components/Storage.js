@@ -894,7 +894,7 @@ export const updateItemPublicState = async(item_uuid, new_public_state) => {
         is_public: new_public_state
       }
     );
-    //console.log("updateItemPublicState Response Obj: " + JSON.stringify(response.data.body));
+    console.log("updateItemPublicState Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateItemPublicState API:', error);
   }
