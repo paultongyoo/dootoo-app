@@ -285,6 +285,7 @@ export const generateNewKeyboardEntry = () => {
     text: null,
     parent_item_uuid: null,
     scheduled_datetime_utc: null,
+    userReactions: [],
     newKeyboardEntry: true
   };
   return newItem;

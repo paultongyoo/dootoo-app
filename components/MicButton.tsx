@@ -192,7 +192,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                 });
 
 
-                const response = await callBackendTranscribeService(fileUri, duration);
+                let response = await callBackendTranscribeService(fileUri, duration);
 
                 const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
                 //console.log("Number of scheduled items recorded: " + numScheduledItems);
@@ -236,6 +236,9 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
 
                     if (listArray && response && response.length > 0) {
                         lastRecordedCount.current = response.length;  // Set for future toast undo potential
+
+                        // Append default field(s) not appended by transcription service (currently just userReactions);
+                        response = response.map(thing => ({...thing, userReactions: []}));
 
                         // If list is empty, we ASSume that the empty CTA is visible so we first
                         // fade it out before displaying the list to user.
