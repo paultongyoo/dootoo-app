@@ -453,7 +453,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }
     }
 
-    const handleThingDelete = (thing: any) => {
+    const handleThingDelete = async (thing: any) => {
         //console.log("handleThingDelete: " + JSON.stringify(thing));
 
 
@@ -493,30 +493,39 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                     thing_type: thingName
                                 });
 
-                                animationPromises.push(
-                                    new Promise<void>((resolve) => {
-                                        thingRowPositionXs.current[listArrayCopy[i].uuid].value = withTiming(-600, {
-                                            duration: 300,
-                                            easing: Easing.in(Easing.quad)
-                                        }, (isFinished) => {
-                                            if (isFinished) {
-                                                runOnJS(resolve)()
-                                            }
-                                        });
-                                    })
-                                );
-                                animationPromises.push(
-                                    new Promise<void>((resolve) => {
-                                        thingRowHeights.current[listArrayCopy[i].uuid].value = withTiming(0, {
-                                            duration: 300,
-                                            easing: Easing.in(Easing.quad)
-                                        }, (isFinished) => {
-                                            if (isFinished) {
-                                                runOnJS(resolve)()
-                                            }
-                                        });
-                                    })
-                                );
+                                if (thingRowPositionXs.current[listArrayCopy[i].uuid]) {
+                                    animationPromises.push(
+                                        new Promise<void>((resolve) => {
+                                            thingRowPositionXs.current[listArrayCopy[i].uuid].value = withTiming(-600, {
+                                                duration: 300,
+                                                easing: Easing.in(Easing.quad)
+                                            }, (isFinished) => {
+                                                if (isFinished) {
+                                                    runOnJS(resolve)()
+                                                }
+                                            });
+                                        })
+                                    );
+                                } else {
+                                    console.log("thingRowPositionX unexpectedly missing for item: " + listArrayCopy[i].text);
+                                }
+
+                                if (thingRowHeights.current[listArrayCopy[i].uuid]) {
+                                    animationPromises.push(
+                                        new Promise<void>((resolve) => {
+                                            thingRowHeights.current[listArrayCopy[i].uuid].value = withTiming(0, {
+                                                duration: 300,
+                                                easing: Easing.in(Easing.quad)
+                                            }, (isFinished) => {
+                                                if (isFinished) {
+                                                    runOnJS(resolve)()
+                                                }
+                                            });
+                                        })
+                                    );
+                                } else {
+                                    console.log("thingRowHeights unexpectedly missing for item: " + listArrayCopy[i].text);
+                                }
                             }
 
                             await Promise.all(animationPromises);
@@ -557,52 +566,60 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             const index = listArrayCopy.findIndex(obj => obj.uuid == thing.uuid);
 
             //console.log(`Stats of row before deleting - positionX ${JSON.stringify(currentRowPositionX)}, rowHeight ${JSON.stringify(currentRowHeight)}`);
-            currentRowPositionX.value = withTiming(-600, {
-                duration: 300,
-                easing: Easing.in(Easing.quad)
-            }, (isFinished) => {
-                if (isFinished) {
-                    currentRowHeight.value = withTiming(0, {
-                        duration: 300,
-                        easing: Easing.in(Easing.quad)
-                    }, (isFinished) => {
-                        if (isFinished) {
-                            runOnJS(postSingleDeletionActions)(listArrayCopy, index, thing);
-                        }
-                    });
-                }
+
+            if (currentRowPositionX) {
+                await new Promise<void>((resolve) => currentRowPositionX.value = withTiming(-600, {
+                    duration: 300,
+                    easing: Easing.in(Easing.quad)
+                }, (isFinished) => {
+                    if (isFinished) {
+                        runOnJS(resolve)();
+                    }
+                }));
+            } else {
+                console.log("currentRowPositionX unexpectedly null for item: " + thing.text);
+            }
+
+            if (currentRowHeight) {
+                await new Promise<void>((resolve) => currentRowHeight.value = withTiming(0, {
+                    duration: 300,
+                    easing: Easing.in(Easing.quad)
+                }, (isFinished) => {
+                    if (isFinished) {
+                        runOnJS(resolve)();
+                    }
+                }));
+            } else {
+                console.log("currentRowHeight unexpectedly null for item: " + thing.text);
+            }
+
+            amplitude.track(`${thingName} Deleted`, {
+                anonymous_id: anonymousId,
+                thing_uuid: thing.uuid,
+                thing_type: thingName
             });
+    
+            // Call asyncronous delete to mark item as deleted in backend to sync database
+            // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
+            if (!thing.newKeyboardEntry) deleteThing(thing.uuid);
+    
+            if (thingName == 'tip') {
+                ProfileCountEventEmitter.emit('decr_tips');
+            }
+    
+            if (thing.is_done) {
+                ProfileCountEventEmitter.emit("decr_done");
+            }
+    
+            // Remove item from displayed and thingRowPositionXs lists
+            listArrayCopy.splice(index, 1);
+            delete thingRowPositionXs.current[thing.uuid];
+            delete thingRowHeights.current[thing.uuid];
+    
+            //console.log(`updatedThings post delete (${updatedThings.length}): ${JSON.stringify(updatedThings)}`);
+    
+            listArraySetter((prevThings) => prevThings.filter((obj) => (obj.uuid != thing.uuid)));
         }
-    }
-
-    const postSingleDeletionActions = (listArrayCopy, index, thing) => {
-
-        amplitude.track(`${thingName} Deleted`, {
-            anonymous_id: anonymousId,
-            thing_uuid: thing.uuid,
-            thing_type: thingName
-        });
-
-        // Call asyncronous delete to mark item as deleted in backend to sync database
-        // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
-        if (!thing.newKeyboardEntry) deleteThing(thing.uuid);
-
-        if (thingName == 'tip') {
-            ProfileCountEventEmitter.emit('decr_tips');
-        }
-
-        if (thing.is_done) {
-            ProfileCountEventEmitter.emit("decr_done");
-        }
-
-        // Remove item from displayed and thingRowPositionXs lists
-        listArrayCopy.splice(index, 1);
-        delete thingRowPositionXs.current[thing.uuid];
-        delete thingRowHeights.current[thing.uuid];
-
-        //console.log(`updatedThings post delete (${updatedThings.length}): ${JSON.stringify(updatedThings)}`);
-
-        listArraySetter((prevThings) => prevThings.filter((obj) => (obj.uuid != thing.uuid)));
     }
 
     // Function to close all Swipeables except the one being opened
@@ -2061,13 +2078,13 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             <ProfileModal username={modalUsername.current} modalVisible={profileModalVisible} modalVisibleSetter={setProfileModalVisible}
                 onMoreIconPress={
                     // Only display the more icon if the profile modal is depicting ANOTHER user
-                    (username != modalUsername.current) 
+                    (username != modalUsername.current)
                         ? (modalUsername) => {
-                                showMoreModalOnProfileModalHide.current = true;
-                                modalItem.current = null;
-                                modalUsername.current = modalUsername;
-                                setProfileModalVisible(false);
-                            } 
+                            showMoreModalOnProfileModalHide.current = true;
+                            modalItem.current = null;
+                            modalUsername.current = modalUsername;
+                            setProfileModalVisible(false);
+                        }
                         : null
                 }
                 onModalHide={() => {
