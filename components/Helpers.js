@@ -44,7 +44,15 @@ export const isThingOverdue = (thing) => {
 
 export const timeAgo = (utcDateString) => {
   const date = DateTime.fromISO(utcDateString);
-  return date.toRelative();
+  const relativeTime = date.toRelative();
+  const abbreviated = relativeTime
+    .replace(" minutes", " min.")
+    .replace(" minute", " min.")
+    .replace(" hours", " hr.")
+    .replace(" hour", " hr.")
+    .replace(" seconds", " sec.")
+    .replace(" second", " sec.");
+  return abbreviated;
 }
 
 export const getDate = (utcDateString) => {
