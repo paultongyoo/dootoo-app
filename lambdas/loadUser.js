@@ -51,7 +51,8 @@ export const handler = async (event) => {
           name: loadedUser.name,
           affirmation: loadedUser.affirmation,
           doneCount: loadedUser.doneCount,
-          tipCount: loadedUser.tipCount
+          tipCount: loadedUser.tipCount,
+          createdAt: loadedUser.createdAt
         }
       };
     } else {
