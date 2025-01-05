@@ -3,7 +3,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Linking, Platform, ScrollView } from "react-native";
 import { AppContext } from "@/components/AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
-import { formatNumber, getDate, showComingSoonAlert, timeAgo } from '@/components/Helpers';
+import { formatNumber, getDate } from '@/components/Helpers';
 import { overrideUserAnonId as overrideUser, saveUserLocally, updateAffirmation, updateUsername } from "@/components/Storage";
 import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import Dialog from "react-native-dialog";

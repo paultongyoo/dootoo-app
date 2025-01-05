@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, View, Image, Text, ActivityIndicator, Pressable } from "react-native";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import { extractDateInLocalTZ, formatNumber, getDate, timeAgo } from "./Helpers";
+import { formatNumber, getDate } from "./Helpers";
 import { CircleCheck } from "./svg/circle-check";
 import { loadUsername } from "./Storage";
 import Modal from "react-native-modal";
