@@ -164,10 +164,10 @@ const ProfileScreen = ({ navigation }) => {
             borderRadius: 15,
             backgroundColor: '#556B2F',
             shadowColor: '#000',
-            shadowOffset: { width: 2, height: 4 },
+            shadowOffset: { width: 2, height: 2 },
             shadowOpacity: 0.6,
-            shadowRadius: 4,
-            elevation: 4, // Elevation for Android   
+            shadowRadius: 2,
+            elevation: 2, // Elevation for Android   
         },
         profileDrawerAffirmationCTAButtonText: {
             textAlign: 'center',
