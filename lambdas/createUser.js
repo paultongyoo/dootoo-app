@@ -34,7 +34,8 @@ const saveUser = async(username, anonymousId) => {
     select: {
       name: true,
       anonymous_id: true,
-      affirmation: true
+      affirmation: true,
+      createdAt: true
     }
   });
 };

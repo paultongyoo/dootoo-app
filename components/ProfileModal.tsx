@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, View, Image, Text, ActivityIndicator, Pressable } from "react-native";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import { formatNumber } from "./Helpers";
+import { extractDateInLocalTZ, formatNumber, getDate, timeAgo } from "./Helpers";
 import { CircleCheck } from "./svg/circle-check";
 import { loadUsername } from "./Storage";
 import Modal from "react-native-modal";
@@ -123,6 +123,19 @@ const ProfileModal = ({ username, modalVisible, modalVisibleSetter,
             justifyContent: 'center',
             flex: 1,
             paddingBottom: 30
+        },
+        firstDooDateContainer: {
+            flexDirection: 'row',
+            paddingTop: 20
+        },
+        firstDooDatePrefix: {
+            paddingRight: 5,
+            fontSize: 16
+        },
+        firstDooDate: {
+            color: '#556B2F',
+            fontWeight: 'bold',
+            fontSize: 16
         }
     });
 
@@ -171,6 +184,10 @@ const ProfileModal = ({ username, modalVisible, modalVisibleSetter,
                                 <Text style={styles.statNumber}>{formatNumber(user.doneCount) || '0'}</Text>
                                 <Text style={styles.statName}>Done</Text>
                             </View>
+                        </View>
+                        <View style={styles.firstDooDateContainer}>
+                            <Text style={styles.firstDooDatePrefix}>Dooing things since:</Text>
+                            <Text style={styles.firstDooDate}>{getDate(user.createdAt)}</Text>
                         </View>
                     </>
                 }

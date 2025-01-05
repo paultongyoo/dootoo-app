@@ -3,7 +3,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Linking, Platform, ScrollView } from "react-native";
 import { AppContext } from "@/components/AppContext";
 import * as amplitude from '@amplitude/analytics-react-native';
-import { formatNumber, showComingSoonAlert } from '@/components/Helpers';
+import { formatNumber, getDate, showComingSoonAlert, timeAgo } from '@/components/Helpers';
 import { overrideUserAnonId as overrideUser, saveUserLocally, updateAffirmation, updateUsername } from "@/components/Storage";
 import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import Dialog from "react-native-dialog";
@@ -17,7 +17,7 @@ import { Trash } from "@/components/svg/trash";
 
 const ProfileScreen = ({ navigation }) => {
     const pathname = usePathname();
-    const { username, setUsername, affirmation, setAffirmation,
+    const { username, setUsername, affirmation, setAffirmation, dooDate,
         doneCount, tipCount, setTipCount, anonymousId, resetUserContext } = useContext(AppContext);
 
     //const [username, setUsername] = useState('');
@@ -168,7 +168,7 @@ const ProfileScreen = ({ navigation }) => {
             fontSize: 20
         },
         privacyContainer: {
-            marginTop: 40,
+            marginTop: 30,
             marginHorizontal: 20,
             borderTopWidth: 1,
             borderTopColor: "#556B2F30",
@@ -241,6 +241,19 @@ const ProfileScreen = ({ navigation }) => {
         },
         dialogTextInput_Invalid: {
             color: 'red'
+        },
+        firstDooDateContainer: {
+            flexDirection: 'row',
+            paddingTop: 20
+        },
+        firstDooDatePrefix: {
+            paddingRight: 5,
+            fontSize: 16
+        },
+        firstDooDate: {
+            color: '#556B2F',
+            fontWeight: 'bold',
+            fontSize: 16
         }
     });
 
@@ -567,6 +580,10 @@ const ProfileScreen = ({ navigation }) => {
                     <Text style={styles.statNumber}>{formatNumber(tipCount) || '0'}</Text>
                     <Text style={styles.statName}>Tips</Text>
                 </Pressable> */}
+                </View>
+                <View style={styles.firstDooDateContainer}>
+                    <Text style={styles.firstDooDatePrefix}>Dooing things since:</Text>
+                    <Text style={styles.firstDooDate}>{getDate(dooDate)}</Text>
                 </View>
                 <View style={styles.privacyContainer}>
                     {/* <View style={styles.anonIdDisplayContainer}>

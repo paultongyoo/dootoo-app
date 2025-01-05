@@ -1228,7 +1228,8 @@ const createUser = async () => {
       anonymous_id: newAnonymousId, 
       affirmation: affirmation,
       doneCountStr: doneCountStr, 
-      tipCountStr: tipCountStr 
+      tipCountStr: tipCountStr,
+      createdAt: new Date().toISOString()
     }
   } catch (error) {
     //console.error('Error calling create User API:', error);

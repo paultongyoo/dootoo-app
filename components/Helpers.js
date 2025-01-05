@@ -47,6 +47,11 @@ export const timeAgo = (utcDateString) => {
   return date.toRelative();
 }
 
+export const getDate = (utcDateString) => {
+  const date = DateTime.fromISO(utcDateString);
+  return date.toFormat("MMM d, yyyy");
+}
+
 export const momentFromNow = (thing) => {
   const scheduled_datetime_utc = thing.scheduled_datetime_utc;
   return formatLocalizedTime(scheduled_datetime_utc);

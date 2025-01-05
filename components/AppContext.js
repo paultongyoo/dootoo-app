@@ -26,6 +26,7 @@ export const AppProvider = ({ children }) => {
     const [affirmation, setAffirmation] = useState(null);
     const [doneCount, setDoneCount] = useState(0);
     const [tipCount, setTipCount] = useState(0);
+    const [dooDate, setDooDate] = useState(null);
     const itemCountsMap = useRef(new Map());
     const currentlyTappedThing = useRef(null);   
 
@@ -49,6 +50,7 @@ export const AppProvider = ({ children }) => {
       setUsername(userData.name);
       setAnonymousId(userData.anonymous_id);
       setAffirmation(userData.affirmation);
+      setDooDate(userData.createdAt);
       //console.log("username/anonymousId.current values set: " + JSON.stringify(userData));
       if (callback) {
         callback(userData.isNew);
@@ -81,6 +83,7 @@ export const AppProvider = ({ children }) => {
             affirmation, setAffirmation,
             doneCount, setDoneCount,
             tipCount, setTipCount,
+            dooDate, setDooDate,
             lastRecordedCount,
             resetUserContext,
             initializeLocalUser,
