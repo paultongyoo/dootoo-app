@@ -146,7 +146,7 @@ export const loadCommunityItems = async(requestedPage) => {
 
 
 export const DONE_ITEM_FILTER_ONLY_OPEN_PARENTS = "onlyOpenParents";
-export const DONE_ITEM_FILTER_ONLY_DONE_PARENTS = "onlyDoneParents";
+export const DONE_ITEM_FILTER_ONLY_DONE_ITEMS = "onlyDoneItems";
 export const loadItems = async (isPullDown, requestedPage, doneFilterString = null) => {
   //console.log(`loadItems: isPullDown ${isPullDown}, page ${page}, doneFilterString: ${doneFilterString}`);
   
@@ -155,7 +155,7 @@ export const loadItems = async (isPullDown, requestedPage, doneFilterString = nu
   // Assume we only want to check cache when the caller requests page == 1 (i.e. on initialization).
   // Requests for any other page will call the backend.
   if (requestedPage == 1 && !isPullDown) {
-    const cachedItems = (doneFilterString == DONE_ITEM_FILTER_ONLY_DONE_PARENTS) 
+    const cachedItems = (doneFilterString == DONE_ITEM_FILTER_ONLY_DONE_ITEMS) 
                            ? await loadDoneItemsCache()
                            : await loadItemsCache();
 
@@ -177,7 +177,7 @@ export const loadItems = async (isPullDown, requestedPage, doneFilterString = nu
   } else if (requestedPage != 1) {
     //console.log(`Page ${requestedPage} being requested by app, pulling from backend...`);
   } else {
-    //console.log("Load called on pull down, executing backend load...");
+    console.log("Load called on pull down, executing backend load...");
   }
 
   try {
@@ -194,7 +194,7 @@ export const loadItems = async (isPullDown, requestedPage, doneFilterString = nu
         page: requestedPage,                          
         skipCounts: true,
         onlyOpenParents: (doneFilterString == DONE_ITEM_FILTER_ONLY_OPEN_PARENTS),    //  Added in 1.6 for "list" screen
-        onlyDoneParents: (doneFilterString == DONE_ITEM_FILTER_ONLY_DONE_PARENTS) //  Added in 1.6 for "done" screen                                                                           
+        onlyDoneItems: (doneFilterString == DONE_ITEM_FILTER_ONLY_DONE_ITEMS) //  Added in 1.6 for "done" screen                                                                           
       }
     );
     const item_array = response.data.body.items;

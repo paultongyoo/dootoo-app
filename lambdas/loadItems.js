@@ -46,11 +46,18 @@ export const handler = async (event) => {
     HAVING COUNT(*) > 2`;
     console.log("Number of Users blocked more than twice: " + blockedUserIds.length);
 
+    console.log("onlyOpenParents: " + event.onlyOpenParents);
+    console.log("onlyDoneItems: " + event.onlyDoneItems);
+
     let prismaParams = {
       where: {
         user: { id: user.id },
         is_deleted: false,
-        parent_item_id: null
+        ...(event.onlyOpenParents && {
+          parent_item_id: null,
+          is_done: false
+        }),
+        ...(event.onlyDoneItems && { is_done: true })   // is_done isn't defaulted for backwards compatibility
       },
       select: {
         is_done: true,
@@ -90,48 +97,60 @@ export const handler = async (event) => {
             createdAt: 'desc'
           }
         },
-        children: {
-          select: {
-            uuid: true,
-            text: true,
-            scheduled_datetime_utc: true,
-            event_id: true,
-            is_done: true,
-            parent: {
-              select: {
-                uuid: true
+        ...(event.onlyOpenParents && {  // return only children (and their parent UUID) on open page 
+          children: {
+            select: {
+              uuid: true,
+              text: true,
+              scheduled_datetime_utc: true,
+              event_id: true,
+              is_done: true,
+              parent: {
+                select: {
+                  uuid: true
+                }
               }
+            },
+            where: {
+              is_deleted: false
+            },
+            orderBy: {
+              rank_idx: 'asc'
             }
-          },
-          where: {
-            is_deleted: false
-          },
-          orderBy: {
-            rank_idx: 'asc'
           }
-        }
+        }),
+        ...(event.onlyDoneItems && ({ // return only parents on done page
+          parent: {
+            select: {
+              uuid: true,
+              text: true,
+              is_done: true
+            }
+          }
+        }))
       },
       orderBy: {
-        rank_idx: 'asc'
+        ...((event.onlyOpenParents || !event.onlyDoneItems) && ( { rank_idx: 'asc' } )),
+        ...(event.onlyDoneItems && ({ updatedAt: 'desc'}))
       }
     };
 
-    console.log("onlyOpenParents: " + event.onlyOpenParents);
-    console.log("onlyDoneParents: " + event.onlyDoneParents);
-
-    if (event.onlyOpenParents) {
-      prismaParams.where = { ...prismaParams.where, is_done: false };
-    } else if (event.onlyDoneParents) {
-      prismaParams.where = { ...prismaParams.where, is_done: true };
-    }
+    // if (event.onlyOpenParents) {
+    //   prismaParams.where = { ...prismaParams.where, is_done: false };
+    // } else if (event.onlyDoneItems) {
+    //   prismaParams.where = { ...prismaParams.where, is_done: true };
+    // }
 
     retrievedItems = await prisma.item.findMany(prismaParams);
 
-    const flattenItem = (item) => {
-      const { children, ...parent } = item;
-      return [parent, ...children];
+    if (event.onlyOpenParents) {
+      const flattenItem = (item) => {
+        const { children, ...parent } = item;
+        return [parent, ...children];
+      }
+      retrievedItems = retrievedItems.flatMap((item) => flattenItem(item));
     }
-    retrievedItems = retrievedItems.flatMap((item) => flattenItem(item));
+
     console.log("retrievedItems array length: " + retrievedItems.length);
 
     const pageSize = 15   // hardcode this for now
@@ -239,7 +258,7 @@ export const handler = async (event) => {
   //              Race conditions maybe?
   // retrievedItems = removeOrphans(retrievedItems);
 
- 
+
 
   var response = null;
   if (event.loadAll) {

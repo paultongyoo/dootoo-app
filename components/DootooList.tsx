@@ -291,7 +291,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         let things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;
 
-        //console.log(`${thingName}: DB load returned ${things.length} item(s) and hasMore is ${hasMore}`);
+        console.log(`${thingName}: DB load returned ${things.length} item(s) and hasMore is ${hasMore}`);
 
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
         hasMoreThings.current = hasMore;
