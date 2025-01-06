@@ -56,25 +56,26 @@ export default function DoneScreen() {
   const handleDoneClick = async (item) => {
 
     /*
-    Rules as of v1.1.1 in priority order:
+      1.7 Latest MVP UX: 
+            -- Flat page of ALL completed parents and children, listed by Item.updatedAt descending
+            --- Page updated to list completed subitems that ARE listed on opened items page too
+            -- Completed children have their parents' text listed above them in smaller font (they are NOT separate list items) 
 
-      1) Scenarios attempting to set item TO Done :
-        1.1) If user sets an item that has no children to Done, item is moved to top of
-           Done Adults list or end of the list if no DAs exist.
-        1.2) If user attempts to set a parent item to done that has open children,
-              DISPLAY PROMPT to user that:
-              1.2.1) Informs them their item has open subitems
-              1.2.2) Asks them if they want to Complete or Delete their open items
-                 --- Choosing this option will affect the open items as chosen and set the parent to done
-              1.2.3) Gives them Cancel button
-                 --- Choosing this option will simply dismiss the prompt; no change made to item or list
-        1.3) If user sets a child to Done, item is moved to top of Kids list if kids exist, otherwise left
-           underneath parent.  The child is NOT separated from its parent.
-
-      2) Scenarios setting item TO Open:
-        2.1) If item is an DA, move it to the top of the DA list if it exists, or end of the list if no DAs
-        2.2) If item is a child of a DA, move it to the top of the DA list (or end of list if no DAs) and make it a parent
-        2.3) If item is a child of an Open parent, move it to the top of the Done Kids list (or end of maily list of no DKs)
+          Actions allowed from this page at the moment
+            1) Reopening individual items:
+                - User prompted to confirm
+                - Item moved to top of opened list
+                - Reopened children scenarios
+                -- If child's parent is open, reopened child is removed from done page 
+                   and opened in place on opened page
+                -- If child's parent is done, reopened child is removed from done page 
+                   and moved to top of opened page as new adult
+                -- Reopened parents only are removed from the done page (any completed children stay on done page) 
+                   and their entire family (should be only done items) moved to top of opened page
+            2) Deleting individual items
+            3) Making item public (yes, currently want to test allowing completed items to be made public to see if users do this to celebrate)
+            4) Pagination load on scroll
+            5) Pull down to refresh
     */
     try {
 
@@ -229,6 +230,16 @@ export default function DoneScreen() {
     action_MoveToTop: {
       borderRightWidth: 1,
       borderRightColor: '#3E272333'
+    },
+    doneItemParentContainer: {
+      paddingLeft: 10,
+      paddingTop: 10,
+      position: 'relative',
+      top: 6
+    },
+    doneItemParentText: {
+      fontSize: 12,
+      color: "#3e2723"
     }
   });
 

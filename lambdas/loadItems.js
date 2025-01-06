@@ -187,13 +187,10 @@ export const handler = async (event) => {
 
     try {
 
-      // Decrypt item text
-      const decryptParams = {
-        CiphertextBlob: Buffer.from(item.text, 'base64')
-      };
-      const decryptedData = await kms.decrypt(decryptParams).promise();
-      const decryptedString = decryptedData.Plaintext.toString('utf-8');
-      item.text = decryptedString;   // Replace with plaintext string for display in app
+      item.text = await decryptText(item.text);   
+      if (item.parent) {
+        item.parent.text = await decryptText(item.parent.text);
+      }
 
       if (!event.skipCounts) {
 
@@ -275,6 +272,14 @@ export const handler = async (event) => {
   await prisma.$disconnect();
   return response;
 };
+
+async function decryptText(encryptedText) {
+  const decryptParams = {
+    CiphertextBlob: Buffer.from(encryptedText, 'base64')
+  };
+  const decryptedData = await kms.decrypt(decryptParams).promise();
+  return decryptedData.Plaintext.toString('utf-8');
+}
 
 function removeOrphans(items) {
   // Create a set of parent IDs from the list

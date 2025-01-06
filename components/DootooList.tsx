@@ -1814,26 +1814,27 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         }
                     }}>
                     <ScaleDecorator>
+                        { (thingName == THINGNAME_DONE_ITEM) && item.parent && (
+                            <View style={styles.doneItemParentContainer}>
+                                <Text style={styles.doneItemParentText}>{item.parent.text}:</Text>
+                            </View>
+                        )}
                         <View style={[listStyles.itemContainer, styles.itemContainer]}>
-                            {(item.parent_item_uuid) ?
+                            {item.parent_item_uuid && (
                                 <View style={styles.childItemSpacer}></View>
-                                : <></>
-                            }
-                            {(isDoneable && !((thingName == THINGNAME_DONE_ITEM) && item.parent_item_uuid)) ?
+                            )}
+                            {isDoneable && (
                                 <Pressable style={[styles.itemCircleOpen, item.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(item)}></Pressable>
-                                : ((thingName == THINGNAME_DONE_ITEM) && item.parent_item_uuid)
-                                    ? <View style={styles.childDoneSpacer}></View>
-                                    : <></>
-                            }
-                            {(thingName == 'tip') ?
+                            )}
+                            {(thingName == 'tip') && (
                                 <Pressable style={styles.tipListIconContainer}
                                     onPress={() => {
                                         console.log("Tapping bulb");
                                         swipeableRefs.current[item.uuid].openLeft()
                                     }}>
                                     <Bulb wxh="28" opacity="0.8" color="#556B2F" strokeWidth='1.5' />
-                                </Pressable> : <></>
-                            }
+                                </Pressable>
+                            )}
                             <View style={listStyles.itemNameContainer}>
                                 {((thingName == THINGNAME_ITEM) && item.scheduled_datetime_utc) ?
                                     <Reanimated.View style={[listStyles.timerIconContainer, timerContainerWidthAnimatedStyle]}>
