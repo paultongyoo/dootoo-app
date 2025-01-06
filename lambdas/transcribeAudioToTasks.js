@@ -79,7 +79,7 @@ export const handler = async (event) => {
                   "tasks": [
                     {
                       "uuid": "<RFC-compliant UUID>",
-                      "text": "<task name (include schedule info if specified) (always capitalize its first letter)>", 
+                      "text": "<task name (include schedule info if specified) (capitalize its first letter of task name, not necessarily every word)>", 
                       "parent_item_uuid": <UUID of parent task if this is a subtask>,
                       "scheduled_datetime_utc": <ISO 8601 formatted string in UTC timezone per rules above, or null if no date or time info provided>
                   ]
