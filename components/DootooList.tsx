@@ -1461,55 +1461,35 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 //console.log("Attempting to enrich item: " + item.text);
                 const attemptToEnrichedItem = async (itemToEnrich) => {
                     try {
-                        const enrichmentResponse = await fetchWithRetry(() => enrichItem(itemToEnrich));
-                        //console.log("Enriched Item Response: " + JSON.stringify(enrichmentResponse));
-                        if (enrichmentResponse && enrichmentResponse.enriched) {
+                        const { scheduled_datetime_utc } = await enrichItem(itemToEnrich);
+                        //console.log("Enriched Item Response: " + JSON.stringify(scheduled_datetime_utc));
+                        if (scheduled_datetime_utc) {
 
-                            lastEnrichedText.current = enrichmentResponse.text;
-
-                            await new Promise<void>((resolve) => {
-                                textOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
-                                    if (isFinished) {
-                                        runOnJS(resolve)();
-                                    }
-                                })
-                            })
-
-                            amplitude.track("Item Enriched", {
-                                anonymous_id: anonymousId,
-                                pathname: pathname,
-                                uuid: item.uuid
-                            });
-
-                            // Overwrite enriched data in DB and UI
+                            // Overwrite scheduled_datetime_utc in DB and UI
                             listArraySetter((prevThings) => prevThings.map((thing) =>
                                 (thing.uuid == itemToEnrich.uuid)
                                     ? {
                                         ...thing,
-                                        text: enrichmentResponse.text,
-                                        scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc
+                                        scheduled_datetime_utc: scheduled_datetime_utc
                                     }
                                     : thing
                             ));
 
-                            // 1.3 Intentionally NOT implementing the below functions in the enrichment lambda
-                            //     to minimize time required to return enrichment back to client
-                            const deepItemCopy = {
-                                ...item,
-                                text: enrichmentResponse.text,
-                                scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc
-                            }
-                            updateItemText(deepItemCopy);
-                            updateItemSchedule(item.uuid, enrichmentResponse.scheduled_datetime_utc);
+                            // We need to use retry here given this effect may be called 
+                            // after an item was just created by user and therefore the item may be
+                            // in the process of saving and we have to wait for the save to complete.
+                            // This is still a hack as the save may still take longer than the amount
+                            // of retries employed here.  FUTURE TODO TO FIX
+                            await fetchWithRetry(() => updateItemSchedule(item.uuid, scheduled_datetime_utc));
 
                             const eventIdToUpdate = item.event_id;
                             if (eventIdToUpdate) {
-                                const updatedTimerThing = { ...selectedTimerThing.current, scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc };
+                                const updatedTimerThing = { ...selectedTimerThing.current, scheduled_datetime_utc: scheduled_datetime_utc };
                                 const updatedDate = getLocalDateObj(updatedTimerThing);
                                 const alertMinutesOffset = deriveAlertMinutesOffset(updatedTimerThing);
                                 //console.log("Updated alertMinutesOffset: " + alertMinutesOffset);
                                 Calendar.updateEventAsync(eventIdToUpdate, {
-                                    title: enrichmentResponse.text,
+                                    title: item.text,
                                     alarms: [{ relativeOffset: alertMinutesOffset, method: Calendar.AlarmMethod.ALERT }],
                                     startDate: updatedDate,
                                     endDate: updatedDate

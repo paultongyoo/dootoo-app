@@ -434,6 +434,7 @@ export const enrichItem = async (item) => {
       {
         anonymous_id : localAnonId,
         item_uuid: item.uuid,
+        text: item.text,
         userlocaltime : currentTimeAPIHeaders.userlocaltime,
         usertimezone  : currentTimeAPIHeaders.usertimezone,
         utcdatetime : currentTimeAPIHeaders.utcdatetime
@@ -450,9 +451,7 @@ export const enrichItem = async (item) => {
     } else {
       //console.log("No chat_cost response in enrichItem response.")
     }
-
-    //console.log("enrichItem Response Obj: " + JSON.stringify(response.data.body));
-    return response.data;
+    return response.data.body;
   } catch (error) {
     console.error('Error calling enrichItem API:', error);
   }
@@ -851,6 +850,7 @@ export const updateItemSchedule = async(item_uuid, scheduled_datetime_utc) => {
       }
     );
     //console.log("updateItemSchedule Response Obj: " + JSON.stringify(response.data.body));
+    return response.data;
   } catch (error) {
     console.error('Error calling updateItemSchedule API:', error);
   }
