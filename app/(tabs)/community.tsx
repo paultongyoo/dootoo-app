@@ -490,7 +490,8 @@ const CommunityScreen = () => {
                     <View style={styles.mainLineTextContainer}>
                         {item.scheduled_datetime_utc && (
                             <View style={styles.timerIconContainer}>
-                                <Pressable hitSlop={10} onPress={() => handleTimerClick(item)}>
+                                <Pressable hitSlop={10} style={({pressed}) => pressed && { backgroundColor: '#3e272310'}}
+                                           onPress={() => handleTimerClick(item)}>
                                     {(isThingOverdue(item) && !item.is_done)
                                         ? <Clock wxh="20" color="#FF0000" />
                                         : <Clock wxh="20" color="#556B2F" />
@@ -505,7 +506,8 @@ const CommunityScreen = () => {
                             <Text style={styles.bullet}>{'\u2022'}</Text>
                             {child.scheduled_datetime_utc && (
                                 <View style={styles.timerIconContainer}>
-                                    <Pressable hitSlop={10} onPress={() => handleTimerClick(child)}>
+                                    <Pressable hitSlop={10} style={({pressed}) => pressed && { backgroundColor: '#3e272310'}}
+                                               onPress={() => handleTimerClick(child)}>
                                         {(isThingOverdue(child) && !child.is_done)
                                             ? <Clock wxh="15" color="#FF0000" />
                                             : <Clock wxh="15" color="#556B2F" />
