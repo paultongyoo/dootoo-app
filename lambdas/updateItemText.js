@@ -26,7 +26,8 @@ export const handler = async (event) => {
             where: {
                 user: { id: user.id },
                 uuid: event.item_uuid
-            }
+            },
+            include: { parent: true }   // Include parent in retrieval if one exists for following checkup.
         });
         if (item == null) {
             return {
@@ -45,7 +46,24 @@ export const handler = async (event) => {
 
         var updatedItem = await prisma.item.update({
             where: { id: item.id },
-            data: { text: encryptedText }
+            data: { 
+                text: encryptedText, 
+                ...(item.is_public && {
+                    public_update_desc: 'updated',
+                    public_updatedAt: new Date()
+                }),
+                ...(item.parent && item.parent.is_public && {
+                    parent: {
+                        update: {
+                            public_update_desc: 'updated',
+                            public_updatedAt: new Date()
+                        }
+                    }
+                })
+            },
+            select: {
+                id: true
+            }
         });
 
         // Update embedding for new text
