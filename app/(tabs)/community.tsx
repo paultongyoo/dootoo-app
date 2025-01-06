@@ -506,7 +506,7 @@ const CommunityScreen = () => {
                             {child.scheduled_datetime_utc && (
                                 <View style={styles.timerIconContainer}>
                                     <Pressable hitSlop={10} onPress={() => handleTimerClick(child)}>
-                                        {(isThingOverdue(child) && !item.is_done)
+                                        {(isThingOverdue(child) && !child.is_done)
                                             ? <Clock wxh="15" color="#FF0000" />
                                             : <Clock wxh="15" color="#556B2F" />
                                         }
