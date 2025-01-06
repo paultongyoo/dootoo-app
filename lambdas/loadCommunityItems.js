@@ -74,6 +74,7 @@ export const handler = async (event) => {
       uuid: true,
       is_done: true,
       text: true,
+      scheduled_datetime_utc: true,
       public_update_desc: true,
       public_updatedAt: true,
       userReactions: {

@@ -1,5 +1,5 @@
 import { AppContext } from "@/components/AppContext";
-import { generateReactionCountObject, timeAgo } from "@/components/Helpers";
+import { generateReactionCountObject, isThingOverdue, timeAgo } from "@/components/Helpers";
 import { blockItem, blockUser, loadCommunityItems, reactToItem, updateItemPublicState } from "@/components/Storage";
 import { CircleUserRound } from "@/components/svg/circle-user-round";
 import { EllipsisVertical } from "@/components/svg/ellipsis-vertical";
@@ -8,7 +8,7 @@ import { Flag } from "@/components/svg/flag";
 import { ThumbUp } from "@/components/svg/thumb-up";
 import { useFocusEffect, usePathname } from "expo-router";
 import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { StyleSheet, View, ActivityIndicator, FlatList, Text, Alert, Pressable, RefreshControl } from "react-native";
+import { StyleSheet, View, ActivityIndicator, FlatList, Text, Alert, Pressable, RefreshControl, Platform } from "react-native";
 import Modal from "react-native-modal";
 import * as amplitude from '@amplitude/analytics-react-native';
 import * as Constants from '@/components/Constants';
@@ -22,6 +22,8 @@ import { PartyPopper } from "@/components/svg/party-popper";
 import ReactionsModal from "@/components/ReactionsModal";
 import { ReactionsDisplay } from "@/components/ReactionsDisplay";
 import ProfileModal from "@/components/ProfileModal";
+import Toast from "react-native-toast-message";
+import { Clock } from "@/components/svg/clock";
 
 const CommunityScreen = () => {
     const pathname = usePathname();
@@ -367,6 +369,16 @@ const CommunityScreen = () => {
         reactionModalCopyText: {
             color: '#3e2723',
             fontWeight: 'bold'
+        },
+        timerIconContainer: {
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingRight: 10
+        },
+        mainLineTextContainer: {
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexDirection: 'row'
         }
     })
 
@@ -427,6 +439,23 @@ const CommunityScreen = () => {
             setProfileModalVisible(true);
         }
 
+        const handleTimerClick = (thing) => {
+            amplitude.track("Item Timer Icon Tapped", {
+                anonymous_id: anonymousId,
+                pathname: pathname,
+                uuid: thing.uuid
+            });
+            Toast.show({
+                type: 'timerInfo',
+                visibilityTime: 8000,
+                position: 'bottom',
+                bottomOffset: (Platform.OS == 'ios') ? 280 : 260,
+                props: {
+                    thing: thing
+                }
+            });
+        }
+
         return (
             <View style={styles.itemContainer}>
                 <View style={styles.header}>
@@ -458,7 +487,17 @@ const CommunityScreen = () => {
                     </View>
                 </View>
                 <View style={styles.textContainer}>
-                    <Text style={[styles.textLine, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
+                    <View style={styles.mainLineTextContainer}>
+                        <View style={styles.timerIconContainer}>
+                            <Pressable hitSlop={10} onPress={() => handleTimerClick(item)}>
+                                {(isThingOverdue(item) && !item.is_done)
+                                    ? <Clock wxh="20" color="#FF0000" />
+                                    : <Clock wxh="20" color="#556B2F" />
+                                }
+                            </Pressable>
+                        </View>
+                        <Text style={[styles.textLine, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
+                    </View>
                     {item.children.map((child) => (
                         <View key={child.uuid} style={styles.textSubLine}>
                             <Text style={styles.bullet}>{'\u2022'}</Text>
