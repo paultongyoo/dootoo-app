@@ -37,6 +37,7 @@ export const handler = async (event) => {
                 where: { id: item.id },
                 data: { 
                     is_done: event.is_done,
+                    doneAt: (event.is_done) ? new Date() : null,
                     ...(item.parent && item.parent.is_public && !item.parent.is_done && {
                         parent: {
                             update: {
@@ -65,7 +66,8 @@ export const handler = async (event) => {
             updatedItem = await prisma.item.update({
                 where: { id: item.id },
                 data: { 
-                    is_done: (event.is_done == true),
+                    is_done: (event.is_done == true),                 
+                    doneAt: (event.is_done) ? new Date() : null,
                     rank_idx: -1,
                     ...(item.is_public && {
                         public_update_desc: (event.is_done == true) ? 'finished' : 'reopened',

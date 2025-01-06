@@ -57,7 +57,12 @@ export const handler = async (event) => {
           parent_item_id: null,
           is_done: false
         }),
-        ...(event.onlyDoneItems && { is_done: true })   // is_done isn't defaulted for backwards compatibility
+        ...(event.onlyDoneItems && { 
+          is_done: true,
+          doneAt: {
+            not: null
+          }
+         })   // is_done isn't defaulted for backwards compatibility
       },
       select: {
         is_done: true,
@@ -132,7 +137,7 @@ export const handler = async (event) => {
       },
       orderBy: {
         ...((event.onlyOpenParents || !event.onlyDoneItems) && ( { rank_idx: 'asc' } )),
-        ...(event.onlyDoneItems && ({ updatedAt: 'desc'}))
+        ...(event.onlyDoneItems && ({ doneAt: 'desc'}))
       }
     };
 

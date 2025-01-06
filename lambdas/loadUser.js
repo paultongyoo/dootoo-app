@@ -27,7 +27,10 @@ export const handler = async (event) => {
             id: loadedUser.id
           },
           is_done: true,
-          is_deleted: false
+          is_deleted: false,
+          doneAt: {
+            not: null
+          }
         }
       });
       console.log("User Task Done Count: " + loadedUser.doneCount);
