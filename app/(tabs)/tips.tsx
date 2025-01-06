@@ -57,7 +57,8 @@ export default function ItemTips() {
   };
 
   const saveTextUpdate = async (tip) => {
-    updateTipText(tip);
+    //updateTipText(tip);
+    // 1.7 FUTURE TODO -- If using tips in future, revise this to mimic updateItemGivenText
   }
 
   const saveTipOrder = async (uuidArray) => {
@@ -483,7 +484,7 @@ export default function ItemTips() {
           saveNewThings={(tips, latest_tip_uuids) => saveNewTips(tips, selectedItem.uuid, latest_tip_uuids, async () => {
             await updateSelectedItemCounts(selectedItem, itemCountsMap);
           })}
-          saveTextUpdateFunc={saveTextUpdate}
+          saveTextUpdateFunc={saveTextUpdate}     // 1.7 FUTURE TODO -- Revise to mimic updateItemGivenText
           saveThingOrderFunc={saveTipOrder}
           loadAllThings={(isPullDown) => loadTips(isPullDown, selectedItem.uuid)}
           deleteThing={(tip_uuid) => {
