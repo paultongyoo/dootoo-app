@@ -13,28 +13,28 @@ const ITEMS_KEY_ID = process.env.ITEMS_KEY_ID;
 const lambda = new AWS.Lambda();
 
 export const handler = async (event) => {
-  const user = await saveItems(event.anonymous_id, event.items_str);
-  const updatedUser = null;
-  if (!event.skipUserLoad) {
-    updatedUser = await refreshUpdatedCounts(user);
-  }
-  var updatedItems = [];
-  if (!event.skipLoad) {
-    updatedItems = await loadItems(event.anonymous_id);
-  }
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({ user: updatedUser, items: updatedItems})
-  };
-  await prisma.$disconnect()
-  return response;
+    const user = await saveItems(event.anonymous_id, event.items_str);
+    const updatedUser = null;
+    if (!event.skipUserLoad) {
+        updatedUser = await refreshUpdatedCounts(user);
+    }
+    var updatedItems = [];
+    if (!event.skipLoad) {
+        updatedItems = await loadItems(event.anonymous_id);
+    }
+    const response = {
+        statusCode: 200,
+        body: JSON.stringify({ user: updatedUser, items: updatedItems })
+    };
+    await prisma.$disconnect()
+    return response;
 };
 
-const saveItems = async(anonymous_id, items_str) => {
+const saveItems = async (anonymous_id, items_str) => {
     var user = null;
     try {
         user = await prisma.user.findUnique({
-            where: { anonymous_id: anonymous_id}
+            where: { anonymous_id: anonymous_id }
         });
         //console.log(user);
         if (user == null) {
@@ -51,7 +51,7 @@ const saveItems = async(anonymous_id, items_str) => {
             const moderation = await openai.moderations.create({
                 model: "omni-moderation-latest",
                 input: array_item.text
-              });       
+            });
             const flagged = moderation.results[0].flagged;
             if (flagged) {
                 array_item.text = '(flagged)';
@@ -68,41 +68,65 @@ const saveItems = async(anonymous_id, items_str) => {
                 const encryptedString = encryptedData.CiphertextBlob.toString('base64');
                 //console.log("Encrypted Item Text.");
 
-                const item = await prisma.item.upsert({
-                    where: { uuid: array_item.uuid},
-                    create: { 
-                        uuid: array_item.uuid,
-                        user: {
-                            connect: { id: user.id }
+                const transactionOperations = [
+                    prisma.item.upsert({
+                        where: { uuid: array_item.uuid },
+                        create: {
+                            uuid: array_item.uuid,
+                            user: {
+                                connect: { id: user.id }
+                            },
+                            text: encryptedString,
+                            is_child: array_item.is_child,  // TODO: Deprecate
+                            rank_idx: i,
+                            is_done: array_item.is_done,
+                            is_deleted: array_item.is_deleted,
+                            scheduled_datetime_utc: array_item.scheduled_datetime_utc,
+                            event_id: array_item.event_id,
+                            ...((array_item.parent_item_uuid) && {
+                                parent: {
+                                    connect: {
+                                        uuid: array_item.parent_item_uuid
+                                    }
+                                }
+                            })
                         },
-                        text: encryptedString,
-                        is_child: array_item.is_child,  // TODO: Deprecate
-                        rank_idx: i,
-                        is_done: array_item.is_done,
-                        is_deleted: array_item.is_deleted,
-                        scheduled_datetime_utc: array_item.scheduled_datetime_utc,
-                        event_id: array_item.event_id,
-                        ...((array_item.parent_item_uuid) && { parent: {
-                                connect: {
-                                    uuid: array_item.parent_item_uuid 
+                        update: {
+                            text: encryptedString,
+                            is_child: array_item.is_child,  // TODO: Deprecate
+                            rank_idx: i,
+                            is_done: array_item.is_done,
+                            is_deleted: array_item.is_deleted,
+                            scheduled_datetime_utc: array_item.scheduled_datetime_utc,
+                            event_id: array_item.event_id,
+                            ...((array_item.parent_item_uuid) && {
+                                parent: {
+                                    connect: {
+                                        uuid: array_item.parent_item_uuid
+                                    }
                                 }
-                            }})
-                    },
-                    update: { 
-                        text: encryptedString,
-                        is_child: array_item.is_child,  // TODO: Deprecate
-                        rank_idx: i,
-                        is_done: array_item.is_done,
-                        is_deleted: array_item.is_deleted,
-                        scheduled_datetime_utc: array_item.scheduled_datetime_utc,
-                        event_id: array_item.event_id,
-                        ...((array_item.parent_item_uuid) && { parent: {
-                                connect: {
-                                    uuid: array_item.parent_item_uuid 
-                                }
-                            }})
-                    }
-                });
+                            })
+                        }
+                    })
+                ];
+
+                if (array_item.parent_item_uuid) {
+                    transactionOperations.push(
+                        prisma.item.update({
+                            where: {
+                                uuid: array_item.parent_item_uuid,
+                                is_done: false,
+                                is_public: true,
+                                is_deleted: false
+                            },
+                            data: {
+                                public_update_desc: 'updated',
+                                public_updatedAt: new Date()
+                            }
+                        })
+                    )
+                }
+                const [item, updatedParent] = await prisma.$transaction(transactionOperations);
 
                 // Retrieve embedding for task and insert into table
                 //console.log(`Begin retrieval and storing of embedding for item ${item.id}...`);
@@ -115,7 +139,7 @@ const saveItems = async(anonymous_id, items_str) => {
                 //console.log("Embedding: " + embedding);
                 const embeddingArray = embedding.join(',');
                 //console.log("Embedding Array: " + embeddingArray);
-                await prisma.$executeRawUnsafe(`UPDATE "Item" SET embedding = '[` + 
+                await prisma.$executeRawUnsafe(`UPDATE "Item" SET embedding = '[` +
                     embeddingArray + `]'::vector WHERE id = ` + item.id + `;`);
                 //console.log("End retreival and storage complete ..");
 
@@ -128,12 +152,12 @@ const saveItems = async(anonymous_id, items_str) => {
     } catch (error) {
         console.error('Unexpected Prisma error', error);
         return null;
-    } 
+    }
     //console.log("Inside saveItems - checking user obj: " + user);
     return user;
 }
 
-const refreshUpdatedCounts = async(loadedUser) => {
+const refreshUpdatedCounts = async (loadedUser) => {
     //console.log("User loaded: " + JSON.stringify(loadedUser));
 
     // Count user's completed tasks 
@@ -157,14 +181,14 @@ const refreshUpdatedCounts = async(loadedUser) => {
         }
     });
     //console.log("User Tip Count: " + loadedUser.tipCount);
-    
+
     return loadedUser;
 }
 
 const loadItems = async (anonymous_id) => {
     const lambdaParams = {
-        FunctionName: "loadItems_Dev:prod", 
-        InvocationType: "RequestResponse", 
+        FunctionName: "loadItems_Dev:prod",
+        InvocationType: "RequestResponse",
         Payload: JSON.stringify({ anonymous_id: anonymous_id, loadAll: true })
     };
 
