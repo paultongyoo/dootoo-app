@@ -1816,7 +1816,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     <ScaleDecorator>
                         { (thingName == THINGNAME_DONE_ITEM) && item.parent && (
                             <View style={styles.doneItemParentContainer}>
-                                <Text style={styles.doneItemParentText}>{item.parent.text}:</Text>
+                                <Text style={[styles.doneItemParentText, item.parent.is_done && { textDecorationLine: 'line-through'}]}>{item.parent.text}:</Text>
                             </View>
                         )}
                         <View style={[listStyles.itemContainer, styles.itemContainer]}>
