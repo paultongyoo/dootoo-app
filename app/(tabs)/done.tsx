@@ -89,8 +89,7 @@ export default function DoneScreen() {
         item_type: (item.parent_item_uuid) ? 'child' : 'adult'
       });
 
-      // Check if item has open kids
-      const openChildren = doneItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
+      // Build list of done children on the page
       const doneChildren = doneItems.filter((child) => (child.parent_item_uuid == item.uuid) && child.is_done);
 
       // 1) If attempting to set item TO done
@@ -109,11 +108,11 @@ export default function DoneScreen() {
           "Reopen Item?",
           (item.parent) 
             ? ((item.parent.is_done)
-                ? "Your item will appear at the top of your Open Items list."
-                : "Your item will be reopened under its parent on your Open Items list.")
+                ? "The item will appear at the top of your Open Items list."
+                : "The item will be reopened under its parent on your Open Items list.")
             : ((doneChildren.length == 0) 
-                ? "Your item will appear at the top of your opened items list."
-                : "Your item and its subitems will appear at the top of your opened items list."),
+                ? "The item will appear at the top of your opened items list."
+                : "The item and its subitems will appear at the top of your opened items list."),
           [
             {
               text: 'Cancel',
@@ -182,47 +181,33 @@ export default function DoneScreen() {
 
                 } else {
 
-                  const reopenFamily = async () => {
+                  const reopenAdult = async () => {
 
-                    // Collapse opened item and all of its children
-                    const uuidsToCollapse = [item.uuid];
-                    uuidsToCollapse.push(...openChildren.map((child) => child.uuid));
-                    uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
-                    const collapseAnimationPromises = [];
-                    uuidsToCollapse.forEach((uuid) => {
-                      collapseAnimationPromises.push(
-                        new Promise<void>((resolve) => {
-                          thingRowHeights.current[uuid].value =
-                            withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
-                        })
-                      );
+                    // Collapse reopened item
+                    new Promise<void>((resolve) => {
+                      thingRowHeights.current[item.uuid].value =
+                        withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
                     });
 
-                    await Promise.all(collapseAnimationPromises);
 
-                    // 1.6 Item is a parent -- remove it and its children from its list (to be rendered on the list screen)
+                    // Remove item from done page
                     setDoneItems((prevItems) => {
 
-                      const openedList = prevItems.map(obj => (obj.uuid == item.uuid) ? { ...obj, is_done: false } : obj);
-                      const children = openedList.filter(obj => obj.parent_item_uuid == item.uuid);
-                      const itemIdx = openedList.findIndex(obj => obj.uuid == item.uuid);
-                      openedList.splice(itemIdx, 1 + children.length);
+                      // Create new list from existing excluding the child 
+                      const filteredList = prevItems.filter(prevItem => (prevItem.uuid != item.uuid));
 
-                      const uuidArray = openedList.map((thing) => ({ uuid: thing.uuid }));
+                      // Save the new list's order in the DB
+                      const uuidArray = filteredList.map((thing) => ({ uuid: thing.uuid }));
                       saveItemOrder(uuidArray);
 
-                      return openedList;
+                      // return the list to render it
+                      return filteredList;
                     });
 
-                    // 1.6 Prepend the opened parent and its family to the opened list
-                    setOpenItems((prevItems) => {
-                      return [item,
-                              ...openChildren, // This is assumed empty
-                              ...doneChildren,
-                              ...prevItems];
-                    });
+                    // 1.7 Prepend reopened item and its done children to the top of the opened items list
+                    setOpenItems((prevItems) => [item, ...doneChildren, ...prevItems]);
                   }
-                  reopenFamily();
+                  reopenAdult();
                 }
 
 
