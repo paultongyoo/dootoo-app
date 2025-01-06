@@ -188,7 +188,7 @@ export const handler = async (event) => {
     try {
 
       item.text = await decryptText(item.text);   
-      if (item.parent) {
+      if (item.parent && item.parent.text) {
         item.parent.text = await decryptText(item.parent.text);
       }
 
