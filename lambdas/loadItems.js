@@ -107,7 +107,8 @@ export const handler = async (event) => {
               is_done: true,
               parent: {
                 select: {
-                  uuid: true
+                  uuid: true,
+                  text: true
                 }
               }
             },
@@ -188,7 +189,7 @@ export const handler = async (event) => {
     try {
 
       item.text = await decryptText(item.text);   
-      if (item.parent && item.parent.text) {
+      if (item.parent) {
         item.parent.text = await decryptText(item.parent.text);
       }
 
