@@ -44,7 +44,6 @@ const saveItems = async(anonymous_id, items_str) => {
 
         var itemSaveCount = 0;
         var items_arr = JSON.parse(items_str);
-        var parentUUIDtoIDMap = {};
         for (var i = 0; i < items_arr.length; i++) {
             var array_item = items_arr[i];
 
@@ -83,9 +82,9 @@ const saveItems = async(anonymous_id, items_str) => {
                         is_deleted: array_item.is_deleted,
                         scheduled_datetime_utc: array_item.scheduled_datetime_utc,
                         event_id: array_item.event_id,
-                        ...((array_item.parent_item_uuid) && parentUUIDtoIDMap[array_item.parent_item_uuid] && { parent: {
+                        ...((array_item.parent_item_uuid) && { parent: {
                                 connect: {
-                                    id: parentUUIDtoIDMap[array_item.parent_item_uuid] 
+                                    uuid: array_item.parent_item_uuid 
                                 }
                             }})
                     },
@@ -97,20 +96,13 @@ const saveItems = async(anonymous_id, items_str) => {
                         is_deleted: array_item.is_deleted,
                         scheduled_datetime_utc: array_item.scheduled_datetime_utc,
                         event_id: array_item.event_id,
-                        ...((array_item.parent_item_uuid) && parentUUIDtoIDMap[array_item.parent_item_uuid] && { parent: {
+                        ...((array_item.parent_item_uuid) && { parent: {
                                 connect: {
-                                    id: parentUUIDtoIDMap[array_item.parent_item_uuid] 
+                                    uuid: array_item.parent_item_uuid 
                                 }
                             }})
                     }
                 });
-
-                // If item is a parent item, save its UUID in lookup map
-                // to pass its ID to any potential children
-                if (!array_item.parent_item_uuid) {
-                    parentUUIDtoIDMap[item.uuid] = item.id;
-                }
-                //console.log(item); 
 
                 // Retrieve embedding for task and insert into table
                 //console.log(`Begin retrieval and storing of embedding for item ${item.id}...`);
