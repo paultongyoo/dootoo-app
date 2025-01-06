@@ -269,7 +269,7 @@ const CommunityScreen = () => {
             fontWeight: 'bold',
             color: "#556B2F",
             position: 'absolute',
-            left: 5,
+            left: 7,
             top: 3
         },
         bottomActions: {
@@ -373,7 +373,7 @@ const CommunityScreen = () => {
         timerIconContainer: {
             justifyContent: 'center',
             alignItems: 'center',
-            paddingRight: 10
+            paddingRight: 8
         },
         mainLineTextContainer: {
             justifyContent: 'center',
@@ -507,8 +507,8 @@ const CommunityScreen = () => {
                                 <View style={styles.timerIconContainer}>
                                     <Pressable hitSlop={10} onPress={() => handleTimerClick(child)}>
                                         {(isThingOverdue(child) && !item.is_done)
-                                            ? <Clock wxh="20" color="#FF0000" />
-                                            : <Clock wxh="20" color="#556B2F" />
+                                            ? <Clock wxh="15" color="#FF0000" />
+                                            : <Clock wxh="15" color="#556B2F" />
                                         }
                                     </Pressable>
                                 </View>
