@@ -39,9 +39,6 @@ const UPDATEITEMORDER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-
 const UPDATEITEMTEXT_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemText_Dev'
                                      : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemText';
                                      
-const UPDATEITEMGIVENTEXT_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemGivenText_Dev'
-                                          : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemGivenText';
-
 const UPDATEITEMDONESTATE_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemDoneState_Dev'
                                      : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemDoneState';
 
@@ -342,43 +339,6 @@ export const updateItemText = async (item, callback) => {
     //console.log("updateItemText Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateItemText API:', error);
-  }
-}
-
-export const updateItemGivenText = async (item) => {
-  try {
-    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
-    if (!localUserSr) {
-      console.log("Received null local anon Id, aborting updateItemGivenText!");
-      return;
-    }
-    const localUser = JSON.parse(localUserSr);
-    const localAnonId = localUser.anonymous_id;
-    const currentTimeAPIHeaders = generateCurrentTimeAPIHeaders();
-    const response = await axios.post(UPDATEITEMGIVENTEXT_URL,
-      {
-        anonymous_id : localAnonId,
-        item_uuid: item.uuid,
-        text: item.text,
-        userlocaltime : currentTimeAPIHeaders.userlocaltime,
-        usertimezone  : currentTimeAPIHeaders.usertimezone,
-        utcdatetime : currentTimeAPIHeaders.utcdatetime
-      }
-    );
-
-    const responseObj = response.data.body;
-    if (responseObj.chat_cost) {
-      amplitude.track("AI Costs Received", {
-        anonymous_id: localAnonId,
-        chat_cost: Number(response.data.body.chat_cost)
-      });
-    } else {
-      //console.log("No chat_cost response in enrichItem response.")
-    }
-    console.log("updateItemGivenText response obj: " + JSON.stringify(responseObj));
-    return responseObj;
-  } catch (error) {
-    console.error('Error calling updateItemGivenText API:', error);
   }
 }
 

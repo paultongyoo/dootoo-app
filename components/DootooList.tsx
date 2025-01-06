@@ -1375,8 +1375,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             return { opacity: textOpacity.value }
         });
 
-        const [textUpdateEvaluating, setTextUpdateEvaluating] = useState(false);
-
         useEffect(() => {
             //console.log("renderItem.useEffect([]) " + item.text + " rowHeight: " + rowHeight.value + ", renderTappedField: " + renderTappedField.current);
 
@@ -1454,86 +1452,86 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             }
         }, [item.scheduled_datetime_utc]);
 
-        // const isInitialTextMount = useRef(true);
-        // useEffect(() => {
-        //     //console.log("renderItem useEFfect([item.text]) - item.text: " + item.text);
-        //     if (isInitialTextMount.current) {
-        //         isInitialTextMount.current = false;
-        //     } else if ((thingName == THINGNAME_ITEM) && item.text && (item.text.length > 0) && (item.text != lastEnrichedText.current)) {
-        //         //console.log("Attempting to enrich item: " + item.text);
-        //         const attemptToEnrichedItem = async (itemToEnrich) => {
-        //             try {
-        //                 const enrichmentResponse = await fetchWithRetry(() => enrichItem(itemToEnrich));
-        //                 //console.log("Enriched Item Response: " + JSON.stringify(enrichmentResponse));
-        //                 if (enrichmentResponse && enrichmentResponse.enriched) {
+        const isInitialTextMount = useRef(true);
+        useEffect(() => {
+            //console.log("renderItem useEFfect([item.text]) - item.text: " + item.text);
+            if (isInitialTextMount.current) {
+                isInitialTextMount.current = false;
+            } else if ((thingName == THINGNAME_ITEM) && item.text && (item.text.length > 0) && (item.text != lastEnrichedText.current)) {
+                //console.log("Attempting to enrich item: " + item.text);
+                const attemptToEnrichedItem = async (itemToEnrich) => {
+                    try {
+                        const enrichmentResponse = await fetchWithRetry(() => enrichItem(itemToEnrich));
+                        //console.log("Enriched Item Response: " + JSON.stringify(enrichmentResponse));
+                        if (enrichmentResponse && enrichmentResponse.enriched) {
 
-        //                     lastEnrichedText.current = enrichmentResponse.text;
+                            lastEnrichedText.current = enrichmentResponse.text;
 
-        //                     await new Promise<void>((resolve) => {
-        //                         textOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
-        //                             if (isFinished) {
-        //                                 runOnJS(resolve)();
-        //                             }
-        //                         })
-        //                     })
+                            await new Promise<void>((resolve) => {
+                                textOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+                                    if (isFinished) {
+                                        runOnJS(resolve)();
+                                    }
+                                })
+                            })
 
-        //                     amplitude.track("Item Enriched", {
-        //                         anonymous_id: anonymousId,
-        //                         pathname: pathname,
-        //                         uuid: item.uuid
-        //                     });
+                            amplitude.track("Item Enriched", {
+                                anonymous_id: anonymousId,
+                                pathname: pathname,
+                                uuid: item.uuid
+                            });
 
-        //                     // Overwrite enriched data in DB and UI
-        //                     listArraySetter((prevThings) => prevThings.map((thing) =>
-        //                         (thing.uuid == itemToEnrich.uuid)
-        //                             ? {
-        //                                 ...thing,
-        //                                 text: enrichmentResponse.text,
-        //                                 scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc
-        //                             }
-        //                             : thing
-        //                     ));
+                            // Overwrite enriched data in DB and UI
+                            listArraySetter((prevThings) => prevThings.map((thing) =>
+                                (thing.uuid == itemToEnrich.uuid)
+                                    ? {
+                                        ...thing,
+                                        text: enrichmentResponse.text,
+                                        scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc
+                                    }
+                                    : thing
+                            ));
 
-        //                     // 1.3 Intentionally NOT implementing the below functions in the enrichment lambda
-        //                     //     to minimize time required to return enrichment back to client
-        //                     const deepItemCopy = {
-        //                         ...item,
-        //                         text: enrichmentResponse.text,
-        //                         scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc
-        //                     }
-        //                     updateItemText(deepItemCopy);
-        //                     updateItemSchedule(item.uuid, enrichmentResponse.scheduled_datetime_utc);
+                            // 1.3 Intentionally NOT implementing the below functions in the enrichment lambda
+                            //     to minimize time required to return enrichment back to client
+                            const deepItemCopy = {
+                                ...item,
+                                text: enrichmentResponse.text,
+                                scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc
+                            }
+                            updateItemText(deepItemCopy);
+                            updateItemSchedule(item.uuid, enrichmentResponse.scheduled_datetime_utc);
 
-        //                     const eventIdToUpdate = item.event_id;
-        //                     if (eventIdToUpdate) {
-        //                         const updatedTimerThing = { ...selectedTimerThing.current, scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc };
-        //                         const updatedDate = getLocalDateObj(updatedTimerThing);
-        //                         const alertMinutesOffset = deriveAlertMinutesOffset(updatedTimerThing);
-        //                         //console.log("Updated alertMinutesOffset: " + alertMinutesOffset);
-        //                         Calendar.updateEventAsync(eventIdToUpdate, {
-        //                             title: enrichmentResponse.text,
-        //                             alarms: [{ relativeOffset: alertMinutesOffset, method: Calendar.AlarmMethod.ALERT }],
-        //                             startDate: updatedDate,
-        //                             endDate: updatedDate
-        //                         });
-        //                         //console.log("Calendar Event Updated Asyncronously: " + eventIdToUpdate);
-        //                     }
-        //                 } else {
-        //                     //console.log("Enrichment response had no updates");
-        //                 }
-        //             } catch (error) {
-        //                 // Log a message to console and abandon updating UI
-        //                 //console.warn("Enrichment calls were not successful, potential issue?", error);
-        //             }
-        //         }
-        //         //console.log("Calling attemptToEnrichedItem for changed text: " + item.text);
-        //         attemptToEnrichedItem(item);
-        //     } else if (item.text == lastEnrichedText.current) {
-        //         //console.log("Discarding enrichment call as item text equals last enrichment text: " + item.text);
-        //     } else {
-        //         //console.log("Discarding enrichment call for blanked text");
-        //     }
-        // }, [item.text])
+                            const eventIdToUpdate = item.event_id;
+                            if (eventIdToUpdate) {
+                                const updatedTimerThing = { ...selectedTimerThing.current, scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc };
+                                const updatedDate = getLocalDateObj(updatedTimerThing);
+                                const alertMinutesOffset = deriveAlertMinutesOffset(updatedTimerThing);
+                                //console.log("Updated alertMinutesOffset: " + alertMinutesOffset);
+                                Calendar.updateEventAsync(eventIdToUpdate, {
+                                    title: enrichmentResponse.text,
+                                    alarms: [{ relativeOffset: alertMinutesOffset, method: Calendar.AlarmMethod.ALERT }],
+                                    startDate: updatedDate,
+                                    endDate: updatedDate
+                                });
+                                //console.log("Calendar Event Updated Asyncronously: " + eventIdToUpdate);
+                            }
+                        } else {
+                            //console.log("Enrichment response had no updates");
+                        }
+                    } catch (error) {
+                        // Log a message to console and abandon updating UI
+                        //console.warn("Enrichment calls were not successful, potential issue?", error);
+                    }
+                }
+                //console.log("Calling attemptToEnrichedItem for changed text: " + item.text);
+                attemptToEnrichedItem(item);
+            } else if (item.text == lastEnrichedText.current) {
+                //console.log("Discarding enrichment call as item text equals last enrichment text: " + item.text);
+            } else {
+                //console.log("Discarding enrichment call for blanked text");
+            }
+        }, [item.text])
 
         const handleThingTextTap = (thing) => {
             console.log(`handleItemTextTap for ${thing.text}, renderTappedField: ${renderTappedField.current}`);
@@ -1564,14 +1562,13 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             listArraySetter((prevItems) => prevItems.map((prevItem) => prevItem));
         }
 
-        const handleBlur = async (thing) => {
-            console.log(`Inside handleBlur for index ${getIndex()}`);
+        const handleBlur = (thing) => {
+            //console.log(`Inside handleBlur for index ${getIndex()}`);
 
             const textOnChange = onChangeInputValue.current;
-            console.log("textOnChange: " + textOnChange);
+            //console.log("textOnChange: " + textOnChange);
 
             // If blur after field changed to empty, assume the user wants to delete it
-            let derived_scheduled_datetime_utc = null;
             if (!textOnChange || textOnChange.length == 0) {
                 //console.log("Blur occurred on empty field, deleting it!");
                 handleThingDelete(thing);
@@ -1583,30 +1580,24 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 const updatedThing = JSON.parse(JSON.stringify(thing));
                 updatedThing.text = textOnChange.trim();
 
-                setTextUpdateEvaluating(true);
-
                 if (thing.newKeyboardEntry) {
-
-                    const latestUuidOrder = listArray.map((thing) => ({ uuid: thing.uuid }));
-                    await saveNewThing(updatedThing, latestUuidOrder);
-
-                    if (thingName == 'tip') {
-                        ProfileCountEventEmitter.emit('incr_tips', { count: 1 });
-                    }
 
                     amplitude.track("Keyboard Entry Completed", {
                         anonymous_id: anonymousId,
                         pathname: pathname,
                         uuid: thing.uuid
                     });
-                }  
 
-                // Check if text contains timing info
-                const { scheduled_datetime_utc } = await saveTextUpdateFunc(updatedThing);
-                derived_scheduled_datetime_utc = scheduled_datetime_utc;
-                console.log("Derived schedule info: " + derived_scheduled_datetime_utc);
+                    const latestUuidOrder = listArray.map((thing) => ({ uuid: thing.uuid }));
+                    saveNewThing(updatedThing, latestUuidOrder);
 
-                setTextUpdateEvaluating(false);
+                    if (thingName == 'tip') {
+                        ProfileCountEventEmitter.emit('incr_tips', { count: 1 });
+                    }
+                } else {
+                    // Asynchronously sync new item text to DB
+                    saveTextUpdateFunc(updatedThing);
+                }
 
                 amplitude.track("Thing Text Edited", {
                     anonymous_id: anonymousId,
@@ -1631,7 +1622,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         ? {
                             ...prevThing,
                             text: textOnChange,
-                            ...(derived_scheduled_datetime_utc && { scheduled_datetime_utc: derived_scheduled_datetime_utc}),
                             newKeyboardEntry: false
                         }
                         : prevThing);
@@ -1883,7 +1873,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         blurOnSubmit={true}
                                         multiline={true}
                                         style={listStyles.itemTextInput}
-                                        defaultValue={onChangeInputValue.current}
+                                        defaultValue={item.text}
                                         editable={true}
                                         autoFocus={true}
                                         onContentSizeChange={(event) => {
@@ -1899,7 +1889,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                             }
                                         }}
                                         onSubmitEditing={(event) => {
-                                            console.log("onSubmitEditing event: " + onChangeInputValue.current);
                                             blurredOnSubmit.current = true;
                                             onChangeInputValue.current = event.nativeEvent.text.trim();
                                         }}
@@ -1922,10 +1911,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                                 <Text style={[listStyles.taskTitle]}>{item.text}</Text>
                                             </View>
                                     )}
-                                { textUpdateEvaluating 
-                                    ? <ActivityIndicator size="small" color="#3e2723" />
-                                    : <ListThingSidebar thing={item} styles={styles} onReactionsPress={() => handleReactionsTap(item)} />
-                                }
+                                <ListThingSidebar thing={item} styles={styles} onReactionsPress={() => handleReactionsTap(item)} />
                             </View>
                         </View>
                     </ScaleDecorator>
