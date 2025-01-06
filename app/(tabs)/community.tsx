@@ -259,7 +259,7 @@ const CommunityScreen = () => {
             fontSize: 16
         },
         textSubLine: {
-            // flexDirection: 'row',
+            flexDirection: 'row',
             position: 'relative',
             paddingLeft: 20,
             alignItems: 'center',
@@ -488,19 +488,31 @@ const CommunityScreen = () => {
                 </View>
                 <View style={styles.textContainer}>
                     <View style={styles.mainLineTextContainer}>
-                        <View style={styles.timerIconContainer}>
-                            <Pressable hitSlop={10} onPress={() => handleTimerClick(item)}>
-                                {(isThingOverdue(item) && !item.is_done)
-                                    ? <Clock wxh="20" color="#FF0000" />
-                                    : <Clock wxh="20" color="#556B2F" />
-                                }
-                            </Pressable>
-                        </View>
+                        {item.scheduled_datetime_utc && (
+                            <View style={styles.timerIconContainer}>
+                                <Pressable hitSlop={10} onPress={() => handleTimerClick(item)}>
+                                    {(isThingOverdue(item) && !item.is_done)
+                                        ? <Clock wxh="20" color="#FF0000" />
+                                        : <Clock wxh="20" color="#556B2F" />
+                                    }
+                                </Pressable>
+                            </View>
+                        )}
                         <Text style={[styles.textLine, item.is_done && styles.taskTitle_isDone]}>{item.text}</Text>
                     </View>
                     {item.children.map((child) => (
                         <View key={child.uuid} style={styles.textSubLine}>
                             <Text style={styles.bullet}>{'\u2022'}</Text>
+                            {child.scheduled_datetime_utc && (
+                                <View style={styles.timerIconContainer}>
+                                    <Pressable hitSlop={10} onPress={() => handleTimerClick(child)}>
+                                        {(isThingOverdue(child) && !item.is_done)
+                                            ? <Clock wxh="20" color="#FF0000" />
+                                            : <Clock wxh="20" color="#556B2F" />
+                                        }
+                                    </Pressable>
+                                </View>
+                            )}
                             <Text style={[styles.textLine, child.is_done && styles.taskTitle_isDone]}>{child.text}</Text>
                         </View>
                     ))}

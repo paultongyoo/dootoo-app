@@ -117,6 +117,7 @@ export const handler = async (event) => {
         select: {
           uuid: true,
           text: true,
+          scheduled_datetime_utc: true,
           is_done: true
         },
         where: {
