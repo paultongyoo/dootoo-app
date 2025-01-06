@@ -214,27 +214,6 @@ export default function ListScreen() {
 
   const handleDoneClick = async (item) => {
 
-    /*
-    Rules as of v1.1.1 in priority order:
-
-      1) Scenarios attempting to set item TO Done :
-        1.1) If user sets an item that has no children to Done, item is moved to top of
-           Done Adults list or end of the list if no DAs exist.
-        1.2) If user attempts to set a parent item to done that has open children,
-              DISPLAY PROMPT to user that:
-              1.2.1) Informs them their item has open subitems
-              1.2.2) Asks them if they want to Complete or Delete their open items
-                 --- Choosing this option will affect the open items as chosen and set the parent to done
-              1.2.3) Gives them Cancel button
-                 --- Choosing this option will simply dismiss the prompt; no change made to item or list
-        1.3) If user sets a child to Done, item is moved to top of Kids list if kids exist, otherwise left
-           underneath parent.  The child is NOT separated from its parent.
-
-      2) Scenarios setting item TO Open:
-        2.1) If item is an DA, move it to the top of the DA list if it exists, or end of the list if no DAs
-        2.2) If item is a child of a DA, move it to the top of the DA list (or end of list if no DAs) and make it a parent
-        2.3) If item is a child of an Open parent, move it to the top of the Done Kids list (or end of maily list of no DKs)
-    */
     try {
 
       amplitude.track("Item Done Clicked", {
@@ -310,6 +289,10 @@ export default function ListScreen() {
           updateItemDoneState(item, () => {
             ProfileCountEventEmitter.emit("incr_done");
           });
+
+          // Add done item to top of done items list
+          //console.log("Adding item to top of done list: " + JSON.stringify(item));
+          setDoneItems(prevItems => [item, ...prevItems])
 
         } else {
 
@@ -422,13 +405,8 @@ export default function ListScreen() {
                         return filteredAndDonedList;
                       });
 
-                      // Append done items and its children to top of dine list
-                      // 1.6 TODO handle scenario where list hasnt been populated yet
-                      setDoneItems((prevItems) => {
-                        return [item,
-                          ...doneChildren,
-                          ...prevItems]
-                      });
+                      // 1.7 Append done item to top of the done list (it's ASSUmed its done children are already on the list)
+                      setDoneItems((prevItems) => [item, ...prevItems]);
                     }
                   },
                   {
@@ -464,11 +442,6 @@ export default function ListScreen() {
                       });
 
                       // Set item as done in backend and incr Profile counter
-                      // 1.6 TODO The lambda needs to update Done list order to place
-                      //          this family at the top of the list
-                      //      NOTE: In theory, this can be done asynchronously to the above done state
-                      //          ops being done on the children AS LONG AS the move is NOT dependent on the
-                      //          childrens' done state
                       item.is_done = true;
                       updateItemDoneState(item, () => {
                         ProfileCountEventEmitter.emit("incr_done");
@@ -491,12 +464,12 @@ export default function ListScreen() {
                         return filteredAndDonedList;
                       });
 
-                      // Append done items and its children to top of dine list
-                      // 1.6 TODO handle scenario where list hasnt been populated yet
+                      // 1.7 Append done items and its children to top of done list 
+                      //     (list children after parent to reflect completing kids before completing parents)
                       setDoneItems((prevItems) => {
-                        return [item,
+                        return [
+                          item,
                           ...openChildren.map((child) => ({ ...child, is_done: true })),
-                          ...doneChildren,
                           ...prevItems]
                       });
                     },
@@ -548,13 +521,8 @@ export default function ListScreen() {
                   return filteredAndDonedList;
                 });
 
-                // Append done items and its children to top of dine list
-                // 1.6 TODO handle scenario where list hasnt been populated yet
-                setDoneItems((prevItems) => {
-                  return [item,
-                    ...doneChildren,
-                    ...prevItems]
-                });
+                // 1.7 Append done item to top of the done list (it's ASSUmed its done children are already on the list)
+                setDoneItems((prevItems) => [item, ...prevItems]);
 
               } else {
                 console.log("Assuming reaching this log is unexpected given preceding logic tree.")
@@ -588,12 +556,8 @@ export default function ListScreen() {
               return filteredList;
             });
 
-            // Append done items and its children to top of dine list
-            // 1.6 TODO handle scenario where list hasnt been populated yet
-            setDoneItems((prevItems) => {
-              return [item,
-                ...prevItems]
-            });
+            // Append the done item to the top of the done list
+            setDoneItems((prevItems) => [item, ...prevItems]);
           }
         }
       } else {
@@ -622,7 +586,7 @@ export default function ListScreen() {
           // If Item's parent is done, convert item to adult and move it above the parent
           // 1.6 This scenario shouldn't happen with the new rules on this list
           if (parent.is_done) {
-            console.warn("Reached unexpected scenario for list page: opening child of done parent.");
+            console.warn("Reached unexpected scenario for open page: opening child of done parent.");
           } else {
 
             // if Item's parent is open, move item to top of parent's done kids or bottom of fam if none
@@ -655,6 +619,9 @@ export default function ListScreen() {
 
               return openedItems;
             });
+
+            // 1.7 Also remove from done list
+            setDoneItems(prevItems => prevItems.filter(prevItem => prevItem.uuid != item.uuid));
           }
         } else {
           console.warn("Reached unexpected scenario for list page: Opening a done parent.");

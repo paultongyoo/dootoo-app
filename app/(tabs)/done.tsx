@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
 import { usePathname } from 'expo-router';
-import { loadItems, deleteItem, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_ONLY_DONE_ITEMS } from '@/components/Storage';
+import { loadItems, deleteItem, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_ONLY_DONE_ITEMS, updateItemHierarchy } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooList, { listStyles, THINGNAME_DONE_ITEM } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
@@ -20,6 +20,29 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { Trash } from "@/components/svg/trash";
 import DootooDoneEmptyUX from "@/components/DootooDoneEmptyUX";
+
+/*
+  1.7 Latest MVP UX: 
+        -- Flat page of ALL completed parents and children, listed by Item.updatedAt descending
+        --- Page updated to list completed subitems that ARE listed on opened items page too
+        -- Completed children have their parents' text listed above them in smaller font (they are NOT separate list items) 
+
+      Actions allowed from this page at the moment
+        1) Reopening individual items:
+            - User prompted to confirm
+            - Item moved to top of opened list
+            - Reopened children scenarios
+            -- If child's parent is open, reopened child is removed from done page 
+                and opened in place on opened page
+            -- If child's parent is done, reopened child is removed from done page 
+                and moved to top of opened page as new adult
+            -- Reopened parents only are removed from the done page (any completed children stay on done page) 
+                and their entire family (should be only done items) moved to top of opened page
+        2) Deleting individual items
+        3) Making item public (yes, currently want to test allowing completed items to be made public to see if users do this to celebrate)
+        4) Pagination load on scroll
+        5) Pull down to refresh
+*/
 
 export default function DoneScreen() {
   const pathname = usePathname();
@@ -55,28 +78,6 @@ export default function DoneScreen() {
 
   const handleDoneClick = async (item) => {
 
-    /*
-      1.7 Latest MVP UX: 
-            -- Flat page of ALL completed parents and children, listed by Item.updatedAt descending
-            --- Page updated to list completed subitems that ARE listed on opened items page too
-            -- Completed children have their parents' text listed above them in smaller font (they are NOT separate list items) 
-
-          Actions allowed from this page at the moment
-            1) Reopening individual items:
-                - User prompted to confirm
-                - Item moved to top of opened list
-                - Reopened children scenarios
-                -- If child's parent is open, reopened child is removed from done page 
-                   and opened in place on opened page
-                -- If child's parent is done, reopened child is removed from done page 
-                   and moved to top of opened page as new adult
-                -- Reopened parents only are removed from the done page (any completed children stay on done page) 
-                   and their entire family (should be only done items) moved to top of opened page
-            2) Deleting individual items
-            3) Making item public (yes, currently want to test allowing completed items to be made public to see if users do this to celebrate)
-            4) Pagination load on scroll
-            5) Pull down to refresh
-    */
     try {
 
       amplitude.track("Item Done Clicked", {
@@ -106,9 +107,13 @@ export default function DoneScreen() {
 
         Alert.alert(
           "Reopen Item?",
-          (doneChildren.length == 0) 
-            ? "Your item will appear at the top of your opened items list."
-            : "Your item and its subitems will appear at the top of your opened items list.",
+          (item.parent) 
+            ? ((item.parent.is_done)
+                ? "Your item will appear at the top of your Open Items list."
+                : "Your item will be reopened under its parent on your Open Items list.")
+            : ((doneChildren.length == 0) 
+                ? "Your item will appear at the top of your opened items list."
+                : "Your item and its subitems will appear at the top of your opened items list."),
           [
             {
               text: 'Cancel',
@@ -124,11 +129,6 @@ export default function DoneScreen() {
               text: 'Yes',
               onPress: () => {
 
-                amplitude.track("Item Reopen Completed", {
-                  anonymous_id: anonymousId.current,
-                  pathname: pathname
-                });
-
                 // Set item TO Open
                 item.is_done = false;
                 updateItemDoneState(item, async () => {
@@ -137,7 +137,49 @@ export default function DoneScreen() {
 
                 // if item is a child
                 if (item.parent_item_uuid) {
-                  console.warn("Entering scenario that shouldn't happen on the done page: Opening a subitem");
+
+                  const reopenChild = async () => {
+
+                    // Collpase child
+                    new Promise<void>((resolve) => {
+                      thingRowHeights.current[item.uuid].value =
+                        withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                    })
+
+                    // Remove item from done page
+                    setDoneItems((prevItems) => {
+
+                      // Create new list from existing excluding the child 
+                      const filteredList = prevItems.filter(prevItem => (prevItem.uuid != item.uuid));
+
+                      // Save the new list's order in the DB
+                      const uuidArray = filteredList.map((thing) => ({ uuid: thing.uuid }));
+                      saveItemOrder(uuidArray);
+
+                      // return the list to render it
+                      return filteredList;
+                    });
+
+                    // Update the opened list in one of two ways based on parent's done state
+                    if (item.parent.is_done) {
+                      
+                      // Clear the item's parent and move to top of the list
+                      updateItemHierarchy(item.uuid, null);
+                      setOpenItems((prevItems) => {
+                        return [{...item, parent_item_uuid: null, parent: null }, ...prevItems];
+                      });
+                    } else {
+
+                      // Update done state of item in place (it's ASSumed the item is still present in the list)
+                      setOpenItems((prevItems) => prevItems.map(prevItem =>
+                          (prevItem.uuid == item.uuid)
+                            ? { ...prevItem, is_done: false }
+                            : prevItem
+                      ));
+                    }
+                  }
+                  reopenChild();
+
                 } else {
 
                   const reopenFamily = async () => {
@@ -182,6 +224,13 @@ export default function DoneScreen() {
                   }
                   reopenFamily();
                 }
+
+
+
+                amplitude.track("Item Reopen Completed", {
+                  anonymous_id: anonymousId.current,
+                  pathname: pathname
+                });
               },
             },
           ],
