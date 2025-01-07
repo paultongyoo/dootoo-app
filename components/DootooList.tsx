@@ -72,6 +72,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const selectedTimerThing = useRef(null);
     const blurredOnSubmit = useRef(false);
 
+    const listOpacity = useSharedValue(0);
+
     const firstListRendered = useSharedValue(false);
     const initialLoadFadeInOpacity = useSharedValue(0);
     const nextPageLoadingOpacity = useSharedValue(0);
