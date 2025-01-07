@@ -14,7 +14,7 @@ import { NAVIGATION_SECTION_IDX_COMMUNITY } from './Constants';
 const DootooItemSidebar = ({ thing, onReactionsPress }) => {
    
     const pathname = usePathname();
-    const { anonymousId, setOpenItems } = useContext(AppContext);
+    const { anonymousId, setOpenItems, setDoneItems, refreshCommunityItems } = useContext(AppContext);
 
     const [isPublic, setIsPublic] = useState(thing.is_public == true);
 
@@ -45,37 +45,46 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                                 pathname: pathname
                             });
                             
-                            setOpenItems(prevItems => prevItems.map((prevItem) => 
-                                (prevItem.uuid == thing.uuid)
-                                    ? { ...prevItem, is_public: true }
-                                    : prevItem  ));
-                            updateItemPublicState(thing.uuid, true);    
+                            if (thing.is_done) {
+                                setDoneItems(prevItems => prevItems.map((prevItem) => 
+                                    (prevItem.uuid == thing.uuid)
+                                        ? { ...prevItem, is_public: true }
+                                        : prevItem  ));
+                            } else {
+                                setOpenItems(prevItems => prevItems.map((prevItem) => 
+                                    (prevItem.uuid == thing.uuid)
+                                        ? { ...prevItem, is_public: true }
+                                        : prevItem  ));
+                            }
+                            updateItemPublicState(thing.uuid, true, () => {
+                                refreshCommunityItems();
 
-                            Alert.alert(
-                                "Item Posted to the Community",
-                                "Thanks for sharing.  Let's get to work!",
-                                [
-                                    {
-                                        text: 'Go to Post',
-                                        onPress: () => {
-                                            amplitude.track("Item Go Public Success: Went to Post", {
-                                                anonymous_id: anonymousId,
-                                                pathname: pathname
-                                            });
-                                            NavigationEventEmitter.emit(NAVIGATION_EVENT__GO_TO_SECTION, NAVIGATION_SECTION_IDX_COMMUNITY);
-                                        }
-                                    },
-                                    {
-                                        text: 'Close',
-                                        onPress: () => {
-                                            amplitude.track("Item Go Public Success: Closed", {
-                                                anonymous_id: anonymousId,
-                                                pathname: pathname
-                                            });                                           
+                                Alert.alert(
+                                    "Item Posted to the Community",
+                                    "Thanks for sharing.  Let's get to work!",
+                                    [
+                                        {
+                                            text: 'Go to Post',
+                                            onPress: () => {
+                                                amplitude.track("Item Go Public Success: Went to Post", {
+                                                    anonymous_id: anonymousId,
+                                                    pathname: pathname
+                                                });
+                                                NavigationEventEmitter.emit(NAVIGATION_EVENT__GO_TO_SECTION, NAVIGATION_SECTION_IDX_COMMUNITY);
+                                            }
                                         },
-                                    }
-                                ]
-                            )
+                                        {
+                                            text: 'Close',
+                                            onPress: () => {
+                                                amplitude.track("Item Go Public Success: Closed", {
+                                                    anonymous_id: anonymousId,
+                                                    pathname: pathname
+                                                });                                           
+                                            },
+                                        }
+                                    ]
+                                )
+                            });    
                         }
                     }
                 ]
@@ -107,11 +116,20 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                                 pathname: pathname
                             });
                             
-                            setOpenItems(prevItems => prevItems.map((prevItem) => 
-                                (prevItem.uuid == thing.uuid)
-                                    ? { ...prevItem, is_public: false }
-                                    : prevItem  ));                            
-                            updateItemPublicState(thing.uuid, false);
+                            if (thing.is_done) {
+                                setDoneItems(prevItems => prevItems.map((prevItem) => 
+                                    (prevItem.uuid == thing.uuid)
+                                        ? { ...prevItem, is_public: false }
+                                        : prevItem  ));   
+                            } else {
+                                setOpenItems(prevItems => prevItems.map((prevItem) => 
+                                    (prevItem.uuid == thing.uuid)
+                                        ? { ...prevItem, is_public: false }
+                                        : prevItem  ));   
+                            }
+                            updateItemPublicState(thing.uuid, false, () => {
+                                refreshCommunityItems();
+                            });
                         },
                     },
                 ]
