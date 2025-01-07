@@ -137,7 +137,7 @@ export default function DoneScreen() {
                   const reopenChild = async () => {
 
                     // Collpase child
-                    new Promise<void>((resolve) => {
+                    await new Promise<void>((resolve) => {
                       thingRowHeights.current[item.uuid].value =
                         withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
                     })
@@ -195,7 +195,7 @@ export default function DoneScreen() {
                   const reopenAdult = async () => {
 
                     // Collapse reopened item
-                    new Promise<void>((resolve) => {
+                    await new Promise<void>((resolve) => {
                       thingRowHeights.current[item.uuid].value =
                         withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
                     });
@@ -227,7 +227,7 @@ export default function DoneScreen() {
                   }
                   reopenAdult();
                 }
-                
+
                 amplitude.track("Item Reopen Completed", {
                   anonymous_id: anonymousId.current,
                   pathname: pathname
