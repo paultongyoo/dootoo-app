@@ -27,7 +27,8 @@ import { Clock } from "@/components/svg/clock";
 
 const CommunityScreen = () => {
     const pathname = usePathname();
-    const { username, anonymousId, setOpenItems, setDoneItems, communityItems, setCommunityItems } = useContext(AppContext);
+    const { username, anonymousId, setOpenItems, setDoneItems, 
+            communityItems, setCommunityItems, hasMoreCommunityItems, communityLayoutOpacity } = useContext(AppContext);
     const [itemMoreModalVisible, setItemMoreModalVisible] = useState(false);
     const [hideFromCommunityDialogVisible, setHideFromCommunityDialogVisible] = useState(false);
     const [hideUserDialogVisible, setHideUserDialogVisible] = useState(false);
@@ -40,14 +41,13 @@ const CommunityScreen = () => {
     const modelItemReactionCounts = useRef({});
     const modalItemReactions = useRef([]);
 
-    const opacity = useSharedValue(0);
+  
     const animatedOpacity = useAnimatedStyle(() => {
-        return { opacity: opacity.value }
+        return { opacity: communityLayoutOpacity.value }
     })
     const [page, setPage] = useState(1);
     const [refreshKey, setRefreshKey] = useState(1);
     const [refreshing, setRefreshing] = useState(false);
-    const hasMoreItems = useRef(false);
     const nextPageLoadingOpacity = useSharedValue(0);
     const nextPageAnimatedOpacity = useAnimatedStyle(() => {
         return { opacity: nextPageLoadingOpacity.value }
@@ -61,11 +61,22 @@ const CommunityScreen = () => {
     useFocusEffect(
         useCallback(() => {
             //console.log("Community.useFocusEffect([]), communityItems: " + JSON.stringify(communityItems));
-            initializeCommunityScreen();
-            return () => {
-                //console.log("Setting communityItems back to null on losing focus");
-                setCommunityItems(null);
+            
+            // Component should be in one of two states on focus:
+            // 1) Non-null community items = List completed initializing on launch in background
+            // 2) Null communty items = List has not completed initializing on launch, still in progress
+            // In both scenarios we want to fade in the layout into view:
+            // 1) For scenario #1, the layout should render the loaded community items
+            // 2) For scenario #2, the layout should render a loading animation
+            const fadeInLayout = async () => {
+                await new Promise<void>((resolve) =>
+                    communityLayoutOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                        if (isFinished) {
+                            runOnJS(resolve)();
+                        }
+                    }));
             }
+            fadeInLayout();
         }, [])
     )
 
@@ -75,10 +86,10 @@ const CommunityScreen = () => {
 
         if (initialItemsMount.current) {
             initialItemsMount.current = false;
-        } else if (opacity.value == 0) {
+        } else if (communityLayoutOpacity.value == 0) {
             const fadeInLayout = async () => {
                 await new Promise<void>((resolve) =>
-                    opacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                    communityLayoutOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
                         if (isFinished) {
                             runOnJS(resolve)();
                         }
@@ -88,32 +99,6 @@ const CommunityScreen = () => {
         }
     }, [communityItems]);
 
-    const initializeCommunityScreen = async () => {
-        //console.log("Initializing Community Screen");
-
-        // Fade in layout, which is ASSumed to be displaying loading animation
-        await new Promise<void>((resolve) =>
-            opacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
-                if (isFinished) {
-                    runOnJS(resolve)();
-                }
-            }));
-
-        const responseObj = await loadCommunityItems(page);
-        hasMoreItems.current = responseObj.hasMore;
-
-        // Fade out layout, which is ASSumed to be displaying loading animation
-        await new Promise<void>((resolve) =>
-            opacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
-                if (isFinished) {
-                    runOnJS(resolve)();
-                }
-            }));
-
-        // Update array
-        setCommunityItems([...responseObj.items])
-    }
-
     const initialPageMount = useRef(true);
     useEffect(() => {
         if (initialPageMount.current) {
@@ -121,13 +106,13 @@ const CommunityScreen = () => {
         } else {
             const updateCommunityPage = async (requestedPage) => {
                 const responseObj = await loadCommunityItems(requestedPage);
-                hasMoreItems.current = responseObj.hasMore;
+                hasMoreCommunityItems.current = responseObj.hasMore;
 
                 if (requestedPage == 1) {
 
                     if (responseObj.items.length == 0) {
                         await new Promise<void>((resolve) =>
-                            opacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+                            communityLayoutOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
                                 if (isFinished) {
                                     runOnJS(resolve)();
                                 }
@@ -173,7 +158,7 @@ const CommunityScreen = () => {
     }
 
     const loadNextPage = async () => {
-        if (hasMoreItems.current) {
+        if (hasMoreCommunityItems.current) {
             await new Promise<void>((resolve) => {
                 nextPageLoadingOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
                     if (isFinished) {

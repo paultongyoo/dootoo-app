@@ -1,6 +1,8 @@
 import { Animated, Easing } from 'react-native';
 import { createContext, useState, useRef } from 'react';
-import { initalizeUser, resetAllData } from './Storage';
+import { initalizeUser, resetAllData, loadCommunityItems } from './Storage';
+import { useSharedValue, withTiming, runOnJS } from 'react-native-reanimated';
+import { pluralize } from './Helpers';
 
 // Create the context
 export const AppContext = createContext();
@@ -12,6 +14,8 @@ export const AppProvider = ({ children }) => {
     const [openItems, setOpenItems] = useState([]);
     const [doneItems, setDoneItems] = useState([]);
     const [communityItems, setCommunityItems] = useState(null); 
+    const hasMoreCommunityItems = useRef(false);
+    const communityLayoutOpacity = useSharedValue(0);
     const [selectedItem, setSelectedItem] = useState(null);         // Selected Item context of Tips pages
     const [selectedProfile, setSelectedProfile] = useState(null);   // Selected Profile from Tip pages
 
@@ -57,6 +61,27 @@ export const AppProvider = ({ children }) => {
       }
     }
 
+    const initializeCommunityItems = async () => {
+      if (!communityItems) {
+        console.log("Initializing Community Items...");
+        const responseObj = await loadCommunityItems(1);
+        hasMoreCommunityItems.current = responseObj.hasMore;
+  
+        // Fade out community items layout just in case it's in view
+        await new Promise((resolve) =>
+            communityLayoutOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+                if (isFinished) {
+                    runOnJS(resolve)();
+                }
+            }));
+  
+        setCommunityItems([...responseObj.items])
+        console.log(`Community Items array initalized with ${pluralize('item', responseObj.items.length)}.`);
+      } else {
+        console.log("Community Items array is non-null, ignoring initialization call");
+      }
+    }
+
     const resetUserContext = async () => {
       await resetAllData();
       await initializeLocalUser(); 
@@ -78,6 +103,8 @@ export const AppProvider = ({ children }) => {
             openItems, setOpenItems,
             doneItems, setDoneItems,
             communityItems, setCommunityItems,
+            hasMoreCommunityItems, communityLayoutOpacity,
+            initializeCommunityItems,
             username, setUsername,
             anonymousId, setAnonymousId,
             affirmation, setAffirmation,

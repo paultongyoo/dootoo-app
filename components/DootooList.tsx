@@ -52,7 +52,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const pathname = usePathname();
     const { anonymousId, username, lastRecordedCount, initializeLocalUser,
         thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap: itemReactionsMap, selectedItem,
-        currentlyTappedThing, emptyListCTAFadeOutAnimation, setOpenItems, communityItems, setCommunityItems, setDoneItems
+        currentlyTappedThing, emptyListCTAFadeOutAnimation, setOpenItems, communityItems, setCommunityItems, setDoneItems,
+        initializeCommunityItems
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [isRefreshing, setRefreshing] = useState(false);
@@ -116,6 +117,9 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             } else {
                 //console.log("Skipping initial load for user per shouldInitialLoad == false.");
             }
+
+            // If community items hasn't been initialized yet, initialize it!
+            initializeCommunityItems();
         });
     }, []);
 
