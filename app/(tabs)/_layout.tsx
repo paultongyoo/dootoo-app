@@ -12,11 +12,17 @@ import { StatusBar } from "expo-status-bar";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { AppProvider } from '@/components/AppContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 const AMPLITUDE_KEY_DEV = "28fd28b2a8714bea3efa4a0bc73fbd0b";
 const AMPLITUDE_KEY_PROD = "ac9cdda8bd0d54ba50553219f407d353";
 
 export default function TabLayout() {
   const pathname = usePathname();
+
+  const opacity = useSharedValue(0);
+  const opacityAnimatedStyle = useAnimatedStyle(() => {
+    return { opacity: opacity.value }
+  })
 
   useEffect(() => {
 
@@ -31,6 +37,8 @@ export default function TabLayout() {
     };
     const subscription = AppState.addEventListener("change", handleAppStateChange);
     checkOpenAPIHealth();
+
+    opacity.value = withTiming(1, { duration: 1000 });
 
     return () => {
       subscription.remove();
@@ -102,18 +110,20 @@ export default function TabLayout() {
   return (
     <AppProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <StatusBar backgroundColor="#FAF3E0" />
-        <Tabs
-          initialRouteName="open"
-          tabBar={(props) => (<DootooFooter {...props} />)}
-          screenOptions={{
-            header: (props) => (<DootooHeader {...props} />)
-          }}>
-          <Tabs.Screen name="open" />
-          <Tabs.Screen name="community" />
-          <Tabs.Screen name="done" />
-          <Tabs.Screen name="profile" />
-        </Tabs>
+        <Animated.View style={[{flex: 1}, opacityAnimatedStyle]}>
+          <StatusBar backgroundColor="#FAF3E0" />
+          <Tabs
+            initialRouteName="open"
+            tabBar={(props) => (<DootooFooter {...props} />)}
+            screenOptions={{
+              header: (props) => (<DootooHeader {...props} />)
+            }}>
+            <Tabs.Screen name="open" />
+            <Tabs.Screen name="community" />
+            <Tabs.Screen name="done" />
+            <Tabs.Screen name="profile" />
+          </Tabs>
+        </Animated.View>
         <Toast config={toastConfig} />
       </GestureHandlerRootView>
     </AppProvider>
