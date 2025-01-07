@@ -1,10 +1,12 @@
 import { Text, StyleSheet, View, Pressable, Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { AppContext } from './AppContext';
 import * as amplitude from '@amplitude/analytics-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DootooItemEmptyUX from './DootooItemEmptyUX';
+import { ArrowDown } from './svg/arrow-down';
 
 const DootooFirstLaunchUX = () => {
   const { isFirstLaunch } = useContext(AppContext);
@@ -16,6 +18,17 @@ const DootooFirstLaunchUX = () => {
   const stepAnimatedOpacity = useAnimatedStyle(() => {
     return { opacity: stepOpacity.value }
   })
+
+  const coachmarkOpacity = useSharedValue(0);
+  const coachmarkAnimatedOpacity = useAnimatedStyle(() => {
+    return { opacity: coachmarkOpacity.value }
+  })
+
+  const BOTTOM_BUTTON_WIDTH_INCL_MARGINS = 50 + 20 + 20;
+  const BOTTOM_BUTTON_HEIGHT_INCL_DIST_FROM_FOOTER = 50 + 20;
+  const coachmarkTranslateX = useSharedValue(
+    BOTTOM_BUTTON_WIDTH_INCL_MARGINS / 2 * -1
+  );
 
   // Step 1
   const fadeTogether = useSharedValue(0);
@@ -41,18 +54,76 @@ const DootooFirstLaunchUX = () => {
     })));
 
     setCurrentStep(2);
-
-    //isFirstLaunch.current = false;
-    //await AsyncStorage.setItem('isFirstLaunch', 'false');
   }
 
   const executeStep2Animation = async () => {
-
-
-    // TODO
-
     amplitude.track("Onboarding Step 2 Viewed");
-    // TODO
+    await new Promise<void>((resolve) => stepOpacity.value = withDelay(1000, withTiming(0, { duration: 1000 }, (isFinished) => {
+      if (isFinished) {
+        runOnJS(resolve)();
+      }
+    })));
+    setCurrentStep(3);
+  }
+
+  const executeStep3Animation = async () => {
+    amplitude.track("Onboarding Step 3 Viewed");
+    await new Promise<void>((resolve) => stepOpacity.value = withDelay(1000, withTiming(0, { duration: 1000 }, (isFinished) => {
+      if (isFinished) {
+        runOnJS(resolve)();
+      }
+    })));
+    setCurrentStep(4);
+  }
+
+  const speakNaturallyOpacity = useSharedValue(0);
+  const speakNaturallyAnimatedStyle = useAnimatedStyle(() => {
+    return { opacity: speakNaturallyOpacity.value }
+  })
+  const executeStep4Animation = async () => {
+    await new Promise<void>((resolve) => 
+      coachmarkOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+        if (isFinished) {
+          runOnJS(resolve)();
+        }
+    }));
+
+    await new Promise<void>((resolve) => 
+      speakNaturallyOpacity.value = withDelay(1000, withTiming(1, { duration: 1000 }, (isFinished) => {
+        if (isFinished) {
+          runOnJS(resolve)();
+        }
+    })));
+
+    amplitude.track("Onboarding Step 4 Viewed");
+    await new Promise<void>((resolve) => stepOpacity.value = withDelay(1000, withTiming(0, { duration: 1000 }, (isFinished) => {
+      if (isFinished) {
+        runOnJS(resolve)();
+      }
+    })));
+    setCurrentStep(5);
+  }
+
+  const executeStep5Animation = async () => {
+    coachmarkTranslateX.value = withTiming(BOTTOM_BUTTON_WIDTH_INCL_MARGINS / 2, 
+      { 
+        duration: 300,
+        easing: Easing.out(Easing.exp)
+      }
+    )
+    amplitude.track("Onboarding Step 5 Viewed");
+    // await new Promise<void>((resolve) => stepOpacity.value = withDelay(1000, withTiming(0, { duration: 1000 }, (isFinished) => {
+    //   if (isFinished) {
+    //     runOnJS(resolve)();
+    //   }
+    // })));
+    //setCurrentStep(6);
+  }
+
+  const executeStep6Animation = async () => {
+    amplitude.track("Onboarding Step 6 Viewed");
+    //isFirstLaunch.current = false;
+    //await AsyncStorage.setItem('isFirstLaunch', 'false');
   }
 
   const initialMount = useRef(true);
@@ -64,11 +135,38 @@ const DootooFirstLaunchUX = () => {
       return;
     }
 
-    stepOpacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
-      if (isFinished) {
-        if (currentStep == 2) runOnJS(executeStep2Animation)();
-      }
-    });
+    if (currentStep == 2) {
+      stepOpacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
+        if (isFinished) {
+          runOnJS(executeStep2Animation)();
+        }
+      });
+    } else if (currentStep == 3) {
+      stepOpacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
+        if (isFinished) {
+          runOnJS(executeStep3Animation)();
+        }
+      });
+    } else if (currentStep == 4) {
+      stepOpacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
+        if (isFinished) {
+          runOnJS(executeStep4Animation)();
+        }
+      });
+    } else if (currentStep == 5) {
+      stepOpacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
+        if (isFinished) {
+          runOnJS(executeStep5Animation)();
+        }
+      });
+    } else if (currentStep == 6) {
+      stepOpacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
+        if (isFinished) {
+          runOnJS(executeStep6Animation)();
+        }
+      });
+    }
+
   }, [currentStep])
 
   useFocusEffect(
@@ -92,12 +190,12 @@ const DootooFirstLaunchUX = () => {
     emptyListContainer: {
       flex: 1,
       justifyContent: 'center',
-      paddingLeft: 30,
-      paddingRight: 60        // Tips specific
     },
     centerCopy: {
       fontSize: 40,
       color: '#3E2723',
+      paddingLeft: 30,
+      paddingRight: 60,
       paddingBottom: 20
     },
     red: {
@@ -113,7 +211,18 @@ const DootooFirstLaunchUX = () => {
     },
     skipButtonText: {
       color: '#3e2723',
-      opacity: 0.5
+      opacity: 0.5,
+      fontSize: 16
+    },
+    coachmarksContainer: {
+      position: 'absolute',
+      bottom: BOTTOM_BUTTON_HEIGHT_INCL_DIST_FROM_FOOTER + 10,
+      width: '100%',
+      justifyContent: 'center',
+      alignItems: 'center'
+    },
+    downArrowContainer: {
+
     }
   })
 
@@ -138,6 +247,38 @@ const DootooFirstLaunchUX = () => {
           <Text style={styles.green}> easily capture your most important things to do</Text>...</Text>
         </>
       )}
+      {(currentStep == 3) && (
+        <>
+          <Text style={styles.centerCopy}>...and 
+          <Text style={styles.green}> connects you with a community of doo-ers </Text>
+          like you.</Text>
+        </>
+      )}
+      {(currentStep == 4) && (
+        <>
+          <Text style={styles.centerCopy}>tap the 
+          <Text style={styles.green}> microphone to quickly add many things at once</Text>
+          .</Text>
+          <Animated.View style={[{position: 'relative', top: -10 }, speakNaturallyAnimatedStyle]}>
+            <Text style={styles.centerCopy}><Text style={styles.green}>speak naturally </Text>
+            and 
+            <Text style={styles.green}> just let your thoughts flow</Text>
+            .</Text>
+          </Animated.View>
+        </>
+      )}
+      {(currentStep == 5) && (
+        <>
+          <Text style={styles.centerCopy}>tap the
+          <Text style={styles.green}> keyboard to add one thing at a time</Text>
+          .</Text>
+        </>
+      )}
+    </Animated.View>
+    <Animated.View style={[styles.coachmarksContainer, coachmarkAnimatedOpacity]}>
+      <Animated.View style={[styles.downArrowContainer, { transform: [{ translateX: coachmarkTranslateX }] }]}>
+        <ArrowDown wxh="50" color="#556B2F" />
+       </Animated.View>
     </Animated.View>
   </Animated.View>;
 };
