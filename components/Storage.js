@@ -122,7 +122,7 @@ export const loadCommunityItems = async(requestedPage) => {
   try {
     const localUserStr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserStr) {
-      console.log("Received null local anon Id, aborting loadItems!");
+      console.log("Received null local anon Id, aborting loadCommunityItems!");
       return { hasMore: false, items: [] };
     }
     const localUser = JSON.parse(localUserStr);
@@ -836,7 +836,7 @@ export const updateItemHierarchy = async(item_uuid, parent_item_uuid, callback =
   }
 }
 
-export const updateItemSchedule = async(item_uuid, scheduled_datetime_utc) => {
+export const updateItemSchedule = async(item_uuid, scheduled_datetime_utc, callback = null) => {
   try {
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserSr) {
@@ -852,6 +852,9 @@ export const updateItemSchedule = async(item_uuid, scheduled_datetime_utc) => {
         scheduled_datetime_utc: scheduled_datetime_utc
       }
     );
+    if (callback) {
+      callback();
+    }
     //console.log("updateItemSchedule Response Obj: " + JSON.stringify(response.data.body));
     return response.data;
   } catch (error) {
@@ -1223,10 +1226,10 @@ const createUser = async () => {
     //console.log(`Username created ${newUsername} with Anon ID ${newAnonymousId}`);
 
     // Asyncronously pass generated user name and anonymous ID to backend to store on server
-    saveUserToBackend(newUsername, newAnonymousId, (savedUserObj) => {
+    await saveUserToBackend(newUsername, newAnonymousId, async (savedUserObj) => {
 
         // Store user data locally to accelerate future loads
-        saveUserLocally(savedUserObj);
+        await saveUserLocally(savedUserObj);
     });
     
     return { 

@@ -74,7 +74,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
     const firstListRendered = useSharedValue(false);
     const initialLoadFadeInOpacity = useSharedValue(0);
-    const listOpacity = useSharedValue(0);
     const nextPageLoadingOpacity = useSharedValue(0);
     const nextPageAnimatedOpacity = useAnimatedStyle(() => {
         return { opacity: nextPageLoadingOpacity.value }
@@ -743,7 +742,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 }
                 : thing));
 
-        updateItemSchedule(thingToUpdateUUID, null);
+        updateItemSchedule(thingToUpdateUUID, null, () => {
+            if (selectedTimerThing.current.is_public) {
+                refreshCommunityItems();
+            }
+        });
         updateItemEventId(thingToUpdateUUID, null);
         setShowScheduleEditDialog(false);
     }
@@ -793,7 +796,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 }
                 : thing));
 
-        updateItemSchedule(thingToUpdateUUID, newScheduledDateTimeUTCStr);
+        updateItemSchedule(thingToUpdateUUID, newScheduledDateTimeUTCStr, () => {
+            if (selectedTimerThing.current.is_public) {
+                refreshCommunityItems();
+            }
+        });
 
         if (eventIdToUpdate) {
             const updatedTimerThing = { ...selectedTimerThing.current, scheduled_datetime_utc: newScheduledDateTimeUTCStr };
@@ -1103,7 +1110,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         }
                                         : prevThing));
 
-                                updateItemSchedule(thing.uuid, calStartLocalDate.toISOString());
+                                updateItemSchedule(thing.uuid, calStartLocalDate.toISOString(), () => {
+                                    if (thing.is_public) {
+                                        refreshCommunityItems();
+                                    }
+                                });
                                 //updateItemText({ uuid: thing.uuid, text: calEvent.title });                 
                             } else {
                                 //console.log("Calendar Event " + calEvent.title + " matches what's saved.");
@@ -1123,7 +1134,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 }
                                 : prevThing));
 
-                        updateItemSchedule(thing.uuid, null);
+                        updateItemSchedule(thing.uuid, null, () => {
+                            if (thing.is_public) {
+                                refreshCommunityItems();
+                            }
+                        });
                         updateItemEventId(thing.uuid, null);
                     }
                 });
@@ -1486,7 +1501,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             // in the process of saving and we have to wait for the save to complete.
                             // This is still a hack as the save may still take longer than the amount
                             // of retries employed here.  FUTURE TODO TO FIX
-                            await fetchWithRetry(() => updateItemSchedule(item.uuid, scheduled_datetime_utc));
+                            await fetchWithRetry(() => updateItemSchedule(item.uuid, scheduled_datetime_utc, () => {
+                                if (item.is_public) {
+                                    refreshCommunityItems();
+                                }
+                            }));
 
                             const eventIdToUpdate = item.event_id;
                             if (eventIdToUpdate) {
