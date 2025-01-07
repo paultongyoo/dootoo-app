@@ -17,6 +17,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
     const { anonymousId, setOpenItems, setDoneItems, refreshCommunityItems } = useContext(AppContext);
 
     const [isPublic, setIsPublic] = useState(thing.is_public == true);
+    const [loading, setLoading] = useState(false);
 
     const handleIsPublicTap = () => {
         amplitude.track("Item Go Public Prompt Displayed", {
@@ -44,6 +45,8 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                                 anonymous_id: anonymousId,
                                 pathname: pathname
                             });
+
+                            setLoading(true);
                             
                             if (thing.is_done) {
                                 setDoneItems(prevItems => prevItems.map((prevItem) => 
@@ -57,6 +60,8 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                                         : prevItem  ));
                             }
                             updateItemPublicState(thing.uuid, true, () => {
+                                setLoading(false);
+
                                 refreshCommunityItems();
 
                                 Alert.alert(
@@ -115,6 +120,8 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                                 anonymous_id: anonymousId,
                                 pathname: pathname
                             });
+
+                            setLoading(true);
                             
                             if (thing.is_done) {
                                 setDoneItems(prevItems => prevItems.map((prevItem) => 
@@ -128,6 +135,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                                         : prevItem  ));   
                             }
                             updateItemPublicState(thing.uuid, false, () => {
+                                setLoading(false);
                                 refreshCommunityItems();
                             });
                         },
@@ -148,7 +156,11 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
 
     const greenColorSV = useSharedValue("#556B2F")
 
-    if (!thing.parent_item_uuid) {
+    if (loading) {
+        return (
+            <ActivityIndicator size="small" color="#3e2723" />
+        )
+    } else if (!thing.parent_item_uuid) {
         if (!thing.is_public) {
             return (
                 <Animated.View style={[{ flexDirection: 'row', alignItems: 'center' }]}>
