@@ -1826,7 +1826,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             </View>
                         )}
                         <View style={[listStyles.itemContainer, styles.itemContainer]}>
-                            {item.parent_item_uuid && (
+                            {item.parent_item_uuid && (thingName != THINGNAME_DONE_ITEM) && (
                                 <View style={styles.childItemSpacer}></View>
                             )}
                             {isDoneable && (
