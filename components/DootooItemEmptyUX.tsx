@@ -1,7 +1,7 @@
 import { Text, StyleSheet } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
 const DootooItemEmptyUX = () => {
 
@@ -23,25 +23,25 @@ const DootooItemEmptyUX = () => {
 
   const executeCTAAnimation = async () => {
     await new Promise<void>((resolve) => {
-      fadeAnimGoals.value = withTiming(1, { duration: 400 }, (isFinished) => {
+      fadeAnimGoals.value = withDelay(200, withTiming(1, { duration: 800 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
-      })
+      }))
     });
     await new Promise<void>((resolve) => {
-      fadeAnimDreams.value = withTiming(1, { duration: 400 }, (isFinished) => {
+      fadeAnimDreams.value = withDelay(200, withTiming(1, { duration: 800 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
-      })
+      }))
     });
     await new Promise<void>((resolve) => {
-      fadeAnimChallenges.value = withTiming(1, { duration: 400 }, (isFinished) => {
+      fadeAnimChallenges.value = withDelay(200, withTiming(1, { duration: 800 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
-      })
+      }))
     });
   }
 

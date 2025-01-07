@@ -7,6 +7,8 @@ import * as amplitude from '@amplitude/analytics-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DootooItemEmptyUX from './DootooItemEmptyUX';
 import { ArrowDown } from './svg/arrow-down';
+import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter } from './EventEmitters';
+import { NAVIGATION_SECTION_IDX_OPEN } from './Constants';
 
 const DootooFirstLaunchUX = () => {
   const { isFirstLaunch } = useContext(AppContext);
@@ -112,19 +114,18 @@ const DootooFirstLaunchUX = () => {
       }
     )
     amplitude.track("Onboarding Step 5 Viewed");
-    // await new Promise<void>((resolve) => stepOpacity.value = withDelay(1000, withTiming(0, { duration: 1000 }, (isFinished) => {
-    //   if (isFinished) {
-    //     runOnJS(resolve)();
-    //   }
-    // })));
-    //setCurrentStep(6);
+    await new Promise<void>((resolve) => opacity.value = withDelay(1000, withTiming(0, { duration: 1000 }, (isFinished) => {
+      if (isFinished) {
+        runOnJS(resolve)();
+      }
+    })));
+
+    isFirstLaunch.current = false;
+    await AsyncStorage.setItem('isFirstLaunch', 'false');
+    NavigationEventEmitter.emit(NAVIGATION_EVENT__GO_TO_SECTION, NAVIGATION_SECTION_IDX_OPEN); 
   }
 
-  const executeStep6Animation = async () => {
-    amplitude.track("Onboarding Step 6 Viewed");
-    //isFirstLaunch.current = false;
-    //await AsyncStorage.setItem('isFirstLaunch', 'false');
-  }
+
 
   const initialMount = useRef(true);
   useEffect(() => {
