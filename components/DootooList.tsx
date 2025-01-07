@@ -1849,6 +1849,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         }
                     }}>
                     <ScaleDecorator>
+                        { getIndex() == 0 && (<View style={{height: 4 }}></View>) }
                         { (thingName == THINGNAME_DONE_ITEM) && item.parent && (
                             <View style={styles.doneItemParentContainer}>
                                 <Text style={[styles.doneItemParentText, item.parent.is_done && { textDecorationLine: 'line-through'}]}>{item.parent.text}:</Text>
@@ -2032,7 +2033,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 nestedScrollEnabled={true}
                                 keyboardShouldPersistTaps="handled"
                                 keyExtractor={(item, index) => `${item.uuid}_${item.is_done}`}
-                                ListHeaderComponent={<View style={{ height: 4 }} />}
+
+                                // Keep height zero to prevent ugly space when first row's swipe actions are revealed
+                                ListHeaderComponent={<View style={{ height: 0 }} />}    
+
                                 refreshControl={
                                     <RefreshControl
                                         tintColor="#3E3723"
