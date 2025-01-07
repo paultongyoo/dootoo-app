@@ -1825,7 +1825,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 <Text style={[styles.doneItemParentText, item.parent.is_done && { textDecorationLine: 'line-through'}]}>{item.parent.text}:</Text>
                             </View>
                         )}
-                        <View style={[listStyles.itemContainer, styles.itemContainer]}>
+                        <View style={[listStyles.itemContainer, styles.itemContainer, 
+                                        (thingName == THINGNAME_DONE_ITEM) && {
+                                            borderBottomWidth: 1,
+                                            borderBottomColor: '#3E272333',
+                                        }]}>
                             {item.parent_item_uuid && (thingName != THINGNAME_DONE_ITEM) && (
                                 <View style={styles.childItemSpacer}></View>
                             )}
@@ -1841,7 +1845,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                     <Bulb wxh="28" opacity="0.8" color="#556B2F" strokeWidth='1.5' />
                                 </Pressable>
                             )}
-                            <View style={listStyles.itemNameContainer}>
+                            <View style={[listStyles.itemNameContainer, 
+                                        (thingName == THINGNAME_ITEM) && {
+                                            borderBottomWidth: 1,
+                                            borderBottomColor: '#3E272333',
+                                        }]}>
                                 {((thingName == THINGNAME_ITEM) && item.scheduled_datetime_utc) ?
                                     <Reanimated.View style={[listStyles.timerIconContainer, timerContainerWidthAnimatedStyle]}>
                                         <Pressable hitSlop={10} onPress={() => handleTimerClick(item)}>
@@ -1995,7 +2003,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 nestedScrollEnabled={true}
                                 keyboardShouldPersistTaps="handled"
                                 keyExtractor={(item, index) => `${item.uuid}_${item.is_done}`}
-                                ListHeaderComponent={<View style={{ height: 0 }} />}
+                                ListHeaderComponent={<View style={{ height: 4 }} />}
                                 refreshControl={
                                     <RefreshControl
                                         tintColor="#3E3723"
@@ -2180,15 +2188,14 @@ export const listStyles = StyleSheet.create({
     itemContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingTop: 5
+        // paddingTop: 5,
+        //backgroundColor: 'blue'
     },
     itemNameContainer: {
         marginLeft: 15,                 // Tips had marginLeft 17 - necessary?
         paddingBottom: 10,
         paddingTop: 10,
         paddingRight: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
         flex: 1,
         flexDirection: 'row'
     },

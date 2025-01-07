@@ -283,9 +283,10 @@ export default function DoneScreen() {
     },
     doneItemParentContainer: {
       paddingLeft: 10,
-      paddingTop: 10,
+      paddingTop: 0,
       position: 'relative',
-      top: 6
+      top: 6,
+      //backgroundColor: 'red'
     },
     doneItemParentText: {
       fontSize: 12,
