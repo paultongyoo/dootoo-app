@@ -1,12 +1,12 @@
-import { View, ActivityIndicator, Pressable, StyleSheet, Alert } from 'react-native';
-import { useContext, useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Alert } from 'react-native';
+import { useContext, useState } from 'react';
 import { AppContext } from './AppContext';
-import { useNavigation, usePathname } from 'expo-router';
+import { usePathname } from 'expo-router';
 import Animated, { useSharedValue } from 'react-native-reanimated';
 import { updateItemPublicState } from './Storage';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { UsersRound } from './svg/users-round';
-import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter } from './EventEmitters';
+import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter } from './EventEmitters';
 import { ReactionsDisplay } from './ReactionsDisplay';
 import { NAVIGATION_SECTION_IDX_COMMUNITY } from './Constants';
 
@@ -16,7 +16,6 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
     const pathname = usePathname();
     const { anonymousId, setOpenItems, setDoneItems, refreshCommunityItems } = useContext(AppContext);
 
-    const [isPublic, setIsPublic] = useState(thing.is_public == true);
     const [loading, setLoading] = useState(false);
 
     const handleIsPublicTap = () => {
@@ -24,7 +23,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
             anonymous_id: anonymousId,
             pathname: pathname
         });
-        if (!isPublic) {
+        if (!thing.is_public) {
             Alert.alert(
                 "Share Item with the Community?",
                 "Share this item on the Community Feed to stay motivated, get support, and inspire others working on similar goals.",
