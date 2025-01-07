@@ -293,10 +293,6 @@ export default function ListScreen() {
             return donedList;
           });
 
-          // Add done item to top of done items list
-          //console.log("Adding item to top of done list: " + JSON.stringify(item));
-          setDoneItems(prevItems => [item, ...prevItems])
-
           // Update done state in DB
           item.is_done = true;
           updateItemDoneState(item, () => {
@@ -305,6 +301,10 @@ export default function ListScreen() {
             }
             ProfileCountEventEmitter.emit("incr_done");
           });
+
+          // Add done item to top of done items list
+          //console.log("Adding item to top of done list: " + JSON.stringify(item));
+          setDoneItems(prevItems => [item, ...prevItems])
 
         } else {
 
@@ -393,8 +393,6 @@ export default function ListScreen() {
                       });
 
                       // Asyncronously updated DB with item set done state
-                      // 1.6 TODO The lambda needs to update Done list order to place
-                      //          this family at the top of the list
                       item.is_done = true;
                       updateItemDoneState(item, () => {
                         if (item.is_public) {
@@ -585,12 +583,6 @@ export default function ListScreen() {
 
         // Set item TO Open
         item.is_done = false;
-        updateItemDoneState(item, () => {
-          if (item.is_public) {
-            refreshCommunityItems();
-          }
-          ProfileCountEventEmitter.emit("decr_done");
-        });
 
         // if item is a child
         if (item.parent_item_uuid) {
@@ -607,8 +599,6 @@ export default function ListScreen() {
 
           const [parent] = openItems.filter(obj => obj.uuid == item.parent_item_uuid);
 
-          // If Item's parent is done, convert item to adult and move it above the parent
-          // 1.6 This scenario shouldn't happen with the new rules on this list
           if (parent.is_done) {
             console.warn("Reached unexpected scenario for open page: opening child of done parent.");
           } else {
@@ -646,6 +636,14 @@ export default function ListScreen() {
 
             // 1.7 Also remove from done list
             setDoneItems(prevItems => prevItems.filter(prevItem => prevItem.uuid != item.uuid));
+
+            updateItemDoneState(item, () => {
+              if (item.parent.is_public) {
+                refreshCommunityItems();
+              }
+              ProfileCountEventEmitter.emit("decr_done");
+            });
+    
           }
         } else {
           console.warn("Reached unexpected scenario for list page: Opening a done parent.");

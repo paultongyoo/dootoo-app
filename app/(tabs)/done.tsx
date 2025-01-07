@@ -130,12 +130,6 @@ export default function DoneScreen() {
 
                 // Set item TO Open
                 item.is_done = false;
-                updateItemDoneState(item, async () => {
-                  if (item.is_public) {
-                    refreshCommunityItems();
-                  }
-                  ProfileCountEventEmitter.emit("decr_done");
-                });
 
                 // if item is a child
                 if (item.parent_item_uuid) {
@@ -167,9 +161,12 @@ export default function DoneScreen() {
                       
                       // Clear the item's parent and move to top of the list
                       updateItemHierarchy(item.uuid, null, () => {
-                        if (item.is_public) {       // Presumed unlikely scenario as subitems are private by default
-                          refreshCommunityItems();
-                        }
+                        updateItemDoneState(item, async () => {
+                          if (item.parent.is_public) {
+                            refreshCommunityItems();
+                          }
+                          ProfileCountEventEmitter.emit("decr_done");
+                        });
                       });
                       setOpenItems((prevItems) => {
                         return [{...item, parent_item_uuid: null, parent: null }, ...prevItems];
@@ -182,6 +179,13 @@ export default function DoneScreen() {
                             ? { ...prevItem, is_done: false }
                             : prevItem
                       ));
+
+                      updateItemDoneState(item, async () => {
+                        if (item.parent.is_public) {
+                          refreshCommunityItems();
+                        }
+                        ProfileCountEventEmitter.emit("decr_done");
+                      });
                     }
                   }
                   reopenChild();
@@ -213,12 +217,17 @@ export default function DoneScreen() {
 
                     // 1.7 Prepend reopened item and its done children to the top of the opened items list
                     setOpenItems((prevItems) => [item, ...doneChildren, ...prevItems]);
+
+                    updateItemDoneState(item, async () => {
+                      if (item.is_public) {
+                        refreshCommunityItems();
+                      }
+                      ProfileCountEventEmitter.emit("decr_done");
+                    });
                   }
                   reopenAdult();
                 }
-
-
-
+                
                 amplitude.track("Item Reopen Completed", {
                   anonymous_id: anonymousId.current,
                   pathname: pathname
