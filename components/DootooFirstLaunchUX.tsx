@@ -14,6 +14,7 @@ const DootooFirstLaunchUX = () => {
   const { isFirstLaunch } = useContext(AppContext);
 
   const [currentStep, setCurrentStep] = useState(1);
+  const skipped = useRef(false);
 
   const opacity = useSharedValue(0);
   const stepOpacity = useSharedValue(1);
@@ -84,7 +85,7 @@ const DootooFirstLaunchUX = () => {
   })
   const executeStep4Animation = async () => {
     await new Promise<void>((resolve) => 
-      coachmarkOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+      coachmarkOpacity.value = withTiming(1, { duration: 500 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
@@ -109,11 +110,21 @@ const DootooFirstLaunchUX = () => {
   const executeStep5Animation = async () => {
     coachmarkTranslateX.value = withTiming(BOTTOM_BUTTON_WIDTH_INCL_MARGINS / 2, 
       { 
-        duration: 300,
+        duration: 500,
         easing: Easing.out(Easing.exp)
       }
     )
     amplitude.track("Onboarding Step 5 Viewed");
+    endFirstLaunchUX();
+  }
+
+  const handleSkipTap = () => {
+    amplitude.track("Onboarding Skipped", { step: currentStep });
+    skipped.current = true;
+    endFirstLaunchUX();
+  }
+
+  const endFirstLaunchUX = async () => {
     await new Promise<void>((resolve) => opacity.value = withDelay(1000, withTiming(0, { duration: 1000 }, (isFinished) => {
       if (isFinished) {
         runOnJS(resolve)();
@@ -136,38 +147,31 @@ const DootooFirstLaunchUX = () => {
       return;
     }
 
-    if (currentStep == 2) {
+    if (currentStep == 2 && !skipped.current) {
       stepOpacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
         if (isFinished) {
           runOnJS(executeStep2Animation)();
         }
       });
-    } else if (currentStep == 3) {
+    } else if (currentStep == 3 && !skipped.current) {
       stepOpacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
         if (isFinished) {
           runOnJS(executeStep3Animation)();
         }
       });
-    } else if (currentStep == 4) {
+    } else if (currentStep == 4 && !skipped.current) {
       stepOpacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
         if (isFinished) {
           runOnJS(executeStep4Animation)();
         }
       });
-    } else if (currentStep == 5) {
+    } else if (currentStep == 5 && !skipped.current) {
       stepOpacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
         if (isFinished) {
           runOnJS(executeStep5Animation)();
         }
       });
-    } else if (currentStep == 6) {
-      stepOpacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
-        if (isFinished) {
-          runOnJS(executeStep6Animation)();
-        }
-      });
     }
-
   }, [currentStep])
 
   useFocusEffect(
@@ -213,7 +217,8 @@ const DootooFirstLaunchUX = () => {
     skipButtonText: {
       color: '#3e2723',
       opacity: 0.5,
-      fontSize: 16
+      fontSize: 16,
+      padding: 5
     },
     coachmarksContainer: {
       position: 'absolute',
@@ -229,7 +234,9 @@ const DootooFirstLaunchUX = () => {
 
   return <Animated.View style={[styles.emptyListContainer, { opacity }]}>
     <View style={styles.skipButtonContainer}>
-      <Pressable hitSlop={10} onPress={() => Alert.alert("Implement Me")}>
+      <Pressable hitSlop={10} 
+                 style={({pressed}) => pressed && { backgroundColor: '#3e272310' }} 
+                 onPress={handleSkipTap}>
         <Text style={styles.skipButtonText}>skip</Text>
       </Pressable>
     </View>
@@ -238,7 +245,7 @@ const DootooFirstLaunchUX = () => {
         <>
           <Text style={styles.centerCopy}>doing things{'\n'}can be <Text style={styles.red}>hard</Text>.</Text>
           <Animated.View style={togetherAnimatedOpacity}>
-            <Text style={styles.centerCopy}>doing things{'\n'}<Text style={styles.green}>together is{'\n'}easier</Text>.</Text>
+            <Text style={styles.centerCopy}>doing things{'\n'}<Text style={styles.green}>together can be easier</Text>.</Text>
           </Animated.View>
         </>
       )}

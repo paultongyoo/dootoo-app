@@ -47,6 +47,8 @@ const DootooItemEmptyUX = () => {
 
   useFocusEffect(
     useCallback(() => {
+      //console.log("Inside EmptyItemUX focus effect");
+
       opacity.value = withTiming(1, { duration: 400 }, (isFinished) => {
         if (isFinished) {
           runOnJS(executeCTAAnimation)();
