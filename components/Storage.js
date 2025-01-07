@@ -789,7 +789,7 @@ export const flagTip = async(tip_uuid) => {
 }
 
 // 1.2 Will delete any children of item as well
-export const deleteItem = async(item_uuid) => {
+export const deleteItem = async(item_uuid, callback = null) => {
   try {
     //console.log("Entering delete item, uuid: " + item_uuid);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
@@ -805,6 +805,9 @@ export const deleteItem = async(item_uuid) => {
         item_uuid: item_uuid
       }
     );
+    if (callback) {
+      callback();
+    }
     //console.log("Delete Item Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling Delete Item API:', error);

@@ -489,7 +489,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             // Call asyncronous delete to mark item as deleted in backend to sync database
                             // 1.2  Deleting parent thing will delete its children too in DB
                             // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
-                            if (!thing.newKeyboardEntry) deleteThing(thing.uuid);
+                            if (!thing.newKeyboardEntry) deleteThing(thing.uuid, () => {
+                                if (thing.is_public) {
+                                    refreshCommunityItems();
+                                }
+                            });
 
                             const animationPromises = [];
                             for (var i = index; i <= index + thingSubtasks.length; i++) {
@@ -608,7 +612,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     
             // Call asyncronous delete to mark item as deleted in backend to sync database
             // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
-            if (!thing.newKeyboardEntry) deleteThing(thing.uuid);
+            if (!thing.newKeyboardEntry) deleteThing(thing.uuid, () => {
+                if (thing.is_public) {
+                    refreshCommunityItems();
+                }
+            });
     
             if (thingName == 'tip') {
                 ProfileCountEventEmitter.emit('decr_tips');
