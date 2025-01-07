@@ -446,11 +446,14 @@ export default function ListScreen() {
                       });
                       await Promise.all(collapseAnimationPromises);
 
+                      // 1.7 Future TODO:  Make the following calls atomic to enforce doneAt ordering
+                      
                       // Set each OPEN child as done in backend and incr Profile counter
                       openChildren.forEach((child) => {
                         child.is_done = true;
-                        updateItemDoneState(child);
-                        ProfileCountEventEmitter.emit("incr_done");
+                        updateItemDoneState(child, () => {
+                          ProfileCountEventEmitter.emit("incr_done");
+                        });
                         // We'll defer updating counts until the main item is updated below
                       });
 
