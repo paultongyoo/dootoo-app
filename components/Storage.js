@@ -881,7 +881,7 @@ export const updateItemEventId = async(item_uuid, event_id) => {
   }
 }
 
-export const updateItemPublicState = async(item_uuid, new_public_state) => {
+export const updateItemPublicState = async(item_uuid, new_public_state, callback = null) => {
   try {
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserSr) {
@@ -897,7 +897,10 @@ export const updateItemPublicState = async(item_uuid, new_public_state) => {
         is_public: new_public_state
       }
     );
-    console.log("updateItemPublicState Response Obj: " + JSON.stringify(response.data.body));
+    if (callback) {
+      callback();
+    }
+    //console.log("updateItemPublicState Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateItemPublicState API:', error);
   }
