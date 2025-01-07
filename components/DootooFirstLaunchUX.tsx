@@ -17,7 +17,7 @@ const DootooFirstLaunchUX = () => {
 
   const executeCTAAnimation = async () => {
     await new Promise<void>((resolve) => {
-      fadeTogether.value = withTiming(1, { duration: 800 }, (isFinished) => {
+      fadeTogether.value = withTiming(1, { duration: 1000 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
@@ -30,7 +30,7 @@ const DootooFirstLaunchUX = () => {
 
   useFocusEffect(
     useCallback(() => {
-      opacity.value = withTiming(1, { duration: 800 }, (isFinished) => {
+      opacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
         if (isFinished) {
           runOnJS(executeCTAAnimation)();
         }
