@@ -1830,7 +1830,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 <View style={styles.childItemSpacer}></View>
                             )}
                             {isDoneable && (
-                                <Pressable style={[styles.itemCircleOpen, item.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(item)}></Pressable>
+                                <Pressable hitSlop={10} style={[styles.itemCircleOpen, item.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(item)}></Pressable>
                             )}
                             {(thingName == 'tip') && (
                                 <Pressable style={styles.tipListIconContainer}
