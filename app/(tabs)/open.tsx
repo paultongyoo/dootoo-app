@@ -419,7 +419,28 @@ export default function ListScreen() {
                       });
 
                       // 1.7 Append done item to top of the done list (it's ASSUmed its done children are already on the list)
-                      setDoneItems((prevItems) => [item, ...prevItems]);
+                      setDoneItems((prevItems) => {
+                        
+                        // Two changes needed:
+                        // 1) Insert done item at the top of the done list
+                        // 2) Set is_done=true on all of its done children's parent objects
+
+                        // 1
+                        let prependedList = [item, ...prevItems];
+
+                        // 2
+                        prependedList = prependedList.map(prevItem =>
+                           (prevItem.parent_item_uuid == item.uuid) 
+                              ? { ...prevItem,
+                                parent: {
+                                  ...prevItem.parent,
+                                  is_done: true
+                                }
+                              }
+                              : prevItem);
+                        
+                        return prependedList;
+                      });
                     }
                   },
                   {
@@ -541,7 +562,28 @@ export default function ListScreen() {
                 });
 
                 // 1.7 Append done item to top of the done list (it's ASSUmed its done children are already on the list)
-                setDoneItems((prevItems) => [item, ...prevItems]);
+                setDoneItems((prevItems) => {
+                  
+                  // Two changes needed:
+                  // 1) Insert done item at the top of the done list
+                  // 2) Set is_done=true on all of its done children's parent objects
+
+                  // 1
+                  let prependedList = [item, ...prevItems];
+
+                  // 2
+                  prependedList = prependedList.map(prevItem =>
+                      (prevItem.parent_item_uuid == item.uuid) 
+                        ? { ...prevItem,
+                          parent: {
+                            ...prevItem.parent,
+                            is_done: true
+                          }
+                        }
+                        : prevItem);
+                  
+                  return prependedList;
+                });
 
               } else {
                 console.log("Assuming reaching this log is unexpected given preceding logic tree.")

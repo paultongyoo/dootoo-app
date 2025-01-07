@@ -201,11 +201,22 @@ export default function DoneScreen() {
                     });
 
 
-                    // Remove item from done page
+                    // 1) Remove item from done page, and 2) set any children parent objects to open
                     setDoneItems((prevItems) => {
 
-                      // Create new list from existing excluding the child 
-                      const filteredList = prevItems.filter(prevItem => (prevItem.uuid != item.uuid));
+                      // 1) Create new list from existing excluding the child 
+                      let filteredList = prevItems.filter(prevItem => (prevItem.uuid != item.uuid));
+
+                      // 2)
+                      filteredList = filteredList.map(prevItem =>
+                        (prevItem.parent_item_uuid == item.uuid) 
+                          ? { ...prevItem,
+                            parent: {
+                              ...prevItem.parent,
+                              is_done: false
+                            }
+                          }
+                          : prevItem);
 
                       // Save the new list's order in the DB
                       const uuidArray = filteredList.map((thing) => ({ uuid: thing.uuid }));
