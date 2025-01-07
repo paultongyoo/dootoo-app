@@ -113,7 +113,9 @@ export const handler = async (event) => {
               parent: {
                 select: {
                   uuid: true,
-                  text: true
+                  text: true,
+                  is_done: true,
+                  is_public: true
                 }
               }
             },
@@ -130,7 +132,8 @@ export const handler = async (event) => {
             select: {
               uuid: true,
               text: true,
-              is_done: true
+              is_done: true,
+              is_public: true
             }
           }
         }))

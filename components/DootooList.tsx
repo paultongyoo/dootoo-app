@@ -53,7 +53,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const { anonymousId, username, lastRecordedCount, initializeLocalUser,
         thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap: itemReactionsMap, selectedItem,
         currentlyTappedThing, emptyListCTAFadeOutAnimation, setOpenItems, communityItems, setCommunityItems, setDoneItems,
-        initializeCommunityItems
+        refreshCommunityItems
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [isRefreshing, setRefreshing] = useState(false);
@@ -118,8 +118,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 //console.log("Skipping initial load for user per shouldInitialLoad == false.");
             }
 
-            // If community items hasn't been initialized yet, initialize it!
-            initializeCommunityItems();
+            // If community items haven't been initialized yet, initialize it!
+            if (!communityItems) {
+                refreshCommunityItems();
+            }        
         });
     }, []);
 
@@ -254,7 +256,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     console.log("itemUUIDs.length unexpectedly zero given listArray.length > 0 -- is app in bad state?");
                 }
             } else {
-                console.log(`${thingName} list empty, no counts to refresh.`);
+                console.log(`${thingName} user reactions list empty, no counts to refresh.`);
             }
             ignore = false;
         } else {

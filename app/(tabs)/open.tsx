@@ -31,7 +31,7 @@ import DootooFirstLaunchUX from "@/components/DootooFirstLaunchUX";
 export default function ListScreen() {
   const pathname = usePathname();
   const { anonymousId, openItems, setOpenItems, setDoneItems, isFirstLaunch,
-    thingRowHeights, thingRowPositionXs } = useContext(AppContext);
+    thingRowHeights, thingRowPositionXs, refreshCommunityItems } = useContext(AppContext);
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
@@ -87,9 +87,6 @@ export default function ListScreen() {
       item_uuid: item.uuid
     });
 
-    // Asyncronously update item hierarhcy in DB
-    updateItemHierarchy(item.uuid, null);
-
     console.log("Setting new parent into list");
     setOpenItems((prevItems) => {
 
@@ -120,6 +117,12 @@ export default function ListScreen() {
       return newListToReturn;
     }); // This should update UI only and not invoke any syncronous backend operations
 
+    // Asyncronously update item hierarchy in DB and then refresh community items if item is public
+    updateItemHierarchy(item.uuid, null , () => {
+      if (item.is_public) {
+        refreshCommunityItems();
+      }
+    });
   }
 
   const handleMakeChild = (item, index) => {
@@ -127,12 +130,14 @@ export default function ListScreen() {
     // Get UUID of nearest parent above item to be made into child
     let nearestParentUUID = '';
     let nearestParentText = '';
+    let nearestParentPublic = false;
     for (var i = index - 1; i >= 0; i--) {
       const currItem = openItems[i];
       if (!currItem.parent_item_uuid) {
         console.log("Nearest Parent: " + currItem.text);
         nearestParentUUID = currItem.uuid;
         nearestParentText = currItem.text;
+        nearestParentPublic = currItem.is_public;
         break;
       }
     }
@@ -144,9 +149,6 @@ export default function ListScreen() {
         item_uuid: item.uuid,
         parent_item_uuid: nearestParentUUID
       });
-
-      // Make thing child of nearest parent
-      updateItemHierarchy(item.uuid, nearestParentUUID);
 
       // If item had children, make those children children of nearest parent too
       const childrenOfItem = openItems.filter((prevItem) => prevItem.parent_item_uuid == item.uuid);
@@ -174,6 +176,13 @@ export default function ListScreen() {
             : obj);
 
         return listWithUpdatedItemKids
+      });
+
+      // Make thing child of nearest parent
+      updateItemHierarchy(item.uuid, nearestParentUUID, () => {
+        if (item.is_public || nearestParentPublic) {
+          refreshCommunityItems();
+        }
       });
     }
 
@@ -284,15 +293,18 @@ export default function ListScreen() {
             return donedList;
           });
 
-          // Update done state in DB
-          item.is_done = true;
-          updateItemDoneState(item, () => {
-            ProfileCountEventEmitter.emit("incr_done");
-          });
-
           // Add done item to top of done items list
           //console.log("Adding item to top of done list: " + JSON.stringify(item));
           setDoneItems(prevItems => [item, ...prevItems])
+
+          // Update done state in DB
+          item.is_done = true;
+          updateItemDoneState(item, () => {
+            if (item.parent.is_public) {
+              refreshCommunityItems();
+            }
+            ProfileCountEventEmitter.emit("incr_done");
+          });
 
         } else {
 
@@ -385,6 +397,9 @@ export default function ListScreen() {
                       //          this family at the top of the list
                       item.is_done = true;
                       updateItemDoneState(item, () => {
+                        if (item.is_public) {
+                          refreshCommunityItems();
+                        }
                         ProfileCountEventEmitter.emit("incr_done");
                       });
 
@@ -444,6 +459,9 @@ export default function ListScreen() {
                       // Set item as done in backend and incr Profile counter
                       item.is_done = true;
                       updateItemDoneState(item, () => {
+                        if (item.is_public) {
+                          refreshCommunityItems();
+                        }
                         ProfileCountEventEmitter.emit("incr_done");
                       });
 
@@ -497,11 +515,11 @@ export default function ListScreen() {
               // All the item's kids must be done
               if (doneChildren.length > 0) {
 
-                // Item is a DAWNK with only done kids; set it to done and move it 
-                // 1.6 TODO The lambda needs to update Done list order to place
-                //          this family at the top of the list
                 item.is_done = true;
                 updateItemDoneState(item, () => {
+                  if (item.is_public) {
+                    refreshCommunityItems();
+                  }
                   ProfileCountEventEmitter.emit("incr_done");
                 });
 
@@ -543,6 +561,9 @@ export default function ListScreen() {
             // Item doesn't have any kids, simply set it to done and move it to top of doneAdults
             item.is_done = true;
             updateItemDoneState(item, () => {
+              if (item.is_public) {
+                refreshCommunityItems();
+              }
               ProfileCountEventEmitter.emit("incr_done");
             });
 
@@ -565,6 +586,9 @@ export default function ListScreen() {
         // Set item TO Open
         item.is_done = false;
         updateItemDoneState(item, () => {
+          if (item.is_public) {
+            refreshCommunityItems();
+          }
           ProfileCountEventEmitter.emit("decr_done");
         });
 

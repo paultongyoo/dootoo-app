@@ -61,25 +61,40 @@ export const AppProvider = ({ children }) => {
       }
     }
 
-    const initializeCommunityItems = async () => {
-      if (!communityItems) {
-        console.log("Initializing Community Items...");
-        const responseObj = await loadCommunityItems(1);
-        hasMoreCommunityItems.current = responseObj.hasMore;
-  
-        // Fade out community items layout just in case it's in view
-        await new Promise((resolve) =>
-            communityLayoutOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
-                if (isFinished) {
-                    runOnJS(resolve)();
-                }
-            }));
-  
-        setCommunityItems([...responseObj.items])
-        console.log(`Community Items array initalized with ${pluralize('item', responseObj.items.length)}.`);
-      } else {
-        console.log("Community Items array is non-null, ignoring initialization call");
-      }
+    const refreshCommunityItems = async () => {
+      console.log("Re/Initializing Community Items...");
+
+      // Fade out community items layout just in case it's in view
+      await new Promise((resolve) =>
+        communityLayoutOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+            if (isFinished) {
+                runOnJS(resolve)();
+            }
+        }));
+    
+      // This should cause the community screen to render a loading animation once opacity turned back up
+      setCommunityItems(null);
+
+      await new Promise((resolve) =>
+        communityLayoutOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+            if (isFinished) {
+                runOnJS(resolve)();
+            }
+      }));
+
+      const responseObj = await loadCommunityItems(1);
+      hasMoreCommunityItems.current = responseObj.hasMore;
+
+      // Fade out community items layout just in case it's in view
+      await new Promise((resolve) =>
+          communityLayoutOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+              if (isFinished) {
+                  runOnJS(resolve)();
+              }
+          }));
+
+      setCommunityItems([...responseObj.items])
+      console.log(`Community Items array initalized with ${pluralize('item', responseObj.items.length)}.`);
     }
 
     const resetUserContext = async () => {
@@ -104,7 +119,7 @@ export const AppProvider = ({ children }) => {
             doneItems, setDoneItems,
             communityItems, setCommunityItems,
             hasMoreCommunityItems, communityLayoutOpacity,
-            initializeCommunityItems,
+            refreshCommunityItems,
             username, setUsername,
             anonymousId, setAnonymousId,
             affirmation, setAffirmation,

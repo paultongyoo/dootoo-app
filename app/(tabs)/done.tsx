@@ -47,7 +47,7 @@ import DootooDoneEmptyUX from "@/components/DootooDoneEmptyUX";
 export default function DoneScreen() {
   const pathname = usePathname();
   const { anonymousId, doneItems, setDoneItems, setOpenItems,
-    thingRowHeights, thingRowPositionXs } = useContext(AppContext);
+    thingRowHeights, refreshCommunityItems } = useContext(AppContext);
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
@@ -131,6 +131,9 @@ export default function DoneScreen() {
                 // Set item TO Open
                 item.is_done = false;
                 updateItemDoneState(item, async () => {
+                  if (item.is_public) {
+                    refreshCommunityItems();
+                  }
                   ProfileCountEventEmitter.emit("decr_done");
                 });
 
@@ -163,7 +166,11 @@ export default function DoneScreen() {
                     if (item.parent.is_done) {
                       
                       // Clear the item's parent and move to top of the list
-                      updateItemHierarchy(item.uuid, null);
+                      updateItemHierarchy(item.uuid, null, () => {
+                        if (item.is_public) {       // Presumed unlikely scenario as subitems are private by default
+                          refreshCommunityItems();
+                        }
+                      });
                       setOpenItems((prevItems) => {
                         return [{...item, parent_item_uuid: null, parent: null }, ...prevItems];
                       });

@@ -811,7 +811,7 @@ export const deleteItem = async(item_uuid) => {
   }
 }
 
-export const updateItemHierarchy = async(item_uuid, parent_item_uuid) => {
+export const updateItemHierarchy = async(item_uuid, parent_item_uuid, callback = null) => {
   try {
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
     if (!localUserSr) {
@@ -828,6 +828,9 @@ export const updateItemHierarchy = async(item_uuid, parent_item_uuid) => {
       }
     );
     //console.log("updateItemHierarchy Response Obj: " + JSON.stringify(response.data.body));
+    if (callback) {
+      callback();
+    }
   } catch (error) {
     console.error('Error calling updateItemHierarchy API:', error);
   }
