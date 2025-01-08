@@ -171,7 +171,7 @@ const ProfileModal = ({ username, modalVisible, modalVisibleSetter,
                             </View>
                             {(user.affirmation && user.affirmation.length > 0) ?
                                 <View style={styles.profileDrawerProfileAffirmationContainer}>
-                                    <Text style={styles.profileDrawerProfileAffirmationText}>{user.affirmation}</Text>
+                                    <Text style={styles.profileDrawerProfileAffirmationText}>"{user.affirmation}"</Text>
                                 </View>
                                 : <></>
                             }

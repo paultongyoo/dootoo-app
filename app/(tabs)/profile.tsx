@@ -574,7 +574,7 @@ const ProfileScreen = ({ navigation }) => {
                     </Pressable>
                 ) : (
                     <View style={styles.profileDrawerProfileAffirmationContainer}>
-                        <Text style={styles.profileDrawerProfileAffirmationText}>{affirmation}</Text>
+                        <Text style={styles.profileDrawerProfileAffirmationText}>"{affirmation}"</Text>
                         <View style={{ flexDirection: 'row' }}>
                             {(loadingNewAffirmation) ?
                                 <View style={styles.refreshNameContainer}>
@@ -641,7 +641,7 @@ const ProfileScreen = ({ navigation }) => {
                 <Dialog.Container visible={affirmationDialogVisible} onBackdropPress={handleAffirmationDialogCancel}>
                     <Dialog.Title>Edit Headline</Dialog.Title>
                     <Dialog.Input
-                        multiline={true}
+                        multiline={false}
                         style={affirmationInvalid && styles.dialogTextInput_Invalid}
                         autoFocus={true}
                         onSubmitEditing={handleAffirmationDialogSubmit}
