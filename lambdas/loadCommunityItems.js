@@ -24,19 +24,23 @@ export const handler = async (event) => {
 
   console.log(`Applying skip (${skip}) and take (${take})`);
 
-  const blockedItemIds = await prisma.$queryRaw`
-    SELECT "blocked_item_id"
-    FROM "ItemBlock"
-    GROUP BY "blocked_item_id"
-    HAVING COUNT(*) > 2`;
-  console.log("Number of Items blocked more than twice: " + blockedItemIds.length);
+  // const blockedItemIds = await prisma.$queryRaw`
+  //   SELECT "blocked_item_id"
+  //   FROM "ItemBlock"
+  //   GROUP BY "blocked_item_id"
+  //   HAVING COUNT(*) > 2`;
+  // console.log("Number of Items blocked more than twice: " + blockedItemIds.length);
 
-  const blockedUserIds = await prisma.$queryRaw`
-  SELECT "blocked_user_id"
-  FROM "UserBlock"
-  GROUP BY "blocked_user_id"
-  HAVING COUNT(*) > 2`;
-  console.log("Number of Users blocked more than twice: " + blockedUserIds.length);
+  // const blockedUserIds = await prisma.$queryRaw`
+  // SELECT "blocked_user_id"
+  // FROM "UserBlock"
+  // GROUP BY "blocked_user_id"
+  // HAVING COUNT(*) > 2`;
+  // console.log("Number of Users blocked more than twice: " + blockedUserIds.length);
+
+  // 1.7 TODO, commented out for now as this allows any user to remove any user from system
+  const blockedItemIds = [];
+  const blockedUserIds = [];
 
   let prismaParams = {
     skip, take,
