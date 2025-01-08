@@ -55,9 +55,7 @@ export const handler = async (event) => {
 
     const resultMap = new Map();
     items.forEach((item) => {
-      if (item.userReactions && item.userReactions.length > 0) {
-        resultMap.set(item.uuid, item.userReactions);
-      }
+      resultMap.set(item.uuid, item.userReactions);
     })
     console.log(resultMap);
 
