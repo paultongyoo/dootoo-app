@@ -401,7 +401,7 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
       {(currentStep == 6) && (
         <>
           <Text style={styles.centerCopy}>tap the
-            <Text style={styles.green}> keyboard when using voice is inconvenient</Text>
+            <Text style={styles.green}> keyboard when using voice isn't ideal</Text>
             .</Text>
         </>
       )}
