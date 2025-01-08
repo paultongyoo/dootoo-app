@@ -401,7 +401,7 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
       {(currentStep == 6) && (
         <>
           <Text style={styles.centerCopy}>tap the
-            <Text style={styles.green}> keyboard to add one thing at a time</Text>
+            <Text style={styles.green}> keyboard when using voice is inconvenient</Text>
             .</Text>
         </>
       )}
