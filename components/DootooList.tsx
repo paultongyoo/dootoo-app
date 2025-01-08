@@ -104,6 +104,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const [selectedBlockReason, setSelectedBlockReason] = useState('no_reason');
     const [blockReasonOtherText, setBlockReasonOtherText] = useState('');
 
+    const buttonContainerScaleSV = useSharedValue(1);
+    const buttonContainerAnimatedScale = useAnimatedStyle(() => ({
+        transform: [{ scale: buttonContainerScaleSV.value }],
+    }));
+
     useEffect(() => {
         //console.log("DootooList.useEffect([])");
 
@@ -2072,10 +2077,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             />
                         </Reanimated.View>
                     </>
-                    : <EmptyThingUX />
+                    : <EmptyThingUX buttonContainerScaleSV={buttonContainerScaleSV} />
             }
             {(!hideBottomButtons) ?
-                <View style={listStyles.bottomButtonsContainer}>
+                <Animated.View style={[listStyles.bottomButtonsContainer, buttonContainerAnimatedScale]}>
                     <MicButton
                         buttonHeight={FOOTER_BUTTON_HEIGHT}
                         buttonUnderlayStyle={listStyles.bottomButton_Underlay}
@@ -2085,7 +2090,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         saveNewThingsFunc={saveNewThings}
                         transcribeFunc={transcribeAudioToThings} />
                     <KeyboardButton listArray={listArray} listArraySetterFunc={listArraySetter} />
-                </View>
+                </Animated.View>
                 : <></>
             }
             <ItemMoreModal />

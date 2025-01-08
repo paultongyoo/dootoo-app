@@ -1,7 +1,7 @@
 import { Text, StyleSheet, View, Pressable, Alert, Platform } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 import { AppContext } from './AppContext';
 import * as amplitude from '@amplitude/analytics-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,7 +11,7 @@ import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter } from './Event
 import { NAVIGATION_SECTION_IDX_OPEN } from './Constants';
 import { check, PERMISSIONS, RESULTS, request } from 'react-native-permissions';
 
-const DootooFirstLaunchUX = () => {
+const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
   const { isFirstLaunch } = useContext(AppContext);
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -61,7 +61,7 @@ const DootooFirstLaunchUX = () => {
 
   const executeStep1Animation = async () => {
     await new Promise<void>((resolve) => {
-      fadeTogether.value = withDelay(500, withTiming(1, { duration: 500 }, (isFinished) => {
+      fadeTogether.value = withDelay(1000, withTiming(1, { duration: 1000 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
@@ -196,6 +196,16 @@ const DootooFirstLaunchUX = () => {
           runOnJS(resolve)();
         }
       }))
+    });
+    await new Promise<void>((resolve) => {
+      buttonContainerScaleSV.value = withDelay(200, withSequence(
+        withTiming(1.2, { duration: 300, easing: Easing.out(Easing.ease) }), 
+        withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) }, 
+        (isFinished) => {
+          if (isFinished) {
+            runOnJS(resolve)();
+          }
+      })))
     });
     amplitude.track("Onboarding Step 7 Viewed");
     endFirstLaunchUX();
