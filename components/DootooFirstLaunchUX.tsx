@@ -12,7 +12,7 @@ import { NAVIGATION_SECTION_IDX_OPEN } from './Constants';
 import { check, PERMISSIONS, RESULTS, request } from 'react-native-permissions';
 
 const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
-  const { isFirstLaunch } = useContext(AppContext);
+  const { isFirstLaunch, anonymousId, username } = useContext(AppContext);
 
   const [currentStep, setCurrentStep] = useState(1);
   const skipped = useRef(false);
@@ -68,7 +68,10 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
       }))
     });
 
-    amplitude.track("Onboarding Step 1 Viewed");
+    amplitude.track("Onboarding Step 1 Viewed", {
+      anonymous_id: anonymousId,
+      username: username
+    });
     await new Promise<void>((resolve) => stepOpacity.value = withDelay(2000, withTiming(0, { duration: 500 }, (isFinished) => {
       if (isFinished) {
         runOnJS(resolve)();
@@ -79,7 +82,10 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
   }
 
   const executeStep2Animation = async () => {
-    amplitude.track("Onboarding Step 2 Viewed");
+    amplitude.track("Onboarding Step 2 Viewed", {
+      anonymous_id: anonymousId,
+      username: username
+    });
     await new Promise<void>((resolve) => stepOpacity.value = withDelay(2000, withTiming(0, { duration: 500 }, (isFinished) => {
       if (isFinished) {
         runOnJS(resolve)();
@@ -89,7 +95,10 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
   }
 
   const executeStep3Animation = async () => {
-    amplitude.track("Onboarding Step 3 Viewed");
+    amplitude.track("Onboarding Step 3 Viewed", {
+      anonymous_id: anonymousId,
+      username: username
+    });
     await new Promise<void>((resolve) => stepOpacity.value = withDelay(2000, withTiming(0, { duration: 500 }, (isFinished) => {
       if (isFinished) {
         runOnJS(resolve)();
@@ -105,7 +114,10 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
           runOnJS(resolve)()
         }
       }));
-    amplitude.track("Onboarding Step 4 Viewed");
+    amplitude.track("Onboarding Step 4 Viewed", {
+      anonymous_id: anonymousId,
+      username: username
+    });
     await new Promise<void>((resolve) => stepOpacity.value = withDelay(2000, withTiming(0, { duration: 500 }, (isFinished) => {
       if (isFinished) {
         runOnJS(resolve)();
@@ -115,7 +127,10 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
   }
 
   const executeStep5Animation = async () => {
-    amplitude.track("Onboarding Step 5 Viewed");
+    amplitude.track("Onboarding Step 5 Viewed", {
+      anonymous_id: anonymousId,
+      username: username
+    });
     await new Promise<void>((resolve) => stepOpacity.value = withDelay(2000, withTiming(0, { duration: 500 }, (isFinished) => {
       if (isFinished) {
         runOnJS(resolve)();
@@ -145,7 +160,10 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
           }))
     ];
     await Promise.all(animationPromises);
-    amplitude.track("Onboarding Step 6 Viewed");
+    amplitude.track("Onboarding Step 6 Viewed", {
+      anonymous_id: anonymousId,
+      username: username
+    });
     await new Promise<void>((resolve) => stepOpacity.value = withDelay(2000, withTiming(0, { duration: 500 }, (isFinished) => {
       if (isFinished) {
         runOnJS(resolve)();
@@ -207,12 +225,19 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
           }
       })))
     });
-    amplitude.track("Onboarding Step 7 Viewed");
+    amplitude.track("Onboarding Step 7 Viewed", {
+      anonymous_id: anonymousId,
+      username: username
+    });
     endFirstLaunchUX();
   }
 
   const handleSkipTap = async () => {
-    amplitude.track("Onboarding Skipped", { step: currentStep });
+    amplitude.track("Onboarding Skipped", { 
+      anonymous_id: anonymousId,
+      username: username,
+      step: currentStep
+     });
     skipped.current = true;
     await new Promise<void>((resolve) => stepOpacity.value = withTiming(0, { duration: 500 }, (isFinished) => {
       if (isFinished) {
@@ -278,9 +303,16 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
           if (result === RESULTS.DENIED) {
 
             // The permission has not been requested, so request it.
-            amplitude.track("iOS ATT Prompt Started");
+            amplitude.track("iOS ATT Prompt Started", {
+              anonymous_id: anonymousId,
+              username: username
+            });
             const result = await request(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
-            amplitude.track("iOS ATT Prompt Completed", { result: result });
+            amplitude.track("iOS ATT Prompt Completed", { 
+              anonymous_id: anonymousId,
+              username: username,
+              result: result
+             });
           }
         }
 

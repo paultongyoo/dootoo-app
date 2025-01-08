@@ -64,6 +64,7 @@ const ProfileScreen = ({ navigation }) => {
     const showConfirmationPrompt = () => {
         amplitude.track("User Data Deletion Started", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         Alert.alert(
@@ -75,6 +76,7 @@ const ProfileScreen = ({ navigation }) => {
                     onPress: () => {
                         amplitude.track("User Data Deletion Cancelled", {
                             anonymous_id: anonymousId,
+                            username: username,
                             pathname: pathname
                         });
                     },
@@ -86,6 +88,7 @@ const ProfileScreen = ({ navigation }) => {
                         //console.log('Data Deletion OK Pressed');
                         amplitude.track("User Data Deletion Completed", {
                             anonymous_id: anonymousId,
+                            username: username,
                             pathname: pathname
                         });
                         resetUserData();
@@ -105,6 +108,7 @@ const ProfileScreen = ({ navigation }) => {
     const sendEmail = () => {
         amplitude.track("Email Feedback Link Clicked", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
 
@@ -120,6 +124,7 @@ const ProfileScreen = ({ navigation }) => {
 
         amplitude.track("Email Feedback Link Opened", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
     };
@@ -283,6 +288,7 @@ const ProfileScreen = ({ navigation }) => {
     const handleEditUsername = () => {
         amplitude.track("Edit Username Started", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         usernameTextInputValue.current = username;
@@ -378,6 +384,7 @@ const ProfileScreen = ({ navigation }) => {
     const handleDeleteAffirmation = () => {
         amplitude.track("Delete Headline Started", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
 
@@ -389,6 +396,7 @@ const ProfileScreen = ({ navigation }) => {
                     onPress: async () => {
                         amplitude.track("Delete Headline Cancelled", {
                             anonymous_id: anonymousId,
+                            username: username,
                             pathname: pathname
                         });
                     },
@@ -399,6 +407,7 @@ const ProfileScreen = ({ navigation }) => {
                     onPress: async () => {
                         amplitude.track("Delete Headline Approved", {
                             anonymous_id: anonymousId,
+                            username: username,
                             pathname: pathname
                         });
                         affirmationTextInputValue.current = null;
@@ -412,6 +421,7 @@ const ProfileScreen = ({ navigation }) => {
     const handleEditAffirmation = () => {
         amplitude.track("Edit Headline Started", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         affirmationTextInputValue.current = affirmation;
@@ -437,6 +447,7 @@ const ProfileScreen = ({ navigation }) => {
 
             amplitude.track("Edit Headline Completed", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname,
                 affirmation: affirmationTextInputValue.current
             });
@@ -446,6 +457,7 @@ const ProfileScreen = ({ navigation }) => {
 
             amplitude.track("Edit Headline Submission Invalid", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname,
                 error_type: 'moderation_failed',
                 affirmation: affirmationTextInputValue.current
@@ -456,6 +468,7 @@ const ProfileScreen = ({ navigation }) => {
 
             amplitude.track("Edit Headline Submission Invalid", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname,
                 error_type: 'spam',
                 affirmation: affirmationTextInputValue.current
@@ -467,6 +480,7 @@ const ProfileScreen = ({ navigation }) => {
 
             amplitude.track("Edit Headline Submission Invalid", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname,
                 error_type: 'other',
                 error_reason: body,
@@ -478,6 +492,7 @@ const ProfileScreen = ({ navigation }) => {
 
             amplitude.track("Edit Headline Submission Invalid", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname,
                 error_type: 'unexpected',
                 affirmation: affirmationTextInputValue.current

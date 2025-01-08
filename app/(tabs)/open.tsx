@@ -30,7 +30,7 @@ import DootooFirstLaunchUX from "@/components/DootooFirstLaunchUX";
 
 export default function ListScreen() {
   const pathname = usePathname();
-  const { anonymousId, openItems, setOpenItems, setDoneItems, isFirstLaunch,
+  const { anonymousId, username, openItems, setOpenItems, setDoneItems, isFirstLaunch,
     thingRowHeights, thingRowPositionXs, refreshCommunityItems } = useContext(AppContext);
 
   configureReanimatedLogger({
@@ -70,6 +70,7 @@ export default function ListScreen() {
 
     amplitude.track("Item Made Into Parent", {
       anonymous_id: anonymousId,
+      username: username,
       item_uuid: item.uuid
     });
 
@@ -132,6 +133,7 @@ export default function ListScreen() {
 
       amplitude.track("Item Made Into Child", {
         anonymous_id: anonymousId,
+        username: username,
         item_uuid: item.uuid,
         parent_item_uuid: nearestParentUUID
       });
@@ -185,6 +187,7 @@ export default function ListScreen() {
             onPress: () => {
               amplitude.track("Make Parent into Child Cancelled", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname
               });
             },
@@ -196,6 +199,7 @@ export default function ListScreen() {
               //console.log('Data Deletion OK Pressed');
               amplitude.track("Make Parent into Child Confirmed", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname
               });
               makeChild();
@@ -213,6 +217,7 @@ export default function ListScreen() {
 
       amplitude.track("Item Done Clicked", {
         anonymous_id: anonymousId,
+        username: username,
         pathname: pathname,
         uuid: item.uuid,
         done_state_at_click: item.is_done,
@@ -304,6 +309,7 @@ export default function ListScreen() {
             if (openChildren.length > 0) {
               amplitude.track("Doneify With Kids Prompt Displayed", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname,
                 num_open_kids: openChildren.length
               });
@@ -317,6 +323,7 @@ export default function ListScreen() {
                     onPress: () => {
                       amplitude.track("Doneify With Kids Prompt Cancelled", {
                         anonymous_id: anonymousId,
+                        username: username,
                         pathname: pathname,
                         num_open_kids: openChildren.length
                       });
@@ -328,6 +335,7 @@ export default function ListScreen() {
                     onPress: async () => {
                       amplitude.track("Doneify With Kids Prompt: Delete Chosen", {
                         anonymous_id: anonymousId,
+                        username: username,
                         pathname: pathname,
                         num_open_children: openChildren.length
                       });
@@ -434,6 +442,7 @@ export default function ListScreen() {
                     onPress: async () => {
                       amplitude.track("Doneify With Kids Prompt: Complete Chosen", {
                         anonymous_id: anonymousId,
+                        username: username,
                         pathname: pathname,
                         num_open_children: openChildren.length
                       });

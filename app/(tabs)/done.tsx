@@ -82,6 +82,7 @@ export default function DoneScreen() {
 
       amplitude.track("Item Done Clicked", {
         anonymous_id: anonymousId,
+        username: username,
         pathname: pathname,
         uuid: item.uuid,
         done_state_at_click: item.is_done,
@@ -101,6 +102,7 @@ export default function DoneScreen() {
 
         amplitude.track("Item Reopen Prompt Displayed", {
           anonymous_id: anonymousId.current,
+          username: username,
           pathname: pathname
         });
 
@@ -119,6 +121,7 @@ export default function DoneScreen() {
               onPress: () => {
                 amplitude.track("Item Reopen Cancelled", {
                   anonymous_id: anonymousId.current,
+                  username: username,
                   pathname: pathname
                 });
               },
@@ -188,6 +191,7 @@ export default function DoneScreen() {
                         
                         amplitude.track("Item Reopen Completed", {
                           anonymous_id: anonymousId.current,
+                          username: username,
                           pathname: pathname,
                           item_type: 'child'
                         });
@@ -243,6 +247,7 @@ export default function DoneScreen() {
 
                       amplitude.track("Item Reopen Completed", {
                         anonymous_id: anonymousId.current,
+                        username: username,
                         pathname: pathname,
                         item_type: 'adult'
                       });

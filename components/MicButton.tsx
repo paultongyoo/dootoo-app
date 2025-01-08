@@ -12,7 +12,7 @@ import { Asterisk } from "./svg/asterisk";
 
 const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle, 
                     selectedThing = null, listArray, listArraySetterFunc, transcribeFunc, saveNewThingsFunc }) => {
-    const { anonymousId, lastRecordedCount, emptyListCTAFadeOutAnimation } = useContext(AppContext);
+    const { anonymousId, username, lastRecordedCount, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const pathname = usePathname();
     const [permissionResponse, requestPermission] = Audio.usePermissions();
     const [recording, setRecording] = useState(null);
@@ -48,14 +48,20 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
         //console.log("Logging start time: " + new Date(recordingTimeStart.current).toLocaleString());
         amplitude.track("Recording Started", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         try {
             if (permissionResponse!.status !== 'granted') {
                 //console.log('Requesting permission..');
-                amplitude.track("Recording Permission Prompt Started");
+                amplitude.track("Recording Permission Prompt Started", {
+                    anonymous_id: anonymousId,
+                    username: username
+                });
                 const result = await requestPermission();
                 amplitude.track("Recording Permission Prompt Completed", {
+                    anonymous_id: anonymousId,
+                    username: username,
                     result: (result) ? result.status : '(null)'
                 });
             }
@@ -125,6 +131,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                 //console.error('Failed to start recording', err);
                 amplitude.track("Recording Error Occurred", {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname,
                     error: err
                 });
@@ -187,6 +194,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
 
                 amplitude.track("Recording Processing Started", {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname,
                     stop_type: (isAutoStop) ? 'auto' : 'manual'
                 });
@@ -198,6 +206,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                 //console.log("Number of scheduled items recorded: " + numScheduledItems);
                 amplitude.track("Recording Processing Completed", {
                     anonymous_id: anonymousId,
+                    username: username,
                     flagged: (response == "flagged"),
                     thing_count: (response && response.length >= 0) ? response.length : -1,
                     numScheduledItems: numScheduledItems,
@@ -208,10 +217,12 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                     //console.log(`Audio flagged, displaying alert prompt`);
                     amplitude.track("Recording Flagged", {
                         anonymous_id: anonymousId,
+                        username: username,
                         pathname: pathname
                     });
                     amplitude.track("Recording Flagged Prompt Displayed", {
                         anonymous_id: anonymousId,
+                        username: username,
                         pathname: pathname
                     });
                     Alert.alert(
@@ -224,6 +235,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                                     //console.log('Audio Content Advisory Acknowledgement button Pressed');
                                     amplitude.track("Recording Flagged Prompt Dismissed", {
                                         anonymous_id: anonymousId,
+                                        username: username,
                                         pathname: pathname
                                     });
                                 },
@@ -314,6 +326,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                         //console.log("Did not call setter with updated list, attempting to show toast.");
                         amplitude.track("Empty Recording Toast Displayed", {
                             anonymous_id: anonymousId,
+                            username: username,
                             pathname: pathname
                         });
                         Toast.show({
@@ -359,6 +372,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
         const recordingDuration = (recordingDurationEnd - recordingTimeStart.current) / 1000;
         amplitude.track("Recording Stopped", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             durationSeconds: recordingDuration,
             stop_type: (isAutoStop) ? 'auto' : 'manual'

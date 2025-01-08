@@ -184,6 +184,7 @@ const CommunityScreen = () => {
             }
             amplitude.track("Community Page Loaded", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname,
                 page: page
             });
@@ -416,6 +417,7 @@ const CommunityScreen = () => {
         const handleMoreTap = (item) => {
             amplitude.track(`User Tapped Post More Icon`, {
                 anonymous_id: anonymousId,
+                username: username,
                 uuid: item.uuid
             });
 
@@ -426,6 +428,7 @@ const CommunityScreen = () => {
         const handleReact = async (item, reaction_str = Constants.REACTION_LIKE) => {
             amplitude.track(`User Reacted to Post`, {
                 anonymous_id: anonymousId,
+                username: username,
                 uuid: item.uuid,
                 reaction: reaction_str
             });
@@ -475,6 +478,7 @@ const CommunityScreen = () => {
         const handleUsernameTap = (username) => {
             amplitude.track(`Username Tapped `, {
                 anonymous_id: anonymousId,
+                username: username,
                 uuid: item.uuid
             });
 
@@ -485,6 +489,7 @@ const CommunityScreen = () => {
         const handleTimerClick = (thing) => {
             amplitude.track("Item Timer Icon Tapped", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname,
                 uuid: thing.uuid
             });
@@ -649,6 +654,7 @@ const CommunityScreen = () => {
     const handleReactionsTap = (item) => {
         amplitude.track("Post Reactions Tapped", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         modalItem.current = item;
@@ -662,6 +668,7 @@ const CommunityScreen = () => {
     const handleHideFromCommunity = () => {
         amplitude.track("Item Hide from Public Prompt Displayed", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setItemMoreModalVisible(false);
@@ -671,6 +678,7 @@ const CommunityScreen = () => {
     const handleHideFromCommunityCancel = () => {
         amplitude.track("Item Hide from Public Prompt Cancelled", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setHideFromCommunityDialogVisible(false);
@@ -679,6 +687,7 @@ const CommunityScreen = () => {
     const handleHideFromCommunitySubmit = () => {
         amplitude.track("Item Hide from Public Prompt Approved", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setHideFromCommunityDialogVisible(false);
@@ -704,6 +713,7 @@ const CommunityScreen = () => {
 
             amplitude.track("Profile Blocked", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname,
                 name: username
             });
@@ -718,6 +728,7 @@ const CommunityScreen = () => {
                 "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
             amplitude.track("Block Profile Unexpected Error", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname,
                 name: username
             });
@@ -730,6 +741,7 @@ const CommunityScreen = () => {
 
             amplitude.track("Item Blocked", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname,
                 uuid: item_uuid
             });
@@ -744,6 +756,7 @@ const CommunityScreen = () => {
                 "An unexpected error occurred when attempting to block the post.  We will fix this issue as soon as possible.");
             amplitude.track("Block Item Unexpected Error", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname,
                 uuid: item_uuid
             });
@@ -753,6 +766,7 @@ const CommunityScreen = () => {
     const handleHideUser = () => {
         amplitude.track("Hide User Prompt Displayed", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setItemMoreModalVisible(false);
@@ -762,6 +776,7 @@ const CommunityScreen = () => {
     const handleHideUserCancel = () => {
         amplitude.track("Hide User Prompt Cancelled", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setHideUserDialogVisible(false);
@@ -770,6 +785,7 @@ const CommunityScreen = () => {
     const handleHideUserSubmit = async () => {
         amplitude.track("Hide User Prompt Submitted", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         await submitBlock((modalItem.current) ? modalItem.current.user.name : modalUsername.current, "hide_user");
@@ -779,6 +795,7 @@ const CommunityScreen = () => {
     const handleReportUser = () => {
         amplitude.track("Report User Prompt Displayed", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setItemMoreModalVisible(false);
@@ -788,6 +805,7 @@ const CommunityScreen = () => {
     const handleReportUserCancel = () => {
         amplitude.track("Report User Prompt Cancelled", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setReportUserModalVisible(false);
@@ -805,6 +823,7 @@ const CommunityScreen = () => {
     const handleReportPost = () => {
         amplitude.track("Report Post Prompt Displayed", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setItemMoreModalVisible(false);
@@ -814,6 +833,7 @@ const CommunityScreen = () => {
     const handleReportPostCancel = () => {
         amplitude.track("Report Post Prompt Cancelled", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setReportPostModalVisible(false);

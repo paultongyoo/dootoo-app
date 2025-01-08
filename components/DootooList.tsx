@@ -358,6 +358,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
         amplitude.track("List Item Dragged", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: draggedThing.uuid,
             item_type: (draggedThing.parent_item_uuid) ? 'child' : 'adult'
@@ -374,6 +375,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                 amplitude.track(`Child Dragged Outside Of Family`, {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname,
                     uuid: draggedThing.uuid
                 });
@@ -391,6 +393,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                 amplitude.track(`Child Dragged to New Family`, {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname,
                     uuid: draggedThing.uuid
                 });
@@ -425,6 +428,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                 amplitude.track(`Adult Dragged Into Family`, {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname,
                     uuid: draggedThing.uuid,
                     kid_count: kidCount
@@ -511,6 +515,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                                 amplitude.track(`${thingName} Deleted`, {
                                     anonymous_id: anonymousId,
+                                    username: username,
                                     thing_uuid: listArrayCopy[i].uuid,
                                     thing_type: thingName
                                 });
@@ -617,6 +622,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
             amplitude.track(`${thingName} Deleted`, {
                 anonymous_id: anonymousId,
+                username: username,
                 thing_uuid: thing.uuid,
                 thing_type: thingName
             });
@@ -673,6 +679,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleTimerClick = (thing) => {
         amplitude.track("Item Timer Icon Tapped", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: thing.uuid
         });
@@ -692,6 +699,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleTimerToastEditClick = (thing) => {
         amplitude.track("Edit Schedule Icon Tapped", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: thing.uuid
         });
@@ -703,6 +711,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleScheduleEditDialogCancel = () => {
         amplitude.track("Edit Schedule Dialog Cancelled", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setShowScheduleEditDialog(false);
@@ -711,6 +720,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleScheduleEditDialogClear = () => {
         amplitude.track("Item Schedule Clear Message Displayed", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         Alert.alert(
@@ -723,6 +733,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     onPress: () => {
                         amplitude.track("Item Schedule Clear Message Cancelled", {
                             anonymous_id: anonymousId,
+                            username: username,
                             pathname: pathname
                         });
                     },
@@ -733,6 +744,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     onPress: () => {
                         amplitude.track("Item Schedule Cleared", {
                             anonymous_id: anonymousId,
+                            username: username,
                             pathname: pathname
                         });
                         clearScheduleInfo();
@@ -799,6 +811,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
         amplitude.track("Edit Schedule Dialog Submitted", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: selectedTimerThing.current.uuid
         });
@@ -842,6 +855,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleScheduleEditDialogEditDateClick = () => {
         amplitude.track("Edit Schedule Dialog Date Tapped", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
         });
@@ -859,6 +873,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleScheduleEditDialogEditTimeClick = () => {
         amplitude.track("Edit Schedule Dialog Time Tapped", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
         });
@@ -877,6 +892,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleTimerToastCalendarClick = async (thing) => {
         amplitude.track("Calendar Icon Tapped", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: thing.uuid
         });
@@ -891,6 +907,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             if (calendarUri) {
                 amplitude.track("Calendar App URI Opened", {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname,
                     uuid: thing.uuid
                 });
@@ -906,6 +923,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         const permissionsResponse = await Calendar.requestCalendarPermissionsAsync();
         amplitude.track("Calendar Permissions Requested", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: thing.uuid,
             permissionsResponse: permissionsResponse.status
@@ -922,12 +940,14 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             } else if (editableCalendars.current.length > 1) {
                 amplitude.track("Calendar Selection Dialog Displayed", {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname
                 });
                 setShowCalendarSelectionDialog(true);
             } else if (editableCalendars.current.length == 0) {
                 amplitude.track("No Calendars Found Message Displayed", {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname
                 });
                 Alert.alert(
@@ -939,6 +959,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             onPress: () => {
                                 amplitude.track("No Calendars Found Message Dimissed", {
                                     anonymous_id: anonymousId,
+                                    username: username,
                                     pathname: pathname
                                 });
                             }
@@ -950,6 +971,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         } else {
             amplitude.track("Calendar Permissions Required Displayed", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname
             });
             Alert.alert(
@@ -961,6 +983,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         onPress: () => {
                             amplitude.track("Calendar Permissions Required Dimissed", {
                                 anonymous_id: anonymousId,
+                                username: username,
                                 pathname: pathname
                             });
                         },
@@ -971,6 +994,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         onPress: () => {
                             amplitude.track("Calendar Permissions Required Go to Settings Pressed", {
                                 anonymous_id: anonymousId,
+                                username: username,
                                 pathname: pathname
                             });
                             openAppSettings();
@@ -985,6 +1009,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleCalendarSelectDialogCancel = () => {
         amplitude.track("Calendar Selection Dialog Cancelled", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
         });
@@ -996,6 +1021,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleCalendarSelectDialogSubmission = async () => {
         amplitude.track("Calendar Selection Dialog Submitted", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
         });
@@ -1018,6 +1044,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                 amplitude.track("Calendar Event Created", {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname,
                     uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
                 });
@@ -1033,6 +1060,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 onPress: () => {
                                     amplitude.track("Calendar Event Created Go to Calendar Button Pressed", {
                                         anonymous_id: anonymousId,
+                                        username: username,
                                         pathname: pathname
                                     });
 
@@ -1049,6 +1077,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 onPress: () => {
                                     amplitude.track("Calendar Event Created Message Dimissed", {
                                         anonymous_id: anonymousId,
+                                        username: username,
                                         pathname: pathname
                                     });
                                 }
@@ -1175,6 +1204,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
         amplitude.track("Tap Below List Entry Started", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: newItem.uuid
         });
@@ -1214,6 +1244,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleHideFromCommunity = () => {
         amplitude.track("Item Hide from Public Prompt Displayed", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setItemMoreModalVisible(false);
@@ -1223,6 +1254,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleHideFromCommunityCancel = () => {
         amplitude.track("Item Hide from Public Prompt Cancelled", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setHideFromCommunityDialogVisible(false);
@@ -1231,6 +1263,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleHideFromCommunitySubmit = () => {
         amplitude.track("Item Hide from Public Prompt Approved", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setHideFromCommunityDialogVisible(false);
@@ -1259,6 +1292,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
             amplitude.track("Block Profile Blocked", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname,
                 name: username
             });
@@ -1273,6 +1307,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
             amplitude.track("Block Profile Unexpected Error", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname,
                 name: username
             });
@@ -1282,6 +1317,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleHideUser = () => {
         amplitude.track("Hide User Prompt Displayed", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setItemMoreModalVisible(false);
@@ -1291,6 +1327,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleHideUserCancel = () => {
         amplitude.track("Hide User Prompt Cancelled", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setHideUserDialogVisible(false);
@@ -1299,6 +1336,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleHideUserSubmit = async () => {
         amplitude.track("Hide User Prompt Approved", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         await submitBlock(modalUsername.current, "hide_user");
@@ -1610,6 +1648,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                     amplitude.track("Keyboard Entry Completed", {
                         anonymous_id: anonymousId,
+                        username: username,
                         pathname: pathname,
                         uuid: thing.uuid
                     });
@@ -1627,6 +1666,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                 amplitude.track("Thing Text Edited", {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname,
                     thing_uuid: thing.uuid,
                     thing_type: thingName
@@ -1836,6 +1876,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     onSwipeableWillOpen={(direction) => {
                         amplitude.track(`Swipe ${direction.toUpperCase()} Actions Opened`, {
                             anonymous_id: anonymousId,
+                            username: username,
                             pathname: pathname,
                             thing_uuid: item.uuid,
                             thing_type: thingName

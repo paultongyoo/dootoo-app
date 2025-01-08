@@ -14,13 +14,14 @@ import { NAVIGATION_SECTION_IDX_COMMUNITY } from './Constants';
 const DootooItemSidebar = ({ thing, onReactionsPress }) => {
    
     const pathname = usePathname();
-    const { anonymousId, setOpenItems, setDoneItems, refreshCommunityItems } = useContext(AppContext);
+    const { anonymousId, username, setOpenItems, setDoneItems, refreshCommunityItems } = useContext(AppContext);
 
     const [loading, setLoading] = useState(false);
 
     const handleIsPublicTap = () => {
         amplitude.track("Item Go Public Prompt Displayed", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         if (!thing.is_public) {
@@ -33,6 +34,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                         onPress: () => {
                             amplitude.track("Item Go Public Prompt Cancelled", {
                                 anonymous_id: anonymousId,
+                                username: username,
                                 pathname: pathname
                             });
                         }
@@ -42,6 +44,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                         onPress: async () => {
                             amplitude.track("Item Go Public Prompt Approved", {
                                 anonymous_id: anonymousId,
+                                username: username,
                                 pathname: pathname
                             });
 
@@ -72,6 +75,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                                             onPress: () => {
                                                 amplitude.track("Item Go Public Success: Went to Post", {
                                                     anonymous_id: anonymousId,
+                                                    username: username,
                                                     pathname: pathname
                                                 });
                                                 NavigationEventEmitter.emit(NAVIGATION_EVENT__GO_TO_SECTION, NAVIGATION_SECTION_IDX_COMMUNITY);
@@ -82,6 +86,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                                             onPress: () => {
                                                 amplitude.track("Item Go Public Success: Closed", {
                                                     anonymous_id: anonymousId,
+                                                    username: username,
                                                     pathname: pathname
                                                 });                                           
                                             },
@@ -96,6 +101,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
         } else {
             amplitude.track("Item Hide from Public Prompt Displayed", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname
             });
             Alert.alert(
@@ -107,6 +113,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                         onPress: () => {
                             amplitude.track("Item Hide from Public Prompt Cancelled", {
                                 anonymous_id: anonymousId,
+                                username: username,
                                 pathname: pathname
                             });
                         },

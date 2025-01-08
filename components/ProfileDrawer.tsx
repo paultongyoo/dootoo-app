@@ -93,7 +93,8 @@ const ProfileScreen = ({ navigation }) => {
 
   const showConfirmationPrompt = () => {
     amplitude.track("User Data Deletion Started", {
-      anonymous_id: anonymousId.current,
+      anonymous_id: anonymousId,
+      username: username,
       pathname: pathname
     });
     Alert.alert(
@@ -104,7 +105,8 @@ const ProfileScreen = ({ navigation }) => {
           text: 'Cancel',
           onPress: () => {
             amplitude.track("User Data Deletion Cancelled", {
-              anonymous_id: anonymousId.current,
+              anonymous_id: anonymousId,
+              username: username,
               pathname: pathname
             });
           },
@@ -115,7 +117,8 @@ const ProfileScreen = ({ navigation }) => {
           onPress: () => {
             //console.log('Data Deletion OK Pressed');
             amplitude.track("User Data Deletion Completed", {
-              anonymous_id: anonymousId.current,
+              anonymous_id: anonymousId,
+              username: username,
               pathname: pathname
             });
             resetUserData();
@@ -134,7 +137,8 @@ const ProfileScreen = ({ navigation }) => {
 
   const sendEmail = () => {
     amplitude.track("Email Feedback Link Clicked", {
-      anonymous_id: anonymousId.current,
+      anonymous_id: anonymousId,
+      username: username,
       pathname: pathname
     });
 
@@ -149,7 +153,8 @@ const ProfileScreen = ({ navigation }) => {
     Linking.openURL(url).catch(err => console.error('Error opening email client:', err));
 
     amplitude.track("Email Feedback Link Opened", {
-      anonymous_id: anonymousId.current,
+      anonymous_id: anonymousId,
+      username: username,
       pathname: pathname
     });
   };
@@ -273,7 +278,8 @@ const ProfileScreen = ({ navigation }) => {
 
   const handleEditUsername = () => {
     amplitude.track("Edit Username Started", {
-      anonymous_id: anonymousId.current,
+      anonymous_id: anonymousId,
+      username: username,
       pathname: pathname
     });
     usernameTextInputValue.current = username;
@@ -318,7 +324,8 @@ const ProfileScreen = ({ navigation }) => {
       setLoadingNewUsername(false);
 
       amplitude.track("Edit Username Completed", {
-        anonymous_id: anonymousId.current,
+        anonymous_id: anonymousId,
+        username: username,
         pathname: pathname,
         username: usernameTextInputValue.current
       });
@@ -327,7 +334,8 @@ const ProfileScreen = ({ navigation }) => {
       setDupeUsernameDialogVisible(true);
 
       amplitude.track("Edit Username Submission Invalid", {
-        anonymous_id: anonymousId.current,
+        anonymous_id: anonymousId,
+        username: username,
         pathname: pathname,
         error_type: 'dupe',
         username: usernameTextInputValue.current
@@ -337,7 +345,8 @@ const ProfileScreen = ({ navigation }) => {
       setUsernameModerationFailedDialogVisible(true);
 
       amplitude.track("Edit Username Submission Invalid", {
-        anonymous_id: anonymousId.current,
+        anonymous_id: anonymousId,
+        username: username,
         pathname: pathname,
         error_type: 'moderation_failed',
         username: usernameTextInputValue.current
@@ -347,7 +356,8 @@ const ProfileScreen = ({ navigation }) => {
       setUsernameSpammingFailedDialogVisible(true);
 
       amplitude.track("Edit Username Submission Invalid", {
-        anonymous_id: anonymousId.current,
+        anonymous_id: anonymousId,
+        username: username,
         pathname: pathname,
         error_type: 'spam',
         username: usernameTextInputValue.current
@@ -357,7 +367,7 @@ const ProfileScreen = ({ navigation }) => {
       setUsernameUnexpectedDialogVisible(true);
 
       amplitude.track("Edit Username Submission Invalid", {
-        anonymous_id: anonymousId.current,
+        anonymous_id: anonymousId
         pathname: pathname,
         error_type: 'unexpected',
         username: usernameTextInputValue.current
@@ -383,7 +393,8 @@ const ProfileScreen = ({ navigation }) => {
       <Pressable style={styles.profileDrawerCloseContainer}
         onPress={() => {
           amplitude.track("Profile Drawer Closed", {
-            anonymous_id: anonymousId.current,
+            anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
           });
           navigation.closeDrawer();
