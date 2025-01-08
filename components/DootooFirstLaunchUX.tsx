@@ -191,6 +191,7 @@ const DootooFirstLaunchUX = () => {
 
   useFocusEffect(
     useCallback(() => {
+      console.log("Inside FirstLaunchUX useFocusEffect");
 
       const displayATTPrompt = async() => {
           if (Platform.OS == 'ios') {
@@ -202,13 +203,13 @@ const DootooFirstLaunchUX = () => {
                   const result = await request(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
                   amplitude.track("iOS ATT Prompt Completed", { result: result });
               }
-
-              opacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
-                if (isFinished) {
-                  runOnJS(executeStep1Animation)();
-                }
-              });
           }
+
+          opacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
+            if (isFinished) {
+              runOnJS(executeStep1Animation)();
+            }
+          });
       }
       displayATTPrompt();
 
