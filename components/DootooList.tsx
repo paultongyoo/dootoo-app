@@ -1,5 +1,5 @@
 import { View, Text, ActivityIndicator, Pressable, TextInput, Keyboard, AppState, StyleSheet, Platform, Alert } from 'react-native';
-import { useState, useRef, useContext, useEffect } from 'react';
+import { useState, useRef, useContext, useEffect, useCallback } from 'react';
 import Reanimated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -7,7 +7,7 @@ import { AppContext } from './AppContext';
 import Toast from 'react-native-toast-message';
 import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
-import { usePathname } from 'expo-router';
+import { useFocusEffect, usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
 import { blockUser, enrichItem, loadItemsCounts, loadItemsReactions, loadLocalListLastCachedPage, OPEN_ITEM_LIST_KEY, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemPublicState, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
 import * as Calendar from 'expo-calendar';
@@ -215,6 +215,12 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         };
     }, [appState]);
 
+    useFocusEffect(
+        useCallback(() => {
+            refreshThingReactions();
+        }, [])
+    );
+
 
     // 1.7:  Currently refreshThingReactions will only be called on foregrounding the app from background
     //       otherwise reactions are expected to be refreshed on full pull downs (i.e. as part of loadItems result)
@@ -225,10 +231,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         let ignore = false;
         if (!ignore) {
             ignore = true;
-            console.log(`Refreshing latest ${thingName} reactions: ${new Date(Date.now()).toLocaleString()}`);
             if (listArray.filter(thing => thing.is_public && !thing.newKeyboardEntry).length > 0) {
                 const filteredItemUUIDs = listArray.filter(thing => thing.is_public && !thing.newKeyboardEntry).map(thing => thing.uuid);
                 if (filteredItemUUIDs.length > 0) {
+                    console.log(`Refreshing latest ${thingName} reactions: ${new Date(Date.now()).toLocaleString()}`);
                     itemReactionsMap.current = await loadItemsReactions(filteredItemUUIDs);
                     //console.log("Loaded Reactions: " + JSON.stringify(itemReactionsMap.current));
                     if (itemReactionsMap.current) {
