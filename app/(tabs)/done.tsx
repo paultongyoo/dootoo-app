@@ -185,6 +185,12 @@ export default function DoneScreen() {
                           refreshCommunityItems();
                         }
                         ProfileCountEventEmitter.emit("decr_done");
+                        
+                        amplitude.track("Item Reopen Completed", {
+                          anonymous_id: anonymousId.current,
+                          pathname: pathname,
+                          item_type: 'child'
+                        });
                       });
                     }
                   }
@@ -234,15 +240,16 @@ export default function DoneScreen() {
                         refreshCommunityItems();
                       }
                       ProfileCountEventEmitter.emit("decr_done");
+
+                      amplitude.track("Item Reopen Completed", {
+                        anonymous_id: anonymousId.current,
+                        pathname: pathname,
+                        item_type: 'adult'
+                      });
                     });
                   }
                   reopenAdult();
                 }
-
-                amplitude.track("Item Reopen Completed", {
-                  anonymous_id: anonymousId.current,
-                  pathname: pathname
-                });
               },
             },
           ],
@@ -318,10 +325,6 @@ export default function DoneScreen() {
   }
 
   const renderRightActions = (item, index, handleThingDeleteFunc, handleMoveToTopFunc, insertRecordingAction) => {
-
-    // Used as part of visibility rules of Move To Top action (don't display if already at top of parent list)
-    const idxOfParent =
-      (item.parent_item_uuid) ? doneItems.findIndex(prevItem => prevItem.uuid == item.parent_item_uuid) : -999;
 
     return (
       <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
