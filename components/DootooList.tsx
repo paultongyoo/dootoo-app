@@ -709,7 +709,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             pathname: pathname
         });
         Alert.alert(
-            "Clear Schedule",
+            "Delete Schedule",
             `Are you sure you want to remove the schedule from this item? ` +
             `${(selectedTimerThing.current.event_id) ? 'This will delete your calendar event as well.' : ''}`,
             [
@@ -2203,7 +2203,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     </View>
                 }
                 <Dialog.Button label="Cancel" onPress={handleScheduleEditDialogCancel} />
-                <Dialog.Button label="Clear" onPress={handleScheduleEditDialogClear} />
+                <Dialog.Button label="Delete" onPress={handleScheduleEditDialogClear} />
                 <Dialog.Button label="Submit" onPress={handleScheduleEditDialogSubmission} />
             </Dialog.Container>
         </View>
