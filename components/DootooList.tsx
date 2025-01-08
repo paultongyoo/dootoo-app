@@ -1786,13 +1786,19 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 const thingsToMove = shallowListCopy.splice(getIndex(), thingsToCollapse.length);
 
                 // If thing is a child, ASSume the user wants to move the thing to the top
-                // of the family, else move it to the top of their entire list            
+                // of the family, else move it to the top of their entire list  
+                let newArray;          
                 if (selectedThing.parent_item_uuid) {
                     const parentIndex = shallowListCopy.findIndex(thing => thing.uuid == selectedThing.parent_item_uuid);
-                    return insertArrayAfter(shallowListCopy, thingsToMove, parentIndex);
+                    newArray = insertArrayAfter(shallowListCopy, thingsToMove, parentIndex);
                 } else {
-                    return thingsToMove.concat(shallowListCopy);
+                    newArray = thingsToMove.concat(shallowListCopy);
                 }
+
+                const uuidArray = newArray.map((thing) => ({ uuid: thing.uuid }));
+                saveThingOrderFunc(uuidArray);
+
+                return newArray;
             });
         }
 
@@ -1826,6 +1832,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 const shallowListCopy = prevThings.map(thing => thing);
                 const thingsToMove = shallowListCopy.splice(getIndex(), thingsToCollapse.length);
                 shallowListCopy.splice(previousIndex.current, 0, ...thingsToMove);
+
+                const uuidArray = shallowListCopy.map((thing) => ({ uuid: thing.uuid }));
+                saveThingOrderFunc(uuidArray);
+
                 return shallowListCopy;
             });
         }
