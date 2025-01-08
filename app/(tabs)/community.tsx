@@ -182,6 +182,11 @@ const CommunityScreen = () => {
                 }
                 setRefreshing(false);
             }
+            amplitude.track("Community Page Loaded", {
+                anonymous_id: anonymousId,
+                pathname: pathname,
+                page: page
+            });
             updateCommunityPage(page);
         }
     }, [page, refreshKey])
@@ -409,11 +414,22 @@ const CommunityScreen = () => {
         const [reactionModalVisible, setReactionModalVisible] = useState(false);
 
         const handleMoreTap = (item) => {
+            amplitude.track(`User Tapped Post More Icon`, {
+                anonymous_id: anonymousId,
+                uuid: item.uuid
+            });
+
             modalItem.current = item;
             setItemMoreModalVisible(true);
         }
 
         const handleReact = async (item, reaction_str = Constants.REACTION_LIKE) => {
+            amplitude.track(`User Reacted to Post`, {
+                anonymous_id: anonymousId,
+                uuid: item.uuid,
+                reaction: reaction_str
+            });
+
             const hasReaction = item.userReactions.some(reaction => (reaction.user.name == username) && (reaction.reaction.name == reaction_str));
             if (!hasReaction) {
                 reactToItem(item.uuid, reaction_str);
@@ -457,6 +473,11 @@ const CommunityScreen = () => {
         }
 
         const handleUsernameTap = (username) => {
+            amplitude.track(`Username Tapped `, {
+                anonymous_id: anonymousId,
+                uuid: item.uuid
+            });
+
             modalUsername.current = username;
             setProfileModalVisible(true);
         }
@@ -626,6 +647,10 @@ const CommunityScreen = () => {
     };
 
     const handleReactionsTap = (item) => {
+        amplitude.track("Post Reactions Tapped", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
         modalItem.current = item;
         modelItemReactionCounts.current = generateReactionCountObject(item.userReactions);
         modalItemReactions.current = item.userReactions;
@@ -677,7 +702,7 @@ const CommunityScreen = () => {
         const wasBlockSuccessful = await blockUser(username, block_reason_str);
         if (wasBlockSuccessful) {
 
-            amplitude.track("Block Profile Blocked", {
+            amplitude.track("Profile Blocked", {
                 anonymous_id: anonymousId,
                 pathname: pathname,
                 name: username
@@ -743,7 +768,7 @@ const CommunityScreen = () => {
     }
 
     const handleHideUserSubmit = async () => {
-        amplitude.track("Hide User Prompt Approved", {
+        amplitude.track("Hide User Prompt Submitted", {
             anonymous_id: anonymousId,
             pathname: pathname
         });
@@ -752,11 +777,19 @@ const CommunityScreen = () => {
     }
 
     const handleReportUser = () => {
+        amplitude.track("Report User Prompt Displayed", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
         setItemMoreModalVisible(false);
         setReportUserModalVisible(true);
     }
 
     const handleReportUserCancel = () => {
+        amplitude.track("Report User Prompt Cancelled", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
         setReportUserModalVisible(false);
     }
 
@@ -770,11 +803,19 @@ const CommunityScreen = () => {
     }
 
     const handleReportPost = () => {
+        amplitude.track("Report Post Prompt Displayed", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
         setItemMoreModalVisible(false);
         setReportPostModalVisible(true);
     }
 
     const handleReportPostCancel = () => {
+        amplitude.track("Report Post Prompt Cancelled", {
+            anonymous_id: anonymousId,
+            pathname: pathname
+        });
         setReportPostModalVisible(false);
     }
 
