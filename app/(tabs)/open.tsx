@@ -39,20 +39,6 @@ export default function ListScreen() {
   });
 
   useEffect(() => {
-    const displayATTPrompt = async() => {
-        if (Platform.OS == 'ios') {
-            const result = await check(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
-            if (result === RESULTS.DENIED) {
-
-                // The permission has not been requested, so request it.
-                amplitude.track("iOS ATT Prompt Started");
-                const result = await request(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
-                amplitude.track("iOS ATT Prompt Completed", { result: result });
-            }
-        }
-    }
-    displayATTPrompt();
-
     const checkFirstLaunch = async () => {
         const launchStatus = await AsyncStorage.getItem('isFirstLaunch');
         if (launchStatus === null) {

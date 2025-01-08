@@ -9,6 +9,7 @@ const AMPLITUDE_KEY_PROD = "ac9cdda8bd0d54ba50553219f407d353";
 import { setJSExceptionHandler } from "react-native-exception-handler";
 import { Alert, AppState, BackHandler, Platform } from "react-native";
 import { checkOpenAPIStatus } from "@/components/BackendServices";
+import { check, PERMISSIONS, RESULTS, request } from "react-native-permissions";
 
 export default function StackLayout() {
   const pathname = usePathname();
@@ -26,6 +27,20 @@ export default function StackLayout() {
     };
     const subscription = AppState.addEventListener("change", handleAppStateChange);
     checkOpenAPIHealth();
+
+    const displayATTPrompt = async() => {
+        if (Platform.OS == 'ios') {
+            const result = await check(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
+            if (result === RESULTS.DENIED) {
+
+                // The permission has not been requested, so request it.
+                amplitude.track("iOS ATT Prompt Started");
+                const result = await request(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
+                amplitude.track("iOS ATT Prompt Completed", { result: result });
+            }
+        }
+    }
+    displayATTPrompt();
 
     return () => {
       subscription.remove();
