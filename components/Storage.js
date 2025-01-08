@@ -1097,7 +1097,7 @@ export const resetAllData = async () => {
       throw new Error(response.data.body);
     }
   } catch (e) {
-    console.error('Error calling deleteTip API:', error);
+    console.error('Error calling resetAllData API:', e);
   }
 };
 
