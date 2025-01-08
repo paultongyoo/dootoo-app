@@ -1,4 +1,4 @@
-import { Text, StyleSheet, View, Pressable, Alert } from 'react-native';
+import { Text, StyleSheet, View, Pressable, Alert, Platform } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
@@ -9,6 +9,7 @@ import DootooItemEmptyUX from './DootooItemEmptyUX';
 import { ArrowDown } from './svg/arrow-down';
 import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter } from './EventEmitters';
 import { NAVIGATION_SECTION_IDX_OPEN } from './Constants';
+import { check, PERMISSIONS, RESULTS, request } from 'react-native-permissions';
 
 const DootooFirstLaunchUX = () => {
   const { isFirstLaunch } = useContext(AppContext);
@@ -190,11 +191,27 @@ const DootooFirstLaunchUX = () => {
 
   useFocusEffect(
     useCallback(() => {
-      opacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
-        if (isFinished) {
-          runOnJS(executeStep1Animation)();
-        }
-      });
+
+      const displayATTPrompt = async() => {
+          if (Platform.OS == 'ios') {
+              const result = await check(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
+              if (result === RESULTS.DENIED) {
+
+                  // The permission has not been requested, so request it.
+                  amplitude.track("iOS ATT Prompt Started");
+                  const result = await request(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
+                  amplitude.track("iOS ATT Prompt Completed", { result: result });
+              }
+
+              opacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
+                if (isFinished) {
+                  runOnJS(executeStep1Animation)();
+                }
+              });
+          }
+      }
+      displayATTPrompt();
+
       return () => {
         opacity.value = withTiming(0, { duration: 400 }, (isFinished) => {
           if (isFinished) {
