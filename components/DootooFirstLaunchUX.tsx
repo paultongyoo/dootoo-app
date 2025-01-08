@@ -231,7 +231,7 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
 
   const initialMount = useRef(true);
   useEffect(() => {
-    console.log("Inside FirstLaunchUX.useEffect([currentStep]): " + currentStep);
+    //console.log("Inside FirstLaunchUX.useEffect([currentStep]): " + currentStep);
 
     // Discard initial mount assuming step 1 rendering handled by FocusEffect
     if (initialMount.current) {
