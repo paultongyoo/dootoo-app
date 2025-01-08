@@ -16,6 +16,10 @@ const DootooFirstLaunchUX = () => {
 
   const [currentStep, setCurrentStep] = useState(1);
   const skipped = useRef(false);
+  const skipOpacity = useSharedValue(1);
+  const skipAnimatedOpacity = useAnimatedStyle(() => {
+    return { opacity: skipOpacity.value }
+  })
 
   const opacity = useSharedValue(0);
   const stepOpacity = useSharedValue(1);
@@ -33,6 +37,20 @@ const DootooFirstLaunchUX = () => {
   const coachmarkTranslateX = useSharedValue(
     BOTTOM_BUTTON_WIDTH_INCL_MARGINS / 2 * -1
   );
+
+  const fadeAnimGoals = useSharedValue(0);
+  const goalsAnimatedOpacity = useAnimatedStyle(() => {
+    return { opacity: fadeAnimGoals.value }
+  })
+  const fadeAnimDreams = useSharedValue(0);
+  const dreamsAnimatedOpacity = useAnimatedStyle(() => {
+    return { opacity: fadeAnimDreams.value }
+  })
+
+  const fadeAnimChallenges = useSharedValue(0);
+  const challengesAnimatedOpacity = useAnimatedStyle(() => {
+    return { opacity: fadeAnimChallenges.value }
+  })
 
   // Step 1
   const fadeTogether = useSharedValue(0);
@@ -128,31 +146,82 @@ const DootooFirstLaunchUX = () => {
     ];
     await Promise.all(animationPromises);
     amplitude.track("Onboarding Step 6 Viewed");
-    endFirstLaunchUX();
-  }
-
-  const handleSkipTap = () => {
-    amplitude.track("Onboarding Skipped", { step: currentStep });
-    skipped.current = true;
-    endFirstLaunchUX();
-  }
-
-  const endFirstLaunchUX = async () => {
-    await new Promise<void>((resolve) => opacity.value = withDelay(1000, withTiming(0, { duration: 1000 }, (isFinished) => {
+    await new Promise<void>((resolve) => stepOpacity.value = withDelay(2000, withTiming(0, { duration: 500 }, (isFinished) => {
       if (isFinished) {
         runOnJS(resolve)();
       }
     })));
+    setCurrentStep(7)
+  }
 
+  const executeStep7Animation = async () => {
+    const animationPromises = [
+      new Promise<void>((resolve) =>
+        stepOpacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
+          if (isFinished) {
+            runOnJS(resolve)()
+          }
+        })),
+      new Promise<void>((resolve) =>
+        coachmarkOpacity.value = withTiming(0, { duration: 500 }, (isFinished) => {
+          if (isFinished) {
+            runOnJS(resolve)();
+          }
+        })),
+      new Promise<void>((resolve) =>
+        skipOpacity.value = withTiming(0, { duration: 500 }, (isFinished) => {
+          if (isFinished) {
+            runOnJS(resolve)();
+          }
+        }))
+    ];
+    await Promise.all(animationPromises);
+    await new Promise<void>((resolve) => {
+      fadeAnimGoals.value = withDelay(200, withTiming(1, { duration: 800 }, (isFinished) => {
+        if (isFinished) {
+          runOnJS(resolve)();
+        }
+      }))
+    });
+    await new Promise<void>((resolve) => {
+      fadeAnimDreams.value = withDelay(200, withTiming(1, { duration: 800 }, (isFinished) => {
+        if (isFinished) {
+          runOnJS(resolve)();
+        }
+      }))
+    });
+    await new Promise<void>((resolve) => {
+      fadeAnimChallenges.value = withDelay(200, withTiming(1, { duration: 800 }, (isFinished) => {
+        if (isFinished) {
+          runOnJS(resolve)();
+        }
+      }))
+    });
+    amplitude.track("Onboarding Step 7 Viewed");
+    endFirstLaunchUX();
+  }
+
+  const handleSkipTap = async () => {
+    amplitude.track("Onboarding Skipped", { step: currentStep });
+    skipped.current = true;
+    await new Promise<void>((resolve) => stepOpacity.value = withTiming(0, { duration: 500 }, (isFinished) => {
+      if (isFinished) {
+        runOnJS(resolve)();
+      }
+    }));
+    setCurrentStep(7)
+  }
+
+  const endFirstLaunchUX = async () => {
     isFirstLaunch.current = false;
     await AsyncStorage.setItem('isFirstLaunch', 'false');
-    NavigationEventEmitter.emit(NAVIGATION_EVENT__GO_TO_SECTION, NAVIGATION_SECTION_IDX_OPEN);
   }
 
 
 
   const initialMount = useRef(true);
   useEffect(() => {
+    console.log("Inside FirstLaunchUX.useEffect([currentStep]): " + currentStep);
 
     // Discard initial mount assuming step 1 rendering handled by FocusEffect
     if (initialMount.current) {
@@ -186,54 +255,64 @@ const DootooFirstLaunchUX = () => {
       });
     } else if (currentStep == 6 && !skipped.current) {
       executeStep6Animation();
+    } else if (currentStep == 7) {
+      executeStep7Animation();
     }
   }, [currentStep])
 
   useFocusEffect(
     useCallback(() => {
-      console.log("Inside FirstLaunchUX useFocusEffect");
+      const displayATTPrompt = async () => {
+        if (Platform.OS == 'ios') {
+          const result = await check(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
+          if (result === RESULTS.DENIED) {
 
-      const displayATTPrompt = async() => {
-          if (Platform.OS == 'ios') {
-              const result = await check(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
-              if (result === RESULTS.DENIED) {
-
-                  // The permission has not been requested, so request it.
-                  amplitude.track("iOS ATT Prompt Started");
-                  const result = await request(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
-                  amplitude.track("iOS ATT Prompt Completed", { result: result });
-              }
+            // The permission has not been requested, so request it.
+            amplitude.track("iOS ATT Prompt Started");
+            const result = await request(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
+            amplitude.track("iOS ATT Prompt Completed", { result: result });
           }
+        }
 
-          opacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
-            if (isFinished) {
-              runOnJS(executeStep1Animation)();
-            }
-          });
+        opacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
+          if (isFinished) {
+            runOnJS(executeStep1Animation)();
+          }
+        });
       }
       displayATTPrompt();
 
       return () => {
         opacity.value = withTiming(0, { duration: 400 }, (isFinished) => {
           if (isFinished) {
-            fadeTogether.value = 0;
+            runOnJS(resetState)();
           }
         });
       }
     }, [])
   );
 
+  const resetState = () => {
+    skipped.current = false;
+    fadeTogether.value = 0;
+    coachmarkTranslateX.value = BOTTOM_BUTTON_WIDTH_INCL_MARGINS / 2 * -1
+    fadeAnimGoals.value = 0;
+    fadeAnimDreams.value = 0;
+    fadeAnimChallenges.value = 0;
+    skipOpacity.value = 1;
+    setCurrentStep(1);
+  }
+
   const styles = StyleSheet.create({
     emptyListContainer: {
       flex: 1,
-      justifyContent: 'center',
+      justifyContent: 'center'
     },
     centerCopy: {
       fontSize: 40,
       color: '#3E2723',
       paddingLeft: 30,
-      paddingRight: 60,
-      paddingBottom: 20
+      paddingRight: 60
     },
     red: {
       color: '#A23E48'
@@ -249,7 +328,7 @@ const DootooFirstLaunchUX = () => {
     skipButtonText: {
       color: '#3e2723',
       opacity: 0.5,
-      fontSize: 16,
+      fontSize: 20,
       padding: 5
     },
     coachmarksContainer: {
@@ -265,13 +344,13 @@ const DootooFirstLaunchUX = () => {
   })
 
   return <Animated.View style={[styles.emptyListContainer, { opacity }]}>
-    <View style={styles.skipButtonContainer}>
+    <Animated.View style={[styles.skipButtonContainer, skipAnimatedOpacity]}>
       <Pressable hitSlop={10}
         style={({ pressed }) => pressed && { backgroundColor: '#3e272310' }}
         onPress={handleSkipTap}>
         <Text style={styles.skipButtonText}>skip</Text>
       </Pressable>
-    </View>
+    </Animated.View>
     <Animated.View style={stepAnimatedOpacity}>
       {(currentStep == 1) && (
         <>
@@ -314,6 +393,23 @@ const DootooFirstLaunchUX = () => {
           <Text style={styles.centerCopy}>tap the
             <Text style={styles.green}> keyboard to add one thing at a time</Text>
             .</Text>
+        </>
+      )}
+      {(currentStep == 7) && (
+        <>
+          <Text style={styles.centerCopy}>what are your</Text>
+          <Animated.View>
+            <Text style={[styles.centerCopy, styles.green]}>tasks?</Text>
+          </Animated.View>
+          <Animated.View style={goalsAnimatedOpacity}>
+            <Text style={[styles.centerCopy, styles.green]}>goals?</Text>
+          </Animated.View>
+          <Animated.View style={dreamsAnimatedOpacity}>
+            <Text style={[styles.centerCopy, styles.green]}>dreams?</Text>
+          </Animated.View>
+          <Animated.View style={challengesAnimatedOpacity}>
+            <Text style={[styles.centerCopy, styles.green]}>challenges?</Text>
+          </Animated.View>
         </>
       )}
     </Animated.View>
