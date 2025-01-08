@@ -108,7 +108,7 @@ const DootooFirstLaunchUX = () => {
   const executeStep6Animation = async () => {
     const animationPromises = [
       new Promise<void>((resolve) =>
-        stepOpacity.value = withTiming(1, { duration: 2000 }, (isFinished) => {
+        stepOpacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
           if (isFinished) {
             runOnJS(resolve)()
           }
