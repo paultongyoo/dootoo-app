@@ -365,7 +365,7 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
       {(currentStep == 1) && (
         <>
           <Text style={styles.centerCopy}>doing things{'\n'}can be <Text style={styles.red}>hard</Text>.</Text>
-          <Animated.View style={togetherAnimatedOpacity}>
+          <Animated.View style={[{ paddingTop: 20 }, togetherAnimatedOpacity]}>
             <Text style={styles.centerCopy}>doing things{'\n'}<Text style={styles.green}>together can be easier</Text>.</Text>
           </Animated.View>
         </>
