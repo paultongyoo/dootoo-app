@@ -1,17 +1,11 @@
 import { Platform, View, StyleSheet, Text, Pressable, Image } from "react-native";
 import Animated from "react-native-reanimated";
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 
 const DootooHeader = ({ navigation, route, options }) => {
-
-    const insets = useSafeAreaInsets();
-
-
     const styles = StyleSheet.create({
         headerContainer: {
             backgroundColor: '#FAF3E0',
-            height: insets.top, // (Platform.OS == 'ios') ? 100 : 90,
+            height: (Platform.OS == 'ios') ? 100 : 90,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.2,
