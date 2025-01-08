@@ -20,9 +20,6 @@ export const handler = async (event) => {
       where: {
         uuid: {
           in: itemUUIDs,
-        },
-        user: {
-          id: user.id
         }
       },
       select: {
@@ -58,7 +55,9 @@ export const handler = async (event) => {
 
     const resultMap = new Map();
     items.forEach((item) => {
-      resultMap.set(item.uuid, item.userReactions);
+      if (item.userReactions && item.userReactions.length > 0) {
+        resultMap.set(item.uuid, item.userReactions);
+      }
     })
     console.log(resultMap);
 

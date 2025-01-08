@@ -1,13 +1,13 @@
 import { AppContext } from "@/components/AppContext";
-import { generateReactionCountObject, isThingOverdue, timeAgo } from "@/components/Helpers";
-import { blockItem, blockUser, loadCommunityItems, reactToItem, updateItemPublicState } from "@/components/Storage";
+import { generateReactionCountObject, isThingOverdue, pluralize, timeAgo } from "@/components/Helpers";
+import { blockItem, blockUser, loadCommunityItems, loadItemsReactions, reactToItem, updateItemPublicState } from "@/components/Storage";
 import { CircleUserRound } from "@/components/svg/circle-user-round";
 import { EllipsisVertical } from "@/components/svg/ellipsis-vertical";
 import { EyeOff } from "@/components/svg/eye-off";
 import { Flag } from "@/components/svg/flag";
 import { ThumbUp } from "@/components/svg/thumb-up";
 import { useFocusEffect, usePathname } from "expo-router";
-import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { StyleSheet, View, ActivityIndicator, FlatList, Text, Alert, Pressable, RefreshControl, Platform } from "react-native";
 import Modal from "react-native-modal";
 import * as amplitude from '@amplitude/analytics-react-native';
@@ -27,8 +27,8 @@ import { Clock } from "@/components/svg/clock";
 
 const CommunityScreen = () => {
     const pathname = usePathname();
-    const { username, anonymousId, setOpenItems, setDoneItems, 
-            communityItems, setCommunityItems, hasMoreCommunityItems, communityLayoutOpacity } = useContext(AppContext);
+    const { username, anonymousId, setOpenItems, setDoneItems,
+        communityItems, setCommunityItems, hasMoreCommunityItems, communityLayoutOpacity } = useContext(AppContext);
     const [itemMoreModalVisible, setItemMoreModalVisible] = useState(false);
     const [hideFromCommunityDialogVisible, setHideFromCommunityDialogVisible] = useState(false);
     const [hideUserDialogVisible, setHideUserDialogVisible] = useState(false);
@@ -77,8 +77,41 @@ const CommunityScreen = () => {
                     }));
             }
             fadeInLayout();
+
+            refreshCommunityReactions();
         }, [])
     )
+
+    const refreshCommunityReactions = async () => {
+        if (communityItems && communityItems.length > 0) {
+            console.log("Refreshing community screen reactions...");
+            const itemUUIDs = communityItems.map(item => item.uuid);
+            const itemReactionsMap = await loadItemsReactions(itemUUIDs);
+            if (itemReactionsMap) {
+                console.log("Returned map with " + pluralize("reaction", itemReactionsMap.size));
+                setCommunityItems(prevItems => {
+                    let arrayToUpdate = [...prevItems];
+                    let itemsRefreshed = 0
+                    for (const uuid in itemReactionsMap) {
+                        if (itemReactionsMap.hasOwnProperty(uuid)) {
+                            const returnedReactions = itemReactionsMap[uuid];
+                            arrayToUpdate = arrayToUpdate.map(item =>
+                                (item.uuid == uuid)
+                                    ? { ...item, userReactions: returnedReactions }
+                                    : item
+                            )
+                            itemsRefreshed += 1;
+                        }
+                    }
+                    console.log(`${pluralize('item', itemsRefreshed)} refreshed.`)
+                    return arrayToUpdate;
+                });
+            } else {
+                console.log("Received null item reactions map -- unexpected?");
+
+            }
+        }
+    }
 
     const initialItemsMount = useRef(true);
     useEffect(() => {
@@ -475,8 +508,8 @@ const CommunityScreen = () => {
                     <View style={styles.mainLineTextContainer}>
                         {item.scheduled_datetime_utc && (
                             <View style={styles.timerIconContainer}>
-                                <Pressable hitSlop={10} style={({pressed}) => pressed && { backgroundColor: '#3e272310'}}
-                                           onPress={() => handleTimerClick(item)}>
+                                <Pressable hitSlop={10} style={({ pressed }) => pressed && { backgroundColor: '#3e272310' }}
+                                    onPress={() => handleTimerClick(item)}>
                                     {(isThingOverdue(item) && !item.is_done)
                                         ? <Clock wxh="20" color="#FF0000" />
                                         : <Clock wxh="20" color="#556B2F" />
@@ -491,8 +524,8 @@ const CommunityScreen = () => {
                             <Text style={styles.bullet}>{'\u2022'}</Text>
                             {child.scheduled_datetime_utc && (
                                 <View style={styles.timerIconContainer}>
-                                    <Pressable hitSlop={10} style={({pressed}) => pressed && { backgroundColor: '#3e272310'}}
-                                               onPress={() => handleTimerClick(child)}>
+                                    <Pressable hitSlop={10} style={({ pressed }) => pressed && { backgroundColor: '#3e272310' }}
+                                        onPress={() => handleTimerClick(child)}>
                                         {(isThingOverdue(child) && !child.is_done)
                                             ? <Clock wxh="15" color="#FF0000" />
                                             : <Clock wxh="15" color="#556B2F" />
