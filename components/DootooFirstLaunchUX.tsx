@@ -293,7 +293,7 @@ const DootooFirstLaunchUX = () => {
       )}
       {(currentStep == 6) && (
         <>
-          <Text style={styles.centerCopy}>Tap the
+          <Text style={styles.centerCopy}>tap the
             <Text style={styles.green}> keyboard to add one thing at a time</Text>
             .</Text>
         </>
