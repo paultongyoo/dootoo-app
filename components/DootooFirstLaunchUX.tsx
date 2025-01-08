@@ -42,7 +42,7 @@ const DootooFirstLaunchUX = () => {
 
   const executeStep1Animation = async () => {
     await new Promise<void>((resolve) => {
-      fadeTogether.value = withDelay(500, withTiming(1, { duration: 1000 }, (isFinished) => {
+      fadeTogether.value = withDelay(500, withTiming(1, { duration: 500 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
@@ -50,7 +50,7 @@ const DootooFirstLaunchUX = () => {
     });
 
     amplitude.track("Onboarding Step 1 Viewed");
-    await new Promise<void>((resolve) => stepOpacity.value = withDelay(800, withTiming(0, { duration: 1000 }, (isFinished) => {
+    await new Promise<void>((resolve) => stepOpacity.value = withDelay(2000, withTiming(0, { duration: 500 }, (isFinished) => {
       if (isFinished) {
         runOnJS(resolve)();
       }
@@ -61,7 +61,7 @@ const DootooFirstLaunchUX = () => {
 
   const executeStep2Animation = async () => {
     amplitude.track("Onboarding Step 2 Viewed");
-    await new Promise<void>((resolve) => stepOpacity.value = withDelay(1000, withTiming(0, { duration: 1000 }, (isFinished) => {
+    await new Promise<void>((resolve) => stepOpacity.value = withDelay(2000, withTiming(0, { duration: 500 }, (isFinished) => {
       if (isFinished) {
         runOnJS(resolve)();
       }
@@ -71,7 +71,7 @@ const DootooFirstLaunchUX = () => {
 
   const executeStep3Animation = async () => {
     amplitude.track("Onboarding Step 3 Viewed");
-    await new Promise<void>((resolve) => stepOpacity.value = withDelay(1000, withTiming(0, { duration: 1000 }, (isFinished) => {
+    await new Promise<void>((resolve) => stepOpacity.value = withDelay(2000, withTiming(0, { duration: 500 }, (isFinished) => {
       if (isFinished) {
         runOnJS(resolve)();
       }
@@ -87,7 +87,7 @@ const DootooFirstLaunchUX = () => {
         }
       }));
     amplitude.track("Onboarding Step 4 Viewed");
-    await new Promise<void>((resolve) => stepOpacity.value = withDelay(1000, withTiming(0, { duration: 1000 }, (isFinished) => {
+    await new Promise<void>((resolve) => stepOpacity.value = withDelay(2000, withTiming(0, { duration: 500 }, (isFinished) => {
       if (isFinished) {
         runOnJS(resolve)();
       }
@@ -97,7 +97,7 @@ const DootooFirstLaunchUX = () => {
 
   const executeStep5Animation = async () => {
     amplitude.track("Onboarding Step 5 Viewed");
-    await new Promise<void>((resolve) => stepOpacity.value = withDelay(1000, withTiming(0, { duration: 1000 }, (isFinished) => {
+    await new Promise<void>((resolve) => stepOpacity.value = withDelay(2000, withTiming(0, { duration: 500 }, (isFinished) => {
       if (isFinished) {
         runOnJS(resolve)();
       }
@@ -108,7 +108,7 @@ const DootooFirstLaunchUX = () => {
   const executeStep6Animation = async () => {
     const animationPromises = [
       new Promise<void>((resolve) =>
-        stepOpacity.value = withTiming(1, { duration: 1000 }, (isFinished) => {
+        stepOpacity.value = withTiming(1, { duration: 2000 }, (isFinished) => {
           if (isFinished) {
             runOnJS(resolve)()
           }
