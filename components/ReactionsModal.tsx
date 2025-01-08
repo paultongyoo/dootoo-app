@@ -57,15 +57,28 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
         },
         reactionContainer: {
             flexDirection: 'row',
-            paddingBottom: 10
+            paddingBottom: 15
         },
         reactionIcon: {
-       
+            justifyContent: 'center',
+            alignItems: 'center'
+        },
+        reactionNameContainer: {
+            marginLeft: 10,
+            borderBottomWidth: 0.75,
+            borderBottomColor: "#3e272333",
+            flex: 1
         },
         reactionUsername: {
             fontWeight: 'bold',
-            fontSize: 16,
-            color: '#3e2723'
+            fontSize: 15,
+            color: '#556B2F'
+        },
+        reactionAffirmation: {
+            fontWeight: 'normal',
+            fontSize: 14,
+            color: '#3e272399',
+            paddingBottom: 10
         },
         moreIconContainer: {
             
@@ -175,8 +188,9 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
                                 }                                   
                             </View>
                             <Pressable onPress={() => onUsernamePress(item.user.name)} 
-                                       style={({pressed}) => [{ paddingHorizontal: 10 }, pressed && { backgroundColor: '#3e272310'}]}>
+                                       style={({pressed}) => [styles.reactionNameContainer, pressed && { backgroundColor: '#3e272310'}]}>
                                 <Text style={styles.reactionUsername}>{item.user.name}</Text>
+                                {item.user.affirmation && (<Text style={styles.reactionAffirmation}>"{item.user.affirmation}"</Text>) }
                             </Pressable>
                         </View>
                     }
