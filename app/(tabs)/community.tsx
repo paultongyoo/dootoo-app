@@ -76,7 +76,9 @@ const CommunityScreen = () => {
                         }
                     }));
             }
-            fadeInLayout();
+            if (communityLayoutOpacity.value == 0) {
+                fadeInLayout();
+            }
 
             refreshCommunityReactions();
         }, [])
