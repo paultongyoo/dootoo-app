@@ -90,13 +90,14 @@ const CommunityScreen = () => {
             const itemUUIDs = communityItems.map(item => item.uuid);
             const itemReactionsMap = await loadItemsReactions(itemUUIDs);
             if (itemReactionsMap) {
-                console.log("Returned map with " + pluralize("reaction", itemReactionsMap.size));
+                //console.log("Item Reactions Map Response: " + JSON.stringify(itemReactionsMap));
                 setCommunityItems(prevItems => {
                     let arrayToUpdate = [...prevItems];
                     let itemsRefreshed = 0
                     for (const uuid in itemReactionsMap) {
                         if (itemReactionsMap.hasOwnProperty(uuid)) {
                             const returnedReactions = itemReactionsMap[uuid];
+                            //console.log("Returned reaction: " + JSON.stringify(returnedReactions));
                             arrayToUpdate = arrayToUpdate.map(item =>
                                 (item.uuid == uuid)
                                     ? { ...item, userReactions: returnedReactions }
@@ -110,8 +111,9 @@ const CommunityScreen = () => {
                 });
             } else {
                 console.log("Received null item reactions map -- unexpected?");
-
             }
+        } else {
+            console.log("Community array empty, unexpected?");
         }
     }
 
