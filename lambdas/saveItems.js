@@ -62,26 +62,27 @@ const saveItems = async (anonymous_id, items_str) => {
             const completion = await openai.chat.completions.create({
                 model: "gpt-4o-mini",
                 messages: [
-                  {
-                    "role": "system",
-                    "content": `
+                    {
+                        "role": "system",
+                        "content": `
                           Validate that the user input is not random characters.
                           Return your analysis in the following JSON format:
                           {
                             invalid: <true if random characters, false otherwise>
                           }`
-                  },
-                  { "role": "user", "content": `User-provided input: ${array_item.text}` }
-                ], 
+                    },
+                    { "role": "user", "content": `User-provided input: ${array_item.text}` }
+                ],
                 response_format: { "type": "json_object" },
                 user: anonymous_id
-              });
-              var validationAnalysis = JSON.parse(completion.choices[0].message.content);
-              console.log("validationAnalysis: " + JSON.stringify(validationAnalysis));
-              if (validationAnalysis.invalid) {
+            });
+            var validationAnalysis = JSON.parse(completion.choices[0].message.content);
+            //console.log("validationAnalysis: " + JSON.stringify(validationAnalysis));
+            if (validationAnalysis.invalid) {
+                console.log("Pushing record to flaggedItems and skipping upsert: " + array_item.uuid);
                 flaggedItems.push({ uuid: array_item.uuid, reason: 'random_characters' });
                 continue;
-              }
+            }
 
             // Encrypt item text before saving
             try {
@@ -94,65 +95,73 @@ const saveItems = async (anonymous_id, items_str) => {
                 const encryptedString = encryptedData.CiphertextBlob.toString('base64');
                 //console.log("Encrypted Item Text.");
 
-                const transactionOperations = [
-                    prisma.item.upsert({
-                        where: { uuid: array_item.uuid },
-                        create: {
-                            uuid: array_item.uuid,
-                            user: {
-                                connect: { id: user.id }
-                            },
-                            text: encryptedString,
-                            is_child: array_item.is_child,  // TODO: Deprecate
-                            rank_idx: i,
-                            is_done: array_item.is_done,
-                            is_deleted: array_item.is_deleted,
-                            scheduled_datetime_utc: array_item.scheduled_datetime_utc,
-                            event_id: array_item.event_id,
-                            ...((array_item.parent_item_uuid) && {
-                                parent: {
-                                    connect: {
-                                        uuid: array_item.parent_item_uuid
-                                    }
-                                }
-                            })
+                const item = await prisma.item.upsert({
+                    where: { uuid: array_item.uuid },
+                    create: {
+                        uuid: array_item.uuid,
+                        user: {
+                            connect: { id: user.id }
                         },
-                        update: {
-                            text: encryptedString,
-                            is_child: array_item.is_child,  // TODO: Deprecate
-                            rank_idx: i,
-                            is_done: array_item.is_done,
-                            is_deleted: array_item.is_deleted,
-                            scheduled_datetime_utc: array_item.scheduled_datetime_utc,
-                            event_id: array_item.event_id,
-                            ...((array_item.parent_item_uuid) && {
-                                parent: {
-                                    connect: {
-                                        uuid: array_item.parent_item_uuid
-                                    }
+                        text: encryptedString,
+                        is_child: array_item.is_child,  // TODO: Deprecate
+                        rank_idx: i,
+                        is_done: array_item.is_done,
+                        is_deleted: array_item.is_deleted,
+                        scheduled_datetime_utc: array_item.scheduled_datetime_utc,
+                        event_id: array_item.event_id,
+                        ...((array_item.parent_item_uuid) && {
+                            parent: {
+                                connect: {
+                                    uuid: array_item.parent_item_uuid
                                 }
-                            })
-                        }
-                    })
-                ];
+                            }
+                        })
+                    },
+                    update: {
+                        text: encryptedString,
+                        is_child: array_item.is_child,  // TODO: Deprecate
+                        rank_idx: i,
+                        is_done: array_item.is_done,
+                        is_deleted: array_item.is_deleted,
+                        scheduled_datetime_utc: array_item.scheduled_datetime_utc,
+                        event_id: array_item.event_id,
+                        ...((array_item.parent_item_uuid) && {
+                            parent: {
+                                connect: {
+                                    uuid: array_item.parent_item_uuid
+                                }
+                            }
+                        })
+                    }
+                });
+                //console.log("Upserted item: " + JSON.stringify(item));
 
+                // If the item has an open parent and its parent is public,
+                // update the parent's public desc and updatedAt
                 if (array_item.parent_item_uuid) {
-                    transactionOperations.push(
+                    const parent = await prisma.item.findUnique({
+                        where: {
+                            uuid: array_item.parent_item_uuid,
+                            is_done: false,
+                            is_public: true,
+                            is_deleted: false
+                        },
+                        select: {
+                            id: true
+                        }
+                    });
+                    if (parent) {
                         prisma.item.update({
                             where: {
-                                uuid: array_item.parent_item_uuid,
-                                is_done: false,
-                                is_public: true,
-                                is_deleted: false
+                                id: parent.id
                             },
                             data: {
                                 public_update_desc: 'updated',
                                 public_updatedAt: new Date()
                             }
                         })
-                    )
+                    }
                 }
-                const [item, updatedParent] = await prisma.$transaction(transactionOperations);
 
                 // Retrieve embedding for task and insert into table
                 //console.log(`Begin retrieval and storing of embedding for item ${item.id}...`);
@@ -165,8 +174,10 @@ const saveItems = async (anonymous_id, items_str) => {
                 //console.log("Embedding: " + embedding);
                 const embeddingArray = embedding.join(',');
                 //console.log("Embedding Array: " + embeddingArray);
-                await prisma.$executeRawUnsafe(`UPDATE "Item" SET embedding = '[` +
-                    embeddingArray + `]'::vector WHERE id = ` + item.id + `;`);
+                const query = `UPDATE "Item" SET embedding = '[` +
+                    embeddingArray + `]'::vector WHERE id = ` + item.id + `;`
+                //console.log("Raw query: " + query);
+                await prisma.$executeRawUnsafe(query);
                 //console.log("End retreival and storage complete ..");
 
                 itemSaveCount += 1;
