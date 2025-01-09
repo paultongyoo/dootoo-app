@@ -49,20 +49,20 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                             });
 
                             setLoading(true);
-                            
-                            if (thing.is_done) {
-                                setDoneItems(prevItems => prevItems.map((prevItem) => 
-                                    (prevItem.uuid == thing.uuid)
-                                        ? { ...prevItem, is_public: true }
-                                        : prevItem  ));
-                            } else {
-                                setOpenItems(prevItems => prevItems.map((prevItem) => 
-                                    (prevItem.uuid == thing.uuid)
-                                        ? { ...prevItem, is_public: true }
-                                        : prevItem  ));
-                            }
                             updateItemPublicState(thing.uuid, true, () => {
                                 setLoading(false);
+
+                                if (thing.is_done) {
+                                    setDoneItems(prevItems => prevItems.map((prevItem) => 
+                                        (prevItem.uuid == thing.uuid)
+                                            ? { ...prevItem, is_public: true }
+                                            : prevItem  ));
+                                } else {
+                                    setOpenItems(prevItems => prevItems.map((prevItem) => 
+                                        (prevItem.uuid == thing.uuid)
+                                            ? { ...prevItem, is_public: true }
+                                            : prevItem  ));
+                                }
 
                                 refreshCommunityItems();
 
@@ -128,20 +128,21 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                             });
 
                             setLoading(true);
-                            
-                            if (thing.is_done) {
-                                setDoneItems(prevItems => prevItems.map((prevItem) => 
-                                    (prevItem.uuid == thing.uuid)
-                                        ? { ...prevItem, is_public: false }
-                                        : prevItem  ));   
-                            } else {
-                                setOpenItems(prevItems => prevItems.map((prevItem) => 
-                                    (prevItem.uuid == thing.uuid)
-                                        ? { ...prevItem, is_public: false }
-                                        : prevItem  ));   
-                            }
                             updateItemPublicState(thing.uuid, false, () => {
                                 setLoading(false);
+
+                                if (thing.is_done) {
+                                    setDoneItems(prevItems => prevItems.map((prevItem) => 
+                                        (prevItem.uuid == thing.uuid)
+                                            ? { ...prevItem, is_public: false }
+                                            : prevItem  ));   
+                                } else {
+                                    setOpenItems(prevItems => prevItems.map((prevItem) => 
+                                        (prevItem.uuid == thing.uuid)
+                                            ? { ...prevItem, is_public: false }
+                                            : prevItem  ));   
+                                }
+
                                 refreshCommunityItems();
                             });
                         },
