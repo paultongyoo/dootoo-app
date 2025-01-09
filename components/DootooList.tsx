@@ -1754,8 +1754,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 : 'some';
                     Alert.alert(`${pluralize('Item', flaggedUuids.length)} Flagged`,
                         `${messageModifier} of your items ${flaggedUuids.length == 1 ? 'has' : 'have'} been ` +
-                        `flagged as violating our community rules.  ${flaggedUuids.length == 1 ? 'It has' : 'They have'} NOT been ` +
-                        `saved to our database and will be removed on your next refresh.  To maintain the integrity of your list, ` +
+                        `flagged as violating our community rules and will be removed on your next refresh.  To maintain the integrity of your list, ` +
                         `modify the text to abide by community rules or delete the ${pluralize('item', flaggedUuids.length, false)}.`);
 
                     return prevItems.map(prevItem =>
