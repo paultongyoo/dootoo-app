@@ -1,6 +1,6 @@
 import { View, Text, ActivityIndicator, Pressable, TextInput, Keyboard, AppState, StyleSheet, Platform, Alert } from 'react-native';
 import { useState, useRef, useContext, useEffect, useCallback } from 'react';
-import Reanimated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Reanimated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from "react-native-reanimated";
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { AppContext } from './AppContext';
@@ -1449,6 +1449,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         const timerOpacityAnimatedStyle = useAnimatedStyle(() => {
             return { opacity: timerOpacity.value }
         });
+        const timerScale = useSharedValue(1);
+        const timerScaleAnimatedStyle = useAnimatedStyle(() => ({
+            transform: [{ scale: timerScale.value }],
+        }));
         const textOpacity = useSharedValue(1);
         const textOpacityAnimatedStyle = useAnimatedStyle(() => {
             return { opacity: textOpacity.value }
@@ -1510,24 +1514,34 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             // If item has a schedule but the timer container width is zero
             // ASSume the schedule was added to an existing item through enrichment
             // and thus fade in the timer
-            if (item.scheduled_datetime_utc && (timerContainerWidth.value == 0)) {
-                const animateTimerAppearance = async () => {
-                    await new Promise<void>((resolve) => {
-                        timerContainerWidth.value = withTiming(30, { duration: 300 }, (isFinished) => {
-                            if (isFinished) {
-                                runOnJS(resolve)();
-                            }
-                        })
-                    });
-                    await new Promise<void>((resolve) => {
-                        timerOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
-                            if (isFinished) {
-                                runOnJS(resolve)();
-                            }
-                        })
-                    });
-                };
-                animateTimerAppearance();
+            if (item.scheduled_datetime_utc) {
+                if (timerContainerWidth.value == 0) {
+                    const animateTimerAppearance = async () => {
+                        await new Promise<void>((resolve) => {
+                            timerContainerWidth.value = withTiming(30, { duration: 300 }, (isFinished) => {
+                                if (isFinished) {
+                                    runOnJS(resolve)();
+                                }
+                            })
+                        });
+                        await new Promise<void>((resolve) => {
+                            timerOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                                if (isFinished) {
+                                    runOnJS(resolve)();
+                                }
+                            })
+                        });
+                    };
+                    animateTimerAppearance();
+                } else {
+
+                    // ASSume the timer is already visible but has changed due to a user edit
+                    // Pulse timer icon to inform users the schedule has changed
+                    timerScale.value = withSequence(
+                        withTiming(1.4, { duration: 400, easing: Easing.out(Easing.cubic) }),
+                        withDelay(200, withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) }))
+                    );
+                }
             }
         }, [item.scheduled_datetime_utc]);
 
@@ -1981,18 +1995,18 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 borderBottomWidth: 1,
                                 borderBottomColor: '#3E272333',
                             }]}>
-                                {((thingName == THINGNAME_ITEM) && item.scheduled_datetime_utc) ?
+                                {(item.scheduled_datetime_utc) && (
                                     <Reanimated.View style={[listStyles.timerIconContainer, timerContainerWidthAnimatedStyle]}>
                                         <Pressable hitSlop={10} onPress={() => handleTimerClick(item)}>
-                                            <Reanimated.View style={timerOpacityAnimatedStyle}>
+                                            <Animated.View style={[timerOpacityAnimatedStyle, timerScaleAnimatedStyle]}>
                                                 {(isThingOverdue(item) && !item.is_done)
                                                     ? <Clock wxh="20" color="#FF0000" />
                                                     : <Clock wxh="20" color="#556B2F" />
                                                 }
-                                            </Reanimated.View>
+                                            </Animated.View>
                                         </Pressable>
                                     </Reanimated.View>
-                                    : <></>}
+                                )}
                                 {(currentlyTappedThing.current && (currentlyTappedThing.current.uuid == item.uuid) && renderTappedField.current) ?
                                     <TextInput
                                         ref={textInputRef}
