@@ -9,8 +9,7 @@ import { ProfileCountEventEmitter } from "@/components/EventEmitters";
 import * as amplitude from '@amplitude/analytics-react-native';
 
 import {
-  StyleSheet, Pressable, Alert,
-  Platform,
+  StyleSheet, Pressable, Alert
 } from "react-native";
 import { AppContext } from '@/components/AppContext';
 import Reanimated, {
@@ -24,7 +23,6 @@ import { IndentIncrease } from "@/components/svg/indent-increase";
 import { IndentDecrease } from "@/components/svg/indent-decrease";
 import { Trash } from "@/components/svg/trash";
 import { MoveToTop } from "@/components/svg/move-to-top";
-import { check, PERMISSIONS, request, RESULTS } from "react-native-permissions";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DootooFirstLaunchUX from "@/components/DootooFirstLaunchUX";
 
