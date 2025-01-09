@@ -362,7 +362,6 @@ export default function DoneScreen() {
       saveThingOrderFunc={saveItemOrder}
       loadAllThings={(isPullDown, page) => loadItems(isPullDown, page, DONE_ITEM_FILTER_ONLY_DONE_ITEMS)}
       deleteThing={deleteItem}
-      saveNewThing={saveNewItem}
       transcribeAudioToThings={transcribeAudioToTasks}
       ListThingSidebar={DootooItemSidebar}
       EmptyThingUX={DootooDoneEmptyUX}

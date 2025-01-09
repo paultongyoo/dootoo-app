@@ -30,8 +30,8 @@ const LOADITEMCOUNTS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2
 const LOADITEMSCOUNTS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItemsCounts_Dev'
                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadItemsCounts';                            
 
-const SAVEITEMS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev'
-                                : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveItems';
+// const SAVEITEMS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveItems_Dev'
+//                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveItems';
 
 const UPDATEITEMORDER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemOrder_Dev'
                                        : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemOrder';
@@ -51,8 +51,8 @@ const UPDATEITEMEVENTID_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-eas
 const UPDATEITEMPUBLICSTATE_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/updateItemPublicState_Dev'
                                      : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/updateItemPublicState';
 
-const SAVENEWITEM_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveNewItem_Dev'
-                                  : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveNewItem';    // Plan to deprecate
+// const SAVENEWITEM_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveNewItem_Dev'
+//                                   : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveNewItem';    // Plan to deprecate
 
 const SAVENEWITEMS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/saveNewItems_Dev'
                                   : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/saveNewItems';
@@ -269,26 +269,26 @@ export const areItemsCached = async(cacheKeyStr = null) => {
 }
 
 
-export const saveItems = async (item_list_obj, callback) => {
-  if (item_list_obj === undefined) {
-    //console.log("saveItems called with undefined parameter, exiting...");
-    return;
-  }
+// export const saveItems = async (item_list_obj, callback) => {
+//   if (item_list_obj === undefined) {
+//     //console.log("saveItems called with undefined parameter, exiting...");
+//     return;
+//   }
 
-  // Asyncronously save to backend to enable community features and refresh user counts.
-  // Ensure all UI data uses only locally stored data and is not reliant on real-time backend state.
-  saveItemsToBackend(item_list_obj, (updatedUser) => {
+//   // Asyncronously save to backend to enable community features and refresh user counts.
+//   // Ensure all UI data uses only locally stored data and is not reliant on real-time backend state.
+//   saveItemsToBackend(item_list_obj, (updatedUser) => {
 
-    // Deprecated in v1.1.1
-    //saveUserLocally(updatedUser);
+//     // Deprecated in v1.1.1
+//     //saveUserLocally(updatedUser);
 
-    if (callback) {
+//     if (callback) {
 
-      // Used to allow UI to update its user UI based on latest user counts
-      callback();
-    }
-  });
-}
+//       // Used to allow UI to update its user UI based on latest user counts
+//       callback();
+//     }
+//   });
+// }
 
 export const updateItemOrder = async (uuid_array, callback) => {
   try {
@@ -370,30 +370,30 @@ export const updateItemDoneState = async (item, callback) => {
   }
 }
 
-export const saveNewItem = async (item, latest_item_uuids) => {
-  try {
-    //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
-    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
-    if (!localUserSr) {
-      //console.log("Received null local anon Id, aborting tipVote!");
-      return;
-    }
-    const localUser = JSON.parse(localUserSr);
-    const localAnonId = localUser.anonymous_id;
-    const response = await axios.post(SAVENEWITEM_URL,
-      {
-        anonymous_id : localAnonId,
-        item_str: JSON.stringify(item),
-        uuid_array: JSON.stringify(latest_item_uuids)
-      }
-    );
-    //console.log("saveNewItem Response Obj: " + JSON.stringify(response.data.body));
-  } catch (error) {
-    console.error('Error calling saveNewItem API:', error);
-  }
-}
+// export const saveNewItem = async (item, latest_item_uuids) => {
+//   try {
+//     //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
+//     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+//     if (!localUserSr) {
+//       //console.log("Received null local anon Id, aborting tipVote!");
+//       return;
+//     }
+//     const localUser = JSON.parse(localUserSr);
+//     const localAnonId = localUser.anonymous_id;
+//     const response = await axios.post(SAVENEWITEM_URL,
+//       {
+//         anonymous_id : localAnonId,
+//         item_str: JSON.stringify(item),
+//         uuid_array: JSON.stringify(latest_item_uuids)
+//       }
+//     );
+//     //console.log("saveNewItem Response Obj: " + JSON.stringify(response.data.body));
+//   } catch (error) {
+//     console.error('Error calling saveNewItem API:', error);
+//   }
+// }
 
-export const saveNewItems = async (items, latest_item_uuids) => {
+export const saveNewItems = async (items, latest_item_uuids, callback = null) => {
   try {
     //console.log("Entering tip vote, uuid: " + tip_uuid + "  vote_value: " + voteValue);
     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
@@ -410,7 +410,10 @@ export const saveNewItems = async (items, latest_item_uuids) => {
         uuid_array: JSON.stringify(latest_item_uuids)
       }
     );
-    //console.log("saveNewItems Response Obj: " + JSON.stringify(response.data.body));
+    console.log("saveNewItems Response Obj: " + JSON.stringify(response.data));
+    if (callback) {
+      callback(response.data);
+    }
   } catch (error) {
     console.error('Error calling saveNewItems API:', error);
   }
@@ -1248,41 +1251,41 @@ const createUser = async () => {
   }
 };
 
-const saveItemsToBackend = async(item_list_obj, callback) => {
-  if (!item_list_obj || item_list_obj.length == 0) {
-    //console.log("saveItemsToBackend called with empty list, aborting backend call!");
-    return null;
-  }
+// const saveItemsToBackend = async(item_list_obj, callback) => {
+//   if (!item_list_obj || item_list_obj.length == 0) {
+//     //console.log("saveItemsToBackend called with empty list, aborting backend call!");
+//     return null;
+//   }
 
-  try {
-    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
-    if (!localUserSr) {
-      //console.log("Received null local anon Id, aborting tipVote!");
-      return ;
-    }
-    const localUser = JSON.parse(localUserSr);
-    const localAnonId = localUser.anonymous_id;
-    //console.log("Saving to backend for anon Id: " + localAnonId);
-    const response = await axios.post(SAVEITEMS_URL,
-      {
-        anonymous_id: localAnonId,
-        items_str: JSON.stringify(item_list_obj),
-        skipLoad: true,
-        skipUserLoad: true
-      }
-    );
-    const response_obj = JSON.parse(response.data.body);
-    const updatedUser = response_obj.user;
-    // console.log("Updated User: " + JSON.stringify(updatedUser));
+//   try {
+//     const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+//     if (!localUserSr) {
+//       //console.log("Received null local anon Id, aborting tipVote!");
+//       return ;
+//     }
+//     const localUser = JSON.parse(localUserSr);
+//     const localAnonId = localUser.anonymous_id;
+//     //console.log("Saving to backend for anon Id: " + localAnonId);
+//     const response = await axios.post(SAVEITEMS_URL,
+//       {
+//         anonymous_id: localAnonId,
+//         items_str: JSON.stringify(item_list_obj),
+//         skipLoad: true,
+//         skipUserLoad: true
+//       }
+//     );
+//     const response_obj = JSON.parse(response.data.body);
+//     const updatedUser = response_obj.user;
+//     // console.log("Updated User: " + JSON.stringify(updatedUser));
     
-    if (callback) {
-      callback(updatedUser);
-    }
+//     if (callback) {
+//       callback(updatedUser);
+//     }
 
-  } catch (e) {
-    //console.log("Error saving item list to backend", e);
-  }
-}
+//   } catch (e) {
+//     //console.log("Error saving item list to backend", e);
+//   }
+// }
 
 const saveTipsToBackend = async(item_obj, tip_list_obj, callback) => {
   if (!tip_list_obj || tip_list_obj.length == 0) {

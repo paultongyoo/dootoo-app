@@ -813,7 +813,6 @@ export default function ListScreen() {
       saveThingOrderFunc={saveItemOrder}
       loadAllThings={(isPullDown, page) => loadItems(isPullDown, page, DONE_ITEM_FILTER_ONLY_OPEN_PARENTS)}
       deleteThing={deleteItem}
-      saveNewThing={saveNewItem}
       transcribeAudioToThings={transcribeAudioToTasks}
       ListThingSidebar={DootooItemSidebar}
       EmptyThingUX={(isFirstLaunch.current) ? DootooFirstLaunchUX : DootooItemEmptyUX}

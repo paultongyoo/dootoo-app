@@ -6,22 +6,39 @@ export const handler = async (event) => {
     const items = JSON.parse(event.items_str);
     const uuid_array = JSON.parse(event.uuid_array);
 
-    // Call prexisting saveItems lambda with single item array, deactivating deprecated post actions
-     await saveItems(anonymousId, items);     // Discard object
+    try {
 
-    // Call preexisting updateItemOrder function
-    const updateResult = await updateItemOrder(anonymousId, uuid_array);
+        // Call prexisting saveItems lambda with single item array, deactivating deprecated post actions
+        await saveItems(anonymousId, items);     // Discard object
 
-    const response = {
-        statusCode: 200,
-        body: updateResult
-    };
-    return response;
+        // Call preexisting updateItemOrder function
+        const updateResult = await updateItemOrder(anonymousId, uuid_array);
+
+        const response = {
+            statusCode: 200,
+            body: updateResult
+        };
+        return response;
+    } catch (error) {
+        const errorPayload = JSON.parse(error.message);
+        if (errorPayload.flaggedItems) {
+            console.log("Returning 422 error with details back to caller!", error);
+            return {
+                statusCode: 422,
+                body: errorPayload.flaggedItems
+            }
+        } else {
+            return {
+                statusCode: 500,
+                body: error.message
+            }
+        }
+    }
 };
 
 const saveItems = async (anonymousId, items) => {
     const lambdaParams = {
-        FunctionName: "saveItems_Dev:prod",
+        FunctionName: "saveItems_Dev",
         InvocationType: "RequestResponse",
         Payload: JSON.stringify({
             anonymous_id: anonymousId,
@@ -31,13 +48,16 @@ const saveItems = async (anonymousId, items) => {
         })
     };
 
-    try {
-        const response = await lambda.invoke(lambdaParams).promise();
+    const response = await lambda.invoke(lambdaParams).promise();
+    console.log("response: " + JSON.stringify(response));
+    if (!response.FunctionError) {
         const user = JSON.parse(response.Payload).body;
         return user;
-    } catch (error) {
-        console.error("Error invoking saveItems Lambda function:", error);
-        throw error;
+    } else {
+        console.log("Attempting to parse nested error...");
+        const nestedError = JSON.parse(response.Payload);
+        console.log("nestedError: " + JSON.stringify(nestedError));
+        throw new Error(nestedError.errorMessage);
     }
 }
 

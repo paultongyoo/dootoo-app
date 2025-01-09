@@ -40,7 +40,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     saveThingOrderFunc,
     loadAllThings,
     deleteThing,
-    saveNewThing,
     transcribeAudioToThings,
     isThingPressable,
     isThingDraggable,
@@ -1654,7 +1653,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     });
 
                     const latestUuidOrder = listArray.map((thing) => ({ uuid: thing.uuid }));
-                    saveNewThing(updatedThing, latestUuidOrder);
+                    saveNewThings([updatedThing], latestUuidOrder);
 
                     if (thingName == 'tip') {
                         ProfileCountEventEmitter.emit('incr_tips', { count: 1 });

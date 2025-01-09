@@ -44,6 +44,7 @@ const saveItems = async (anonymous_id, items_str) => {
 
         var itemSaveCount = 0;
         var items_arr = JSON.parse(items_str);
+        const flaggedItems = [];
         for (var i = 0; i < items_arr.length; i++) {
             var array_item = items_arr[i];
 
@@ -54,8 +55,33 @@ const saveItems = async (anonymous_id, items_str) => {
             });
             const flagged = moderation.results[0].flagged;
             if (flagged) {
-                array_item.text = '(flagged)';
+                flaggedItems.push({ uuid: array_item.uuid, reason: 'moderation' });
+                continue;
             }
+
+            const completion = await openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: [
+                  {
+                    "role": "system",
+                    "content": `
+                          Validate that the user input is not random characters.
+                          Return your analysis in the following JSON format:
+                          {
+                            invalid: <true if random characters, false otherwise>
+                          }`
+                  },
+                  { "role": "user", "content": `User-provided input: ${array_item.text}` }
+                ], 
+                response_format: { "type": "json_object" },
+                user: anonymous_id
+              });
+              var validationAnalysis = JSON.parse(completion.choices[0].message.content);
+              console.log("validationAnalysis: " + JSON.stringify(validationAnalysis));
+              if (validationAnalysis.invalid) {
+                flaggedItems.push({ uuid: array_item.uuid, reason: 'random_characters' });
+                continue;
+              }
 
             // Encrypt item text before saving
             try {
@@ -146,12 +172,28 @@ const saveItems = async (anonymous_id, items_str) => {
                 itemSaveCount += 1;
             } catch (error) {
                 console.error('Error encrypting or decrypting:', error);
-                return null;
+                throw new Error('')
             }
         }
+
+        console.log("flaggedItems.length: " + flaggedItems.length);
+        if (flaggedItems.length > 0) {
+            const flaggedErrorObj = new Error("Flagged Items");
+            flaggedErrorObj.flaggedItems = flaggedItems;
+            throw flaggedErrorObj;
+        }
     } catch (error) {
-        console.error('Unexpected Prisma error', error);
-        return null;
+        console.log("Thrown error message: " + error.message);
+        if (error.message == 'Flagged Items') {
+            const errorPayload = {
+                errorType: error.message,
+                flaggedItems: error.flaggedItems
+            }
+            throw new Error(JSON.stringify(errorPayload));
+        } else {
+            console.error('Unexpected error occurred during item processing', error);
+            return null;
+        }
     }
     //console.log("Inside saveItems - checking user obj: " + user);
     return user;
