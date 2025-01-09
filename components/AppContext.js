@@ -1,20 +1,22 @@
 import { Animated, Easing } from 'react-native';
 import { createContext, useState, useRef } from 'react';
-import { initalizeUser, resetAllData, loadCommunityItems } from './Storage';
+import { initalizeUser, resetAllData, loadCommunityItems, loadItems, DONE_ITEM_FILTER_ONLY_DONE_ITEMS } from './Storage';
 import { useSharedValue, withTiming, runOnJS } from 'react-native-reanimated';
 import { pluralize } from './Helpers';
 
-// Create the context
+// Create the context 
 export const AppContext = createContext();
 
 // Create a provider component
 export const AppProvider = ({ children }) => {
 
     // State Variables:  Changing these SHOULD intentionally cause components to re-render
-    const [openItems, setOpenItems] = useState([]);
-    const [doneItems, setDoneItems] = useState([]);
-    const [communityItems, setCommunityItems] = useState(null); 
+    const [openItems, setOpenItems] = useState(null);             // Using null state as "not initialized" indicator
+    const [doneItems, setDoneItems] = useState(null);             // Using null state as "not iinitialized" indicator
+    const [communityItems, setCommunityItems] = useState(null);   // Using null state as "not iinitialized" indicator
     const hasMoreCommunityItems = useRef(false);
+    const hasMoreOpenItems = useRef(true);
+    const hasMoreDoneItems = useRef(true);
     const communityLayoutOpacity = useSharedValue(0);
     const [selectedItem, setSelectedItem] = useState(null);         // Selected Item context of Tips pages
     const [selectedProfile, setSelectedProfile] = useState(null);   // Selected Profile from Tip pages
@@ -57,7 +59,7 @@ export const AppProvider = ({ children }) => {
       setDooDate(userData.createdAt);
       //console.log("username/anonymousId.current values set: " + JSON.stringify(userData));
       if (callback) {
-        callback(userData.isNew);
+        callback();
       }
     }
 
@@ -97,6 +99,14 @@ export const AppProvider = ({ children }) => {
       console.log(`Community Items array initalized with ${pluralize('item', responseObj.items.length)}.`);
     }
 
+    const initializeDoneItems = async () => {
+      console.log("Initializing Done Items...");
+      const responseObj = await loadItems(true, 1, DONE_ITEM_FILTER_ONLY_DONE_ITEMS);
+      hasMoreDoneItems.current = responseObj.hasMore;
+      console.log("Setting done items with array of " + responseObj.things.length + " items.");
+      setDoneItems([...responseObj.things]);
+    }
+
     const resetUserContext = async () => {
       await resetAllData();
       await initializeLocalUser(); 
@@ -115,8 +125,8 @@ export const AppProvider = ({ children }) => {
 
     return (
         <AppContext.Provider value={{ 
-            openItems, setOpenItems,
-            doneItems, setDoneItems,
+            openItems, setOpenItems, hasMoreOpenItems,
+            doneItems, setDoneItems, hasMoreDoneItems, initializeDoneItems,
             communityItems, setCommunityItems,
             hasMoreCommunityItems, communityLayoutOpacity,
             refreshCommunityItems,

@@ -1,5 +1,5 @@
 import { View, Text, ActivityIndicator, Pressable, TextInput, Keyboard, AppState, StyleSheet, Platform, Alert } from 'react-native';
-import { useState, useRef, useContext, useEffect, useCallback } from 'react';
+import { useState, useRef, useContext, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import Reanimated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from "react-native-reanimated";
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -29,7 +29,7 @@ import { Flag } from './svg/flag';
 
 export const THINGNAME_ITEM = "item";
 export const THINGNAME_DONE_ITEM = "done_item";
-const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
+const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArray, listArraySetter, ListThingSidebar, EmptyThingUX, styles,
     renderLeftActions = (item, index) => { return <></> },
     renderRightActions = (item: any, p0: any, handleThingDelete: (thing: any) => void, handleMoveToTop: (selectedThing: any) => Promise<void>, p1: unknown) => { return <></> },
     swipeableOpenFunc = (direction, item, index) => { return; },
@@ -44,7 +44,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     isThingPressable,
     isThingDraggable,
     shouldInitialLoad = true,
-    hideBottomButtons = false }, ref) => {
+    hideBottomButtons = false,
+    hasMoreThings }, ref) => {
 
     const FOOTER_BUTTON_HEIGHT = 50;
 
@@ -54,7 +55,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         currentlyTappedThing, emptyListCTAFadeOutAnimation, setOpenItems, communityItems, setCommunityItems, setDoneItems,
         refreshCommunityItems
     } = useContext(AppContext);
-    const [screenInitialized, setScreenInitialized] = useState(false);
     const [isRefreshing, setRefreshing] = useState(false);
     const [showCalendarSelectionDialog, setShowCalendarSelectionDialog] = useState(false);
     const [calendarSelectionInvalid, setCalendarSelectionInvalid] = useState(false);
@@ -65,7 +65,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     // References:  Changing these should intentionally NOT cause this list to re-render
     //const itemFlatList = useRef(null);              // TODO: Consider deprecate
     const onChangeInputValue = useRef('');
-    const hasMoreThings = useRef(true);
     const editableCalendars = useRef<Calendar.Calendar[]>([]);
     const selectedCalendar = useRef();
     const selectedTimerThing = useRef(null);
@@ -108,100 +107,66 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         transform: [{ scale: buttonContainerScaleSV.value }],
     }));
 
+    useImperativeHandle(ref, () => ({
+        loadFirstPage: () => {
+            console.log(thingName + ": Started DootooList.loadFirstPage");
+            initialLoadFadeInOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                if (isFinished) {
+                    runOnJS(resetListWithFirstPageLoad)(false);
+                }
+            });
+        }
+    }))
+
     useEffect(() => {
-        //console.log("DootooList.useEffect([])");
 
-        initializeLocalUser((isNew: boolean) => {
-            //console.log("initializeLocalUser callback method: " + shouldInitialLoad);
-            if (shouldInitialLoad) {
-                initialLoadFadeInOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
-                    if (isFinished) {
-                        runOnJS(resetListWithFirstPageLoad)(false);
-                    }
-                });
-            } else {
-                //console.log("Skipping initial load for user per shouldInitialLoad == false.");
-            }
+        if (!listArray) {
+            console.log(thingName + " useEffect([listArray]): listArray not initialized.");
+            return;
+        }
 
-            // If community items haven't been initialized yet, initialize it!
-            if (!communityItems) {
-                refreshCommunityItems();
-            }
-        });
-    }, []);
+        console.log(thingName + ` useEffect([listArray]) called: List length ${listArray.length}`);
+        //console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
 
-    const initialListArrayMount = useRef(true);
-    useEffect(() => {
-        if (initialListArrayMount.current) {
-            //console.log(thingName + " useEffect([listArray]) discarding call on initial mount, listArray: " + listArray.length);
-            initialListArrayMount.current = false;
+        // Asyncronously update local cache with latest listArray update
+        if (thingName == THINGNAME_ITEM) {
+            updateItemsCache(listArray);
+        } else if (thingName == THINGNAME_DONE_ITEM) {
+            updateDoneItemsCache(listArray);
         } else {
-            //console.log(thingName + ` useEffect([listArray]) called: List length ${listArray.length}`);
-            //console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
+            updateTipsCache(selectedItem, listArray);
+        }
 
-            // Asyncronously update local cache with latest listArray update
-            if (thingName == THINGNAME_ITEM) {
-                updateItemsCache(listArray);
-            } else if (thingName == THINGNAME_DONE_ITEM) {
-                updateDoneItemsCache(listArray);
-            } else {
-                updateTipsCache(selectedItem, listArray);
+        // If the effect was called with an empty list,
+        // set this ref here because renderItem will not have fired
+        if (listArray.length == 0) {
+            firstListRendered.value = true;
+        }
+
+        // If we're inside here, we were called after recording new things
+        if (lastRecordedCount.current > 0) {
+            if (thingName == 'tip') {
+                ProfileCountEventEmitter.emit('incr_tips', { count: lastRecordedCount.current });
             }
 
-            if (lastRecordedCount.current > 0) {
-                // If we're inside here, we were called after recording new things
+            // Display Toast
+            Toast.show({
+                type: 'msgOpenWidth',
+                text1: `Added ${lastRecordedCount.current} ${stringizeThingName(thingName)}${(lastRecordedCount.current > 1) ? 's' : ''}.`,
+                position: 'bottom',
+                bottomOffset: (Platform.OS == 'ios') ? 280 : 260,
+                visibilityTime: 8000
+            });
+            lastRecordedCount.current = 0;
+        }
 
-                if (thingName == 'tip') {
-                    ProfileCountEventEmitter.emit('incr_tips', { count: lastRecordedCount.current });
-                }
+        if (thingName == THINGNAME_ITEM) {
+            syncItemCalendarUpdates();
+        }
 
-                // Display Toast
-                Toast.show({
-                    type: 'msgOpenWidth',
-                    text1: `Added ${lastRecordedCount.current} ${stringizeThingName(thingName)}${(lastRecordedCount.current > 1) ? 's' : ''}.`,
-                    position: 'bottom',
-                    bottomOffset: (Platform.OS == 'ios') ? 280 : 260,
-                    visibilityTime: 8000,
-                    props: {
-
-                        // 1.3 TODO Revise undo logic with upcoming speaking into subtasks
-                        //      (items can no longer be assumed to have been just appended to top of list);
-                        //
-                        // numItemsRecorded: lastRecordedCount.current,
-                        // onUndoPress: (numItemsToUndo) => {
-
-                        //     // TODO: This doesn't delete in DB, FIX
-                        //     listArraySetter((prevItems) => prevItems.slice(numItemsToUndo)); // This should update UI only and not invoke any syncronous backend operations            
-                        // }
-                    }
-                });
-                lastRecordedCount.current = 0;
-            }
-
-            if (thingName == THINGNAME_ITEM) {
-                syncItemCalendarUpdates();
-            }
-
-            if (!screenInitialized) {
-
-                // if we have an empty list array when we reach this logic,
-                // explicitly set fullListRendered boolean as it will not
-                // have been set in the renderItem logic (reminder: this boolean is for enabling rowHeight animations)
-                if (listArray.length == 0) {
-                    firstListRendered.value = true;
-                }
-
-                initialLoadFadeInOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
-                    if (isFinished) {
-                        runOnJS(setScreenInitialized)(true);
-                    }
-                });
-            }
-
-            if (!hasReactionsBeenRefreshedOnLaunch.current) {
-                refreshThingReactions();
-                hasReactionsBeenRefreshedOnLaunch.current = true;
-            }
+        if (!hasReactionsBeenRefreshedOnLaunch.current) {
+            refreshThingReactions();
+            hasReactionsBeenRefreshedOnLaunch.current = true;
         }
     }, [listArray]);
 
@@ -235,6 +200,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         let ignore = false;
         if (!ignore) {
             ignore = true;
+            if (!listArray) {
+                console.log(thingName + "listArray not yet initalized, ignoring refreshThingReactions call.");
+                return;
+            }
+
             if (listArray.filter(thing => thing.is_public && !thing.newKeyboardEntry).length > 0) {
                 const filteredItemUUIDs = listArray.filter(thing => thing.is_public && !thing.newKeyboardEntry).map(thing => thing.uuid);
                 if (filteredItemUUIDs.length > 0) {
@@ -307,11 +277,19 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
         let things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;
+        hasMoreThings.current = hasMore;
 
         //console.log(`${thingName}: loadAllThings returned ${things.length} item(s) and hasMore is ${hasMore}`);
 
-        // Immediately update hasMore state to prevent future backend calls if hasMore == false
-        hasMoreThings.current = hasMore;
+        // If the initial loading animation is visible, fade it out before setting the new list
+        if (initialLoadFadeInOpacity.value == 1) {
+            await new Promise<void>((resolve) =>
+                initialLoadFadeInOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+                    if (isFinished) {
+                        runOnJS(resolve)();
+                    }
+                }));
+        }
 
         // If we're loading the first page, assume we want to reset the displays list to only the first page
         // (e.g. on a pull-down-to-refresh action).  If page > 1, assume we want to append the page to what's currently
@@ -319,20 +297,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         if (currentPage.current == 1) {
             //console.log(`${thingName}: (Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
 
-            // 1.3 Deactivated fade in animation to prevent flicker on launch
-            // if (isPullDown) {
-            //     //console.log("Loading page 1 as part of pulldown refresh, attempting to fade out current list before fading in new list");
-            //     fadeInListOnRender.current = true;
-            //     listFadeOutAnimation.start(() => {
-            //         listArraySetter([...things]);
-            //     });
-            // } else {
-            //fadeInListOnRender.current = true;
-
-            //console.log("Loading page 1 outside of pulldown refresh, simply fading in list");
-            //console.log("Outputting Things: " + JSON.stringify(things));
             listArraySetter([...things]);
-            // }
         } else {
             //console.log(`${thingName}: Appending ${things.length} ${thingName}(s) from page ${currentPage.current} to current list.`)
 
@@ -2133,12 +2098,12 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
     return (
         <View style={[listStyles.listContainer, styles.listContainer]}>
-            {(!screenInitialized) ?
+            {(!listArray) ?
                 <Reanimated.View style={[listStyles.initialLoadAnimContainer, { opacity: initialLoadFadeInOpacity }]}>
                     <Text style={listStyles.initialLoadMsg}>{loadingAnimMsg}</Text>
                     <ActivityIndicator size={"large"} color="#3E3723" />
                 </Reanimated.View>
-                : (listArray && (listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0) ?
+                : ((listArray.length > 0) && listArray.filter(item => !item.is_deleted)!.length > 0) ?
                     <>
                         <Reanimated.View style={[listStyles.taskContainer, { opacity: listOpacity }]}>
                             <DraggableFlatList
@@ -2321,7 +2286,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         </View>
     );
 
-};
+});
 
 // Used by Tips screen as well
 export const listStyles = StyleSheet.create({

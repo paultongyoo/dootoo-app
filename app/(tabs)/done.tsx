@@ -46,7 +46,7 @@ import DootooDoneEmptyUX from "@/components/DootooDoneEmptyUX";
 
 export default function DoneScreen() {
   const pathname = usePathname();
-  const { anonymousId, username, doneItems, setDoneItems, setOpenItems,
+  const { anonymousId, username, doneItems, setDoneItems, setOpenItems, hasMoreDoneItems,
     thingRowHeights, refreshCommunityItems } = useContext(AppContext);
 
   configureReanimatedLogger({
@@ -367,7 +367,8 @@ export default function DoneScreen() {
       EmptyThingUX={DootooDoneEmptyUX}
       isThingPressable={() => { return true }}
       isThingDraggable={true}
-      hideBottomButtons={true} />
+      hideBottomButtons={true}
+      hasMoreThings={hasMoreDoneItems} />
   );
 
 }

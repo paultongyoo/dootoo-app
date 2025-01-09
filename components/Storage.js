@@ -587,12 +587,9 @@ export const initalizeUser = async() => {
     // Populate user vars with what's in local storage, if anything
     const localUser = await loadLocalUser();
     if (localUser) {
-      localUser.isNew = false;
       return localUser;
     } else {
-      const newUserData = await createUser();
-      newUserData.isNew = true;
-      return newUserData;
+      return await createUser();
     }
   } catch (e) {
       //console.log("Error reading user data:", e);
