@@ -58,10 +58,10 @@ export const handler = async (event) => {
                             invalid: <true if random characters, false otherwise>
                           }`
                   },
-                  { "role": "user", "content": `User-provided input: ${array_item.text}` }
+                  { "role": "user", "content": `User-provided input: ${textUpdate}` }
                 ], 
                 response_format: { "type": "json_object" },
-                user: anonymous_id
+                user: event.anonymous_id
               });
               var validationAnalysis = JSON.parse(completion.choices[0].message.content);
               console.log("validationAnalysis: " + JSON.stringify(validationAnalysis));
@@ -114,7 +114,7 @@ export const handler = async (event) => {
 
         const response = {
             statusCode: 200,
-            body: JSON.stringify(updatedItem)
+            body: true
         };
         return response;
     } catch (error) {
