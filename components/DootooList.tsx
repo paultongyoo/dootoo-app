@@ -308,7 +308,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         let things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;
 
-        console.log(`${thingName}: loadAllThings returned ${things.length} item(s) and hasMore is ${hasMore}`);
+        //console.log(`${thingName}: loadAllThings returned ${things.length} item(s) and hasMore is ${hasMore}`);
 
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
         hasMoreThings.current = hasMore;
@@ -1611,13 +1611,13 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }, [item.text])
 
         const handleThingTextTap = (thing) => {
-            console.log(`handleItemTextTap for ${thing.text}, renderTappedField: ${renderTappedField.current}`);
+            //console.log(`handleItemTextTap for ${thing.text}, renderTappedField: ${renderTappedField.current}`);
 
             // If something else was selected/active when the 
             // user tapped a new item -- process that item's latest
             // value before activating newly tapped thing
             if (currentlyTappedThing.current) {
-                console.log("Blurring currently tapped item before processing new tap...");
+                //console.log("Blurring currently tapped item before processing new tap...");
                 handleBlur(currentlyTappedThing.current);
             }
 
