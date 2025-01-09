@@ -11,7 +11,7 @@ import { Plus } from "./svg/plus";
 
 const KeyboardButton = ({ listArray, listArraySetterFunc }) => {
 
-    const { anonymousId, currentlyTappedThing, emptyListCTAFadeOutAnimation } = useContext(AppContext);
+    const { anonymousId, username, currentlyTappedThing, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const pathname = usePathname();
     const keyboardButtonOpacity = useSharedValue(1);
 
@@ -21,6 +21,7 @@ const KeyboardButton = ({ listArray, listArraySetterFunc }) => {
 
         amplitude.track("Keyboard Entry Started", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: newItem.uuid
         });
