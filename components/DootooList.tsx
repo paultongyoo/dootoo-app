@@ -1687,7 +1687,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         ? {
                             ...prevThing,
                             text: textOnChange,
-                            newKeyboardEntry: false
+                            newKeyboardEntry: false,
+                            flagged: false           // Reset any flagged states on this initial save (violations will be flagged on callback)
                         }
                         : prevThing);
 
