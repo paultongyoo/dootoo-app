@@ -24,9 +24,9 @@ const NavigationSections = ({ navigation }) => {
         });
         const listener_descr_done = ProfileCountEventEmitter.addListener('decr_done', (data) => {
             if (data && data.count) {
-                setDoneCount(prevVal => prevVal - data.count);
+                setDoneCount(prevVal => Math.max(0, prevVal - data.count));
             } else {
-                setDoneCount(prevVal => prevVal - 1);
+                setDoneCount(prevVal => Math.max(0, prevVal - 1));
             }
         });
 
