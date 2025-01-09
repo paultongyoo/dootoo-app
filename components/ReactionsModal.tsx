@@ -118,9 +118,7 @@ const ReactionsModal = ({ modalVisible, modalVisibleSetter, reactions, reactionC
         <Modal
             isVisible={modalVisible}
             onBackdropPress={() => { modalVisibleSetter(false) }}
-            onSwipeComplete={() => { modalVisibleSetter(false) }}
             onModalHide={onModalHide}
-            swipeDirection={"down"}
             backdropOpacity={0.3}
             animationIn={"slideInUp"}
             animationOut={"slideOutDown"}>
