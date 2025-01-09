@@ -166,7 +166,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
         return (
             <ActivityIndicator size="small" color="#3e2723" />
         )
-    } else if (!thing.parent_item_uuid) {
+    } else if (!thing.parent_item_uuid && !thing.newKeyboardEntry && !thing.flagged) {
         if (!thing.is_public) {
             return (
                 <Animated.View style={[{ flexDirection: 'row', alignItems: 'center' }]}>
