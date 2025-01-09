@@ -332,11 +332,10 @@ export const updateItemText = async (item, callback) => {
         text: item.text
       }
     );
-
+    //console.log("updateItemText Response Obj: " + JSON.stringify(response.data));
     if (callback) {
-      callback();
+      callback(response.data);
     }
-    //console.log("updateItemText Response Obj: " + JSON.stringify(response.data.body));
   } catch (error) {
     console.error('Error calling updateItemText API:', error);
   }

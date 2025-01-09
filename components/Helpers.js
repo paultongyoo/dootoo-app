@@ -382,8 +382,8 @@ export function capitalizeFirstCharacter(word) {
   return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
-export function pluralize(word, count) {
-  return `${count} ${count === 1 ? word : word + 's'}`;
+export function pluralize(word, count, includeNumber = true) {
+  return `${includeNumber ? `${count} ` : ``}${count === 1 ? word : word + 's'}`;
 }
 
 export const deleteFile = async (fileUri: string) => {

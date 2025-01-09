@@ -48,20 +48,6 @@ export default function ListScreen() {
     checkFirstLaunch();
   }, []);
 
-  const saveTextUpdate = async (item) => {
-    updateItemText(item, async () => {
-
-      // 1.2 Event Text edit not working for some reason TODO revisit
-      // if (item.event_id) {
-      //    const response = await Calendar.updateEventAsync(item.event_id, {
-      //         title: item.text
-      //     });
-      //     console.log("Event ID Event Update Response: " + JSON.stringify(response));
-      //     console.log("Calendar Event title updated asyncronously to (" + item.event_id + "): " + item.text);
-      // }   
-    });
-  }
-
   const saveItemOrder = async (uuidArray) => {
     updateItemOrder(uuidArray);
   }
@@ -809,7 +795,7 @@ export default function ListScreen() {
       swipeableOpenFunc={onSwipeableOpen}
       handleDoneClick={handleDoneClick}
       saveNewThings={saveNewItems}
-      saveTextUpdateFunc={saveTextUpdate}
+      saveTextUpdateFunc={updateItemText}
       saveThingOrderFunc={saveItemOrder}
       loadAllThings={(isPullDown, page) => loadItems(isPullDown, page, DONE_ITEM_FILTER_ONLY_OPEN_PARENTS)}
       deleteThing={deleteItem}

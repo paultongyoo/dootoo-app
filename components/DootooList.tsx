@@ -126,7 +126,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             // If community items haven't been initialized yet, initialize it!
             if (!communityItems) {
                 refreshCommunityItems();
-            }        
+            }
         });
     }, []);
 
@@ -308,7 +308,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         let things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;
 
-        console.log(`${thingName}: DB load returned ${things.length} item(s) and hasMore is ${hasMore}`);
+        console.log(`${thingName}: loadAllThings returned ${things.length} item(s) and hasMore is ${hasMore}`);
 
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
         hasMoreThings.current = hasMore;
@@ -625,7 +625,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 thing_uuid: thing.uuid,
                 thing_type: thingName
             });
-    
+
             // Call asyncronous delete to mark item as deleted in backend to sync database
             // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
             if (!thing.newKeyboardEntry) deleteThing(thing.uuid, () => {
@@ -633,22 +633,22 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     refreshCommunityItems();
                 }
             });
-    
+
             if (thingName == 'tip') {
                 ProfileCountEventEmitter.emit('decr_tips');
             }
-    
+
             if (thing.is_done) {
                 ProfileCountEventEmitter.emit("decr_done");
             }
-    
+
             // Remove item from displayed and thingRowPositionXs lists
             listArrayCopy.splice(index, 1);
             delete thingRowPositionXs.current[thing.uuid];
             delete thingRowHeights.current[thing.uuid];
-    
+
             //console.log(`updatedThings post delete (${updatedThings.length}): ${JSON.stringify(updatedThings)}`);
-    
+
             listArraySetter((prevThings) => prevThings.filter((obj) => (obj.uuid != thing.uuid)));
         }
     }
@@ -1653,14 +1653,14 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     });
 
                     const latestUuidOrder = listArray.map((thing) => ({ uuid: thing.uuid }));
-                    saveNewThings([updatedThing], latestUuidOrder);
+                    saveNewThings([updatedThing], latestUuidOrder, handleTextUpdateBackendResponse);
 
                     if (thingName == 'tip') {
                         ProfileCountEventEmitter.emit('incr_tips', { count: 1 });
                     }
                 } else {
                     // Asynchronously sync new item text to DB
-                    saveTextUpdateFunc(updatedThing);
+                    saveTextUpdateFunc(updatedThing, handleTextUpdateBackendResponse);
                 }
 
                 amplitude.track("Thing Text Edited", {
@@ -1729,6 +1729,46 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             });
         }
 
+        const handleTextUpdateBackendResponse = (response) => {
+            //console.log("Inside handleTextUpdateBackendResponse: " + JSON.stringify(response));
+            if (response.statusCode == 422) {
+
+                // Saved payload included flagged items!  Visually highlight
+                // the flagged items in the UI and inform user
+                const flaggedItems = response.body;
+                const flaggedUuids = flaggedItems.map(item => item.uuid);   // Ignoring flag reason for now
+                //console.log("flaggedUuids: " + JSON.stringify(flaggedUuids));
+
+                amplitude.track("New Items Flagged", {
+                    anonymous_id: anonymousId,
+                    username: username,
+                    pathname: pathname,
+                    numItems: flaggedUuids.length
+                });
+
+                listArraySetter(prevItems => {
+
+                    const messageModifier =
+                        (flaggedUuids.length == 1) ? 'One'
+                            : (flaggedUuids.length == prevItems.length) ? 'All'
+                                : 'some';
+                    Alert.alert(`${pluralize('Item', flaggedUuids.length)} Flagged`,
+                        `${messageModifier} of your items ${flaggedUuids.length == 1 ? 'has' : 'have'} been ` +
+                        `flagged as violating our community rules.  ${flaggedUuids.length == 1 ? 'It has' : 'They have'} NOT been ` +
+                        `saved to our database and will be removed on your next refresh.  To maintain the integrity of your list, ` +
+                        `modify the text to abide by community rules or delete the ${pluralize('item', flaggedUuids.length, false)}.`);
+
+                    return prevItems.map(prevItem =>
+                        flaggedUuids.includes(prevItem.uuid)
+                            ? { ...prevItem, flagged: true }
+                            : prevItem
+                    )
+                });
+
+
+            }
+        }
+
         const handleMoveToTop = async (selectedThing) => {
             //console.log("Starting handleMoveToTop: " + selectedThing.text)
 
@@ -1786,7 +1826,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                 // If thing is a child, ASSume the user wants to move the thing to the top
                 // of the family, else move it to the top of their entire list  
-                let newArray;          
+                let newArray;
                 if (selectedThing.parent_item_uuid) {
                     const parentIndex = shallowListCopy.findIndex(thing => thing.uuid == selectedThing.parent_item_uuid);
                     newArray = insertArrayAfter(shallowListCopy, thingsToMove, parentIndex);
@@ -1910,17 +1950,17 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         }
                     }}>
                     <ScaleDecorator>
-                        { getIndex() == 0 && (<View style={{height: 4 }}></View>) }
-                        { (thingName == THINGNAME_DONE_ITEM) && item.parent && (
+                        {getIndex() == 0 && (<View style={{ height: 4 }}></View>)}
+                        {(thingName == THINGNAME_DONE_ITEM) && item.parent && (
                             <View style={styles.doneItemParentContainer}>
-                                <Text style={[styles.doneItemParentText, item.parent.is_done && { textDecorationLine: 'line-through'}]}>{item.parent.text}:</Text>
+                                <Text style={[styles.doneItemParentText, item.parent.is_done && { textDecorationLine: 'line-through' }]}>{item.parent.text}:</Text>
                             </View>
                         )}
-                        <View style={[listStyles.itemContainer, styles.itemContainer, 
-                                        (thingName == THINGNAME_DONE_ITEM) && {
-                                            borderBottomWidth: 1,
-                                            borderBottomColor: '#3E272333',
-                                        }]}>
+                        <View style={[listStyles.itemContainer, styles.itemContainer,
+                        (thingName == THINGNAME_DONE_ITEM) && {
+                            borderBottomWidth: 1,
+                            borderBottomColor: '#3E272333',
+                        }]}>
                             {item.parent_item_uuid && (thingName != THINGNAME_DONE_ITEM) && (
                                 <View style={styles.childItemSpacer}></View>
                             )}
@@ -1936,11 +1976,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                     <Bulb wxh="28" opacity="0.8" color="#556B2F" strokeWidth='1.5' />
                                 </Pressable>
                             )}
-                            <View style={[listStyles.itemNameContainer, 
-                                        (thingName == THINGNAME_ITEM) && {
-                                            borderBottomWidth: 1,
-                                            borderBottomColor: '#3E272333',
-                                        }]}>
+                            <View style={[listStyles.itemNameContainer,
+                            (thingName == THINGNAME_ITEM) && {
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#3E272333',
+                            }]}>
                                 {((thingName == THINGNAME_ITEM) && item.scheduled_datetime_utc) ?
                                     <Reanimated.View style={[listStyles.timerIconContainer, timerContainerWidthAnimatedStyle]}>
                                         <Pressable hitSlop={10} onPress={() => handleTimerClick(item)}>
@@ -1991,10 +2031,13 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                                 onLongPress={drag}
                                                 disabled={isActive || item.is_done}
                                                 onPress={() => handleThingTextTap(item)}>
-                                                <Reanimated.Text style={[textOpacityAnimatedStyle, listStyles.taskTitle, item.is_done && listStyles.taskTitle_isDone]}>{item.text}</Reanimated.Text>
+                                                <Reanimated.Text style={[textOpacityAnimatedStyle,
+                                                    listStyles.taskTitle,
+                                                    item.is_done && listStyles.taskTitle_isDone,
+                                                    item.flagged && { color: 'red' }]}>{item.text}</Reanimated.Text>
                                             </Pressable>
                                             : <View style={styles.tipNamePressable}>
-                                                <Text style={[listStyles.taskTitle]}>{item.text}</Text>
+                                                <Text style={[listStyles.taskTitle, item.flagged && { color: 'red' }]}>{item.text}</Text>
                                             </View>
                                     )}
                                 <ListThingSidebar thing={item} styles={styles} onReactionsPress={() => handleReactionsTap(item)} />
@@ -2096,7 +2139,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 keyExtractor={(item, index) => `${item.uuid}_${item.is_done}`}
 
                                 // Keep height zero to prevent ugly space when first row's swipe actions are revealed
-                                ListHeaderComponent={<View style={{ height: 0 }} />}    
+                                ListHeaderComponent={<View style={{ height: 0 }} />}
 
                                 refreshControl={
                                     <RefreshControl

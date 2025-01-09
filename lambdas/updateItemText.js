@@ -38,8 +38,51 @@ export const handler = async (event) => {
 
         var textUpdate = event.text
 
-        // Confirm text passes moderation
-        textUpdate = await moderateText(textUpdate);
+        try {
+
+            // Confirm text passes moderation
+            textUpdate = await moderateText(textUpdate);
+            if (textUpdate == 'flagged') {
+                throw new Error('flagged');
+            }
+
+            const completion = await openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: [
+                  {
+                    "role": "system",
+                    "content": `
+                          Validate that the user input is not random characters.
+                          Return your analysis in the following JSON format:
+                          {
+                            invalid: <true if random characters, false otherwise>
+                          }`
+                  },
+                  { "role": "user", "content": `User-provided input: ${array_item.text}` }
+                ], 
+                response_format: { "type": "json_object" },
+                user: anonymous_id
+              });
+              var validationAnalysis = JSON.parse(completion.choices[0].message.content);
+              console.log("validationAnalysis: " + JSON.stringify(validationAnalysis));
+              if (validationAnalysis.invalid) {
+                throw new Error('random_characters');
+              }
+        } catch (error) {
+            if ((error.message == 'flagged') || (error.message == 'random_characters')) {
+                console.log("Text update flagged: " + error.message);
+                return {
+                    statusCode: 422,
+                    body: [{ uuid: event.item_uuid, reason: error.message}]
+                }          
+            } else {
+                console.log("Unexpected error through while reviewing text update for moderation and spam");
+                return {
+                    statusCode: 500,
+                    body: error.message
+                }
+            }
+        }
 
         // Encrypt text before insert
         const encryptedText = await encryptText(textUpdate);
@@ -105,7 +148,7 @@ async function moderateText(textUpdate) {
     });
     const flagged = moderation.results[0].flagged;
     if (flagged) {
-        textUpdate = '(flagged)';
+        textUpdate = 'flagged';
     }
     return textUpdate;
 }
