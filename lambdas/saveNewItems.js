@@ -38,7 +38,7 @@ export const handler = async (event) => {
 
 const saveItems = async (anonymousId, items) => {
     const lambdaParams = {
-        FunctionName: "saveItems_Dev",
+        FunctionName: "saveItems_Dev:prod",
         InvocationType: "RequestResponse",
         Payload: JSON.stringify({
             anonymous_id: anonymousId,
