@@ -39,12 +39,14 @@ export const handler = async (event) => {
     });
   } else {
 
-    const blockedUserIds = await prisma.$queryRaw`
-    SELECT "blocked_user_id"
-    FROM "UserBlock"
-    GROUP BY "blocked_user_id"
-    HAVING COUNT(*) > 2`;
-    console.log("Number of Users blocked more than twice: " + blockedUserIds.length);
+    // const blockedUserIds = await prisma.$queryRaw`
+    // SELECT "blocked_user_id"
+    // FROM "UserBlock"
+    // GROUP BY "blocked_user_id"
+    // HAVING COUNT(*) > 2`;
+    // console.log("Number of Users blocked more than twice: " + blockedUserIds.length);
+
+    const blockedUserIds = [];      // Tmporarily deactivating blockedUserID filter in lieu of future admin strategy
 
     console.log("onlyOpenParents: " + event.onlyOpenParents);
     console.log("onlyDoneItems: " + event.onlyDoneItems);
