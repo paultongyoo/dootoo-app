@@ -626,12 +626,12 @@ const ProfileScreen = ({ navigation }) => {
                         <Text style={styles.deleteDataLinkText}>Override User</Text>
                     </Pressable>
                 </View> */}
-                    <View style={styles.linkContainer}>
+                    {/* <View style={styles.linkContainer}>
                         <Pressable onPress={showConfirmationPrompt}>
                             <Text style={styles.deleteDataLinkText}>Delete My Data</Text>
                         </Pressable>
-                    </View>
-                    <View style={{ flex: 1 }}></View>
+                    </View> */}
+                    {/* <View style={{ flex: 1 }}></View> */}
                     <View style={styles.linkContainer}>
                         <Pressable onPress={sendEmail}>
                             <Text style={styles.feedbackLinkText}>Email Feedback</Text>
