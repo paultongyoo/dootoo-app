@@ -23,28 +23,28 @@ const DootooItemEmptyUX = ({buttonContainerScaleSV}) => {
 
   const executeCTAAnimation = async () => {
     await new Promise<void>((resolve) => {
-      fadeAnimGoals.value = withDelay(200, withTiming(1, { duration: 800 }, (isFinished) => {
+      fadeAnimGoals.value = withDelay(400, withTiming(1, { duration: 600 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
       }))
     });
     await new Promise<void>((resolve) => {
-      fadeAnimDreams.value = withDelay(200, withTiming(1, { duration: 800 }, (isFinished) => {
+      fadeAnimDreams.value = withDelay(400, withTiming(1, { duration: 600 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
       }))
     });
     await new Promise<void>((resolve) => {
-      fadeAnimChallenges.value = withDelay(200, withTiming(1, { duration: 800 }, (isFinished) => {
+      fadeAnimChallenges.value = withDelay(400, withTiming(1, { duration: 600 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
       }))
     });
     await new Promise<void>((resolve) => {
-          buttonContainerScaleSV.value = withDelay(200, withSequence(
+          buttonContainerScaleSV.value = withDelay(400, withSequence(
             withTiming(1.2, { duration: 300, easing: Easing.out(Easing.ease) }), 
             withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) }, 
             (isFinished) => {
@@ -59,7 +59,7 @@ const DootooItemEmptyUX = ({buttonContainerScaleSV}) => {
     useCallback(() => {
       //console.log("Inside EmptyItemUX focus effect");
 
-      opacity.value = withTiming(1, { duration: 400 }, (isFinished) => {
+      opacity.value = withTiming(1, { duration: 600 }, (isFinished) => {
         if (isFinished) {
           runOnJS(executeCTAAnimation)();
         }

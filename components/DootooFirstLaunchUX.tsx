@@ -5,10 +5,7 @@ import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay,
 import { AppContext } from './AppContext';
 import * as amplitude from '@amplitude/analytics-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import DootooItemEmptyUX from './DootooItemEmptyUX';
 import { ArrowDown } from './svg/arrow-down';
-import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter } from './EventEmitters';
-import { NAVIGATION_SECTION_IDX_OPEN } from './Constants';
 import { check, PERMISSIONS, RESULTS, request } from 'react-native-permissions';
 
 const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
@@ -151,7 +148,7 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
         coachmarkTranslateX.value = withTiming(BOTTOM_BUTTON_WIDTH_INCL_MARGINS / 2,
           {
             duration: 500,
-            easing: Easing.out(Easing.exp)
+            easing: Easing.inOut(Easing.quad)
           },
           (isFinished) => {
             if (isFinished) {
@@ -195,28 +192,28 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
     ];
     await Promise.all(animationPromises);
     await new Promise<void>((resolve) => {
-      fadeAnimGoals.value = withDelay(200, withTiming(1, { duration: 800 }, (isFinished) => {
+      fadeAnimGoals.value = withDelay(400, withTiming(1, { duration: 600 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
       }))
     });
     await new Promise<void>((resolve) => {
-      fadeAnimDreams.value = withDelay(200, withTiming(1, { duration: 800 }, (isFinished) => {
+      fadeAnimDreams.value = withDelay(400, withTiming(1, { duration: 600 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
       }))
     });
     await new Promise<void>((resolve) => {
-      fadeAnimChallenges.value = withDelay(200, withTiming(1, { duration: 800 }, (isFinished) => {
+      fadeAnimChallenges.value = withDelay(400, withTiming(1, { duration: 600 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
       }))
     });
     await new Promise<void>((resolve) => {
-      buttonContainerScaleSV.value = withDelay(200, withSequence(
+      buttonContainerScaleSV.value = withDelay(400, withSequence(
         withTiming(1.2, { duration: 300, easing: Easing.out(Easing.ease) }), 
         withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) }, 
         (isFinished) => {

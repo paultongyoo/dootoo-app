@@ -2,7 +2,7 @@ import { Text, StyleSheet } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useContext } from 'react';
 import { AppContext } from './AppContext';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
 const DootooDoneEmptyUX = () => {
 
@@ -15,9 +15,9 @@ const DootooDoneEmptyUX = () => {
 
   useFocusEffect(
     useCallback(() => {
-      opacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+      opacity.value = withTiming(1, { duration: 400 }, (isFinished) => {
         if (isFinished) {
-          workOpacity.value = withTiming(1, { duration: 400 });
+          workOpacity.value = withDelay(400, withTiming(1, { duration: 400 }));
         }
       })
       return () => {
