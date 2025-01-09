@@ -13,9 +13,33 @@ export const handler = async (event) => {
             };
         }
 
-        const deletedUserBlocks = await prisma.userBlock.deleteMany({
+        const deletedUserBlockings = await prisma.userBlock.deleteMany({
             where: {
                 blockingUser: {
+                    id: user.id
+                }
+            }
+        });
+
+        const deletedUserBlocked = await prisma.userBlock.deleteMany({
+            where: {
+                blockedUser: {
+                    id: user.id
+                }
+            }
+        });
+
+        const deletedItemBlocks = await prisma.itemBlock.deleteMany({
+            where: {
+                blockingUser: {
+                    id: user.id
+                }
+            }
+        });
+
+        const deletedUserReactions = await prisma.userReaction.deleteMany({
+            where: {
+                user: {
                     id: user.id
                 }
             }
@@ -52,7 +76,10 @@ export const handler = async (event) => {
             deletedItems: deletedItemsCount,
             deletedTips: deletedTipsCount,
             deletedVotes: deletedVotesCount,
-            deletedUserBlocks: deletedUserBlocks
+            deletedUserBlockings: deletedUserBlockings,
+            deletedUserBlocked: deletedUserBlocked,
+            deletedItemBlocks: deletedItemBlocks,
+            deletedUserReactions: deletedUserReactions
         };
         console.log("Deleted Info: " + JSON.stringify(deletedInfo));
         return {

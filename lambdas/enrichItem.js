@@ -6,8 +6,6 @@ import AWS from 'aws-sdk';
 const kms = new AWS.KMS();
 
 export const handler = async (event) => {
-
-  console.log("Event object: " + JSON.stringify(event));
   
   try {
     const user = await prisma.user.findUnique({
@@ -19,25 +17,6 @@ export const handler = async (event) => {
             body: JSON.stringify({ error: 'Can\'t find user!' })
         };
     }
-    const item = await prisma.item.findUnique({
-      where: {
-          user: { id: user.id },
-          uuid: event.item_uuid
-      }
-    });
-    if (item == null) {
-        return {
-            statusCode: 403,
-            body: JSON.stringify({ error: 'Can\'t find item owned by user!' })
-        };
-    }
-
-    // Decrypt item text
-    const decryptParams = {
-      CiphertextBlob: Buffer.from(item.text, 'base64')
-    };
-    const decryptedData = await kms.decrypt(decryptParams).promise();          
-    const decryptedText = decryptedData.Plaintext.toString('utf-8');
 
     // Note: Lambda lowercases all header keys
     let currentDateStringPrompt = '';
@@ -59,24 +38,22 @@ export const handler = async (event) => {
           "content": `
                 ${currentDateStringPrompt}
                 The user has submitted a description of a task.
-                If the task includes time, date, or temporal adverbs, remove that text from the task and represent it in the scheduled_datetime_utc field below.
-                If the task only contains time info, assume the scheduled date is the current date in the user's timezone.
-                If the task only contains a date or temporal adverbs, assume the scheduled time is 12:00AM in the user's timezone.
+                If the task includes time, date, and/or temporal adverb information, translate the info into the scheduled_datetime_utc field below.
+                If the task only contains time info, assume the date is the current date in the user's timezone.
+                If the task only contains a date or temporal adverbs, assume the time is 6:00AM in the user's timezone.
                 Respond only in English.
                 Return your analysis in the following JSON format:
                 {
-                  "enriched: <true if task was modified, false otherwise>,
-                  "text": <modified task description if it contained date and/or time info, otherwise exclude this field from JSON>, 
-                  "scheduled_datetime_utc": <ISO 8601 formatted string in UTC timezone per rules above if task was modified, otherwise exclude this field from JSON>
+                  "scheduled_datetime_utc": <ISO 8601 formatted string in UTC timezone per rules above if task contained time info, otherwise set to null>
                 }`
         },
-        { "role": "user", "content": `User-provided input: ${decryptedText}` }
+        { "role": "user", "content": `User-provided input: ${event.text}` }
       ], 
       response_format: { "type": "json_object" },
       user: event.anonymous_id
     });
 
-    const enrichedItem = JSON.parse(completion.choices[0].message.content);
+    const { scheduled_datetime_utc } = JSON.parse(completion.choices[0].message.content);
 
     const usage = completion.usage;
     const inputTokens = usage.prompt_tokens;
@@ -92,7 +69,7 @@ export const handler = async (event) => {
 
     const response = {
       statusCode: 200,
-      body: { ...enrichedItem, chat_cost: chatCost }
+      body: { scheduled_datetime_utc, chat_cost: chatCost }
     };
     return response;
   } catch (error) {

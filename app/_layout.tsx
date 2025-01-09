@@ -97,11 +97,11 @@ export default function StackLayout() {
   return (
     <AppProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <Stack screenOptions={{
-          headerShown: false
-        }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="onboarding" />
+        <Stack 
+          initialRouteName="(tabs)"
+          screenOptions={{ headerShown: false }}>
+          {/* <Stack.Screen name="index" />
+          <Stack.Screen name="onboarding" /> */}
           <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
         </Stack>
       </GestureHandlerRootView>

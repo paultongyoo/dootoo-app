@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
 import { usePathname } from 'expo-router';
-import { loadItems, deleteItem, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_ONLY_DONE_PARENTS } from '@/components/Storage';
+import { loadItems, deleteItem, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_ONLY_DONE_ITEMS, updateItemHierarchy } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooList, { listStyles, THINGNAME_DONE_ITEM } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
@@ -21,10 +21,33 @@ import Reanimated, {
 import { Trash } from "@/components/svg/trash";
 import DootooDoneEmptyUX from "@/components/DootooDoneEmptyUX";
 
+/*
+  1.7 Latest MVP UX: 
+        -- Flat page of ALL completed parents and children, listed by Item.updatedAt descending
+        --- Page updated to list completed subitems that ARE listed on opened items page too
+        -- Completed children have their parents' text listed above them in smaller font (they are NOT separate list items) 
+
+      Actions allowed from this page at the moment
+        1) Reopening individual items:
+            - User prompted to confirm
+            - Item moved to top of opened list
+            - Reopened children scenarios
+            -- If child's parent is open, reopened child is removed from done page 
+                and opened in place on opened page
+            -- If child's parent is done, reopened child is removed from done page 
+                and moved to top of opened page as new adult
+            -- Reopened parents only are removed from the done page (any completed children stay on done page) 
+                and their entire family (should be only done items) moved to top of opened page
+        2) Deleting individual items
+        3) Making item public (yes, currently want to test allowing completed items to be made public to see if users do this to celebrate)
+        4) Pagination load on scroll
+        5) Pull down to refresh
+*/
+
 export default function DoneScreen() {
   const pathname = usePathname();
-  const { anonymousId, doneItems, setDoneItems, setOpenItems,
-    thingRowHeights, thingRowPositionXs } = useContext(AppContext);
+  const { anonymousId, username, doneItems, setDoneItems, setOpenItems,
+    thingRowHeights, refreshCommunityItems } = useContext(AppContext);
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
@@ -55,31 +78,11 @@ export default function DoneScreen() {
 
   const handleDoneClick = async (item) => {
 
-    /*
-    Rules as of v1.1.1 in priority order:
-
-      1) Scenarios attempting to set item TO Done :
-        1.1) If user sets an item that has no children to Done, item is moved to top of
-           Done Adults list or end of the list if no DAs exist.
-        1.2) If user attempts to set a parent item to done that has open children,
-              DISPLAY PROMPT to user that:
-              1.2.1) Informs them their item has open subitems
-              1.2.2) Asks them if they want to Complete or Delete their open items
-                 --- Choosing this option will affect the open items as chosen and set the parent to done
-              1.2.3) Gives them Cancel button
-                 --- Choosing this option will simply dismiss the prompt; no change made to item or list
-        1.3) If user sets a child to Done, item is moved to top of Kids list if kids exist, otherwise left
-           underneath parent.  The child is NOT separated from its parent.
-
-      2) Scenarios setting item TO Open:
-        2.1) If item is an DA, move it to the top of the DA list if it exists, or end of the list if no DAs
-        2.2) If item is a child of a DA, move it to the top of the DA list (or end of list if no DAs) and make it a parent
-        2.3) If item is a child of an Open parent, move it to the top of the Done Kids list (or end of maily list of no DKs)
-    */
     try {
 
       amplitude.track("Item Done Clicked", {
         anonymous_id: anonymousId,
+        username: username,
         pathname: pathname,
         uuid: item.uuid,
         done_state_at_click: item.is_done,
@@ -87,8 +90,7 @@ export default function DoneScreen() {
         item_type: (item.parent_item_uuid) ? 'child' : 'adult'
       });
 
-      // Check if item has open kids
-      const openChildren = doneItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
+      // Build list of done children on the page
       const doneChildren = doneItems.filter((child) => (child.parent_item_uuid == item.uuid) && child.is_done);
 
       // 1) If attempting to set item TO done
@@ -100,20 +102,26 @@ export default function DoneScreen() {
 
         amplitude.track("Item Reopen Prompt Displayed", {
           anonymous_id: anonymousId.current,
+          username: username,
           pathname: pathname
         });
 
         Alert.alert(
           "Reopen Item?",
-          (doneChildren.length == 0) 
-            ? "Your item will appear at the top of your opened items list."
-            : "Your item and its subitems will appear at the top of your opened items list.",
+          (item.parent) 
+            ? ((item.parent.is_done)
+                ? "The item will appear at the top of your Open Items list."
+                : "The item will be reopened under its parent on your Open Items list.")
+            : ((doneChildren.length == 0) 
+                ? "The item will appear at the top of your opened items list."
+                : "The item and its subitems will appear at the top of your opened items list."),
           [
             {
               text: 'Cancel',
               onPress: () => {
                 amplitude.track("Item Reopen Cancelled", {
                   anonymous_id: anonymousId.current,
+                  username: username,
                   pathname: pathname
                 });
               },
@@ -123,63 +131,129 @@ export default function DoneScreen() {
               text: 'Yes',
               onPress: () => {
 
-                amplitude.track("Item Reopen Completed", {
-                  anonymous_id: anonymousId.current,
-                  pathname: pathname
-                });
-
                 // Set item TO Open
                 item.is_done = false;
-                updateItemDoneState(item, async () => {
-                  ProfileCountEventEmitter.emit("decr_done");
-                });
 
                 // if item is a child
                 if (item.parent_item_uuid) {
-                  console.warn("Entering scenario that shouldn't happen on the done page: Opening a subitem");
-                } else {
 
-                  const reopenFamily = async () => {
+                  const reopenChild = async () => {
 
-                    // Collapse opened item and all of its children
-                    const uuidsToCollapse = [item.uuid];
-                    uuidsToCollapse.push(...openChildren.map((child) => child.uuid));
-                    uuidsToCollapse.push(...doneChildren.map((child) => child.uuid));
-                    const collapseAnimationPromises = [];
-                    uuidsToCollapse.forEach((uuid) => {
-                      collapseAnimationPromises.push(
-                        new Promise<void>((resolve) => {
-                          thingRowHeights.current[uuid].value =
-                            withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
-                        })
-                      );
-                    });
+                    // Collpase child
+                    await new Promise<void>((resolve) => {
+                      thingRowHeights.current[item.uuid].value =
+                        withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                    })
 
-                    await Promise.all(collapseAnimationPromises);
-
-                    // 1.6 Item is a parent -- remove it and its children from its list (to be rendered on the list screen)
+                    // Remove item from done page
                     setDoneItems((prevItems) => {
 
-                      const openedList = prevItems.map(obj => (obj.uuid == item.uuid) ? { ...obj, is_done: false } : obj);
-                      const children = openedList.filter(obj => obj.parent_item_uuid == item.uuid);
-                      const itemIdx = openedList.findIndex(obj => obj.uuid == item.uuid);
-                      openedList.splice(itemIdx, 1 + children.length);
+                      // Create new list from existing excluding the child 
+                      const filteredList = prevItems.filter(prevItem => (prevItem.uuid != item.uuid));
 
-                      const uuidArray = openedList.map((thing) => ({ uuid: thing.uuid }));
+                      // Save the new list's order in the DB
+                      const uuidArray = filteredList.map((thing) => ({ uuid: thing.uuid }));
                       saveItemOrder(uuidArray);
 
-                      return openedList;
+                      // return the list to render it
+                      return filteredList;
                     });
 
-                    // 1.6 Prepend the opened parent and its family to the opened list
-                    setOpenItems((prevItems) => {
-                      return [item,
-                              ...openChildren, // This is assumed empty
-                              ...doneChildren,
-                              ...prevItems];
+                    // Update the opened list in one of two ways based on parent's done state
+                    if (item.parent.is_done) {
+                      
+                      // Clear the item's parent and move to top of the list
+                      updateItemHierarchy(item.uuid, null, () => {
+                        updateItemDoneState(item, async () => {
+                          if (item.parent.is_public) {
+                            refreshCommunityItems();
+                          }
+                          ProfileCountEventEmitter.emit("decr_done");
+                        });
+                      });
+                      setOpenItems((prevItems) => {
+                        return [{...item, parent_item_uuid: null, parent: null }, ...prevItems];
+                      });
+                    } else {
+
+                      // Update done state of item in place (it's ASSumed the item is still present in the list)
+                      setOpenItems((prevItems) => prevItems.map(prevItem =>
+                          (prevItem.uuid == item.uuid)
+                            ? { ...prevItem, is_done: false }
+                            : prevItem
+                      ));
+
+                      updateItemDoneState(item, async () => {
+                        if (item.parent.is_public) {
+                          refreshCommunityItems();
+                        }
+                        ProfileCountEventEmitter.emit("decr_done");
+                        
+                        amplitude.track("Item Reopen Completed", {
+                          anonymous_id: anonymousId.current,
+                          username: username,
+                          pathname: pathname,
+                          item_type: 'child'
+                        });
+                      });
+                    }
+                  }
+                  reopenChild();
+
+                } else {
+
+                  const reopenAdult = async () => {
+
+                    // Collapse reopened item
+                    await new Promise<void>((resolve) => {
+                      thingRowHeights.current[item.uuid].value =
+                        withTiming(0, { duration: 300 }, (isFinished) => { if (isFinished) { runOnJS(resolve)() } })
+                    });
+
+
+                    // 1) Remove item from done page, and 2) set any children parent objects to open
+                    setDoneItems((prevItems) => {
+
+                      // 1) Create new list from existing excluding the child 
+                      let filteredList = prevItems.filter(prevItem => (prevItem.uuid != item.uuid));
+
+                      // 2)
+                      filteredList = filteredList.map(prevItem =>
+                        (prevItem.parent_item_uuid == item.uuid) 
+                          ? { ...prevItem,
+                            parent: {
+                              ...prevItem.parent,
+                              is_done: false
+                            }
+                          }
+                          : prevItem);
+
+                      // Save the new list's order in the DB
+                      const uuidArray = filteredList.map((thing) => ({ uuid: thing.uuid }));
+                      saveItemOrder(uuidArray);
+
+                      // return the list to render it
+                      return filteredList;
+                    });
+
+                    // 1.7 Prepend reopened item and its done children to the top of the opened items list
+                    setOpenItems((prevItems) => [item, ...doneChildren, ...prevItems]);
+
+                    updateItemDoneState(item, async () => {
+                      if (item.is_public) {
+                        refreshCommunityItems();
+                      }
+                      ProfileCountEventEmitter.emit("decr_done");
+
+                      amplitude.track("Item Reopen Completed", {
+                        anonymous_id: anonymousId.current,
+                        username: username,
+                        pathname: pathname,
+                        item_type: 'adult'
+                      });
                     });
                   }
-                  reopenFamily();
+                  reopenAdult();
                 }
               },
             },
@@ -229,6 +303,17 @@ export default function DoneScreen() {
     action_MoveToTop: {
       borderRightWidth: 1,
       borderRightColor: '#3E272333'
+    },
+    doneItemParentContainer: {
+      paddingLeft: 10,
+      paddingTop: 0,
+      position: 'relative',
+      top: 6,
+      //backgroundColor: 'red'
+    },
+    doneItemParentText: {
+      fontSize: 12,
+      color: "#3e2723"
     }
   });
 
@@ -245,10 +330,6 @@ export default function DoneScreen() {
   }
 
   const renderRightActions = (item, index, handleThingDeleteFunc, handleMoveToTopFunc, insertRecordingAction) => {
-
-    // Used as part of visibility rules of Move To Top action (don't display if already at top of parent list)
-    const idxOfParent =
-      (item.parent_item_uuid) ? doneItems.findIndex(prevItem => prevItem.uuid == item.parent_item_uuid) : -999;
 
     return (
       <Reanimated.View style={[listStyles.itemSwipeAction, styles.action_Delete]}>
@@ -279,9 +360,8 @@ export default function DoneScreen() {
       saveNewThings={saveNewItems}
       saveTextUpdateFunc={saveTextUpdate}
       saveThingOrderFunc={saveItemOrder}
-      loadAllThings={(isPullDown, page) => loadItems(isPullDown, page, DONE_ITEM_FILTER_ONLY_DONE_PARENTS)}
+      loadAllThings={(isPullDown, page) => loadItems(isPullDown, page, DONE_ITEM_FILTER_ONLY_DONE_ITEMS)}
       deleteThing={deleteItem}
-      saveNewThing={saveNewItem}
       transcribeAudioToThings={transcribeAudioToTasks}
       ListThingSidebar={DootooItemSidebar}
       EmptyThingUX={DootooDoneEmptyUX}

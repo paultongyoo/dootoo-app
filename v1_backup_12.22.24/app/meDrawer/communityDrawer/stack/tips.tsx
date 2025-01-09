@@ -490,7 +490,6 @@ export default function ItemTips() {
 
             ProfileCountEventEmitter.emit('decr_tips');
           }}
-          saveNewThing={(tip, latest_tip_uuids) => saveNewTip(tip, selectedItem.uuid, latest_tip_uuids)}
           transcribeAudioToThings={transcribeAudioToTips}
           ListThingSidebar={DootooTipSidebar}
           EmptyThingUX={() => <DootooTipEmptyUX selectedItem={selectedItem} tipArray={tips} />}

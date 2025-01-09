@@ -1,14 +1,15 @@
 import { Platform, View, StyleSheet, Text } from "react-native";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useContext } from "react";
 import mobileAds, { BannerAd, TestIds, useForeground, BannerAdSize } from 'react-native-google-mobile-ads';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import NavigationSections from "./NavigationSections";
+import { AppContext } from "./AppContext";
 
 const DootooFooter = ({ state, descriptors, navigation }) => {
-
+    const { anonymousId, username } = useContext(AppContext);
     const pathname = usePathname();
 
     const bannerAdId = __DEV__ ?
@@ -90,10 +91,22 @@ const DootooFooter = ({ state, descriptors, navigation }) => {
                         <Text style={styles.bannerAdCopy}>ADVERTISEMENT</Text>
                     </View>
                     <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-                        onPaid={() => amplitude.track("Banner Ad Paid")}
-                        onAdLoaded={() => amplitude.track("Banner Ad Loaded")}
-                        onAdOpened={() => amplitude.track("Banner Ad Opened")}
-                        onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load")} />
+                        onPaid={() => amplitude.track("Banner Ad Paid", {
+                            anonymous_id: anonymousId,
+                            username: username
+                          })}
+                        onAdLoaded={() => amplitude.track("Banner Ad Loaded", {
+                            anonymous_id: anonymousId,
+                            username: username
+                          })}
+                        onAdOpened={() => amplitude.track("Banner Ad Opened", {
+                            anonymous_id: anonymousId,
+                            username: username
+                          })}
+                        onAdFailedToLoad={() => amplitude.track("Banner Ad Failed to Load", {
+                            anonymous_id: anonymousId,
+                            username: username
+                          })} />
                 </View>
             </View>
         </>

@@ -1,5 +1,5 @@
 import { View, Text, ActivityIndicator, Pressable, TextInput, Keyboard, AppState, StyleSheet, Platform, Alert } from 'react-native';
-import { useState, useRef, useContext, useEffect } from 'react';
+import { useState, useRef, useContext, useEffect, useCallback } from 'react';
 import Reanimated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -7,19 +7,25 @@ import { AppContext } from './AppContext';
 import Toast from 'react-native-toast-message';
 import { RefreshControl } from 'react-native-gesture-handler';
 import * as amplitude from '@amplitude/analytics-react-native';
-import { usePathname } from 'expo-router';
+import { useFocusEffect, usePathname } from 'expo-router';
 import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter, ProfileCountEventEmitter } from './EventEmitters';
-import { enrichItem, loadItemsCounts, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
+import { blockUser, enrichItem, loadItemsCounts, loadItemsReactions, loadLocalListLastCachedPage, OPEN_ITEM_LIST_KEY, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemPublicState, updateItemsCache, updateItemSchedule, updateItemText, updateTipsCache } from './Storage';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, getLocalDateObj, insertArrayAfter, isThingOverdue, pluralize, stringizeThingName } from './Helpers';
+import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, generateReactionCountObject, getLocalDateObj, insertArrayAfter, isThingOverdue, pluralize, stringizeThingName } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Bulb } from './svg/bulb';
 import { Clock } from './svg/clock';
 import MicButton from './MicButton';
 import KeyboardButton from './KeyboardButton';
+import Animated from 'react-native-reanimated';
+import ReactionsModal from './ReactionsModal';
+import Modal from 'react-native-modal';
+import { EyeOff } from './svg/eye-off';
+import ProfileModal from './ProfileModal';
+import { Flag } from './svg/flag';
 
 export const THINGNAME_ITEM = "item";
 export const THINGNAME_DONE_ITEM = "done_item";
@@ -34,7 +40,6 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     saveThingOrderFunc,
     loadAllThings,
     deleteThing,
-    saveNewThing,
     transcribeAudioToThings,
     isThingPressable,
     isThingDraggable,
@@ -44,9 +49,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const FOOTER_BUTTON_HEIGHT = 50;
 
     const pathname = usePathname();
-    const { anonymousId, lastRecordedCount, initializeLocalUser,
-        thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap, selectedItem,
-        currentlyTappedThing, emptyListCTAFadeOutAnimation,
+    const { anonymousId, username, lastRecordedCount, initializeLocalUser,
+        thingRowPositionXs, thingRowHeights, swipeableRefs, itemCountsMap: itemReactionsMap, selectedItem,
+        currentlyTappedThing, emptyListCTAFadeOutAnimation, setOpenItems, communityItems, setCommunityItems, setDoneItems,
+        refreshCommunityItems
     } = useContext(AppContext);
     const [screenInitialized, setScreenInitialized] = useState(false);
     const [isRefreshing, setRefreshing] = useState(false);
@@ -64,14 +70,43 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const selectedCalendar = useRef();
     const selectedTimerThing = useRef(null);
     const blurredOnSubmit = useRef(false);
-    const isPageLoading = useRef(false);
+
+    const listOpacity = useSharedValue(0);
 
     const firstListRendered = useSharedValue(false);
     const initialLoadFadeInOpacity = useSharedValue(0);
-    const listOpacity = useSharedValue(0);
+    const nextPageLoadingOpacity = useSharedValue(0);
+    const nextPageAnimatedOpacity = useAnimatedStyle(() => {
+        return { opacity: nextPageLoadingOpacity.value }
+    });
 
     // 1.6 Reintroducing pagination with the separation of Open and Done lists
-    const [page, setPage] = useState(1);
+    const currentPage = useRef(1);
+
+    const [reactorsModalVisible, setReactorsModalVisible] = useState(false);
+    const modalItem = useRef(null);
+    const modelItemReactionCounts = useRef({});
+    const modalItemReactions = useRef([]);
+    const [hideFromCommunityDialogVisible, setHideFromCommunityDialogVisible] = useState(false);
+    const [itemMoreModalVisible, setItemMoreModalVisible] = useState(false);
+    const showMoreModalOnReactionsModalHide = useRef(false);
+    const modalUsername = useRef(null);
+    const [profileModalVisible, setProfileModalVisible] = useState(false);
+    const showProfileModalOnReactionsModalHide = useRef(false);
+
+    const hasReactionsBeenRefreshedOnLaunch = useRef(false);
+    const [appState, setAppState] = useState(AppState.currentState);
+
+    const showMoreModalOnProfileModalHide = useRef(false);
+    const [hideUserDialogVisible, setHideUserDialogVisible] = useState(false);
+    const [reportUserDialogVisible, setReportUserModalVisible] = useState(false);
+    const [selectedBlockReason, setSelectedBlockReason] = useState('no_reason');
+    const [blockReasonOtherText, setBlockReasonOtherText] = useState('');
+
+    const buttonContainerScaleSV = useSharedValue(1);
+    const buttonContainerAnimatedScale = useAnimatedStyle(() => ({
+        transform: [{ scale: buttonContainerScaleSV.value }],
+    }));
 
     useEffect(() => {
         //console.log("DootooList.useEffect([])");
@@ -81,40 +116,27 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             if (shouldInitialLoad) {
                 initialLoadFadeInOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
                     if (isFinished) {
-                        runOnJS(resetListWithFirstPageLoad)();
+                        runOnJS(resetListWithFirstPageLoad)(false);
                     }
                 });
             } else {
                 //console.log("Skipping initial load for user per shouldInitialLoad == false.");
             }
-        });
 
-
-        const handleAppStateChange = (nextAppState) => {
-            //console.log("App State Changed: " + nextAppState);
-            if (nextAppState === "active") {
-                refreshThingCounts();
-
-                // Asynchronously check if updated any events in Calendar app
-                if (thingName == THINGNAME_ITEM) {
-                    syncItemCalendarUpdates();
-                }
+            // If community items haven't been initialized yet, initialize it!
+            if (!communityItems) {
+                refreshCommunityItems();
             }
-        };
-        const subscription = AppState.addEventListener("change", handleAppStateChange);
-
-        return () => {
-            subscription.remove();
-        }
+        });
     }, []);
 
     const initialListArrayMount = useRef(true);
     useEffect(() => {
         if (initialListArrayMount.current) {
-            //console.log("useEffect([listArray]) discarding call on initial mount");
+            //console.log(thingName + " useEffect([listArray]) discarding call on initial mount, listArray: " + listArray.length);
             initialListArrayMount.current = false;
         } else {
-            //console.log(`useEffect[listArray] called: List length ${listArray.length}`);
+            //console.log(thingName + ` useEffect([listArray]) called: List length ${listArray.length}`);
             //console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
 
             // Asyncronously update local cache with latest listArray update
@@ -176,35 +198,76 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 });
             }
 
-            // Check for count updates since user just made an list update action
-            refreshThingCounts();
+            if (!hasReactionsBeenRefreshedOnLaunch.current) {
+                refreshThingReactions();
+                hasReactionsBeenRefreshedOnLaunch.current = true;
+            }
         }
     }, [listArray]);
 
-    const refreshThingCounts = async () => {
+    useEffect(() => {
+        const subscription = AppState.addEventListener('change', (nextAppState) => {
+            if (appState.match(/inactive|background/) && nextAppState === 'active') {
+                //console.log('App has come to the foreground!');
+                refreshThingReactions();
+            }
+            setAppState(nextAppState);
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, [appState]);
+
+    useFocusEffect(
+        useCallback(() => {
+            refreshThingReactions();
+        }, [])
+    );
+
+
+    // 1.7:  Currently refreshThingReactions will only be called on foregrounding the app from background
+    //       otherwise reactions are expected to be refreshed on full pull downs (i.e. as part of loadItems result)
+    //       FUTURE TODO if traction:  Poll refreshThingReactions to refresh more frequently
+    //       NOTE:  because refreshThingReactions update listArray, the refreshThingReactions call CANNOT be placed in the
+    //       listArray effect to prevent infinite loop
+    const refreshThingReactions = async () => {
         let ignore = false;
         if (!ignore) {
             ignore = true;
-            console.log(`Refreshing latest ${thingName} counts: ${new Date(Date.now()).toLocaleString()}`);
-            if (listArray.filter(thing => !thing.newKeyboardEntry).length > 0) {
-                if ((thingName == THINGNAME_ITEM) || (thingName == THINGNAME_DONE_ITEM)) {
-                    const itemUUIDs = listArray.map(thing => thing.uuid);
-                    if (itemUUIDs.length > 0) {
-                        itemCountsMap.current = await loadItemsCounts(itemUUIDs);
-                        if (itemCountsMap.current) {
-                            const mappedUUIDs = [...itemCountsMap.current.keys()];
-                            ListItemEventEmitter.emit(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, mappedUUIDs);
-                        } else {
-                            console.log("loadItemsCount DB call did not return any counts.  Unexpected?");
-                        }
+            if (listArray.filter(thing => thing.is_public && !thing.newKeyboardEntry).length > 0) {
+                const filteredItemUUIDs = listArray.filter(thing => thing.is_public && !thing.newKeyboardEntry).map(thing => thing.uuid);
+                if (filteredItemUUIDs.length > 0) {
+                    console.log(`Refreshing latest ${thingName} reactions: ${new Date(Date.now()).toLocaleString()}`);
+                    itemReactionsMap.current = await loadItemsReactions(filteredItemUUIDs);
+                    //console.log("Loaded Reactions: " + JSON.stringify(itemReactionsMap.current));
+                    if (itemReactionsMap.current) {
+                        listArraySetter(prevItems => {
+                            let arrayToUpdate = [...prevItems];
+                            let itemsRefreshed = 0
+                            for (const uuid in itemReactionsMap.current) {
+                                if (itemReactionsMap.current.hasOwnProperty(uuid)) {
+                                    const returnedReactions = itemReactionsMap.current[uuid];
+                                    //console.log("Updating array with returnedReactions for item " + uuid + ", returnReactions: " + JSON.stringify(returnedReactions));
+                                    arrayToUpdate = arrayToUpdate.map(item =>
+                                        (item.uuid == uuid)
+                                            ? { ...item, userReactions: returnedReactions }
+                                            : item
+                                    )
+                                    itemsRefreshed += 1;
+                                }
+                            }
+                            console.log(`${pluralize('reaction', itemsRefreshed)} refreshed.`)
+                            return arrayToUpdate;
+                        })
                     } else {
-                        console.log("itemUUIDs.length unexpectedly zero given listArray.length > 0 -- is app in bad state?");
+                        console.log("Unexpected null result from loadItemsReactions!");
                     }
                 } else {
-                    console.log("Ignoring counts refresh call for tips, not supported at this time");
+                    console.log("itemUUIDs.length unexpectedly zero given listArray.length > 0 -- is app in bad state?");
                 }
             } else {
-                console.log(`${thingName} list empty, no counts to refresh.`);
+                console.log(`${thingName} user reactions list empty, no counts to refresh.`);
             }
             ignore = false;
         } else {
@@ -212,68 +275,49 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }
     }
 
-    // 1.2 This function is modified to always execute the page = 1 scenario on all calls,
-    //     whether it is first launch scenario or on refresh pull down
     const resetListWithFirstPageLoad = async (isPullDown = false) => {
-        //console.log(`${thingName}: resetListWithFirstPageLoad, page ${page}`);
-        if (page == 1) {
-            // If current page is already 1, manually invoke LoadThingsForCurrentPage 
-            // as useEffect(page) won't be called
-            loadThingsForCurrentPage(isPullDown);
-         } else {
-             //console.log("Setting page var to 1 to trigger loadThingsForCurrentPage().")
-             setPage(1);
-         }
+        currentPage.current = 1;
+        loadThingsForCurrentPage(isPullDown);
     };
 
-    const isInitialPageMount = useRef(true);
-    useEffect(() => {
-        //console.log("useEffect(page) called for pathname " + Date.now());
-        if (isInitialPageMount.current) {
-            isInitialPageMount.current = false;
-        } else {
-
-            // Assume if on effect page == 1 then the page was reset by pulldown
-            loadThingsForCurrentPage(page == 1);
-        }
-    }, [page]);
-
-    const loadNextPage = () => {
+    const loadNextPage = async () => {
         //console.log("loadNextPage called");
         if (hasMoreThings.current) {
-            if (!isRefreshing && !isPageLoading.current) {
-                //console.log(`List end reached, incrementing current page var (currently ${page}).`);
-                isPageLoading.current = true;
-                setPage((prevPage) => prevPage + 1);
-            } else {
-                //console.log(`Ignoring pull down action as page ${page} currently loading or full list is refreshing.`);
-            }
+            //console.log(`${thingName}: List end reached, incrementing current page var (currently ${currentPage.current}).`);
+
+            await new Promise<void>((resolve) => {
+                nextPageLoadingOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
+                    if (isFinished) {
+                        runOnJS(resolve)();
+                    }
+                })
+            })
+
+            currentPage.current = currentPage.current + 1;
+            loadThingsForCurrentPage(false);
         } else {
-            //console.log(`Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
+            //console.log(`${thingName}: Ignoring onEndReach call as user doesn't have more ${thingName} to return`);
         }
     };
 
     const loadThingsForCurrentPage = async (isPullDown = false) => {
-        //console.log(`${thingName}: Calling loadAllThings(page) with page = ${page}.`);
+        //console.log(`${thingName}: Calling loadAllThings with currentPage = ${currentPage.current}.`);
 
-        const loadResponse = await loadAllThings(isPullDown, page);
+        const loadResponse = await loadAllThings(isPullDown, currentPage.current);
 
         let things = loadResponse.things || [];
         const hasMore = loadResponse.hasMore;
 
-        //console.log(`DB load returned ${things.length} item(s) and hasMore is ${hasMore}`);
+        console.log(`${thingName}: loadAllThings returned ${things.length} item(s) and hasMore is ${hasMore}`);
 
         // Immediately update hasMore state to prevent future backend calls if hasMore == false
         hasMoreThings.current = hasMore;
 
-        isPageLoading.current = false;
-        setRefreshing(false);
-
         // If we're loading the first page, assume we want to reset the displays list to only the first page
         // (e.g. on a pull-down-to-refresh action).  If page > 1, assume we want to append the page to what's currently
         // displayed.
-        if (page == 1) {
-            //console.log(`(Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
+        if (currentPage.current == 1) {
+            //console.log(`${thingName}: (Re)setting displayed list to page 1, containing ${things.length} ${thingName}(s).`)
 
             // 1.3 Deactivated fade in animation to prevent flicker on launch
             // if (isPullDown) {
@@ -286,18 +330,34 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             //fadeInListOnRender.current = true;
 
             //console.log("Loading page 1 outside of pulldown refresh, simply fading in list");
+            //console.log("Outputting Things: " + JSON.stringify(things));
             listArraySetter([...things]);
             // }
         } else {
-            //console.log(`Appending ${things.length} ${thingName}(s) from page ${page} to current list.`)
+            //console.log(`${thingName}: Appending ${things.length} ${thingName}(s) from page ${currentPage.current} to current list.`)
+
+            await new Promise<void>((resolve) => {
+                nextPageLoadingOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
+                    if (isFinished) {
+                        runOnJS(resolve)();
+                    }
+                })
+            })
+
             listArraySetter((prevItems) => prevItems.concat(things));
         }
+
+        currentPage.current = loadResponse.lastPageLoaded;
+        //console.log(`${thingName}: CurrentPage updated to last page loaded: ${currentPage.current}`);
+
+        setRefreshing(false);
     }
 
     function handleThingDrag(newData: unknown[], fromIndex, toIndex, draggedThing) {
 
         amplitude.track("List Item Dragged", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: draggedThing.uuid,
             item_type: (draggedThing.parent_item_uuid) ? 'child' : 'adult'
@@ -314,6 +374,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                 amplitude.track(`Child Dragged Outside Of Family`, {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname,
                     uuid: draggedThing.uuid
                 });
@@ -331,6 +392,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                 amplitude.track(`Child Dragged to New Family`, {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname,
                     uuid: draggedThing.uuid
                 });
@@ -365,6 +427,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                 amplitude.track(`Adult Dragged Into Family`, {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname,
                     uuid: draggedThing.uuid,
                     kid_count: kidCount
@@ -411,7 +474,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         }
     }
 
-    const handleThingDelete = (thing: any) => {
+    const handleThingDelete = async (thing: any) => {
         //console.log("handleThingDelete: " + JSON.stringify(thing));
 
 
@@ -440,41 +503,55 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             // Call asyncronous delete to mark item as deleted in backend to sync database
                             // 1.2  Deleting parent thing will delete its children too in DB
                             // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
-                            if (!thing.newKeyboardEntry) deleteThing(thing.uuid);                               
+                            if (!thing.newKeyboardEntry) deleteThing(thing.uuid, () => {
+                                if (thing.is_public) {
+                                    refreshCommunityItems();
+                                }
+                            });
 
                             const animationPromises = [];
                             for (var i = index; i <= index + thingSubtasks.length; i++) {
 
                                 amplitude.track(`${thingName} Deleted`, {
                                     anonymous_id: anonymousId,
+                                    username: username,
                                     thing_uuid: listArrayCopy[i].uuid,
                                     thing_type: thingName
                                 });
 
-                                animationPromises.push(
-                                    new Promise<void>((resolve) => {
-                                        thingRowPositionXs.current[listArrayCopy[i].uuid].value = withTiming(-600, {
-                                            duration: 300,
-                                            easing: Easing.in(Easing.quad)
-                                        }, (isFinished) => {
-                                            if (isFinished) {
-                                                runOnJS(resolve)()
-                                            }
-                                        });
-                                    })
-                                );
-                                animationPromises.push(
-                                    new Promise<void>((resolve) => {
-                                        thingRowHeights.current[listArrayCopy[i].uuid].value = withTiming(0, {
-                                            duration: 300,
-                                            easing: Easing.in(Easing.quad)
-                                        }, (isFinished) => {
-                                            if (isFinished) {
-                                                runOnJS(resolve)()
-                                            }
-                                        });
-                                    })
-                                );
+                                if (thingRowPositionXs.current[listArrayCopy[i].uuid]) {
+                                    animationPromises.push(
+                                        new Promise<void>((resolve) => {
+                                            thingRowPositionXs.current[listArrayCopy[i].uuid].value = withTiming(-600, {
+                                                duration: 300,
+                                                easing: Easing.in(Easing.quad)
+                                            }, (isFinished) => {
+                                                if (isFinished) {
+                                                    runOnJS(resolve)()
+                                                }
+                                            });
+                                        })
+                                    );
+                                } else {
+                                    console.log("thingRowPositionX unexpectedly missing for item: " + listArrayCopy[i].text);
+                                }
+
+                                if (thingRowHeights.current[listArrayCopy[i].uuid]) {
+                                    animationPromises.push(
+                                        new Promise<void>((resolve) => {
+                                            thingRowHeights.current[listArrayCopy[i].uuid].value = withTiming(0, {
+                                                duration: 300,
+                                                easing: Easing.in(Easing.quad)
+                                            }, (isFinished) => {
+                                                if (isFinished) {
+                                                    runOnJS(resolve)()
+                                                }
+                                            });
+                                        })
+                                    );
+                                } else {
+                                    console.log("thingRowHeights unexpectedly missing for item: " + listArrayCopy[i].text);
+                                }
                             }
 
                             await Promise.all(animationPromises);
@@ -515,52 +592,65 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             const index = listArrayCopy.findIndex(obj => obj.uuid == thing.uuid);
 
             //console.log(`Stats of row before deleting - positionX ${JSON.stringify(currentRowPositionX)}, rowHeight ${JSON.stringify(currentRowHeight)}`);
-            currentRowPositionX.value = withTiming(-600, {
-                duration: 300,
-                easing: Easing.in(Easing.quad)
-            }, (isFinished) => {
-                if (isFinished) {
-                    currentRowHeight.value = withTiming(0, {
-                        duration: 300,
-                        easing: Easing.in(Easing.quad)
-                    }, (isFinished) => {
-                        if (isFinished) {
-                            runOnJS(postSingleDeletionActions)(listArrayCopy, index, thing);
-                        }
-                    });
+
+            if (currentRowPositionX) {
+                await new Promise<void>((resolve) => currentRowPositionX.value = withTiming(-600, {
+                    duration: 300,
+                    easing: Easing.in(Easing.quad)
+                }, (isFinished) => {
+                    if (isFinished) {
+                        runOnJS(resolve)();
+                    }
+                }));
+            } else {
+                console.log("currentRowPositionX unexpectedly null for item: " + thing.text);
+            }
+
+            if (currentRowHeight) {
+                await new Promise<void>((resolve) => currentRowHeight.value = withTiming(0, {
+                    duration: 300,
+                    easing: Easing.in(Easing.quad)
+                }, (isFinished) => {
+                    if (isFinished) {
+                        runOnJS(resolve)();
+                    }
+                }));
+            } else {
+                console.log("currentRowHeight unexpectedly null for item: " + thing.text);
+            }
+
+            amplitude.track(`${thingName} Deleted`, {
+                anonymous_id: anonymousId,
+                username: username,
+                thing_uuid: thing.uuid,
+                thing_type: thingName
+            });
+
+            // Call asyncronous delete to mark item as deleted in backend to sync database
+            // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
+            if (!thing.newKeyboardEntry) deleteThing(thing.uuid, () => {
+                if (thing.is_public) {
+                    refreshCommunityItems();
                 }
             });
+
+            if (thingName == 'tip') {
+                ProfileCountEventEmitter.emit('decr_tips');
+            }
+
+            if (thing.is_done) {
+                ProfileCountEventEmitter.emit("decr_done");
+            }
+
+            // Remove item from displayed and thingRowPositionXs lists
+            listArrayCopy.splice(index, 1);
+            delete thingRowPositionXs.current[thing.uuid];
+            delete thingRowHeights.current[thing.uuid];
+
+            //console.log(`updatedThings post delete (${updatedThings.length}): ${JSON.stringify(updatedThings)}`);
+
+            listArraySetter((prevThings) => prevThings.filter((obj) => (obj.uuid != thing.uuid)));
         }
-    }
-
-    const postSingleDeletionActions = (listArrayCopy, index, thing) => {
-
-        amplitude.track(`${thingName} Deleted`, {
-            anonymous_id: anonymousId,
-            thing_uuid: thing.uuid,
-            thing_type: thingName
-        });
-
-        // Call asyncronous delete to mark item as deleted in backend to sync database
-        // 1.3  We don't try to DB delete new keyboard entries as they weren't saved to DB yet
-        if (!thing.newKeyboardEntry) deleteThing(thing.uuid);
-
-        if (thingName == 'tip') {
-            ProfileCountEventEmitter.emit('decr_tips');
-        }
-
-        if (thing.is_done) {
-            ProfileCountEventEmitter.emit("decr_done");
-        }
-
-        // Remove item from displayed and thingRowPositionXs lists
-        listArrayCopy.splice(index, 1);
-        delete thingRowPositionXs.current[thing.uuid];
-        delete thingRowHeights.current[thing.uuid];
-
-        //console.log(`updatedThings post delete (${updatedThings.length}): ${JSON.stringify(updatedThings)}`);
-
-        listArraySetter((prevThings) => prevThings.filter((obj) => (obj.uuid != thing.uuid)));
     }
 
     // Function to close all Swipeables except the one being opened
@@ -588,6 +678,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleTimerClick = (thing) => {
         amplitude.track("Item Timer Icon Tapped", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: thing.uuid
         });
@@ -607,6 +698,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleTimerToastEditClick = (thing) => {
         amplitude.track("Edit Schedule Icon Tapped", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: thing.uuid
         });
@@ -618,6 +710,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleScheduleEditDialogCancel = () => {
         amplitude.track("Edit Schedule Dialog Cancelled", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         setShowScheduleEditDialog(false);
@@ -626,10 +719,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleScheduleEditDialogClear = () => {
         amplitude.track("Item Schedule Clear Message Displayed", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname
         });
         Alert.alert(
-            "Clear Schedule",
+            "Delete Schedule",
             `Are you sure you want to remove the schedule from this item? ` +
             `${(selectedTimerThing.current.event_id) ? 'This will delete your calendar event as well.' : ''}`,
             [
@@ -638,6 +732,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     onPress: () => {
                         amplitude.track("Item Schedule Clear Message Cancelled", {
                             anonymous_id: anonymousId,
+                            username: username,
                             pathname: pathname
                         });
                     },
@@ -648,6 +743,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     onPress: () => {
                         amplitude.track("Item Schedule Cleared", {
                             anonymous_id: anonymousId,
+                            username: username,
                             pathname: pathname
                         });
                         clearScheduleInfo();
@@ -678,7 +774,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 }
                 : thing));
 
-        updateItemSchedule(thingToUpdateUUID, null);
+        updateItemSchedule(thingToUpdateUUID, null, () => {
+            if (selectedTimerThing.current.is_public) {
+                refreshCommunityItems();
+            }
+        });
         updateItemEventId(thingToUpdateUUID, null);
         setShowScheduleEditDialog(false);
     }
@@ -710,6 +810,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
         amplitude.track("Edit Schedule Dialog Submitted", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: selectedTimerThing.current.uuid
         });
@@ -728,7 +829,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 }
                 : thing));
 
-        updateItemSchedule(thingToUpdateUUID, newScheduledDateTimeUTCStr);
+        updateItemSchedule(thingToUpdateUUID, newScheduledDateTimeUTCStr, () => {
+            if (selectedTimerThing.current.is_public) {
+                refreshCommunityItems();
+            }
+        });
 
         if (eventIdToUpdate) {
             const updatedTimerThing = { ...selectedTimerThing.current, scheduled_datetime_utc: newScheduledDateTimeUTCStr };
@@ -749,6 +854,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleScheduleEditDialogEditDateClick = () => {
         amplitude.track("Edit Schedule Dialog Date Tapped", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
         });
@@ -766,6 +872,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleScheduleEditDialogEditTimeClick = () => {
         amplitude.track("Edit Schedule Dialog Time Tapped", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
         });
@@ -784,6 +891,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleTimerToastCalendarClick = async (thing) => {
         amplitude.track("Calendar Icon Tapped", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: thing.uuid
         });
@@ -798,6 +906,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             if (calendarUri) {
                 amplitude.track("Calendar App URI Opened", {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname,
                     uuid: thing.uuid
                 });
@@ -813,6 +922,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         const permissionsResponse = await Calendar.requestCalendarPermissionsAsync();
         amplitude.track("Calendar Permissions Requested", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: thing.uuid,
             permissionsResponse: permissionsResponse.status
@@ -829,12 +939,14 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             } else if (editableCalendars.current.length > 1) {
                 amplitude.track("Calendar Selection Dialog Displayed", {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname
                 });
                 setShowCalendarSelectionDialog(true);
             } else if (editableCalendars.current.length == 0) {
                 amplitude.track("No Calendars Found Message Displayed", {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname
                 });
                 Alert.alert(
@@ -846,6 +958,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                             onPress: () => {
                                 amplitude.track("No Calendars Found Message Dimissed", {
                                     anonymous_id: anonymousId,
+                                    username: username,
                                     pathname: pathname
                                 });
                             }
@@ -857,6 +970,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         } else {
             amplitude.track("Calendar Permissions Required Displayed", {
                 anonymous_id: anonymousId,
+                username: username,
                 pathname: pathname
             });
             Alert.alert(
@@ -868,6 +982,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         onPress: () => {
                             amplitude.track("Calendar Permissions Required Dimissed", {
                                 anonymous_id: anonymousId,
+                                username: username,
                                 pathname: pathname
                             });
                         },
@@ -878,6 +993,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         onPress: () => {
                             amplitude.track("Calendar Permissions Required Go to Settings Pressed", {
                                 anonymous_id: anonymousId,
+                                username: username,
                                 pathname: pathname
                             });
                             openAppSettings();
@@ -892,6 +1008,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleCalendarSelectDialogCancel = () => {
         amplitude.track("Calendar Selection Dialog Cancelled", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
         });
@@ -903,6 +1020,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
     const handleCalendarSelectDialogSubmission = async () => {
         amplitude.track("Calendar Selection Dialog Submitted", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
         });
@@ -925,6 +1043,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                 amplitude.track("Calendar Event Created", {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname,
                     uuid: (selectedTimerThing.current) ? selectedTimerThing.current.uuid : null
                 });
@@ -940,6 +1059,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 onPress: () => {
                                     amplitude.track("Calendar Event Created Go to Calendar Button Pressed", {
                                         anonymous_id: anonymousId,
+                                        username: username,
                                         pathname: pathname
                                     });
 
@@ -956,6 +1076,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 onPress: () => {
                                     amplitude.track("Calendar Event Created Message Dimissed", {
                                         anonymous_id: anonymousId,
+                                        username: username,
                                         pathname: pathname
                                     });
                                 }
@@ -1038,7 +1159,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         }
                                         : prevThing));
 
-                                updateItemSchedule(thing.uuid, calStartLocalDate.toISOString());
+                                updateItemSchedule(thing.uuid, calStartLocalDate.toISOString(), () => {
+                                    if (thing.is_public) {
+                                        refreshCommunityItems();
+                                    }
+                                });
                                 //updateItemText({ uuid: thing.uuid, text: calEvent.title });                 
                             } else {
                                 //console.log("Calendar Event " + calEvent.title + " matches what's saved.");
@@ -1058,7 +1183,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 }
                                 : prevThing));
 
-                        updateItemSchedule(thing.uuid, null);
+                        updateItemSchedule(thing.uuid, null, () => {
+                            if (thing.is_public) {
+                                refreshCommunityItems();
+                            }
+                        });
                         updateItemEventId(thing.uuid, null);
                     }
                 });
@@ -1074,6 +1203,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
         amplitude.track("Tap Below List Entry Started", {
             anonymous_id: anonymousId,
+            username: username,
             pathname: pathname,
             uuid: newItem.uuid
         });
@@ -1100,6 +1230,190 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             Keyboard.dismiss();
         }
     }
+
+    const handleReactionsTap = (item) => {
+        modalItem.current = item;
+        modelItemReactionCounts.current = generateReactionCountObject(item.userReactions);
+        modalItemReactions.current = item.userReactions;
+        // console.log("modelItemCounts: " + JSON.stringify(modalItemCounts.current));
+        // console.log("modalItemReactions: " + JSON.stringify(modalItemReactions.current));
+        setReactorsModalVisible(true);
+    }
+
+    const handleHideFromCommunity = () => {
+        amplitude.track("Item Hide from Public Prompt Displayed", {
+            anonymous_id: anonymousId,
+            username: username,
+            pathname: pathname
+        });
+        setItemMoreModalVisible(false);
+        setHideFromCommunityDialogVisible(true);
+    }
+
+    const handleHideFromCommunityCancel = () => {
+        amplitude.track("Item Hide from Public Prompt Cancelled", {
+            anonymous_id: anonymousId,
+            username: username,
+            pathname: pathname
+        });
+        setHideFromCommunityDialogVisible(false);
+    }
+
+    const handleHideFromCommunitySubmit = () => {
+        amplitude.track("Item Hide from Public Prompt Approved", {
+            anonymous_id: anonymousId,
+            username: username,
+            pathname: pathname
+        });
+        setHideFromCommunityDialogVisible(false);
+        setReactorsModalVisible(false);
+        if (communityItems) {
+            setCommunityItems(prevItems =>
+                prevItems.filter(prevItem => prevItem.uuid != modalItem.current.uuid));
+        }
+        if (modalItem.current.is_done) {
+            setDoneItems(prevItems => prevItems.map((prevItem) =>
+                (prevItem.uuid == modalItem.current.uuid)
+                    ? { ...prevItem, is_public: false }
+                    : prevItem));
+        } else {
+            setOpenItems(prevItems => prevItems.map((prevItem) =>
+                (prevItem.uuid == modalItem.current.uuid)
+                    ? { ...prevItem, is_public: false }
+                    : prevItem));
+        }
+        updateItemPublicState(modalItem.current.uuid, false);
+    }
+
+    const submitBlock = async (username, block_reason_str) => {
+        const wasBlockSuccessful = await blockUser(username, block_reason_str);
+        if (wasBlockSuccessful) {
+
+            amplitude.track("Block Profile Blocked", {
+                anonymous_id: anonymousId,
+                username: username,
+                pathname: pathname,
+                name: username
+            });
+
+            setItemMoreModalVisible(false);
+            setCommunityItems(prevItems =>
+                (prevItems) ? prevItems.filter(prevItem => prevItem.user.name != username) : prevItems);
+
+        } else {
+            Alert.alert(
+                "Unexpected error occurred",
+                "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
+            amplitude.track("Block Profile Unexpected Error", {
+                anonymous_id: anonymousId,
+                username: username,
+                pathname: pathname,
+                name: username
+            });
+        }
+    }
+
+    const handleHideUser = () => {
+        amplitude.track("Hide User Prompt Displayed", {
+            anonymous_id: anonymousId,
+            username: username,
+            pathname: pathname
+        });
+        setItemMoreModalVisible(false);
+        setHideUserDialogVisible(true);
+    }
+
+    const handleHideUserCancel = () => {
+        amplitude.track("Hide User Prompt Cancelled", {
+            anonymous_id: anonymousId,
+            username: username,
+            pathname: pathname
+        });
+        setHideUserDialogVisible(false);
+    }
+
+    const handleHideUserSubmit = async () => {
+        amplitude.track("Hide User Prompt Approved", {
+            anonymous_id: anonymousId,
+            username: username,
+            pathname: pathname
+        });
+        await submitBlock(modalUsername.current, "hide_user");
+        setHideUserDialogVisible(false);
+    }
+
+    const handleReportUser = () => {
+        setItemMoreModalVisible(false);
+        setReportUserModalVisible(true);
+    }
+
+    const handleReportUserCancel = () => {
+        setReportUserModalVisible(false);
+    }
+
+    const handleReportUserSubmit = async () => {
+        if (selectedBlockReason == 'other') {
+            await submitBlock(modalUsername.current, `${selectedBlockReason}: ${blockReasonOtherText}`);
+        } else {
+            await submitBlock(modalUsername.current, selectedBlockReason);
+        }
+        setReportUserModalVisible(false);
+    }
+
+    const ItemMoreModal = () => (
+        <Modal
+            isVisible={itemMoreModalVisible}
+            onBackdropPress={() => { setItemMoreModalVisible(false) }}
+            backdropOpacity={0.3}
+            animationIn="fadeIn">
+            <View style={listStyles.communityModal}>
+                {(modalItem.current) ?
+                    <Pressable hitSlop={10}
+                        style={({ pressed }) => [
+                            listStyles.moreOverlayOption,
+                            pressed && { backgroundColor: '#3e372310' }
+                        ]}
+                        onPress={handleHideFromCommunity}>
+                        <View>
+                            <EyeOff wxh="20" color="#3e2723" />
+                        </View>
+                        <View>
+                            <Text style={listStyles.moreOverlayOptionText}>Hide Item from Community</Text>
+                        </View>
+                    </Pressable>
+                    : <></>}
+                {(modalUsername.current) && (modalUsername.current != username) ? <>
+                    <Pressable hitSlop={10}
+                        style={({ pressed }) => [
+                            listStyles.moreOverlayOption,
+                            pressed && { backgroundColor: '#3e372310' }
+                        ]}
+                        onPress={handleHideUser}>
+                        <View style={styles.moreOverlayOptionIcon}>
+                            <EyeOff wxh="20" color="#3e2723" />
+                        </View>
+                        <View>
+                            <Text style={listStyles.moreOverlayOptionText}>Hide User</Text>
+                        </View>
+                    </Pressable>
+                    <Pressable hitSlop={10}
+                        style={({ pressed }) => [
+                            listStyles.moreOverlayOption,
+                            pressed && { backgroundColor: '#3e372310' }
+                        ]}
+                        onPress={handleReportUser}>
+                        <View style={styles.moreOverlayOptionIcon}>
+                            <Flag wxh="20" color="#3e2723" />
+                        </View>
+                        <View>
+                            <Text style={listStyles.moreOverlayOptionText}>Report User</Text>
+                        </View>
+                    </Pressable>
+                </>
+                    : <></>}
+            </View>
+        </Modal>
+    )
 
     const renderThing = ({ item, getIndex, drag, isActive }) => {
         const textInputRef = useRef(null);
@@ -1175,7 +1489,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
         const revealListIfLastRowRendered = () => {
 
             if (currentlyTappedThing.current && currentlyTappedThing.current.uuid == item.uuid) {
-                console.log("Attempting to display text input of animated row: " + item.text);
+                //console.log("Attempting to display text input of animated row: " + item.text);
                 renderTappedField.current = true;
                 setRefreshKey(prev => prev + 1);
             }
@@ -1186,7 +1500,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
             //  we can afford janky animations the user won't be able to see)
             // 1.3 Needed to include Math.min op to "ensure" boolean was set for long lists
             if (getIndex() == Math.min(15, listArray.length - 1)) {
-                console.log("Setting boolean indicating first list has been rendered");
+                //console.log("Setting boolean indicating first list has been rendered");
                 firstListRendered.value = true;
             }
         }
@@ -1226,55 +1540,39 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 //console.log("Attempting to enrich item: " + item.text);
                 const attemptToEnrichedItem = async (itemToEnrich) => {
                     try {
-                        const enrichmentResponse = await fetchWithRetry(() => enrichItem(itemToEnrich));
-                        //console.log("Enriched Item Response: " + JSON.stringify(enrichmentResponse));
-                        if (enrichmentResponse && enrichmentResponse.enriched) {
+                        const { scheduled_datetime_utc } = await enrichItem(itemToEnrich);
+                        //console.log("Enriched Item Response: " + JSON.stringify(scheduled_datetime_utc));
+                        if (scheduled_datetime_utc) {
 
-                            lastEnrichedText.current = enrichmentResponse.text;
-
-                            await new Promise<void>((resolve) => {
-                                textOpacity.value = withTiming(0, { duration: 300 }, (isFinished) => {
-                                    if (isFinished) {
-                                        runOnJS(resolve)();
-                                    }
-                                })
-                            })
-
-                            amplitude.track("Item Enriched", {
-                                anonymous_id: anonymousId,
-                                pathname: pathname,
-                                uuid: item.uuid
-                            });
-
-                            // Overwrite enriched data in DB and UI
+                            // Overwrite scheduled_datetime_utc in DB and UI
                             listArraySetter((prevThings) => prevThings.map((thing) =>
                                 (thing.uuid == itemToEnrich.uuid)
                                     ? {
                                         ...thing,
-                                        text: enrichmentResponse.text,
-                                        scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc
+                                        scheduled_datetime_utc: scheduled_datetime_utc
                                     }
                                     : thing
                             ));
 
-                            // 1.3 Intentionally NOT implementing the below functions in the enrichment lambda
-                            //     to minimize time required to return enrichment back to client
-                            const deepItemCopy = {
-                                ...item,
-                                text: enrichmentResponse.text,
-                                scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc
-                            }
-                            updateItemText(deepItemCopy);
-                            updateItemSchedule(item.uuid, enrichmentResponse.scheduled_datetime_utc);
+                            // We need to use retry here given this effect may be called 
+                            // after an item was just created by user and therefore the item may be
+                            // in the process of saving and we have to wait for the save to complete.
+                            // This is still a hack as the save may still take longer than the amount
+                            // of retries employed here.  FUTURE TODO TO FIX
+                            await fetchWithRetry(() => updateItemSchedule(item.uuid, scheduled_datetime_utc, () => {
+                                if (item.is_public) {
+                                    refreshCommunityItems();
+                                }
+                            }));
 
                             const eventIdToUpdate = item.event_id;
                             if (eventIdToUpdate) {
-                                const updatedTimerThing = { ...selectedTimerThing.current, scheduled_datetime_utc: enrichmentResponse.scheduled_datetime_utc };
+                                const updatedTimerThing = { ...selectedTimerThing.current, scheduled_datetime_utc: scheduled_datetime_utc };
                                 const updatedDate = getLocalDateObj(updatedTimerThing);
                                 const alertMinutesOffset = deriveAlertMinutesOffset(updatedTimerThing);
                                 //console.log("Updated alertMinutesOffset: " + alertMinutesOffset);
                                 Calendar.updateEventAsync(eventIdToUpdate, {
-                                    title: enrichmentResponse.text,
+                                    title: item.text,
                                     alarms: [{ relativeOffset: alertMinutesOffset, method: Calendar.AlarmMethod.ALERT }],
                                     startDate: updatedDate,
                                     endDate: updatedDate
@@ -1343,29 +1641,31 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 //// Make a deep copy of thing before editting to ensure
                 //// we don't accidentally change React state and cause re-renders
                 const updatedThing = JSON.parse(JSON.stringify(thing));
-                updatedThing.text = textOnChange;
+                updatedThing.text = textOnChange.trim();
 
                 if (thing.newKeyboardEntry) {
 
                     amplitude.track("Keyboard Entry Completed", {
                         anonymous_id: anonymousId,
+                        username: username,
                         pathname: pathname,
                         uuid: thing.uuid
                     });
 
                     const latestUuidOrder = listArray.map((thing) => ({ uuid: thing.uuid }));
-                    saveNewThing(updatedThing, latestUuidOrder);
+                    saveNewThings([updatedThing], latestUuidOrder, handleTextUpdateBackendResponse);
 
                     if (thingName == 'tip') {
                         ProfileCountEventEmitter.emit('incr_tips', { count: 1 });
                     }
                 } else {
                     // Asynchronously sync new item text to DB
-                    saveTextUpdateFunc(updatedThing);
+                    saveTextUpdateFunc(updatedThing, handleTextUpdateBackendResponse);
                 }
 
                 amplitude.track("Thing Text Edited", {
                     anonymous_id: anonymousId,
+                    username: username,
                     pathname: pathname,
                     thing_uuid: thing.uuid,
                     thing_type: thingName
@@ -1387,7 +1687,8 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         ? {
                             ...prevThing,
                             text: textOnChange,
-                            newKeyboardEntry: false
+                            newKeyboardEntry: false,
+                            flagged: false           // Reset any flagged states on this initial save (violations will be flagged on callback)
                         }
                         : prevThing);
 
@@ -1427,6 +1728,45 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 blurredOnSubmit.current = false
                 return updatedArray;
             });
+        }
+
+        const handleTextUpdateBackendResponse = (response) => {
+            //console.log("Inside handleTextUpdateBackendResponse: " + JSON.stringify(response));
+            if (response.statusCode == 422) {
+
+                // Saved payload included flagged items!  Visually highlight
+                // the flagged items in the UI and inform user
+                const flaggedItems = response.body;
+                const flaggedUuids = flaggedItems.map(item => item.uuid);   // Ignoring flag reason for now
+                //console.log("flaggedUuids: " + JSON.stringify(flaggedUuids));
+
+                amplitude.track("New Items Flagged", {
+                    anonymous_id: anonymousId,
+                    username: username,
+                    pathname: pathname,
+                    numItems: flaggedUuids.length
+                });
+
+                listArraySetter(prevItems => {
+
+                    const messageModifier =
+                        (flaggedUuids.length == 1) ? 'One'
+                            : (flaggedUuids.length == prevItems.length) ? 'All'
+                                : 'some';
+                    Alert.alert(`${pluralize('Item', flaggedUuids.length)} Flagged`,
+                        `${messageModifier} of your items ${flaggedUuids.length == 1 ? 'has' : 'have'} been ` +
+                        `flagged as violating our community rules and will be removed on your next refresh.  To maintain the integrity of your list, ` +
+                        `modify the text to abide by community rules or delete the ${pluralize('item', flaggedUuids.length, false)}.`);
+
+                    return prevItems.map(prevItem =>
+                        flaggedUuids.includes(prevItem.uuid)
+                            ? { ...prevItem, flagged: true }
+                            : prevItem
+                    )
+                });
+
+
+            }
         }
 
         const handleMoveToTop = async (selectedThing) => {
@@ -1485,13 +1825,19 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 const thingsToMove = shallowListCopy.splice(getIndex(), thingsToCollapse.length);
 
                 // If thing is a child, ASSume the user wants to move the thing to the top
-                // of the family, else move it to the top of their entire list            
+                // of the family, else move it to the top of their entire list  
+                let newArray;
                 if (selectedThing.parent_item_uuid) {
                     const parentIndex = shallowListCopy.findIndex(thing => thing.uuid == selectedThing.parent_item_uuid);
-                    return insertArrayAfter(shallowListCopy, thingsToMove, parentIndex);
+                    newArray = insertArrayAfter(shallowListCopy, thingsToMove, parentIndex);
                 } else {
-                    return thingsToMove.concat(shallowListCopy);
+                    newArray = thingsToMove.concat(shallowListCopy);
                 }
+
+                const uuidArray = newArray.map((thing) => ({ uuid: thing.uuid }));
+                saveThingOrderFunc(uuidArray);
+
+                return newArray;
             });
         }
 
@@ -1525,6 +1871,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                 const shallowListCopy = prevThings.map(thing => thing);
                 const thingsToMove = shallowListCopy.splice(getIndex(), thingsToCollapse.length);
                 shallowListCopy.splice(previousIndex.current, 0, ...thingsToMove);
+
+                const uuidArray = shallowListCopy.map((thing) => ({ uuid: thing.uuid }));
+                saveThingOrderFunc(uuidArray);
+
                 return shallowListCopy;
             });
         }
@@ -1575,6 +1925,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     onSwipeableWillOpen={(direction) => {
                         amplitude.track(`Swipe ${direction.toUpperCase()} Actions Opened`, {
                             anonymous_id: anonymousId,
+                            username: username,
                             pathname: pathname,
                             thing_uuid: item.uuid,
                             thing_type: thingName
@@ -1599,27 +1950,37 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         }
                     }}>
                     <ScaleDecorator>
-                        <View style={[listStyles.itemContainer, styles.itemContainer]}>
-                            {(item.parent_item_uuid) ?
+                        {getIndex() == 0 && (<View style={{ height: 4 }}></View>)}
+                        {(thingName == THINGNAME_DONE_ITEM) && item.parent && (
+                            <View style={styles.doneItemParentContainer}>
+                                <Text style={[styles.doneItemParentText, item.parent.is_done && { textDecorationLine: 'line-through' }]}>{item.parent.text}:</Text>
+                            </View>
+                        )}
+                        <View style={[listStyles.itemContainer, styles.itemContainer,
+                        (thingName == THINGNAME_DONE_ITEM) && {
+                            borderBottomWidth: 1,
+                            borderBottomColor: '#3E272333',
+                        }]}>
+                            {item.parent_item_uuid && (thingName != THINGNAME_DONE_ITEM) && (
                                 <View style={styles.childItemSpacer}></View>
-                                : <></>
-                            }
-                            {(isDoneable && !((thingName == THINGNAME_DONE_ITEM) && item.parent_item_uuid)) ?
-                                <Pressable style={[styles.itemCircleOpen, item.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(item)}></Pressable>
-                                : ((thingName == THINGNAME_DONE_ITEM) && item.parent_item_uuid) 
-                                    ? <View style={styles.childDoneSpacer}></View>
-                                    : <></>
-                            }
-                            {(thingName == 'tip') ?
+                            )}
+                            {isDoneable && (
+                                <Pressable hitSlop={10} style={[styles.itemCircleOpen, item.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(item)}></Pressable>
+                            )}
+                            {(thingName == 'tip') && (
                                 <Pressable style={styles.tipListIconContainer}
                                     onPress={() => {
                                         console.log("Tapping bulb");
                                         swipeableRefs.current[item.uuid].openLeft()
                                     }}>
                                     <Bulb wxh="28" opacity="0.8" color="#556B2F" strokeWidth='1.5' />
-                                </Pressable> : <></>
-                            }
-                            <View style={listStyles.itemNameContainer}>
+                                </Pressable>
+                            )}
+                            <View style={[listStyles.itemNameContainer,
+                            (thingName == THINGNAME_ITEM) && {
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#3E272333',
+                            }]}>
                                 {((thingName == THINGNAME_ITEM) && item.scheduled_datetime_utc) ?
                                     <Reanimated.View style={[listStyles.timerIconContainer, timerContainerWidthAnimatedStyle]}>
                                         <Pressable hitSlop={10} onPress={() => handleTimerClick(item)}>
@@ -1655,10 +2016,10 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                         }}
                                         onSubmitEditing={(event) => {
                                             blurredOnSubmit.current = true;
-                                            onChangeInputValue.current = event.nativeEvent.text;
+                                            onChangeInputValue.current = event.nativeEvent.text.trim();
                                         }}
                                         onChangeText={(text) => {
-                                            onChangeInputValue.current = text;
+                                            onChangeInputValue.current = text.trim();
                                         }}
                                         onBlur={() => handleBlur(item)}
                                     />
@@ -1670,13 +2031,16 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                                 onLongPress={drag}
                                                 disabled={isActive || item.is_done}
                                                 onPress={() => handleThingTextTap(item)}>
-                                                <Reanimated.Text style={[textOpacityAnimatedStyle, listStyles.taskTitle, item.is_done && listStyles.taskTitle_isDone]}>{item.text}</Reanimated.Text>
+                                                <Reanimated.Text style={[textOpacityAnimatedStyle,
+                                                    listStyles.taskTitle,
+                                                    item.is_done && listStyles.taskTitle_isDone,
+                                                    item.flagged && { color: 'red' }]}>{item.text}</Reanimated.Text>
                                             </Pressable>
                                             : <View style={styles.tipNamePressable}>
-                                                <Text style={[listStyles.taskTitle]}>{item.text}</Text>
+                                                <Text style={[listStyles.taskTitle, item.flagged && { color: 'red' }]}>{item.text}</Text>
                                             </View>
                                     )}
-                                <ListThingSidebar thing={item} styles={styles} />
+                                <ListThingSidebar thing={item} styles={styles} onReactionsPress={() => handleReactionsTap(item)} />
                             </View>
                         </View>
                     </ScaleDecorator>
@@ -1772,8 +2136,11 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                                 }}
                                 nestedScrollEnabled={true}
                                 keyboardShouldPersistTaps="handled"
-                                keyExtractor={(item, index) => item.uuid}
+                                keyExtractor={(item, index) => `${item.uuid}_${item.is_done}`}
+
+                                // Keep height zero to prevent ugly space when first row's swipe actions are revealed
                                 ListHeaderComponent={<View style={{ height: 0 }} />}
+
                                 refreshControl={
                                     <RefreshControl
                                         tintColor="#3E3723"
@@ -1795,16 +2162,18 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
 
                                 ListFooterComponent={
                                     <Pressable onPress={handleBelowListTap} style={{ paddingTop: 10 }}>
-                                        {isPageLoading.current && <ActivityIndicator size={"small"} color="#3E3723" />}
+                                        <Animated.View style={nextPageAnimatedOpacity}>
+                                            <ActivityIndicator size={"small"} color="#3E3723" />
+                                        </Animated.View>
                                         <View style={{ height: 110 }} />
                                     </Pressable>}
                             />
                         </Reanimated.View>
                     </>
-                    : <EmptyThingUX />
+                    : <EmptyThingUX buttonContainerScaleSV={buttonContainerScaleSV} />
             }
             {(!hideBottomButtons) ?
-                <View style={listStyles.bottomButtonsContainer}>
+                <Animated.View style={[listStyles.bottomButtonsContainer, buttonContainerAnimatedScale]}>
                     <MicButton
                         buttonHeight={FOOTER_BUTTON_HEIGHT}
                         buttonUnderlayStyle={listStyles.bottomButton_Underlay}
@@ -1814,9 +2183,87 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                         saveNewThingsFunc={saveNewThings}
                         transcribeFunc={transcribeAudioToThings} />
                     <KeyboardButton listArray={listArray} listArraySetterFunc={listArraySetter} />
-                </View>
+                </Animated.View>
                 : <></>
             }
+            <ItemMoreModal />
+            <ReactionsModal modalVisible={reactorsModalVisible} modalVisibleSetter={setReactorsModalVisible}
+                reactions={modalItemReactions.current} reactionCounts={modelItemReactionCounts.current}
+                onMoreIconPress={() => {
+                    showMoreModalOnReactionsModalHide.current = true;
+                    setReactorsModalVisible(false);
+                }}
+                onUsernamePress={(username) => {
+                    showProfileModalOnReactionsModalHide.current = true;
+                    modalUsername.current = username;
+                    setReactorsModalVisible(false);
+                }}
+                onModalHide={() => {
+                    if (showMoreModalOnReactionsModalHide.current) {
+                        setItemMoreModalVisible(true);
+                        showMoreModalOnReactionsModalHide.current = false;
+                    } else if (showProfileModalOnReactionsModalHide.current) {
+                        setProfileModalVisible(true);
+                        showProfileModalOnReactionsModalHide.current = false;
+                    }
+                }} />
+            <ProfileModal username={modalUsername.current} modalVisible={profileModalVisible} modalVisibleSetter={setProfileModalVisible}
+                onMoreIconPress={
+                    // Only display the more icon if the profile modal is depicting ANOTHER user
+                    (username != modalUsername.current)
+                        ? (modalUsername) => {
+                            showMoreModalOnProfileModalHide.current = true;
+                            modalItem.current = null;
+                            modalUsername.current = modalUsername;
+                            setProfileModalVisible(false);
+                        }
+                        : null
+                }
+                onModalHide={() => {
+                    if (showMoreModalOnProfileModalHide.current) {
+                        setItemMoreModalVisible(true);
+                        showMoreModalOnProfileModalHide.current = false;
+                    }
+                }} />
+            <Dialog.Container visible={hideUserDialogVisible} onBackdropPress={handleHideUserCancel}>
+                <Dialog.Title>Hide All Posts by {modalUsername.current}?</Dialog.Title>
+                <Dialog.Description>This currently cannot be undone.</Dialog.Description>
+                <Dialog.Button label="Cancel" onPress={handleHideUserCancel} />
+                <Dialog.Button label="Yes" onPress={handleHideUserSubmit} />
+            </Dialog.Container>
+            <Dialog.Container visible={reportUserDialogVisible} onBackdropPress={handleReportUserCancel}>
+                <Dialog.Title>Report {modalUsername.current}?</Dialog.Title>
+                <Dialog.Description>This will hide {modalUsername.current}'s posts as well and currently cannot be undone.</Dialog.Description>
+                <RNPickerSelect
+                    onValueChange={(value) => setSelectedBlockReason(value)}
+                    placeholder={{ label: 'Select a reason', value: 'no_reason' }}
+                    style={pickerSelectStyles}
+                    items={[
+                        { label: 'Hate Speech', value: 'hate_speech' },
+                        { label: 'Cyberbullying', value: 'cyberbulling' },
+                        { label: 'Violent threats', value: 'violent_threats' },
+                        { label: 'Promoting Services, Spam', value: 'sell_promote_spam' },
+                        { label: 'Other', value: 'other' },
+                    ]} />
+                {(selectedBlockReason == 'other') ?
+                    <Dialog.Input
+                        multiline={true}
+                        numberOfLines={2}
+                        style={styles.blockedReasonTextInput}
+                        placeholder={'Enter reason'}
+                        onChangeText={(text) => {
+                            setBlockReasonOtherText(text);
+                        }} /> : <></>
+                }
+                <Dialog.Button label="Cancel" onPress={handleReportUserCancel} />
+                <Dialog.Button label="Submit" onPress={handleReportUserSubmit} />
+            </Dialog.Container>
+            <Dialog.Container visible={hideFromCommunityDialogVisible} onBackdropPress={handleHideFromCommunityCancel}>
+                <Dialog.Title>Hide Item from the Community?</Dialog.Title>
+                <Dialog.Description>The item will no longer display in the Community Feed.</Dialog.Description>
+                <Dialog.Button label="Cancel" onPress={handleHideFromCommunityCancel} />
+                <Dialog.Button label="Yes" onPress={handleHideFromCommunitySubmit} />
+            </Dialog.Container>
             <Dialog.Container visible={showCalendarSelectionDialog} onBackdropPress={handleCalendarSelectDialogCancel}>
                 <Dialog.Title>Select Calendar</Dialog.Title>
                 <Dialog.Description>Which calendar to put this item?</Dialog.Description>
@@ -1854,7 +2301,7 @@ const DootooList = ({ thingName = THINGNAME_ITEM, loadingAnimMsg = null, listArr
                     </View>
                 }
                 <Dialog.Button label="Cancel" onPress={handleScheduleEditDialogCancel} />
-                <Dialog.Button label="Clear" onPress={handleScheduleEditDialogClear} />
+                <Dialog.Button label="Delete" onPress={handleScheduleEditDialogClear} />
                 <Dialog.Button label="Submit" onPress={handleScheduleEditDialogSubmission} />
             </Dialog.Container>
         </View>
@@ -1878,15 +2325,14 @@ export const listStyles = StyleSheet.create({
     itemContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingTop: 5
+        // paddingTop: 5,
+        //backgroundColor: 'blue'
     },
     itemNameContainer: {
         marginLeft: 15,                 // Tips had marginLeft 17 - necessary?
         paddingBottom: 10,
         paddingTop: 10,
         paddingRight: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#3E272333', //#322723 with approx 20% alpha
         flex: 1,
         flexDirection: 'row'
     },
@@ -1987,6 +2433,28 @@ export const listStyles = StyleSheet.create({
         position: 'absolute',
         top: 0,
         backgroundColor: 'black'
+    },
+    communityModal: {
+        // position: 'absolute',
+        // right: 10,
+        backgroundColor: '#FAF3E0',
+        borderRadius: 5,
+        width: '100%',
+        paddingHorizontal: 10,
+        paddingVertical: 5
+    },
+    moreOverlayOption: {
+        flexDirection: 'row',
+        paddingHorizontal: 10,
+        paddingVertical: 15,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    moreOverlayOptionText: {
+        paddingLeft: 10,
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#3e2723'
     }
 })
 

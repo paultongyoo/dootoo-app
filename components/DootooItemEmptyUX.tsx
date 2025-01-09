@@ -1,9 +1,9 @@
 import { Text, StyleSheet } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming, Easing } from 'react-native-reanimated';
 
-const DootooItemEmptyUX = () => {
+const DootooItemEmptyUX = ({buttonContainerScaleSV}) => {
 
   const opacity = useSharedValue(0);
 
@@ -23,37 +23,49 @@ const DootooItemEmptyUX = () => {
 
   const executeCTAAnimation = async () => {
     await new Promise<void>((resolve) => {
-      fadeAnimGoals.value = withTiming(1, { duration: 1500 }, (isFinished) => {
+      fadeAnimGoals.value = withDelay(400, withTiming(1, { duration: 600 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
-      })
+      }))
     });
     await new Promise<void>((resolve) => {
-      fadeAnimDreams.value = withTiming(1, { duration: 1500 }, (isFinished) => {
+      fadeAnimDreams.value = withDelay(400, withTiming(1, { duration: 600 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
-      })
+      }))
     });
     await new Promise<void>((resolve) => {
-      fadeAnimChallenges.value = withTiming(1, { duration: 1500 }, (isFinished) => {
+      fadeAnimChallenges.value = withDelay(400, withTiming(1, { duration: 600 }, (isFinished) => {
         if (isFinished) {
           runOnJS(resolve)();
         }
-      })
+      }))
     });
+    await new Promise<void>((resolve) => {
+          buttonContainerScaleSV.value = withDelay(400, withSequence(
+            withTiming(1.2, { duration: 300, easing: Easing.out(Easing.ease) }), 
+            withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) }, 
+            (isFinished) => {
+              if (isFinished) {
+                runOnJS(resolve)();
+              }
+          })))
+        });
   }
 
   useFocusEffect(
     useCallback(() => {
-      opacity.value = withTiming(1, { duration: 800 }, (isFinished) => {
+      //console.log("Inside EmptyItemUX focus effect");
+
+      opacity.value = withTiming(1, { duration: 600 }, (isFinished) => {
         if (isFinished) {
           runOnJS(executeCTAAnimation)();
         }
       });
       return () => {
-        opacity.value = withTiming(0, { duration: 800 }, (isFinished) => {
+        opacity.value = withTiming(0, { duration: 400 }, (isFinished) => {
           if (isFinished) {
             fadeAnimGoals.value = 0;
             fadeAnimDreams.value = 0;

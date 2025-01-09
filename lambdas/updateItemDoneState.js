@@ -17,7 +17,8 @@ export const handler = async (event) => {
             where: {
                 user: { id: user.id },
                 uuid: event.item_uuid
-            }
+            },
+            include: { parent: true }
         });
         if (item == null) {
             return {
@@ -34,7 +35,18 @@ export const handler = async (event) => {
 
             updatedItem = await prisma.item.update({
                 where: { id: item.id },
-                data: { is_done: event.is_done },
+                data: { 
+                    is_done: event.is_done,
+                    doneAt: (event.is_done) ? new Date() : null,
+                    ...(item.parent && item.parent.is_public && !item.parent.is_done && {
+                        parent: {
+                            update: {
+                                public_update_desc: 'updated',
+                                public_updatedAt: new Date()
+                            }
+                        }
+                    }) 
+                },
                 select: {
                     uuid: true
                 }
@@ -54,8 +66,13 @@ export const handler = async (event) => {
             updatedItem = await prisma.item.update({
                 where: { id: item.id },
                 data: { 
-                    is_done: (event.is_done == true),
-                    rank_idx: -1
+                    is_done: (event.is_done == true),                 
+                    doneAt: (event.is_done) ? new Date() : null,
+                    rank_idx: -1,
+                    ...(item.is_public && {
+                        public_update_desc: (event.is_done == true) ? 'finished' : 'reopened',
+                        public_updatedAt: new Date()
+                    })
                 },
                 select: {
                     uuid: true

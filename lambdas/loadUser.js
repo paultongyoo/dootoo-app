@@ -27,7 +27,10 @@ export const handler = async (event) => {
             id: loadedUser.id
           },
           is_done: true,
-          is_deleted: false
+          is_deleted: false,
+          doneAt: {
+            not: null
+          }
         }
       });
       console.log("User Task Done Count: " + loadedUser.doneCount);
@@ -49,8 +52,10 @@ export const handler = async (event) => {
         statusCode: 200,
         body: {
           name: loadedUser.name,
+          affirmation: loadedUser.affirmation,
           doneCount: loadedUser.doneCount,
-          tipCount: loadedUser.tipCount
+          tipCount: loadedUser.tipCount,
+          createdAt: loadedUser.createdAt
         }
       };
     } else {

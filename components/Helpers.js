@@ -42,6 +42,24 @@ export const isThingOverdue = (thing) => {
   return utcDateTime < now;
 }
 
+export const timeAgo = (utcDateString) => {
+  const date = DateTime.fromISO(utcDateString);
+  const relativeTime = date.toRelative();
+  const abbreviated = relativeTime
+    .replace(" minutes", " min.")
+    .replace(" minute", " min.")
+    .replace(" hours", " hr.")
+    .replace(" hour", " hr.")
+    .replace(" seconds", " sec.")
+    .replace(" second", " sec.");
+  return abbreviated;
+}
+
+export const getDate = (utcDateString) => {
+  const date = DateTime.fromISO(utcDateString);
+  return date.toFormat("MMM d, yyyy");
+}
+
 export const momentFromNow = (thing) => {
   const scheduled_datetime_utc = thing.scheduled_datetime_utc;
   return formatLocalizedTime(scheduled_datetime_utc);
@@ -280,6 +298,7 @@ export const generateNewKeyboardEntry = () => {
     text: null,
     parent_item_uuid: null,
     scheduled_datetime_utc: null,
+    userReactions: [],
     newKeyboardEntry: true
   };
   return newItem;
@@ -363,8 +382,8 @@ export function capitalizeFirstCharacter(word) {
   return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
-export function pluralize(word, count) {
-  return `${count} ${count === 1 ? word : word + 's'}`;
+export function pluralize(word, count, includeNumber = true) {
+  return `${includeNumber ? `${count} ` : ``}${count === 1 ? word : word + 's'}`;
 }
 
 export const deleteFile = async (fileUri: string) => {
@@ -393,4 +412,11 @@ export const stringizeThingName = (thingName) => {
   } else {
     return thingName;
   }
+}
+
+export const generateReactionCountObject = (userReactions) => {
+  return userReactions.reduce((acc, { reaction }) => {
+    acc[reaction.name] = (acc[reaction.name] || 0) + 1;
+    return acc;
+  }, {});
 }

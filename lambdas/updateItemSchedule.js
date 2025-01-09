@@ -17,7 +17,8 @@ export const handler = async (event) => {
             where: {
                 user: { id: user.id },
                 uuid: event.item_uuid
-            }
+            },
+            include: { parent: true }
         });
         if (item == null) {
             return {
@@ -29,13 +30,27 @@ export const handler = async (event) => {
         console.log("event.scheduled_datetime_utc: " + event.scheduled_datetime_utc);
         const updatedItem = await prisma.item.update({
             where: { id: item.id },
-            data: { scheduled_datetime_utc: event.scheduled_datetime_utc }
+            data: { 
+                scheduled_datetime_utc: event.scheduled_datetime_utc ,
+                ...(item.is_public && {
+                    public_update_desc: 'updated',
+                    public_updatedAt: new Date()
+                }),
+                ...(item.parent && item.parent.is_public && {
+                    parent: {
+                        update: {
+                            public_update_desc: 'updated',
+                            public_updatedAt: new Date()
+                        }
+                    }
+                })
+            }
         });
         console.log("Updated Item: " + JSON.stringify(updatedItem));
 
         const response = {
             statusCode: 200,
-            body: JSON.stringify(updatedItem)
+            body: true
         };
         return response;
     } catch (error) {   

@@ -2,7 +2,7 @@
   "expo": {
     "name": "dootoo",
     "slug": "dootoo",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "dootoo",
@@ -38,7 +38,7 @@
         "READ_CALENDAR", "WRITE_CALENDAR"
       ],
       "package": "com.thoughtswork.dootoo",
-      "versionCode": 32,
+      "versionCode": 48,
       "manifest": {
         "supportsScreens": {
           "small": false,
@@ -76,7 +76,7 @@
         {
           "androidAppId": "ca-app-pub-6723010005352574~3510065901",
           "iosAppId": "ca-app-pub-6723010005352574~7767841279",
-          "userTrackingUsageDescription": "This will help our ads be more useful to you.",
+          "userTrackingUsageDescription": "This will help dootoo provide a better ads experience.",
           "skAdNetworkItems": [
             "cstr6suwn9.skadnetwork",
             "4fzdc2evr5.skadnetwork",

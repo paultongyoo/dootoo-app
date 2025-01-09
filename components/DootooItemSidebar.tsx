@@ -1,160 +1,206 @@
-import { View, Text, Platform, ActivityIndicator, Pressable, StyleSheet } from 'react-native';
-import { formatNumber } from './Helpers';
-import Toast from 'react-native-toast-message';
-import { useContext, useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Alert } from 'react-native';
+import { useContext, useState } from 'react';
 import { AppContext } from './AppContext';
-import { usePathname, useRouter } from 'expo-router';
-import { LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, ListItemEventEmitter } from "@/components/EventEmitters";
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { flushTipsCache } from './Storage';
+import { usePathname } from 'expo-router';
+import Animated, { useSharedValue } from 'react-native-reanimated';
+import { updateItemPublicState } from './Storage';
 import * as amplitude from '@amplitude/analytics-react-native';
-import { Bulb } from './svg/bulb';
-import { UserRound } from './svg/user-round';
+import { UsersRound } from './svg/users-round';
+import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter } from './EventEmitters';
+import { ReactionsDisplay } from './ReactionsDisplay';
+import { NAVIGATION_SECTION_IDX_COMMUNITY } from './Constants';
 
 
-const DootooItemSidebar = ({ thing, styles, disabled = false }) => {
-    const router = useRouter();
+const DootooItemSidebar = ({ thing, onReactionsPress }) => {
+   
     const pathname = usePathname();
-    const { anonymousId, setSelectedItem, itemCountsMap } = useContext(AppContext);
+    const { anonymousId, username, setOpenItems, setDoneItems, refreshCommunityItems } = useContext(AppContext);
 
-    const TIPS_PATHNAME = '/(tabs)/tips';
-
-    const [tipCount, setTipCount] = 
-        useState((itemCountsMap.current && itemCountsMap.current.get(thing.uuid)) ? itemCountsMap.current.get(thing.uuid).tip_count : null);
-    const [similarCount, setSimilarCount] = 
-        useState((itemCountsMap.current && itemCountsMap.current.get(thing.uuid)) ? itemCountsMap.current.get(thing.uuid).similar_count : null);
-
-    // Update v1.1.1:  Experimenting with not displaying loading anim on item level now that race condition is solved
     const [loading, setLoading] = useState(false);
 
-    // const opacitySV = useSharedValue(1);
-    // const opacityAnimatedStyle = useAnimatedStyle(() => {
-    //     return { opacity: opacitySV.value }
-    // })
-
-    useEffect(() => {
-        //console.log("Inside useEffect([]) " + thing.text + " " + Date.now());
-
-        const eventHandler_countsPolled = ListItemEventEmitter.addListener(LIST_ITEM_EVENT__POLL_ITEM_COUNTS_RESPONSE, (uuidArray) => {
-            if (itemCountsMap.current && uuidArray.includes(thing.uuid)) {
-                const updatedCounts = itemCountsMap.current.get(thing.uuid);
-                setTipCount(updatedCounts.tip_count);
-                setSimilarCount(updatedCounts.similar_count); 
-                // opacitySV.value = withTiming(1, {
-                //     duration: 300
-                // });
-            }
-        });
-
-        return () => {
-            eventHandler_countsPolled.remove();
-            // opacitySV.value = withTiming(0, {
-            //     duration: 300
-            // });
-        }
-    }, []);
-
-    const handleSimilarCountTap = () => {
-        amplitude.track(`Item Similar Count Tapped`, {
+    const handleIsPublicTap = () => {
+        amplitude.track("Item Go Public Prompt Displayed", {
             anonymous_id: anonymousId,
-            pathname: pathname,
-            uuid: thing.uuid,
-            similarCount: similarCount,
-            tipCount: tipCount
+            username: username,
+            pathname: pathname
         });
+        if (!thing.is_public) {
+            Alert.alert(
+                "Share Item with the Community?",
+                "Share this item on the Community Feed to stay motivated, get support, and inspire others working on similar goals.",
+                [
+                    {
+                        text: 'Cancel',
+                        onPress: () => {
+                            amplitude.track("Item Go Public Prompt Cancelled", {
+                                anonymous_id: anonymousId,
+                                username: username,
+                                pathname: pathname
+                            });
+                        }
+                    },
+                    {
+                        text: 'Yes',
+                        onPress: async () => {
+                            amplitude.track("Item Go Public Prompt Approved", {
+                                anonymous_id: anonymousId,
+                                username: username,
+                                pathname: pathname
+                            });
 
-        Toast.show({
-            type: 'msgWithLink',
-            text1: `${similarCount} ${(similarCount > 1) ? 'people' : 'person'} had similar thing`,
-            position: 'bottom',
-            bottomOffset: (Platform.OS == 'ios') ? 280 : 260,
-            props: {
-                width: 230
-            }
-        });
-    }
+                            setLoading(true);
+                            updateItemPublicState(thing.uuid, true, () => {
+                                setLoading(false);
 
-    const handleTipCountTap = () => {
-        amplitude.track(`Item Tip Count Tapped`, {
-            anonymous_id: anonymousId,
-            pathname: pathname,
-            uuid: thing.uuid,
-            similarCount: similarCount,
-            tipCount: tipCount
-        });
+                                if (thing.is_done) {
+                                    setDoneItems(prevItems => prevItems.map((prevItem) => 
+                                        (prevItem.uuid == thing.uuid)
+                                            ? { ...prevItem, is_public: true }
+                                            : prevItem  ));
+                                } else {
+                                    setOpenItems(prevItems => prevItems.map((prevItem) => 
+                                        (prevItem.uuid == thing.uuid)
+                                            ? { ...prevItem, is_public: true }
+                                            : prevItem  ));
+                                }
 
-        if (thing.is_done) {
-            goToTips();
+                                refreshCommunityItems();
+
+                                Alert.alert(
+                                    "Item Posted to the Community",
+                                    "Thanks for sharing.  Let's get to work!",
+                                    [
+                                        {
+                                            text: 'Go to Post',
+                                            onPress: () => {
+                                                amplitude.track("Item Go Public Success: Went to Post", {
+                                                    anonymous_id: anonymousId,
+                                                    username: username,
+                                                    pathname: pathname
+                                                });
+                                                NavigationEventEmitter.emit(NAVIGATION_EVENT__GO_TO_SECTION, NAVIGATION_SECTION_IDX_COMMUNITY);
+                                            }
+                                        },
+                                        {
+                                            text: 'Close',
+                                            onPress: () => {
+                                                amplitude.track("Item Go Public Success: Closed", {
+                                                    anonymous_id: anonymousId,
+                                                    username: username,
+                                                    pathname: pathname
+                                                });                                           
+                                            },
+                                        }
+                                    ]
+                                )
+                            });    
+                        }
+                    }
+                ]
+            )
         } else {
-            flushTipsCache(thing.uuid, goToTips);
-        }
-    }
+            amplitude.track("Item Hide from Public Prompt Displayed", {
+                anonymous_id: anonymousId,
+                username: username,
+                pathname: pathname
+            });
+            Alert.alert(
+                "Hide Item from the Community?",
+                "The item will no longer display in the Community Feed. ",
+                [
+                    {
+                        text: 'Cancel',
+                        onPress: () => {
+                            amplitude.track("Item Hide from Public Prompt Cancelled", {
+                                anonymous_id: anonymousId,
+                                username: username,
+                                pathname: pathname
+                            });
+                        },
+                        style: 'cancel'
+                    },
+                    {
+                        text: 'Yes',
+                        onPress: () => {
+                            amplitude.track("Item Hide from Public Prompt Approved", {
+                                anonymous_id: anonymousId,
+                                pathname: pathname
+                            });
 
-    const goToTips = () => {
-        setSelectedItem(thing);
-        router.push(TIPS_PATHNAME);           
+                            setLoading(true);
+                            updateItemPublicState(thing.uuid, false, () => {
+                                setLoading(false);
+
+                                if (thing.is_done) {
+                                    setDoneItems(prevItems => prevItems.map((prevItem) => 
+                                        (prevItem.uuid == thing.uuid)
+                                            ? { ...prevItem, is_public: false }
+                                            : prevItem  ));   
+                                } else {
+                                    setOpenItems(prevItems => prevItems.map((prevItem) => 
+                                        (prevItem.uuid == thing.uuid)
+                                            ? { ...prevItem, is_public: false }
+                                            : prevItem  ));   
+                                }
+
+                                refreshCommunityItems();
+                            });
+                        },
+                    },
+                ]
+            )
+        }
     }
 
     const sidebarStyles = StyleSheet.create({
         itemCountsRefreshingAnimContainer: {
             justifyContent: 'center'
         },
-        similarCountContainer: {
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'row',
-            paddingLeft: 15
-          },
-          similarCountText: {
-            fontSize: 15,
-            marginRight: 10
-          },
-          tipCountText: {
-            fontSize: 15,
-            marginRight: 8
-          },
-          tipCountContainer: {
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'row'
-          },
-          tipIconContainer: {
-            position: 'relative',
-            top: -2
-          }
+        isPublicContainer: {
+
+        }
     })
 
-    // Update v1.1.1:  Experimenting with not displaying loading anim on item level now that race condition is solved
+    const greenColorSV = useSharedValue("#556B2F")
+
     if (loading) {
         return (
-            <View style={sidebarStyles.itemCountsRefreshingAnimContainer}>
-                <ActivityIndicator size={"small"} color="#3E3723" />
-            </View>
-        );
-    } else {
-        const greenColorSV = useSharedValue("#556B2F")
-        return (
-            <Animated.View style={[/*opacityAnimatedStyle,*/ { flexDirection: 'row' }]}>
-                {(tipCount || thing.is_done) ?
+            <ActivityIndicator size="small" color="#3e2723" />
+        )
+    } else if (!thing.parent_item_uuid && !thing.newKeyboardEntry && !thing.flagged) {
+        if (!thing.is_public) {
+            return (
+                <Animated.View style={[{ flexDirection: 'row', alignItems: 'center' }]}>
                     <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
-                        disabled={disabled || (pathname == TIPS_PATHNAME)}
-                        style={sidebarStyles.tipCountContainer}
-                        onPress={() => handleTipCountTap()}>
-                        <Text style={sidebarStyles.tipCountText}>{formatNumber(tipCount) || '0'}</Text>
-                        <View style={sidebarStyles.tipIconContainer}>
-                            <Bulb wxh="20" opacity="0.8" color="#556B2F" />
-                        </View>
-                    </Pressable> : <></>}
-                {(similarCount) ?
-                    <Pressable hitSlop={{ top: 10, bottom: 10, right: 10 }}
-                        disabled={disabled}
-                        style={sidebarStyles.similarCountContainer}
-                        onPress={() => handleSimilarCountTap()}>
-                        <Text style={sidebarStyles.similarCountText}>{formatNumber(similarCount)}</Text>
-                        <UserRound wxh="18" opacity="0.8" color={greenColorSV} />
-                    </Pressable> : <></>}
-            </Animated.View>
-        );
+                        style={sidebarStyles.isPublicContainer}
+                        onPress={() => handleIsPublicTap()}>
+                        <UsersRound
+                            wxh="20"
+                            opacity="0.3"
+                            color={greenColorSV} />
+                    </Pressable>
+                </Animated.View>
+            );
+        } else if (!thing.userReactions || thing.userReactions.length == 0) {
+            return (
+                <Animated.View style={[{ flexDirection: 'row', alignItems: 'center' }]}>
+                    <Pressable hitSlop={{ top: 10, bottom: 10, left: 10 }}
+                        style={sidebarStyles.isPublicContainer}
+                        onPress={() => handleIsPublicTap()}>
+                        <UsersRound
+                            wxh="20"
+                            opacity="1.0"
+                            color={greenColorSV} />
+                    </Pressable>
+                </Animated.View>
+            );
+        } else {
+            return (
+                <ReactionsDisplay reactions={thing.userReactions} onReactionsPress={onReactionsPress} />
+            )
+        }
+    } else {
+        return <></>
     }
 };
 

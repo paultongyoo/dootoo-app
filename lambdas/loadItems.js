@@ -39,52 +39,131 @@ export const handler = async (event) => {
     });
   } else {
 
+    // const blockedUserIds = await prisma.$queryRaw`
+    // SELECT "blocked_user_id"
+    // FROM "UserBlock"
+    // GROUP BY "blocked_user_id"
+    // HAVING COUNT(*) > 2`;
+    // console.log("Number of Users blocked more than twice: " + blockedUserIds.length);
+
+    const blockedUserIds = [];      // Tmporarily deactivating blockedUserID filter in lieu of future admin strategy
+
+    console.log("onlyOpenParents: " + event.onlyOpenParents);
+    console.log("onlyDoneItems: " + event.onlyDoneItems);
+
     let prismaParams = {
       where: {
         user: { id: user.id },
         is_deleted: false,
-        parent_item_id: null
+        ...(event.onlyOpenParents && {
+          parent_item_id: null,
+          is_done: false
+        }),
+        ...(event.onlyDoneItems && { 
+          is_done: true,
+          doneAt: {
+            not: null
+          }
+         })   // is_done isn't defaulted for backwards compatibility
       },
       select: {
         is_done: true,
+        is_public: true,
         uuid: true,
         text: true,
         scheduled_datetime_utc: true,
         event_id: true,
-        children: {
+        userReactions: {
+          where: {
+            user: {
+              id: {
+                notIn: blockedUserIds.map((row) => row.blocked_user_id),
+              },
+              NOT: {
+                blockedBys: {
+                  some: {
+                    blocking_user_id: user.id, // Exclude reactions where the user is blocked by the current user
+                  },
+                },
+              }
+            },
+          },
           select: {
-            uuid: true,
-            text: true,
-            scheduled_datetime_utc: true,
-            event_id: true,
-            is_done: true,
-            parent: {
+            user: {
               select: {
-                uuid: true
+                name: true,
+                affirmation: true
+              }
+            },
+            reaction: {
+              select: {
+                name: true
               }
             }
           },
-          where: {
-            is_deleted: false
-          },
           orderBy: {
-            rank_idx: 'asc'
+            createdAt: 'desc'
           }
-        }
+        },
+        ...(event.onlyOpenParents && {  // return only children (and their parent UUID) on open page 
+          children: {
+            select: {
+              uuid: true,
+              text: true,
+              scheduled_datetime_utc: true,
+              event_id: true,
+              is_done: true,
+              parent: {
+                select: {
+                  uuid: true,
+                  text: true,
+                  is_done: true,
+                  is_public: true
+                }
+              }
+            },
+            where: {
+              is_deleted: false
+            },
+            orderBy: {
+              rank_idx: 'asc'
+            }
+          }
+        }),
+        ...(event.onlyDoneItems && ({ // return only parents on done page
+          parent: {
+            select: {
+              uuid: true,
+              text: true,
+              is_done: true,
+              is_public: true
+            }
+          }
+        }))
       },
       orderBy: {
-        rank_idx: 'asc'
+        ...((event.onlyOpenParents || !event.onlyDoneItems) && ( { rank_idx: 'asc' } )),
+        ...(event.onlyDoneItems && ({ doneAt: 'desc'}))
       }
     };
 
-    console.log("onlyOpenParents: " + event.onlyOpenParents);
-    console.log("onlyDoneParents: " + event.onlyDoneParents);
+    // if (event.onlyOpenParents) {
+    //   prismaParams.where = { ...prismaParams.where, is_done: false };
+    // } else if (event.onlyDoneItems) {
+    //   prismaParams.where = { ...prismaParams.where, is_done: true };
+    // }
+
+    retrievedItems = await prisma.item.findMany(prismaParams);
 
     if (event.onlyOpenParents) {
-      prismaParams.where = { ...prismaParams.where, is_done: false };
-    } else if (event.onlyDoneParents) {
-      prismaParams.where = { ...prismaParams.where, is_done: true };
+      const flattenItem = (item) => {
+        const { children, ...parent } = item;
+        return [parent, ...children];
+      }
+      retrievedItems = retrievedItems.flatMap((item) => flattenItem(item));
     }
+
+    console.log("retrievedItems array length: " + retrievedItems.length);
 
     const pageSize = 15   // hardcode this for now
     if (!event.skipPagination) {
@@ -92,34 +171,21 @@ export const handler = async (event) => {
       const skip = (page - 1) * pageSize;
       const take = pageSize + 1;  // Take one more than pageSize to determine if there are more items
 
-      console.log(`Calling item.findMany with skip (${skip}) and take (${take})`);
-      prismaParams = { skip, take, ...prismaParams };
-    } else {
-      console.log("Skipping passing skip/take to item.findMany");
-    }
+      console.log(`Applying skip (${skip}) and take (${take})`);
 
-    retrievedItems = await prisma.item.findMany(prismaParams);
-
-    const flattenItem = (item) => {
-      const { children, ...parent } = item;
-      return [parent, ...children];
-    }
-    retrievedItems = retrievedItems.flatMap((item) => flattenItem(item));
-
-    if (!event.skipPagination) {
+      const startIndex = skip || 0;
+      retrievedItems = retrievedItems.slice(startIndex, startIndex + take);
       hasMore = retrievedItems.length > pageSize;
       console.log(`User does${(!hasMore) ? ' not' : ''} have more items.`);
-
-      // Remove the extra item if it exists
       if (hasMore) {
         retrievedItems.pop();
       }
     } else {
+      console.log("Skipping passing skip/take.");
       hasMore = false;
     }
   }
   console.log(`Returned ${((retrievedItems && retrievedItems.length) || 0)} items.`);
-
 
   for (var i = 0; i < retrievedItems.length; i++) {
     const item = retrievedItems[i];
@@ -133,13 +199,10 @@ export const handler = async (event) => {
 
     try {
 
-      // Decrypt item text
-      const decryptParams = {
-        CiphertextBlob: Buffer.from(item.text, 'base64')
-      };
-      const decryptedData = await kms.decrypt(decryptParams).promise();
-      const decryptedString = decryptedData.Plaintext.toString('utf-8');
-      item.text = decryptedString;   // Replace with plaintext string for display in app
+      item.text = await decryptText(item.text);   
+      if (item.parent) {
+        item.parent.text = await decryptText(item.parent.text);
+      }
 
       if (!event.skipCounts) {
 
@@ -197,14 +260,14 @@ export const handler = async (event) => {
     }
   }
 
-  console.log("Retrieved Items prior to orphan removal: " + JSON.stringify(retrievedItems));
+  //console.log("Retrieved Items prior to orphan removal: " + JSON.stringify(retrievedItems));
 
   // HACK ALERT:  Move any orphaned items to top of the list
   //              The UI was built to prevent orphans but they're still occurring occassionally.  
   //              Race conditions maybe?
-  retrievedItems = removeOrphans(retrievedItems);
+  // retrievedItems = removeOrphans(retrievedItems);
 
- 
+
 
   var response = null;
   if (event.loadAll) {
@@ -221,6 +284,14 @@ export const handler = async (event) => {
   await prisma.$disconnect();
   return response;
 };
+
+async function decryptText(encryptedText) {
+  const decryptParams = {
+    CiphertextBlob: Buffer.from(encryptedText, 'base64')
+  };
+  const decryptedData = await kms.decrypt(decryptParams).promise();
+  return decryptedData.Plaintext.toString('utf-8');
+}
 
 function removeOrphans(items) {
   // Create a set of parent IDs from the list

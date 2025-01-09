@@ -44,6 +44,21 @@ export const handler = async (event) => {
                 where: { id: item.id },
                 data: { parent_item_id: parent_item.id }
             });
+
+            // If parent item is public, update its public desc/updatedAt fields
+            // We won't make the same update if the item loses its parent for now
+            if (parent_item.is_public) {
+                await prisma.item.update({
+                    where: {
+                        id: parent_item.id
+                    },
+                    data: {
+                        public_update_desc: 'updated',
+                        public_updatedAt: new Date()
+                    }
+                })
+                console.log("Updated public desc/date fields of public parent");
+            }
         } else {
             updatedItem = await prisma.item.update({
                 where: { id: item.id },
@@ -55,7 +70,7 @@ export const handler = async (event) => {
 
         const response = {
             statusCode: 200,
-            body: JSON.stringify(updatedItem)
+            body: true
         };
         await prisma.$disconnect();
         return response;

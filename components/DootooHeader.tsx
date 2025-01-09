@@ -2,7 +2,6 @@ import { Platform, View, StyleSheet, Text, Pressable, Image } from "react-native
 import Animated from "react-native-reanimated";
 
 const DootooHeader = ({ navigation, route, options }) => {
-
     const styles = StyleSheet.create({
         headerContainer: {
             backgroundColor: '#FAF3E0',

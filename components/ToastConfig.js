@@ -112,24 +112,30 @@ const toastConfig = {
     </View>
   ),
   timerInfo: ({ props }) => (
-    <View style={[styles.baseToast, styles.timerInfo]}>
+    <View style={[styles.baseToast, 
+                  props.onEditIconClick && styles.timerInfo, 
+                  !props.onEditIconClick && { paddingVertical: 10, paddingHorizontal: 15 }]}>
       <View style={styles.timerIconContainer}>
-          {(isThingOverdue(props.thing) && !props.thing.is_done)
-              ? <Clock wxh="20" color="#FF0000" />
-              :  <Clock wxh="20" color="#556B2F" />
-          }
+        {(isThingOverdue(props.thing) && !props.thing.is_done)
+          ? <Clock wxh="20" color="#FF0000" />
+          : <Clock wxh="20" color="#556B2F" />
+        }
       </View>
       <Text onPress={() => Toast.hide()} style={[styles.toastText, isThingOverdue(props.thing) && !props.thing.is_done && styles.timerText_overdue]}>{momentFromNow(props.thing)}</Text>
-      <Pressable hitSLop={10} style={({ pressed }) => [styles.timerEditIconContainer/*, pressed && { backgroundColor: '#000' }*/]}
-        onPress={props.onEditIconClick}>
-        <Edit wxh="20" color="#A23E38" />
-      </Pressable>
-      <Pressable hitSLop={10} style={({ pressed }) => [styles.calendarIconContainer/*, pressed && { backgroundColor: '#000' }*/]}
-        onPress={props.onCalendarIconClick}>
-        {(!props.thing.event_id) ? <CalendarAdd wxh="20" color="#A23E38" />    // TODO Create better image
-          : <Calendar wxh="20" color="#A23E38" />
-        }
-      </Pressable>
+      {props.onEditIconClick && (
+        <Pressable hitSLop={10} style={({ pressed }) => [styles.timerEditIconContainer/*, pressed && { backgroundColor: '#000' }*/]}
+          onPress={props.onEditIconClick}>
+          <Edit wxh="20" color="#A23E38" />
+        </Pressable>
+      )}
+      {props.onCalendarIconClick && (
+        <Pressable hitSLop={10} style={({ pressed }) => [styles.calendarIconContainer/*, pressed && { backgroundColor: '#000' }*/]}
+          onPress={props.onCalendarIconClick}>
+          {(!props.thing.event_id) ? <CalendarAdd wxh="20" color="#A23E38" />    // TODO Create better image
+            : <Calendar wxh="20" color="#A23E38" />
+          }
+        </Pressable>
+      )}
     </View>
   )
 };

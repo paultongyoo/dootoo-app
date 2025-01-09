@@ -69,9 +69,9 @@ export const handler = async (event) => {
                 ${currentDateStringPrompt}
                 Your role is to identify the main tasks and sub-tasks described in the user's input.
                 Only consider a task as a sub-task if it is described as part of another task.
-                If the task includes time, date, or temporal adverbs, remove that text from the task and represent it in the scheduled_datetime_utc field below.
-                If the task only contains time info, assume the scheduled date is the current date in the user's timezone.
-                If the task only contains a date or temporal adverbs, assume the scheduled time is 12:00AM in the user's timezone.
+                If the task includes time, date, and/or temporal adverb information, translate the info into the scheduled_datetime_utc field below.
+                If the task only contains time info, assume the date is the current date in the user's timezone.
+                If the task only contains a date or temporal adverbs, assume the time is 6:00AM in the user's timezone.
                 Do NOT guess tasks beyond what the user stays in their input.
                 Respond only in English.
                 Return your analysis in the following JSON format:
@@ -79,7 +79,7 @@ export const handler = async (event) => {
                   "tasks": [
                     {
                       "uuid": "<RFC-compliant UUID>",
-                      "text": "<task name>", 
+                      "text": "<task name (include schedule info if specified) (capitalize its first letter of task name, not necessarily every word)>", 
                       "parent_item_uuid": <UUID of parent task if this is a subtask>,
                       "scheduled_datetime_utc": <ISO 8601 formatted string in UTC timezone per rules above, or null if no date or time info provided>
                   ]
