@@ -109,7 +109,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
     useImperativeHandle(ref, () => ({
         loadFirstPage: () => {
-            console.log(thingName + ": Started DootooList.loadFirstPage");
+            //console.log(thingName + ": Started DootooList.loadFirstPage");
             initialLoadFadeInOpacity.value = withTiming(1, { duration: 300 }, (isFinished) => {
                 if (isFinished) {
                     runOnJS(resetListWithFirstPageLoad)(false);
@@ -121,11 +121,11 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     useEffect(() => {
 
         if (!listArray) {
-            console.log(thingName + " useEffect([listArray]): listArray not initialized.");
+            //console.log(thingName + " useEffect([listArray]): listArray not initialized.");
             return;
         }
 
-        console.log(thingName + ` useEffect([listArray]) called: List length ${listArray.length}`);
+        //console.log(thingName + ` useEffect([listArray]) called: List length ${listArray.length}`);
         //console.log(`useEffect[listArray]: current contents: ${JSON.stringify(listArray)}`);
 
         // Asyncronously update local cache with latest listArray update
@@ -1519,9 +1519,10 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 //console.log("Attempting to enrich item: " + item.text);
                 const attemptToEnrichedItem = async (itemToEnrich) => {
                     try {
+
+                        // Allow null values to remove dates from displayed items as well
                         const { scheduled_datetime_utc } = await enrichItem(itemToEnrich);
                         //console.log("Enriched Item Response: " + JSON.stringify(scheduled_datetime_utc));
-                        if (scheduled_datetime_utc) {
 
                             // Overwrite scheduled_datetime_utc in DB and UI
                             listArraySetter((prevThings) => prevThings.map((thing) =>
@@ -1558,9 +1559,6 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                 });
                                 //console.log("Calendar Event Updated Asyncronously: " + eventIdToUpdate);
                             }
-                        } else {
-                            //console.log("Enrichment response had no updates");
-                        }
                     } catch (error) {
                         // Log a message to console and abandon updating UI
                         //console.warn("Enrichment calls were not successful, potential issue?", error);
