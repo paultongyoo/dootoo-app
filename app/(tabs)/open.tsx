@@ -40,7 +40,7 @@ export default function ListScreen() {
   });
 
   useEffect(() => {
-    console.log("Open.tsx useEffect([])");
+    //console.log("Open.tsx useEffect([])");
 
     const checkFirstLaunch = async () => {
       const launchStatus = await AsyncStorage.getItem('isFirstLaunch');
@@ -51,7 +51,7 @@ export default function ListScreen() {
     checkFirstLaunch();
 
     initializeLocalUser(() => {
-      console.log("Started initializeLocalUser callback method");
+      //console.log("Started initializeLocalUser callback method");
 
       if (dootooList.current) {
         dootooList.current.loadFirstPage();
