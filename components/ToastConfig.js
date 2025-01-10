@@ -125,14 +125,14 @@ const toastConfig = {
       {props.onEditIconClick && (
         <Pressable hitSLop={10} style={({ pressed }) => [styles.timerEditIconContainer/*, pressed && { backgroundColor: '#000' }*/]}
           onPress={props.onEditIconClick}>
-          <Edit wxh="20" color="#A23E38" />
+          <Edit wxh="20" color="#A23E38" strokeWidth='2' />
         </Pressable>
       )}
       {props.onCalendarIconClick && (
         <Pressable hitSLop={10} style={({ pressed }) => [styles.calendarIconContainer/*, pressed && { backgroundColor: '#000' }*/]}
           onPress={props.onCalendarIconClick}>
           {(!props.thing.event_id) ? <CalendarAdd wxh="20" color="#A23E38" />    // TODO Create better image
-            : <Calendar wxh="20" color="#A23E38" />
+            : <Calendar wxh="20" color="#A23E38" strokeWidth='2' />
           }
         </Pressable>
       )}
