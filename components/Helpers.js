@@ -182,6 +182,9 @@ function formatLocalizedTime(utcISOString) {
   // Helper to format dates with the year
   const formatDateWithYear = (dt) => dt.toFormat("MMM d, yyyy"); // e.g., "Jan 7, 2025"
 
+  // Helper to format dates with abbreviated day
+  const formatDateWithDay = (dt) => dt.toFormat("EEE MMM d"); // e.g., "Sat Jan 11"
+
   // Determine the difference in days
   const daysDifference = scheduledTime.startOf('day').diff(now.startOf('day'), 'days').toObject().days;
 
@@ -201,16 +204,13 @@ function formatLocalizedTime(utcISOString) {
     return `Yesterday ${formatTime(scheduledTime)}`;
   } else if (scheduledTime.year !== now.year) {
     // Different year
-    if (scheduledTime.hour || scheduledTime.minute) {
-      return `${formatDateWithYear(scheduledTime)} ${formatTime(scheduledTime)}`;
-    }
-    return `${formatDateWithYear(scheduledTime)}`;
-  } else if (Math.abs(daysDifference) > 1) {
-    // Same year but more than a day away
-    if (scheduledTime.hour || scheduledTime.minute) {
-      return `${formatDate(scheduledTime)} ${formatTime(scheduledTime)}`;
-    }
-    return `${formatDate(scheduledTime)}`;
+    return `${formatDateWithYear(scheduledTime)} ${formatTime(scheduledTime)}`;
+  } else if (daysDifference > 1) {
+    // Future dates after tomorrow
+    return `${formatDateWithDay(scheduledTime)} ${formatTime(scheduledTime)}`;
+  } else {
+    // Same year but in the past or more than a day away
+    return `${formatDate(scheduledTime)} ${formatTime(scheduledTime)}`;
   }
 }
 
