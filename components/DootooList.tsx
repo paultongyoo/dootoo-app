@@ -26,6 +26,7 @@ import Modal from 'react-native-modal';
 import { EyeOff } from './svg/eye-off';
 import ProfileModal from './ProfileModal';
 import { Flag } from './svg/flag';
+import { useIsFocused } from '@react-navigation/native';
 
 export const THINGNAME_ITEM = "item";
 export const THINGNAME_DONE_ITEM = "done_item";
@@ -93,7 +94,9 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     const [profileModalVisible, setProfileModalVisible] = useState(false);
     const showProfileModalOnReactionsModalHide = useRef(false);
 
+    const hasReactionsBeenRefreshedOnFocus = useRef(false);
     const hasReactionsBeenRefreshedOnLaunch = useRef(false);
+
     const [appState, setAppState] = useState(AppState.currentState);
 
     const showMoreModalOnProfileModalHide = useRef(false);
@@ -164,6 +167,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             syncItemCalendarUpdates();
         }
 
+        // Refresh thing reactions once on launch, and then call on subsequent focus events (see useEffect[isFocused, listArray])
         if (!hasReactionsBeenRefreshedOnLaunch.current) {
             refreshThingReactions();
             hasReactionsBeenRefreshedOnLaunch.current = true;
@@ -184,11 +188,20 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
         };
     }, [appState]);
 
-    useFocusEffect(
-        useCallback(() => {
-            refreshThingReactions();
-        }, [])
-    );
+    const isFocused = useIsFocused();
+    useEffect(() => {
+
+        // HasReactions boolean used to stop infinite loop given refreshThingReactions updates listArray
+        if (isFocused && !hasReactionsBeenRefreshedOnFocus.current) {
+            refreshThingReactions();  
+            hasReactionsBeenRefreshedOnFocus.current = true;
+        } else if (!isFocused) {
+            console.log(thingName + " DootooList lost focus, resetting reactions boolean.");
+
+            // Component lost focused, reset var
+            hasReactionsBeenRefreshedOnFocus.current = false;
+        }
+    }, [isFocused, listArray]);
 
 
     // 1.7:  Currently refreshThingReactions will only be called on foregrounding the app from background
@@ -201,10 +214,11 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
         if (!ignore) {
             ignore = true;
             if (!listArray) {
-                console.log(thingName + "listArray not yet initalized, ignoring refreshThingReactions call.");
+                console.log(thingName + " listArray not yet initalized, ignoring refreshThingReactions call.");
                 return;
             }
-
+            //console.log(thingName + " listArray.filter(thing => thing.is_public).length: " + listArray.filter(thing => thing.is_public).length);
+            //console.log(thingName + " listArray.filter(thing => thing.is_public && !thing.newKeyboardEntry).length: " + listArray.filter(thing => thing.is_public && !thing.newKeyboardEntry).length);
             if (listArray.filter(thing => thing.is_public && !thing.newKeyboardEntry).length > 0) {
                 const filteredItemUUIDs = listArray.filter(thing => thing.is_public && !thing.newKeyboardEntry).map(thing => thing.uuid);
                 if (filteredItemUUIDs.length > 0) {
@@ -227,7 +241,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                     itemsRefreshed += 1;
                                 }
                             }
-                            console.log(`${pluralize('reaction', itemsRefreshed)} refreshed.`)
+                            console.log(`${thingName}: ${pluralize('reaction', itemsRefreshed)} refreshed.`)
                             return arrayToUpdate;
                         })
                     } else {
