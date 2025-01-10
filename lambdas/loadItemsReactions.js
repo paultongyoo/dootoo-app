@@ -29,7 +29,7 @@ export const handler = async (event) => {
             user: {
               select: {
                 name: true,
-                affirmations: true
+                affirmation: true
               }
             },
             reaction: {
