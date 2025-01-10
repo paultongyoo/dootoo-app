@@ -331,7 +331,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                         });
                         Toast.show({
                             type: 'msgOpenWidth',
-                            text1: `We couldn't transcribe your voice.\n\nPlease try again.`,
+                            text1: `We couldn't derive tasks from your voice.\n\nPlease try again.`,
                             position: 'bottom',
                             bottomOffset: (Platform.OS == 'ios') ? 280 : 260
                         });
