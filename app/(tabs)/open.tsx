@@ -9,8 +9,7 @@ import { ProfileCountEventEmitter } from "@/components/EventEmitters";
 import * as amplitude from '@amplitude/analytics-react-native';
 
 import {
-  StyleSheet, Pressable, Alert,
-  Platform,
+  StyleSheet, Pressable, Alert
 } from "react-native";
 import { AppContext } from '@/components/AppContext';
 import Reanimated, {
@@ -24,14 +23,16 @@ import { IndentIncrease } from "@/components/svg/indent-increase";
 import { IndentDecrease } from "@/components/svg/indent-decrease";
 import { Trash } from "@/components/svg/trash";
 import { MoveToTop } from "@/components/svg/move-to-top";
-import { check, PERMISSIONS, request, RESULTS } from "react-native-permissions";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DootooFirstLaunchUX from "@/components/DootooFirstLaunchUX";
 
 export default function ListScreen() {
   const pathname = usePathname();
-  const { anonymousId, username, openItems, setOpenItems, setDoneItems, isFirstLaunch,
-    thingRowHeights, thingRowPositionXs, refreshCommunityItems } = useContext(AppContext);
+  const { anonymousId, username, openItems, setOpenItems, doneItems, setDoneItems, isFirstLaunch,
+    initializeLocalUser, initializeDoneItems, hasMoreOpenItems,
+    thingRowHeights, thingRowPositionXs, communityItems, refreshCommunityItems } = useContext(AppContext);
+
+  const dootooList = useRef(null);
 
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
@@ -39,13 +40,32 @@ export default function ListScreen() {
   });
 
   useEffect(() => {
+    //console.log("Open.tsx useEffect([])");
+
     const checkFirstLaunch = async () => {
-        const launchStatus = await AsyncStorage.getItem('isFirstLaunch');
-        if (launchStatus === null) {
-          isFirstLaunch.current = true;
-        } 
+      const launchStatus = await AsyncStorage.getItem('isFirstLaunch');
+      if (launchStatus === null) {
+        isFirstLaunch.current = true;
+      }
     };
     checkFirstLaunch();
+
+    initializeLocalUser(() => {
+      //console.log("Started initializeLocalUser callback method");
+
+      if (dootooList.current) {
+        dootooList.current.loadFirstPage();
+      }
+
+      // If community items haven't been initialized yet, initialize them!
+      if (!communityItems) {
+        refreshCommunityItems();
+      }
+
+      if (!doneItems) {
+        initializeDoneItems();
+      }
+    });
   }, []);
 
   const saveItemOrder = async (uuidArray) => {
@@ -91,7 +111,7 @@ export default function ListScreen() {
     }); // This should update UI only and not invoke any syncronous backend operations
 
     // Asyncronously update item hierarchy in DB and then refresh community items if item is public
-    updateItemHierarchy(item.uuid, null , () => {
+    updateItemHierarchy(item.uuid, null, () => {
       if (item.is_public) {
         refreshCommunityItems();
       }
@@ -400,7 +420,7 @@ export default function ListScreen() {
 
                       // 1.7 Append done item to top of the done list (it's ASSUmed its done children are already on the list)
                       setDoneItems((prevItems) => {
-                        
+
                         // Two changes needed:
                         // 1) Insert done item at the top of the done list
                         // 2) Set is_done=true on all of its done children's parent objects
@@ -410,15 +430,16 @@ export default function ListScreen() {
 
                         // 2
                         prependedList = prependedList.map(prevItem =>
-                           (prevItem.parent_item_uuid == item.uuid) 
-                              ? { ...prevItem,
-                                parent: {
-                                  ...prevItem.parent,
-                                  is_done: true
-                                }
+                          (prevItem.parent_item_uuid == item.uuid)
+                            ? {
+                              ...prevItem,
+                              parent: {
+                                ...prevItem.parent,
+                                is_done: true
                               }
-                              : prevItem);
-                        
+                            }
+                            : prevItem);
+
                         return prependedList;
                       });
                     }
@@ -449,7 +470,7 @@ export default function ListScreen() {
                       await Promise.all(collapseAnimationPromises);
 
                       // 1.7 Future TODO:  Make the following calls atomic to enforce doneAt ordering
-                      
+
                       // Set each OPEN child as done in backend and incr Profile counter
                       openChildren.forEach((child) => {
                         child.is_done = true;
@@ -544,7 +565,7 @@ export default function ListScreen() {
 
                 // 1.7 Append done item to top of the done list (it's ASSUmed its done children are already on the list)
                 setDoneItems((prevItems) => {
-                  
+
                   // Two changes needed:
                   // 1) Insert done item at the top of the done list
                   // 2) Set is_done=true on all of its done children's parent objects
@@ -554,15 +575,16 @@ export default function ListScreen() {
 
                   // 2
                   prependedList = prependedList.map(prevItem =>
-                      (prevItem.parent_item_uuid == item.uuid) 
-                        ? { ...prevItem,
-                          parent: {
-                            ...prevItem.parent,
-                            is_done: true
-                          }
+                    (prevItem.parent_item_uuid == item.uuid)
+                      ? {
+                        ...prevItem,
+                        parent: {
+                          ...prevItem.parent,
+                          is_done: true
                         }
-                        : prevItem);
-                  
+                      }
+                      : prevItem);
+
                   return prependedList;
                 });
 
@@ -669,7 +691,7 @@ export default function ListScreen() {
               }
               ProfileCountEventEmitter.emit("decr_done");
             });
-    
+
           }
         } else {
           console.warn("Reached unexpected scenario for list page: Opening a done parent.");
@@ -786,6 +808,7 @@ export default function ListScreen() {
 
   return (
     <DootooList
+      ref={dootooList}
       thingName={THINGNAME_ITEM}
       listArray={openItems}
       listArraySetter={setOpenItems}
@@ -803,7 +826,8 @@ export default function ListScreen() {
       ListThingSidebar={DootooItemSidebar}
       EmptyThingUX={(isFirstLaunch.current) ? DootooFirstLaunchUX : DootooItemEmptyUX}
       isThingPressable={() => { return true }}
-      isThingDraggable={true} />
+      isThingDraggable={true}
+      hasMoreThings={hasMoreOpenItems} />
   );
 
 }

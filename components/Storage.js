@@ -587,12 +587,9 @@ export const initalizeUser = async() => {
     // Populate user vars with what's in local storage, if anything
     const localUser = await loadLocalUser();
     if (localUser) {
-      localUser.isNew = false;
       return localUser;
     } else {
-      const newUserData = await createUser();
-      newUserData.isNew = true;
-      return newUserData;
+      return await createUser();
     }
   } catch (e) {
       //console.log("Error reading user data:", e);
@@ -1355,14 +1352,36 @@ const loadTipsCache = async(item_uuid) => {
 }
 
 export const generateUsername = () => {
-  const numberDictionary = NumberDictionary.generate({ min: 100, max: 999 });
-  const characterName = uniqueNamesGenerator({
-    dictionaries: [adjectives, animals, numberDictionary],
-      length: 3,
-      separator: '',
-      style: 'capital'
-    });
-  return characterName;
+  const adjectives = [
+      "Efficient", "Focused", "Tasky", "Proactive", "Dynamic", "Motivated",
+      "Diligent", "Organized", "Productive", "Hustling", "Energetic", "Ambitious",
+      "Driven", "Tenacious", "Swift", "Agile", "Innovative", "Persistent",
+      "Visionary", "Resilient", "Hardworking", "Thorough", "Strategic", "Purposeful",
+      "Optimistic", "Clever", "Bright", "Brilliant", "Adaptable", "Determined",
+      "Energetic", "Reliable", "Inventive", "Logical", "Resourceful", "Enterprising",
+      "Passionate", "Committed", "Punctual", "Bold", "Savvy", "Disciplined",
+      "Confident", "Vigorous", "Quick", "Resolute", "Analytical", "Creative",
+      "Fearless", "Goal-Oriented"
+  ];
+
+  const nouns = [
+      "Ninja", "Guru", "Wizard", "Hamster", "Machine", "Champion",
+      "Avocado", "Overlord", "Commander", "Slayer", "Hero", "Titan",
+      "Panda", "Cyclone", "Phoenix", "Rocket", "Dynamo", "Inventor",
+      "Mastermind", "Conqueror", "Builder", "Doer", "Creator", "Executor",
+      "Strategist", "Leader", "Achiever", "Pioneer", "Visionary", "Planner",
+      "Hustler", "Developer", "Crafter", "Thinker", "Solver", "Trainer",
+      "Innovator", "Motivator", "Fixer", "Architect", "Pilot", "Trailblazer",
+      "Explorer", "Adventurer", "Hunter", "Maker", "Go-Getter", "Operator"
+  ];
+
+  // Generate random parts
+  const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+  const randomNumber = Math.floor(1000 + Math.random() * 9000); // Random 4-digit number
+
+  // Combine parts into a username
+  return `${randomAdjective}${randomNoun}${randomNumber}`;
 };
 
 // Pass generated user name and anonymous ID to backend to store on server

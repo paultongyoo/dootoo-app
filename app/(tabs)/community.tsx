@@ -24,6 +24,7 @@ import { ReactionsDisplay } from "@/components/ReactionsDisplay";
 import ProfileModal from "@/components/ProfileModal";
 import Toast from "react-native-toast-message";
 import { Clock } from "@/components/svg/clock";
+import { useIsFocused } from "@react-navigation/native";
 
 const CommunityScreen = () => {
     const pathname = usePathname();
@@ -79,15 +80,30 @@ const CommunityScreen = () => {
             if (communityLayoutOpacity.value == 0) {
                 fadeInLayout();
             }
-
-            refreshCommunityReactions();
         }, [])
     )
+
+    const hasReactionsBeenRefreshedOnFocus = useRef(false);
+    const isFocused = useIsFocused();
+    useEffect(() => {
+
+        // HasReactions boolean used to stop infinite loop given refreshThingReactions updates listArray
+        if (isFocused && !hasReactionsBeenRefreshedOnFocus.current) {
+            refreshCommunityReactions();  
+            hasReactionsBeenRefreshedOnFocus.current = true;
+        } else if (!isFocused) {
+            console.log("Community list lost focus, resetting reactions boolean.");
+
+            // Component lost focused, reset var
+            hasReactionsBeenRefreshedOnFocus.current = false;
+        }
+    }, [isFocused, communityItems]);
 
     const refreshCommunityReactions = async () => {
         if (communityItems && communityItems.length > 0) {
             console.log("Refreshing community screen reactions...");
             const itemUUIDs = communityItems.map(item => item.uuid);
+            //console.log("itemUUIDs: " + JSON.stringify(itemUUIDs));
             const itemReactionsMap = await loadItemsReactions(itemUUIDs);
             if (itemReactionsMap) {
                 //console.log("Item Reactions Map Response: " + JSON.stringify(itemReactionsMap));

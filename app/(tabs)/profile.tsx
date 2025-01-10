@@ -130,7 +130,7 @@ const ProfileScreen = ({ navigation }) => {
     };
 
     const styles = StyleSheet.create({
-        scrollView: {   
+        scrollView: {
             backgroundColor: '#DCC7AA'
         },
         profileDrawerContainer: {
@@ -569,7 +569,7 @@ const ProfileScreen = ({ navigation }) => {
                 </View>
                 {(!affirmation || affirmation.length == 0) ? (
                     <Pressable onPress={handleEditAffirmation}
-                        style={({pressed}) => [styles.profileDrawerAffirmationCTAButtonContainer, pressed && { backgroundColor: '#455723'}]}>
+                        style={({ pressed }) => [styles.profileDrawerAffirmationCTAButtonContainer, pressed && { backgroundColor: '#455723' }]}>
                         <Text style={[styles.profileDrawerAffirmationCTAButtonText, loadingNewAffirmation && { paddingRight: 10 }]}>Add your Headline</Text>{loadingNewAffirmation && (<ActivityIndicator size={"small"} color="white" />)}
                     </Pressable>
                 ) : (
@@ -614,18 +614,16 @@ const ProfileScreen = ({ navigation }) => {
                 </Pressable> */}
                 </View>
                 {dooDate && (
-                <View style={styles.firstDooDateContainer}>
-                    <Text style={styles.firstDooDatePrefix}>Dooing things since:</Text>
-                    <Text style={styles.firstDooDate}>{getDate(dooDate)}</Text>
-                </View>)}
+                    <View style={styles.firstDooDateContainer}>
+                        <Text style={styles.firstDooDatePrefix}>Dooing things since:</Text>
+                        <Text style={styles.firstDooDate}>{getDate(dooDate)}</Text>
+                    </View>)}
                 <View style={styles.privacyContainer}>
-                    {/* <View style={styles.anonIdDisplayContainer}>
-                    <Text style={styles.anonIdDisplayText}>Your Anonymous ID:</Text>
-                    <Text selectable={true} style={styles.anonIdDisplayText}>{anonymousId}</Text>
-                    <Pressable onPress={showOverrideUserPrompt}>
-                        <Text style={styles.deleteDataLinkText}>Override User</Text>
-                    </Pressable>
-                </View> */}
+                    {/* <View style={styles.linkContainer}>
+                        <Pressable onPress={showOverrideUserPrompt}>
+                            <Text style={styles.deleteDataLinkText}>Override User</Text>
+                        </Pressable>
+                    </View> */}
                     {/* <View style={styles.linkContainer}>
                         <Pressable onPress={showConfirmationPrompt}>
                             <Text style={styles.deleteDataLinkText}>Delete My Data</Text>
@@ -649,7 +647,7 @@ const ProfileScreen = ({ navigation }) => {
                         onChangeText={(text) => {
                             handleAffirmationEditTextInputChange(text);
                         }} />
-                    <Dialog.Description>Add an <Text style={{ fontWeight: 'bold'}}>affirmation, piece of advice, or personal motto</Text> between 4 to 100 characters long: No profanity, impersonation, spamming, or harmful content.</Dialog.Description>
+                    <Dialog.Description>Add an <Text style={{ fontWeight: 'bold' }}>affirmation, piece of advice, or personal motto</Text> between 4 to 100 characters long: No profanity, impersonation, spamming, or harmful content.</Dialog.Description>
                     <Dialog.Button label="Cancel" onPress={handleAffirmationDialogCancel} />
                     <Dialog.Button label="Submit" onPress={handleAffirmationDialogSubmit} disabled={affirmationInvalid} />
                 </Dialog.Container>
