@@ -422,12 +422,14 @@ export const generateReactionCountObject = (userReactions) => {
 }
 
 export const trackEvent = (eventName, eventProperties) => {
-  const userId = amplitude.getUserId(); 
+  const userId = amplitude.getDeviceId();  // TODO Fix -- this is not the desired Amplitude Id
   if ((userId != '1047743226749') || // Me iOS
       (userId != '1093493796864') || // Me Android
       (userId != '1095647595066') || // Dad 
       (userId != '1095635126298') // Mom 
     ) {
-    amplitude.track(eventName, eventProperties);
+    const appendedProps = { ...eventProperties, amplitude_user_id: userId };
+    console.log("Tracking Event: " + eventName + ", properties: " + JSON.stringify(appendedProps));
+    amplitude.track(eventName, appendedProps);
   }
 }
