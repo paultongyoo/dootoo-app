@@ -28,7 +28,7 @@ import { useIsFocused } from "@react-navigation/native";
 
 const CommunityScreen = () => {
     const pathname = usePathname();
-    const { username, anonymousId, setOpenItems, setDoneItems,
+    const { username, anonymousId, affirmation, setOpenItems, setDoneItems,
         communityItems, setCommunityItems, hasMoreCommunityItems, communityLayoutOpacity } = useContext(AppContext);
     const [itemMoreModalVisible, setItemMoreModalVisible] = useState(false);
     const [hideFromCommunityDialogVisible, setHideFromCommunityDialogVisible] = useState(false);
@@ -431,7 +431,7 @@ const CommunityScreen = () => {
         const [reactionModalVisible, setReactionModalVisible] = useState(false);
 
         const handleMoreTap = (item) => {
-            trackEvent(`User Tapped Post More Icon`, {
+            trackEvent(`Post More Icon Tapped`, {
                 anonymous_id: anonymousId,
                 username: username,
                 uuid: item.uuid
@@ -454,17 +454,17 @@ const CommunityScreen = () => {
                 reactToItem(item.uuid, reaction_str);
                 setCommunityItems(prevItems => prevItems.map(prevItem =>
                     (prevItem.uuid == item.uuid)
-                        ? { ...prevItem, userReactions: [{ reaction: { name: reaction_str }, user: { name: username } }, ...prevItem.userReactions.filter(reaction => reaction.user.name != username)] }
+                        ? { ...prevItem, userReactions: [{ reaction: { name: reaction_str }, user: { name: username, affirmation: affirmation } }, ...prevItem.userReactions.filter(reaction => reaction.user.name != username)] }
                         : prevItem));
                 if (item.is_done) {
                     setDoneItems(prevItems => prevItems.map(prevItem =>
                         (prevItem.uuid == item.uuid)
-                            ? { ...prevItem, userReactions: [{ reaction: { name: reaction_str }, user: { name: username } }, ...prevItem.userReactions.filter(reaction => reaction.user.name != username)] }
+                            ? { ...prevItem, userReactions: [{ reaction: { name: reaction_str }, user: { name: username, affirmation: affirmation } }, ...prevItem.userReactions.filter(reaction => reaction.user.name != username)] }
                             : prevItem));
                 } else {
                     setOpenItems(prevItems => prevItems.map(prevItem =>
                         (prevItem.uuid == item.uuid)
-                            ? { ...prevItem, userReactions: [{ reaction: { name: reaction_str }, user: { name: username } }, ...prevItem.userReactions.filter(reaction => reaction.user.name != username)] }
+                            ? { ...prevItem, userReactions: [{ reaction: { name: reaction_str }, user: { name: username, affirmation: affirmation } }, ...prevItem.userReactions.filter(reaction => reaction.user.name != username)] }
                             : prevItem));
                 }
             } else {
@@ -671,7 +671,8 @@ const CommunityScreen = () => {
         trackEvent("Post Reactions Tapped", {
             anonymous_id: anonymousId,
             username: username,
-            pathname: pathname
+            pathname: pathname,
+            uuid: item.uuid
         });
         modalItem.current = item;
         modelItemReactionCounts.current = generateReactionCountObject(item.userReactions);
@@ -723,7 +724,7 @@ const CommunityScreen = () => {
         updateItemPublicState(modalItem.current.uuid, false);
     }
 
-    const submitBlock = async (username, block_reason_str) => {
+    const submitBlock = async (username_to_block, block_reason_str) => {
         const wasBlockSuccessful = await blockUser(username, block_reason_str);
         if (wasBlockSuccessful) {
 
@@ -731,7 +732,7 @@ const CommunityScreen = () => {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
-                name: username
+                blocked_username: username_to_block
             });
 
             setItemMoreModalVisible(false);

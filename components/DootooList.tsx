@@ -1263,15 +1263,15 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
         updateItemPublicState(modalItem.current.uuid, false);
     }
 
-    const submitBlock = async (username, block_reason_str) => {
+    const submitBlock = async (username_to_block, block_reason_str) => {
         const wasBlockSuccessful = await blockUser(username, block_reason_str);
         if (wasBlockSuccessful) {
 
-            trackEvent("Block Profile Blocked", {
+            trackEvent("Profile Blocked", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
-                name: username
+                blocked_username: username_to_block
             });
 
             setItemMoreModalVisible(false);
