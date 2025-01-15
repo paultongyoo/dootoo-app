@@ -1271,7 +1271,8 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
-                blocked_username: username_to_block
+                blocked_username: username_to_block,
+                reason: block_reason_str
             });
 
             setItemMoreModalVisible(false);
