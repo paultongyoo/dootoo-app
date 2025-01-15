@@ -1,8 +1,7 @@
 import axios from 'axios';
 import RNFS from 'react-native-fs';
 import { Buffer } from 'buffer';
-import { generateCurrentTimeAPIHeaders } from './Helpers';
-import * as amplitude from '@amplitude/analytics-react-native';
+import { generateCurrentTimeAPIHeaders, trackEvent } from './Helpers';
 
 const BACKEND_TRANSCRIPTION_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/transcribeAudioToTasks_Dev'
                                             : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/transcribeAudioToTasks';
@@ -58,7 +57,7 @@ export const transcribeAudioToTasks = async (fileUri, durationSeconds, anonymous
     
     // 1.5 Track AI costs if present in the response
     if (response.headers['audio_cost'] && response.headers['chat_cost']) {
-      amplitude.track("AI Costs Received", {
+      trackEvent("AI Costs Received", {
         anonymous_id: anonymous_id,
         audio_cost: (response.headers['audio_cost']) ? Number(response.headers['audio_cost']) : 0,
         chat_cost: (response.headers['chat_cost']) ? Number(response.headers['chat_cost']) : 0
@@ -107,7 +106,7 @@ export const transcribeAudioToTips = async (fileUri, durationSeconds, anonymous_
 
     // 1.5 Track AI costs if present in the response
     if (response.headers['audio_cost'] && response.headers['chat_cost']) {
-      amplitude.track("AI Costs Received", {
+      trackEvent("AI Costs Received", {
         anonymous_id: anonymous_id,
         audio_cost: (response.headers['audio_cost']) ? Number(response.headers['audio_cost']) : 0,
         chat_cost: (response.headers['chat_cost']) ? Number(response.headers['chat_cost']) : 0

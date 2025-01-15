@@ -2,8 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import uuid from 'react-native-uuid';
 import { uniqueNamesGenerator, adjectives, animals, NumberDictionary } from 'unique-names-generator';
-import { generateCurrentTimeAPIHeaders } from './Helpers';
-import * as amplitude from '@amplitude/analytics-react-native';
+import { generateCurrentTimeAPIHeaders, trackEvent } from './Helpers';
 
 // Local storage column keys
 const DONE_COUNT_KEY = "user_done_count";
@@ -446,7 +445,7 @@ export const enrichItem = async (item) => {
     // 1.5 Track AI costs if present in the response
     //console.log("response obj: " + JSON.stringify(response.data.body));
     if (response.data.body.chat_cost) {
-      amplitude.track("AI Costs Received", {
+      trackEvent("AI Costs Received", {
         anonymous_id: localAnonId,
         chat_cost: Number(response.data.body.chat_cost)
       });

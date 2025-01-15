@@ -1,4 +1,4 @@
-import { View, StyleSheet, Pressable, Text, FlatList, Alert } from "react-native";
+import { View, StyleSheet, Pressable, Text, FlatList } from "react-native";
 import Modal from "react-native-modal";
 import { ThumbUp } from "./svg/thumb-up";
 import { Heart } from "./svg/heart";

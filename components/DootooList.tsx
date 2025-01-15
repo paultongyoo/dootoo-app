@@ -1,20 +1,19 @@
 import { View, Text, ActivityIndicator, Pressable, TextInput, Keyboard, AppState, StyleSheet, Platform, Alert } from 'react-native';
-import { useState, useRef, useContext, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { useState, useRef, useContext, useEffect, forwardRef, useImperativeHandle } from 'react';
 import Reanimated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from "react-native-reanimated";
 import DraggableFlatList, { ScaleDecorator } from '@bwjohns4/react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { AppContext } from './AppContext';
 import Toast from 'react-native-toast-message';
 import { RefreshControl } from 'react-native-gesture-handler';
-import * as amplitude from '@amplitude/analytics-react-native';
-import { useFocusEffect, usePathname } from 'expo-router';
+import { usePathname } from 'expo-router';
 import { ProfileCountEventEmitter } from './EventEmitters';
 import { blockUser, enrichItem, loadItemsReactions, updateDoneItemsCache, updateItemEventId, updateItemHierarchy, updateItemPublicState, updateItemsCache, updateItemSchedule, updateTipsCache } from './Storage';
 import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, generateReactionCountObject, getLocalDateObj, insertArrayAfter, isThingOverdue, pluralize, stringizeThingName } from './Helpers';
+import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, generateReactionCountObject, getLocalDateObj, insertArrayAfter, isThingOverdue, pluralize, stringizeThingName, trackEvent } from './Helpers';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Bulb } from './svg/bulb';
 import { Clock } from './svg/clock';
@@ -334,7 +333,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
     function handleThingDrag(newData: unknown[], fromIndex, toIndex, draggedThing) {
 
-        amplitude.track("List Item Dragged", {
+        trackEvent("List Item Dragged", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname,
@@ -351,7 +350,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 (!newData[toIndex - 1] || (newData[toIndex - 1].parent_item_uuid != draggedThing.parent_item_uuid)) &&
                 (newData[toIndex + 1] && !newData[toIndex + 1].parent_item_uuid)) {
 
-                amplitude.track(`Child Dragged Outside Of Family`, {
+                trackEvent(`Child Dragged Outside Of Family`, {
                     anonymous_id: anonymousId,
                     username: username,
                     pathname: pathname,
@@ -369,7 +368,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 newData[toIndex + 1].parent_item_uuid &&
                 newData[toIndex + 1].parent_item_uuid != draggedThing.parent_item_uuid) {
 
-                amplitude.track(`Child Dragged to New Family`, {
+                trackEvent(`Child Dragged to New Family`, {
                     anonymous_id: anonymousId,
                     username: username,
                     pathname: pathname,
@@ -404,7 +403,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 newData[toIndex].parent_item_uuid = newParentUUID;
                 updateItemHierarchy(newData[toIndex].uuid, newParentUUID);
 
-                amplitude.track(`Adult Dragged Into Family`, {
+                trackEvent(`Adult Dragged Into Family`, {
                     anonymous_id: anonymousId,
                     username: username,
                     pathname: pathname,
@@ -491,7 +490,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                             const animationPromises = [];
                             for (var i = index; i <= index + thingSubtasks.length; i++) {
 
-                                amplitude.track(`${thingName} Deleted`, {
+                                trackEvent(`${thingName} Deleted`, {
                                     anonymous_id: anonymousId,
                                     username: username,
                                     thing_uuid: listArrayCopy[i].uuid,
@@ -598,7 +597,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 console.log("currentRowHeight unexpectedly null for item: " + thing.text);
             }
 
-            amplitude.track(`${thingName} Deleted`, {
+            trackEvent(`${thingName} Deleted`, {
                 anonymous_id: anonymousId,
                 username: username,
                 thing_uuid: thing.uuid,
@@ -655,7 +654,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     }
 
     const handleTimerClick = (thing) => {
-        amplitude.track("Item Timer Icon Tapped", {
+        trackEvent("Item Timer Icon Tapped", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname,
@@ -675,7 +674,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     }
 
     const handleTimerToastEditClick = (thing) => {
-        amplitude.track("Edit Schedule Icon Tapped", {
+        trackEvent("Edit Schedule Icon Tapped", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname,
@@ -687,7 +686,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     }
 
     const handleScheduleEditDialogCancel = () => {
-        amplitude.track("Edit Schedule Dialog Cancelled", {
+        trackEvent("Edit Schedule Dialog Cancelled", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -696,7 +695,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     }
 
     const handleScheduleEditDialogClear = () => {
-        amplitude.track("Item Schedule Clear Message Displayed", {
+        trackEvent("Item Schedule Clear Message Displayed", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -709,7 +708,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 {
                     text: 'Cancel',
                     onPress: () => {
-                        amplitude.track("Item Schedule Clear Message Cancelled", {
+                        trackEvent("Item Schedule Clear Message Cancelled", {
                             anonymous_id: anonymousId,
                             username: username,
                             pathname: pathname
@@ -720,7 +719,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 {
                     text: 'Yes',
                     onPress: () => {
-                        amplitude.track("Item Schedule Cleared", {
+                        trackEvent("Item Schedule Cleared", {
                             anonymous_id: anonymousId,
                             username: username,
                             pathname: pathname
@@ -787,7 +786,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             return;
         }
 
-        amplitude.track("Edit Schedule Dialog Submitted", {
+        trackEvent("Edit Schedule Dialog Submitted", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname,
@@ -831,7 +830,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     }
 
     const handleScheduleEditDialogEditDateClick = () => {
-        amplitude.track("Edit Schedule Dialog Date Tapped", {
+        trackEvent("Edit Schedule Dialog Date Tapped", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname,
@@ -849,7 +848,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     }
 
     const handleScheduleEditDialogEditTimeClick = () => {
-        amplitude.track("Edit Schedule Dialog Time Tapped", {
+        trackEvent("Edit Schedule Dialog Time Tapped", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname,
@@ -868,7 +867,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
 
     const handleTimerToastCalendarClick = async (thing) => {
-        amplitude.track("Calendar Icon Tapped", {
+        trackEvent("Calendar Icon Tapped", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname,
@@ -883,7 +882,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
         if (thing.event_id) {
             const calendarUri = generateCalendarUri(selectedTimerThing.current.scheduled_datetime_utc);
             if (calendarUri) {
-                amplitude.track("Calendar App URI Opened", {
+                trackEvent("Calendar App URI Opened", {
                     anonymous_id: anonymousId,
                     username: username,
                     pathname: pathname,
@@ -899,7 +898,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
         // Else, assume the calendar event hasn't been created so proceed with creation UX
 
         const permissionsResponse = await Calendar.requestCalendarPermissionsAsync();
-        amplitude.track("Calendar Permissions Requested", {
+        trackEvent("Calendar Permissions Requested", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname,
@@ -916,14 +915,14 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 const eventId = await createCalendarEvent();
                 console.log("Created new calendar event after default calendar selection: " + eventId);
             } else if (editableCalendars.current.length > 1) {
-                amplitude.track("Calendar Selection Dialog Displayed", {
+                trackEvent("Calendar Selection Dialog Displayed", {
                     anonymous_id: anonymousId,
                     username: username,
                     pathname: pathname
                 });
                 setShowCalendarSelectionDialog(true);
             } else if (editableCalendars.current.length == 0) {
-                amplitude.track("No Calendars Found Message Displayed", {
+                trackEvent("No Calendars Found Message Displayed", {
                     anonymous_id: anonymousId,
                     username: username,
                     pathname: pathname
@@ -935,7 +934,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                         {
                             text: 'OK',
                             onPress: () => {
-                                amplitude.track("No Calendars Found Message Dimissed", {
+                                trackEvent("No Calendars Found Message Dimissed", {
                                     anonymous_id: anonymousId,
                                     username: username,
                                     pathname: pathname
@@ -947,7 +946,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 );
             }
         } else {
-            amplitude.track("Calendar Permissions Required Displayed", {
+            trackEvent("Calendar Permissions Required Displayed", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname
@@ -959,7 +958,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                     {
                         text: 'Cancel',
                         onPress: () => {
-                            amplitude.track("Calendar Permissions Required Dimissed", {
+                            trackEvent("Calendar Permissions Required Dimissed", {
                                 anonymous_id: anonymousId,
                                 username: username,
                                 pathname: pathname
@@ -970,7 +969,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                     {
                         text: 'Go to Settings',
                         onPress: () => {
-                            amplitude.track("Calendar Permissions Required Go to Settings Pressed", {
+                            trackEvent("Calendar Permissions Required Go to Settings Pressed", {
                                 anonymous_id: anonymousId,
                                 username: username,
                                 pathname: pathname
@@ -985,7 +984,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     }
 
     const handleCalendarSelectDialogCancel = () => {
-        amplitude.track("Calendar Selection Dialog Cancelled", {
+        trackEvent("Calendar Selection Dialog Cancelled", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname,
@@ -997,7 +996,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     }
 
     const handleCalendarSelectDialogSubmission = async () => {
-        amplitude.track("Calendar Selection Dialog Submitted", {
+        trackEvent("Calendar Selection Dialog Submitted", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname,
@@ -1020,7 +1019,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 // Asyncronous
                 updateThingEventId(eventId);
 
-                amplitude.track("Calendar Event Created", {
+                trackEvent("Calendar Event Created", {
                     anonymous_id: anonymousId,
                     username: username,
                     pathname: pathname,
@@ -1036,7 +1035,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                             {
                                 text: 'Go to Calendar',
                                 onPress: () => {
-                                    amplitude.track("Calendar Event Created Go to Calendar Button Pressed", {
+                                    trackEvent("Calendar Event Created Go to Calendar Button Pressed", {
                                         anonymous_id: anonymousId,
                                         username: username,
                                         pathname: pathname
@@ -1053,7 +1052,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                             {
                                 text: 'OK',
                                 onPress: () => {
-                                    amplitude.track("Calendar Event Created Message Dimissed", {
+                                    trackEvent("Calendar Event Created Message Dimissed", {
                                         anonymous_id: anonymousId,
                                         username: username,
                                         pathname: pathname
@@ -1180,7 +1179,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
         const newItem = generateNewKeyboardEntry();
         currentlyTappedThing.current = newItem;
 
-        amplitude.track("Tap Below List Entry Started", {
+        trackEvent("Tap Below List Entry Started", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname,
@@ -1220,7 +1219,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     }
 
     const handleHideFromCommunity = () => {
-        amplitude.track("Item Hide from Public Prompt Displayed", {
+        trackEvent("Item Hide from Public Prompt Displayed", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -1230,7 +1229,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     }
 
     const handleHideFromCommunityCancel = () => {
-        amplitude.track("Item Hide from Public Prompt Cancelled", {
+        trackEvent("Item Hide from Public Prompt Cancelled", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -1239,7 +1238,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     }
 
     const handleHideFromCommunitySubmit = () => {
-        amplitude.track("Item Hide from Public Prompt Approved", {
+        trackEvent("Item Hide from Public Prompt Approved", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -1268,7 +1267,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
         const wasBlockSuccessful = await blockUser(username, block_reason_str);
         if (wasBlockSuccessful) {
 
-            amplitude.track("Block Profile Blocked", {
+            trackEvent("Block Profile Blocked", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
@@ -1283,7 +1282,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
             Alert.alert(
                 "Unexpected error occurred",
                 "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
-            amplitude.track("Block Profile Unexpected Error", {
+            trackEvent("Block Profile Unexpected Error", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
@@ -1293,7 +1292,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     }
 
     const handleHideUser = () => {
-        amplitude.track("Hide User Prompt Displayed", {
+        trackEvent("Hide User Prompt Displayed", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -1303,7 +1302,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     }
 
     const handleHideUserCancel = () => {
-        amplitude.track("Hide User Prompt Cancelled", {
+        trackEvent("Hide User Prompt Cancelled", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -1312,7 +1311,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
     }
 
     const handleHideUserSubmit = async () => {
-        amplitude.track("Hide User Prompt Approved", {
+        trackEvent("Hide User Prompt Approved", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -1636,7 +1635,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
 
                 if (thing.newKeyboardEntry) {
 
-                    amplitude.track("Keyboard Entry Completed", {
+                    trackEvent("Keyboard Entry Completed", {
                         anonymous_id: anonymousId,
                         username: username,
                         pathname: pathname,
@@ -1654,7 +1653,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                     saveTextUpdateFunc(updatedThing, handleTextUpdateBackendResponse);
                 }
 
-                amplitude.track("Thing Text Edited", {
+                trackEvent("Thing Text Edited", {
                     anonymous_id: anonymousId,
                     username: username,
                     pathname: pathname,
@@ -1731,7 +1730,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 const flaggedUuids = flaggedItems.map(item => item.uuid);   // Ignoring flag reason for now
                 //console.log("flaggedUuids: " + JSON.stringify(flaggedUuids));
 
-                amplitude.track("New Items Flagged", {
+                trackEvent("New Items Flagged", {
                     anonymous_id: anonymousId,
                     username: username,
                     pathname: pathname,
@@ -1914,7 +1913,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                     overshootLeft={false}
                     overshootRight={false}
                     onSwipeableWillOpen={(direction) => {
-                        amplitude.track(`Swipe ${direction.toUpperCase()} Actions Opened`, {
+                        trackEvent(`Swipe ${direction.toUpperCase()} Actions Opened`, {
                             anonymous_id: anonymousId,
                             username: username,
                             pathname: pathname,

@@ -1,12 +1,12 @@
-import { Text, StyleSheet, View, Pressable, Alert, Platform } from 'react-native';
+import { Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 import { AppContext } from './AppContext';
-import * as amplitude from '@amplitude/analytics-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ArrowDown } from './svg/arrow-down';
 import { check, PERMISSIONS, RESULTS, request } from 'react-native-permissions';
+import { trackEvent } from '@/components/Helpers';
 
 const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
   const { isFirstLaunch, anonymousId, username } = useContext(AppContext);
@@ -65,7 +65,7 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
       }))
     });
 
-    amplitude.track("Onboarding Step 1 Viewed", {
+    trackEvent("Onboarding Step 1 Viewed", {
       anonymous_id: anonymousId,
       username: username
     });
@@ -79,7 +79,7 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
   }
 
   const executeStep2Animation = async () => {
-    amplitude.track("Onboarding Step 2 Viewed", {
+    trackEvent("Onboarding Step 2 Viewed", {
       anonymous_id: anonymousId,
       username: username
     });
@@ -92,7 +92,7 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
   }
 
   const executeStep3Animation = async () => {
-    amplitude.track("Onboarding Step 3 Viewed", {
+    trackEvent("Onboarding Step 3 Viewed", {
       anonymous_id: anonymousId,
       username: username
     });
@@ -111,7 +111,7 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
           runOnJS(resolve)()
         }
       }));
-    amplitude.track("Onboarding Step 4 Viewed", {
+    trackEvent("Onboarding Step 4 Viewed", {
       anonymous_id: anonymousId,
       username: username
     });
@@ -124,7 +124,7 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
   }
 
   const executeStep5Animation = async () => {
-    amplitude.track("Onboarding Step 5 Viewed", {
+    trackEvent("Onboarding Step 5 Viewed", {
       anonymous_id: anonymousId,
       username: username
     });
@@ -157,7 +157,7 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
           }))
     ];
     await Promise.all(animationPromises);
-    amplitude.track("Onboarding Step 6 Viewed", {
+    trackEvent("Onboarding Step 6 Viewed", {
       anonymous_id: anonymousId,
       username: username
     });
@@ -222,7 +222,7 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
           }
       })))
     });
-    amplitude.track("Onboarding Step 7 Viewed", {
+    trackEvent("Onboarding Step 7 Viewed", {
       anonymous_id: anonymousId,
       username: username
     });
@@ -230,7 +230,7 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
   }
 
   const handleSkipTap = async () => {
-    amplitude.track("Onboarding Skipped", { 
+    trackEvent("Onboarding Skipped", { 
       anonymous_id: anonymousId,
       username: username,
       step: currentStep
@@ -300,12 +300,12 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
           if (result === RESULTS.DENIED) {
 
             // The permission has not been requested, so request it.
-            amplitude.track("iOS ATT Prompt Started", {
+            trackEvent("iOS ATT Prompt Started", {
               anonymous_id: anonymousId,
               username: username
             });
             const result = await request(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
-            amplitude.track("iOS ATT Prompt Completed", { 
+            trackEvent("iOS ATT Prompt Completed", { 
               anonymous_id: anonymousId,
               username: username,
               result: result

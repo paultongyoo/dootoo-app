@@ -1,8 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { View, Text, Animated, Dimensions, StyleSheet, Platform, Pressable, Image, Alert, GestureResponderEvent, Linking, Easing } from 'react-native';
+import { View, Text, Animated, Dimensions, StyleSheet, Platform, Pressable, Image, GestureResponderEvent, Linking, Easing } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import * as amplitude from '@amplitude/analytics-react-native';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DootooItemSidebar from '@/components/DootooItemSidebar';
@@ -15,6 +14,7 @@ import { Bulb } from '@/components/svg/bulb';
 import { ChevronRight } from '@/components/svg/chevron-right';
 import { ArrowRight } from '@/components/svg/arrow-right';
 import { ThumbUp } from '@/components/svg/thumb-up';
+import { trackEvent } from '@/components/Helpers';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -90,9 +90,9 @@ const OnboardingScreen = () => {
             if (result === RESULTS.DENIED) {
 
                 // The permission has not been requested, so request it.
-                amplitude.track("iOS ATT Prompt Started");
+                trackEvent("iOS ATT Prompt Started");
                 const result = await request(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY);
-                amplitude.track("iOS ATT Prompt Completed", { result: result });
+                trackEvent("iOS ATT Prompt Completed", { result: result });
             }
         }
         await AsyncStorage.setItem('isFirstLaunch', 'false');
@@ -152,7 +152,7 @@ const Step1 = () => {
 
     useEffect(() => {
         fadeInAnimation.start();
-        amplitude.track("Onboarding Step 1 Viewed");
+        trackEvent("Onboarding Step 1 Viewed");
     }, []);
 
     const styles = StyleSheet.create({
@@ -190,7 +190,7 @@ const Step2 = () => {
 
     useEffect(() => {
         fadeInAnimation.start();
-        amplitude.track("Onboarding Step 2 Viewed");
+        trackEvent("Onboarding Step 2 Viewed");
     }, []);
 
     const styles = StyleSheet.create({
@@ -257,7 +257,7 @@ const Step3 = () => {
 
     useEffect(() => {
         fadeInAnimation.start();
-        amplitude.track("Onboarding Step 3 Viewed");
+        trackEvent("Onboarding Step 3 Viewed");
     }, []);
 
     const styles = StyleSheet.create({
@@ -391,7 +391,7 @@ const Step4 = () => {
 
     useEffect(() => {
         fadeInAnimation.start();
-        amplitude.track("Onboarding Step 4 Viewed");
+        trackEvent("Onboarding Step 4 Viewed");
     }, []);
 
     const styles = StyleSheet.create({
@@ -594,7 +594,7 @@ const Step5 = () => {
 
     useEffect(() => {
         stepFadeInAnimation.start();
-        amplitude.track("Onboarding Step 5 Viewed");
+        trackEvent("Onboarding Step 5 Viewed");
     }, []);
 
     useEffect(() => {
@@ -610,13 +610,13 @@ const Step5 = () => {
 
     async function handleTermsClick(event: GestureResponderEvent): void {
         //console.log("Inside terms click");
-        amplitude.track("Terms Link Clicked");
+        trackEvent("Terms Link Clicked");
         await Linking.openURL('https://dootoo.app/terms.html').catch(err => console.error('Error opening link:', err));
     }
 
     async function handlePrivacyPolicyClick(event: GestureResponderEvent): void {
         //console.log("Inside privacy click");
-        amplitude.track("Privacy Link Clicked");
+        trackEvent("Privacy Link Clicked");
         await Linking.openURL('https://dootoo.app/privacy.html').catch(err => console.error('Error opening link:', err));
     }
 

@@ -23,7 +23,7 @@ export const showComingSoonAlert = (anonymousId, featureName, pathname) => {
         text: 'OK',
         onPress: () => {
           //console.log('Data Deletion OK Pressed');
-          amplitude.track("Coming Soon Popup Displayed", {
+          trackEvent("Coming Soon Popup Displayed", {
             anonymous_id: anonymousId,
             pathname: pathname,
             featureName: featureName
@@ -419,4 +419,15 @@ export const generateReactionCountObject = (userReactions) => {
     acc[reaction.name] = (acc[reaction.name] || 0) + 1;
     return acc;
   }, {});
+}
+
+export const trackEvent = (eventName, eventProperties) => {
+  const userId = amplitude.getUserId(); 
+  if ((userId != '1047743226749') || // Me iOS
+      (userId != '1093493796864') || // Me Android
+      (userId != '1095647595066') || // Dad 
+      (userId != '1095635126298') // Mom 
+    ) {
+    amplitude.track(eventName, eventProperties);
+  }
 }

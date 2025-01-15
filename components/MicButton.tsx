@@ -3,10 +3,9 @@ import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import { Microphone } from "./svg/microphone";
 import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useContext, useRef, useState } from "react";
-import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from "expo-router";
 import { AppContext } from "./AppContext";
-import { calculateAndroidButtonScale, deleteFile, insertArrayAfter } from "./Helpers";
+import { calculateAndroidButtonScale, deleteFile, insertArrayAfter, trackEvent } from "./Helpers";
 import Toast from "react-native-toast-message";
 import { Asterisk } from "./svg/asterisk";
 
@@ -46,7 +45,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
 
         recordingTimeStart.current = performance.now();
         //console.log("Logging start time: " + new Date(recordingTimeStart.current).toLocaleString());
-        amplitude.track("Recording Started", {
+        trackEvent("Recording Started", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -54,12 +53,12 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
         try {
             if (permissionResponse!.status !== 'granted') {
                 //console.log('Requesting permission..');
-                amplitude.track("Recording Permission Prompt Started", {
+                trackEvent("Recording Permission Prompt Started", {
                     anonymous_id: anonymousId,
                     username: username
                 });
                 const result = await requestPermission();
-                amplitude.track("Recording Permission Prompt Completed", {
+                trackEvent("Recording Permission Prompt Completed", {
                     anonymous_id: anonymousId,
                     username: username,
                     result: (result) ? result.status : '(null)'
@@ -129,7 +128,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                 retryCount += 1;
             } else {
                 //console.error('Failed to start recording', err);
-                amplitude.track("Recording Error Occurred", {
+                trackEvent("Recording Error Occurred", {
                     anonymous_id: anonymousId,
                     username: username,
                     pathname: pathname,
@@ -192,7 +191,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
             if (hasBreachedThreshold.current) {
                 recorderProcessLocked.current = true;
 
-                amplitude.track("Recording Processing Started", {
+                trackEvent("Recording Processing Started", {
                     anonymous_id: anonymousId,
                     username: username,
                     pathname: pathname,
@@ -204,7 +203,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
 
                 const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
                 //console.log("Number of scheduled items recorded: " + numScheduledItems);
-                amplitude.track("Recording Processing Completed", {
+                trackEvent("Recording Processing Completed", {
                     anonymous_id: anonymousId,
                     username: username,
                     flagged: (response == "flagged"),
@@ -215,12 +214,12 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
 
                 if (response == "flagged") {
                     //console.log(`Audio flagged, displaying alert prompt`);
-                    amplitude.track("Recording Flagged", {
+                    trackEvent("Recording Flagged", {
                         anonymous_id: anonymousId,
                         username: username,
                         pathname: pathname
                     });
-                    amplitude.track("Recording Flagged Prompt Displayed", {
+                    trackEvent("Recording Flagged Prompt Displayed", {
                         anonymous_id: anonymousId,
                         username: username,
                         pathname: pathname
@@ -233,7 +232,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                                 text: 'I Understand',
                                 onPress: () => {
                                     //console.log('Audio Content Advisory Acknowledgement button Pressed');
-                                    amplitude.track("Recording Flagged Prompt Dismissed", {
+                                    trackEvent("Recording Flagged Prompt Dismissed", {
                                         anonymous_id: anonymousId,
                                         username: username,
                                         pathname: pathname
@@ -324,7 +323,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
 
                     } else {
                         //console.log("Did not call setter with updated list, attempting to show toast.");
-                        amplitude.track("Empty Recording Toast Displayed", {
+                        trackEvent("Empty Recording Toast Displayed", {
                             anonymous_id: anonymousId,
                             username: username,
                             pathname: pathname
@@ -370,7 +369,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
     const stopRecording = async (localRecordingObject = null, isAutoStop = false) => {
         const recordingDurationEnd = performance.now();
         const recordingDuration = (recordingDurationEnd - recordingTimeStart.current) / 1000;
-        amplitude.track("Recording Stopped", {
+        trackEvent("Recording Stopped", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname,
@@ -411,7 +410,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
     //     if (recording) {
     //         const { fileUri, duration } = await stopRecording();
     //         deleteFile(fileUri);
-    //         amplitude.track("Recording Processing Cancelled", {
+    //         trackEvent("Recording Processing Cancelled", {
     //             anonymous_id: anonymousId,
     //             pathname: pathname,
     //             durationSeconds: duration

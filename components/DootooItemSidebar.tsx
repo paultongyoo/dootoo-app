@@ -4,11 +4,11 @@ import { AppContext } from './AppContext';
 import { usePathname } from 'expo-router';
 import Animated, { useSharedValue } from 'react-native-reanimated';
 import { updateItemPublicState } from './Storage';
-import * as amplitude from '@amplitude/analytics-react-native';
 import { UsersRound } from './svg/users-round';
 import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter } from './EventEmitters';
 import { ReactionsDisplay } from './ReactionsDisplay';
 import { NAVIGATION_SECTION_IDX_COMMUNITY } from './Constants';
+import { trackEvent } from '@/components/Helpers';
 
 
 const DootooItemSidebar = ({ thing, onReactionsPress }) => {
@@ -19,7 +19,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
     const [loading, setLoading] = useState(false);
 
     const handleIsPublicTap = () => {
-        amplitude.track("Item Go Public Prompt Displayed", {
+        trackEvent("Item Go Public Prompt Displayed", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -32,7 +32,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                     {
                         text: 'Cancel',
                         onPress: () => {
-                            amplitude.track("Item Go Public Prompt Cancelled", {
+                            trackEvent("Item Go Public Prompt Cancelled", {
                                 anonymous_id: anonymousId,
                                 username: username,
                                 pathname: pathname
@@ -42,7 +42,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                     {
                         text: 'Yes',
                         onPress: async () => {
-                            amplitude.track("Item Go Public Prompt Approved", {
+                            trackEvent("Item Go Public Prompt Approved", {
                                 anonymous_id: anonymousId,
                                 username: username,
                                 pathname: pathname
@@ -73,7 +73,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                                         {
                                             text: 'Go to Post',
                                             onPress: () => {
-                                                amplitude.track("Item Go Public Success: Went to Post", {
+                                                trackEvent("Item Go Public Success: Went to Post", {
                                                     anonymous_id: anonymousId,
                                                     username: username,
                                                     pathname: pathname
@@ -84,7 +84,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                                         {
                                             text: 'Close',
                                             onPress: () => {
-                                                amplitude.track("Item Go Public Success: Closed", {
+                                                trackEvent("Item Go Public Success: Closed", {
                                                     anonymous_id: anonymousId,
                                                     username: username,
                                                     pathname: pathname
@@ -99,7 +99,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                 ]
             )
         } else {
-            amplitude.track("Item Hide from Public Prompt Displayed", {
+            trackEvent("Item Hide from Public Prompt Displayed", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname
@@ -111,7 +111,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                     {
                         text: 'Cancel',
                         onPress: () => {
-                            amplitude.track("Item Hide from Public Prompt Cancelled", {
+                            trackEvent("Item Hide from Public Prompt Cancelled", {
                                 anonymous_id: anonymousId,
                                 username: username,
                                 pathname: pathname
@@ -122,7 +122,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                     {
                         text: 'Yes',
                         onPress: () => {
-                            amplitude.track("Item Hide from Public Prompt Approved", {
+                            trackEvent("Item Hide from Public Prompt Approved", {
                                 anonymous_id: anonymousId,
                                 pathname: pathname
                             });

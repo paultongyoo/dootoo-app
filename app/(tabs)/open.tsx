@@ -1,12 +1,12 @@
 import { useContext, useEffect, useRef } from "react";
 import { usePathname } from 'expo-router';
-import { loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_ONLY_OPEN_PARENTS } from '@/components/Storage';
+import { loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItems, DONE_ITEM_FILTER_ONLY_OPEN_PARENTS } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList, { listStyles, THINGNAME_ITEM } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import { ProfileCountEventEmitter } from "@/components/EventEmitters";
-import * as amplitude from '@amplitude/analytics-react-native';
+import { trackEvent } from '@/components/Helpers';
 
 import {
   StyleSheet, Pressable, Alert
@@ -74,7 +74,7 @@ export default function ListScreen() {
 
   const handleMakeParent = (item) => {
 
-    amplitude.track("Item Made Into Parent", {
+    trackEvent("Item Made Into Parent", {
       anonymous_id: anonymousId,
       username: username,
       item_uuid: item.uuid
@@ -137,7 +137,7 @@ export default function ListScreen() {
 
     const makeChild = () => {
 
-      amplitude.track("Item Made Into Child", {
+      trackEvent("Item Made Into Child", {
         anonymous_id: anonymousId,
         username: username,
         item_uuid: item.uuid,
@@ -191,7 +191,7 @@ export default function ListScreen() {
           {
             text: 'Cancel',
             onPress: () => {
-              amplitude.track("Make Parent into Child Cancelled", {
+              trackEvent("Make Parent into Child Cancelled", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname
@@ -203,7 +203,7 @@ export default function ListScreen() {
             text: 'Yes',
             onPress: () => {
               //console.log('Data Deletion OK Pressed');
-              amplitude.track("Make Parent into Child Confirmed", {
+              trackEvent("Make Parent into Child Confirmed", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname
@@ -221,7 +221,7 @@ export default function ListScreen() {
 
     try {
 
-      amplitude.track("Item Done Clicked", {
+      trackEvent("Item Done Clicked", {
         anonymous_id: anonymousId,
         username: username,
         pathname: pathname,
@@ -313,7 +313,7 @@ export default function ListScreen() {
 
             // item has open children, prompt user how to handle them
             if (openChildren.length > 0) {
-              amplitude.track("Doneify With Kids Prompt Displayed", {
+              trackEvent("Doneify With Kids Prompt Displayed", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
@@ -327,7 +327,7 @@ export default function ListScreen() {
                   {
                     text: 'Cancel', // 1.2.3
                     onPress: () => {
-                      amplitude.track("Doneify With Kids Prompt Cancelled", {
+                      trackEvent("Doneify With Kids Prompt Cancelled", {
                         anonymous_id: anonymousId,
                         username: username,
                         pathname: pathname,
@@ -339,7 +339,7 @@ export default function ListScreen() {
                   {
                     text: 'Delete Them',
                     onPress: async () => {
-                      amplitude.track("Doneify With Kids Prompt: Delete Chosen", {
+                      trackEvent("Doneify With Kids Prompt: Delete Chosen", {
                         anonymous_id: anonymousId,
                         username: username,
                         pathname: pathname,
@@ -447,7 +447,7 @@ export default function ListScreen() {
                   {
                     text: 'Complete Them',
                     onPress: async () => {
-                      amplitude.track("Doneify With Kids Prompt: Complete Chosen", {
+                      trackEvent("Doneify With Kids Prompt: Complete Chosen", {
                         anonymous_id: anonymousId,
                         username: username,
                         pathname: pathname,
