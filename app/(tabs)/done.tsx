@@ -85,7 +85,7 @@ export default function DoneScreen() {
         username: username,
         pathname: pathname,
         uuid: item.uuid,
-        done_state_at_click: item.is_done,
+        done_state_at_click: (item.is_done == true),
         parent_item_uuid: item.parent_item_uuid,
         item_type: (item.parent_item_uuid) ? 'child' : 'adult'
       });
