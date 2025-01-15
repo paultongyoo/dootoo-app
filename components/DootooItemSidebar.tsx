@@ -19,7 +19,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
     const [loading, setLoading] = useState(false);
 
     const handleIsPublicTap = () => {
-        trackEvent("Item Go Public Prompt Displayed", {
+        trackEvent("Make Post Public Prompt Displayed", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -32,7 +32,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                     {
                         text: 'Cancel',
                         onPress: () => {
-                            trackEvent("Item Go Public Prompt Cancelled", {
+                            trackEvent("Make Post Public Prompt Cancelled", {
                                 anonymous_id: anonymousId,
                                 username: username,
                                 pathname: pathname
@@ -42,7 +42,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                     {
                         text: 'Yes',
                         onPress: async () => {
-                            trackEvent("Item Go Public Prompt Approved", {
+                            trackEvent("Make Post Public Prompt Approved", {
                                 anonymous_id: anonymousId,
                                 username: username,
                                 pathname: pathname
@@ -73,7 +73,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                                         {
                                             text: 'Go to Post',
                                             onPress: () => {
-                                                trackEvent("Item Go Public Success: Went to Post", {
+                                                trackEvent("Make Post Public Success: Went to Post", {
                                                     anonymous_id: anonymousId,
                                                     username: username,
                                                     pathname: pathname
@@ -84,7 +84,7 @@ const DootooItemSidebar = ({ thing, onReactionsPress }) => {
                                         {
                                             text: 'Close',
                                             onPress: () => {
-                                                trackEvent("Item Go Public Success: Closed", {
+                                                trackEvent("Make Post Public Success: Closed", {
                                                     anonymous_id: anonymousId,
                                                     username: username,
                                                     pathname: pathname
