@@ -13,6 +13,7 @@ export const DONE_ITEM_LIST_KEY = "done_item_list";
 const OPEN_ITEM_LIST_LAST_LOADED_PAGE_KEY = "open_item_list_last_page";
 const DONE_ITEM_LIST_LAST_LOADED_PAGE_KEY = "done_item_list_last_page";
 const TIP_LIST_KEY_PREFIX = "tip_list_";    // Append item UUID to key
+const HAS_RECORDED_BEFORE = "has_recorded_before";
 
 const CREATEUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev' 
                                  : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/createUser';
@@ -1152,6 +1153,31 @@ export const loadLocalListLastCachedPage = async(doneFilterString) => {
     }
   } catch (e) {
     console.log("loadLocalListLastCachedPage", e);
+  }
+}
+
+export const hasRecordedBefore = async() => {
+  try {
+    return await AsyncStorage.getItem(HAS_RECORDED_BEFORE) != null
+  } catch (e){
+    console.warn("Error retrieving hasRecordedBefore", e);
+    return false;
+  }
+}
+
+export const setRecordedBefore = async() => {
+  try {
+    await AsyncStorage.setItem(HAS_RECORDED_BEFORE, "yes");
+  } catch (e){
+    console.warn("Error setting HAS_RECORDED_BEFORE key", e);
+  }
+}
+
+export const clearRecordedBefore = async() => {
+  try {
+    await AsyncStorage.removeItem(HAS_RECORDED_BEFORE);
+  } catch (e){
+    console.warn("Error removing HAS_RECORDED_BEFORE key", e);
   }
 }
 

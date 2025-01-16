@@ -8,9 +8,10 @@ import { AppContext } from "./AppContext";
 import { calculateAndroidButtonScale, deleteFile, insertArrayAfter, trackEvent } from "./Helpers";
 import Toast from "react-native-toast-message";
 import { Asterisk } from "./svg/asterisk";
+import { hasRecordedBefore, setRecordedBefore } from "./Storage";
 
-const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle, 
-                    selectedThing = null, listArray, listArraySetterFunc, transcribeFunc, saveNewThingsFunc }) => {
+const MicButton = ({ buttonHeight, buttonUnderlayStyle, buttonStyle,
+    selectedThing = null, listArray, listArraySetterFunc, transcribeFunc, saveNewThingsFunc }) => {
     const { anonymousId, username, lastRecordedCount, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const pathname = usePathname();
     const [permissionResponse, requestPermission] = Audio.usePermissions();
@@ -27,6 +28,39 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
     var retryCount = 0;
     const recorderProcessLocked = useRef(false);
 
+    const handleRecordButtonPress = async (selectedThing = null) => {
+        const hasRecdBefore = await hasRecordedBefore();
+        if (!hasRecdBefore) {
+            trackEvent("Recording Tips Prompt Displayed", { username: username });
+            Alert.alert("Tips For Your First Recording!",
+                `Because we use AI to process your recordings, you can:\n
+1. Say all your things to do at once and we'll create an item for each\n
+2. Speak to groups of items and we'll try to create subitems from them\n
+3. Include time or date info for any items and we'll add schedule features\n
+To protect your privacy, we delete your voice recording immediately after it is processed.  Read our Privacy Policy for more info.\n
+When ideal for you, using your voice can help you easily capture more items and speak to important things you wouldn't have done when typing.  Try it out and let us know what you think!`,
+                [
+                    {
+                        text: 'Cancel',
+                        onPress: () => { 
+                            trackEvent("Recording Tips Prompt: Cancel Pressed", { username: username });
+                        },
+                        style: 'cancel'
+                    },
+                    {
+                        text: 'Start Recording',
+                        onPress: () => { 
+                            trackEvent("Recording Tips Prompt: Start Recording Pressed", { username: username });
+                            setRecordedBefore();
+                            startRecording(selectedThing);
+                        }
+                    },
+                ]
+            );
+        } else {
+            startRecording(selectedThing);
+        }
+    }
 
     const startRecording = async (selectedThing = null) => {
 
@@ -249,7 +283,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                         lastRecordedCount.current = response.length;  // Set for future toast undo potential
 
                         // Append default field(s) not appended by transcription service (currently just userReactions);
-                        response = response.map(thing => ({...thing, userReactions: []}));
+                        response = response.map(thing => ({ ...thing, userReactions: [] }));
 
                         // If list is empty, we ASSume that the empty CTA is visible so we first
                         // fade it out before displaying the list to user.
@@ -460,7 +494,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
     }));
 
     return (
-        <View style={{height: buttonHeight}}>
+        <View style={{ height: buttonHeight }}>
             <View style={buttonUnderlayStyle}></View>
             <Reanimated.View style={[buttonStyle, scaleAnimatedStyle,
                 ((recording || isRecordingProcessing)
@@ -474,7 +508,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                             if (recording) {
                                 processRecording();
                             } else {
-                                startRecording(selectedThing);
+                                handleRecordButtonPress(selectedThing);
                             }
                         }
                     }}
