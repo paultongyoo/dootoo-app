@@ -43,14 +43,18 @@ When ideal for you, using your voice can help you easily capture more items and 
                     {
                         text: 'Cancel',
                         onPress: () => { 
-                            trackEvent("Recording Tips Prompt: Cancel Pressed", { username: username });
+                            trackEvent("Recording Tips Prompt: Cancel Pressed", { 
+                                anonymous_id: anonymousId, username: username 
+                            });
                         },
                         style: 'cancel'
                     },
                     {
                         text: 'Start Recording',
                         onPress: () => { 
-                            trackEvent("Recording Tips Prompt: Start Recording Pressed", { username: username });
+                            trackEvent("Recording Tips Prompt: Start Recording Pressed", { 
+                                anonymous_id: anonymousId, username: username 
+                            });
                             setRecordedBefore();
                             startRecording(selectedThing);
                         }

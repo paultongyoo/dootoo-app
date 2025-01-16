@@ -232,10 +232,14 @@ export default function ListScreen() {
       });
 
       if (item.newKeyboardEntry && ((item.text?.length || 0) == 0)) {
-        trackEvent("Empty Done Prompt Displayed", { username: username });
+        trackEvent("Empty Done Prompt Displayed", { 
+          anonymous_id: anonymousId, username: username 
+        });
         Alert.alert('', 'Oops! You need to add some text to your item before marking it as done.',
           [
-            { text: 'OK', onPress: () => trackEvent("Empty Done Prompt Dismissed", { username: username }) }
+            { text: 'OK', onPress: () => trackEvent("Empty Done Prompt Dismissed", { 
+                anonymous_id: anonymousId, username: username 
+              }) }
           ]);
         return;
       }
