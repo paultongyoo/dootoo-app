@@ -1,8 +1,13 @@
 import { Platform, View, StyleSheet, Text, Pressable, Image, Alert } from "react-native";
 import Animated from "react-native-reanimated";
 import { clearTWEmployee, setTWEmployee } from "./Storage";
+import { trackEvent } from "./Helpers";
+import { useContext } from "react";
+import { AppContext } from "./AppContext";
 
 const DootooHeader = ({ navigation, route, options }) => {
+
+    const { anonymousId, username } = useContext(AppContext);
 
     let headerTapCount = 0;
 
@@ -63,9 +68,15 @@ const DootooHeader = ({ navigation, route, options }) => {
         headerTapCount += 1;
         if (headerTapCount == 10) {
             Alert.alert('', "Let's do this!");
+            trackEvent("dootoo Header Activated", { 
+                anonymous_id: anonymousId, username: username 
+            });
             setTWEmployee();
         } else if (headerTapCount == 20) {
             Alert.alert('', "Let's do this!");
+            trackEvent("dootoo Header Reactivated", { 
+                anonymous_id: anonymousId, username: username 
+            });
             clearTWEmployee();
         }
     }
