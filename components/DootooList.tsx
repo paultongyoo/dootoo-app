@@ -494,7 +494,8 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                     anonymous_id: anonymousId,
                                     username: username,
                                     thing_uuid: listArrayCopy[i].uuid,
-                                    thing_type: thingName
+                                    thing_type: thingName,
+                                    thing_text_length: listArrayCopy[i].text?.length || 0
                                 });
 
                                 if (thingRowPositionXs.current[listArrayCopy[i].uuid]) {
@@ -601,7 +602,8 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                 anonymous_id: anonymousId,
                 username: username,
                 thing_uuid: thing.uuid,
-                thing_type: thingName
+                thing_type: thingName,
+                thing_text_length: thing.text?.length || 0
             });
 
             // Call asyncronous delete to mark item as deleted in backend to sync database
