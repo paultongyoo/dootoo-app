@@ -2,7 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import uuid from 'react-native-uuid';
 import { generateCurrentTimeAPIHeaders } from './Helpers';
-import { trackEvent } from '@/components/Analytics';
 
 // Local storage column keys
 const DONE_COUNT_KEY = "user_done_count";
@@ -446,17 +445,7 @@ export const enrichItem = async (item) => {
         utcdatetime : currentTimeAPIHeaders.utcdatetime
       }
     );
-
-    // 1.5 Track AI costs if present in the response
     //console.log("response obj: " + JSON.stringify(response.data.body));
-    if (response.data.body.chat_cost) {
-      trackEvent("AI Costs Received", {
-        anonymous_id: localAnonId,
-        chat_cost: Number(response.data.body.chat_cost)
-      });
-    } else {
-      //console.log("No chat_cost response in enrichItem response.")
-    }
     return response.data.body;
   } catch (error) {
     console.error('Error calling enrichItem API:', error);

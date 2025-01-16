@@ -1,8 +1,7 @@
-import { Alert, Platform } from "react-native";
+import { Platform } from "react-native";
 import { DateTime } from 'luxon';
 import uuid from 'react-native-uuid';
 import RNFS from 'react-native-fs';
-import { trackEvent } from '@/components/Analytics';
 
 export const formatNumber = (num) => {
   if (!num) return null;
@@ -13,27 +12,27 @@ export const formatNumber = (num) => {
   return (num / 1_000_000_000_000).toFixed(1).replace(/\.0$/, '') + 'T';
 }
 
-export const showComingSoonAlert = (anonymousId, featureName, pathname) => {
+// export const showComingSoonAlert = (anonymousId, featureName, pathname) => {
 
-  Alert.alert(
-    `${featureName} Feature Coming Soon`, // Title of the alert
-    "Look for this in a future release.  We've noted you're looking for it.  Thanks!", // Message of the alert
-    [
-      {
-        text: 'OK',
-        onPress: () => {
-          //console.log('Data Deletion OK Pressed');
-          trackEvent("Coming Soon Popup Displayed", {
-            anonymous_id: anonymousId,
-            pathname: pathname,
-            featureName: featureName
-          });
-        },
-      },
-    ],
-    { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
-  );
-};
+//   Alert.alert(
+//     `${featureName} Feature Coming Soon`, // Title of the alert
+//     "Look for this in a future release.  We've noted you're looking for it.  Thanks!", // Message of the alert
+//     [
+//       {
+//         text: 'OK',
+//         onPress: () => {
+//           //console.log('Data Deletion OK Pressed');
+//           trackEvent("Coming Soon Popup Displayed", {
+//             anonymous_id: anonymousId,
+//             pathname: pathname,
+//             featureName: featureName
+//           });
+//         },
+//       },
+//     ],
+//     { cancelable: true } // Optional: if the alert should be dismissible by tapping outside of it
+//   );
+// };
 
 export const isThingOverdue = (thing) => {
   const scheduled_datetime_utc = thing.scheduled_datetime_utc;

@@ -1538,8 +1538,14 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                     try {
 
                         // Allow null values to remove dates from displayed items as well
-                        const { scheduled_datetime_utc } = await enrichItem(itemToEnrich);
+                        const { scheduled_datetime_utc, chat_cost } = await enrichItem(itemToEnrich);
                         //console.log("Enriched Item Response: " + JSON.stringify(scheduled_datetime_utc));
+
+                            trackEvent("AI Costs Received", {
+                                anonymous_id: anonymousId,
+                                username: username,
+                                chat_cost: Number(chat_cost)
+                            });
 
                             // Overwrite scheduled_datetime_utc in DB and UI
                             listArraySetter((prevThings) => prevThings.map((thing) =>
