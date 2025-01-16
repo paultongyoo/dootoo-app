@@ -10,14 +10,12 @@ import { setJSExceptionHandler } from "react-native-exception-handler";
 import { Alert, AppState, BackHandler, Platform } from "react-native";
 import { checkOpenAPIStatus } from "@/components/BackendServices";
 import { trackEvent } from '@/components/Helpers';
+import { isTWEmployee } from "@/components/Storage";
 
 export default function StackLayout() {
   const pathname = usePathname();
 
   useEffect(() => {
-
-    // Initialize Analytics Tracking
-    amplitude.init((__DEV__) ? AMPLITUDE_KEY_DEV : AMPLITUDE_KEY_PROD);
 
     // Initialize App State event handlers
     const handleAppStateChange = (nextAppState) => {
@@ -26,8 +24,17 @@ export default function StackLayout() {
       }
     };
     const subscription = AppState.addEventListener("change", handleAppStateChange);
-    checkOpenAPIHealth();
 
+    // Initialize Analytics Tracking
+    const initializeAmplitude = async() => {
+      const twEmployee = await isTWEmployee();
+      const apiKey =  (__DEV__ || twEmployee) ? AMPLITUDE_KEY_DEV : AMPLITUDE_KEY_PROD;
+      console.log("Initializing Amplitude with key: " + ((AMPLITUDE_KEY_DEV == apiKey) ? 'dev' : 'prod'));
+      amplitude.init(apiKey);
+      checkOpenAPIHealth();
+    }
+    initializeAmplitude();
+    
     return () => {
       subscription.remove();
     }

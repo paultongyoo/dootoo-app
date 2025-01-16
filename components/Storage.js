@@ -14,6 +14,7 @@ const OPEN_ITEM_LIST_LAST_LOADED_PAGE_KEY = "open_item_list_last_page";
 const DONE_ITEM_LIST_LAST_LOADED_PAGE_KEY = "done_item_list_last_page";
 const TIP_LIST_KEY_PREFIX = "tip_list_";    // Append item UUID to key
 const HAS_RECORDED_BEFORE = "has_recorded_before";
+const TW_EMPLOYEE_KEY = "tw_employee";
 
 const CREATEUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev' 
                                  : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/createUser';
@@ -1181,7 +1182,34 @@ export const clearRecordedBefore = async() => {
   }
 }
 
-// ******** BEGIN Non-EXPORTED METHODS *********
+export const isTWEmployee = async() => {
+  try {
+    return await AsyncStorage.getItem(TW_EMPLOYEE_KEY) != null
+  } catch (e){
+    console.warn("Error retrieving TW_EMPLOYEE_KEY", e);
+    return false;
+  }
+}
+
+export const setTWEmployee = async() => {
+  try {
+    await AsyncStorage.setItem(TW_EMPLOYEE_KEY, "yes");
+  } catch (e){
+    console.warn("Error setting TW_EMPLOYEE_KEY key", e);
+  }
+}
+
+export const clearTWEmployee = async() => {
+  try {
+    await AsyncStorage.removeItem(TW_EMPLOYEE_KEY);
+  } catch (e){
+    console.warn("Error removing TW_EMPLOYEE_KEY key", e);
+  }
+}
+
+
+
+// ******** BEGIN Non-EXPORTED METHODS ***************************************************
 
 const loadLocalUser = async() => {
   //console.log("loadLocalUser");
