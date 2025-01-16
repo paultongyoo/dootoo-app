@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import uuid from 'react-native-uuid';
-import { uniqueNamesGenerator, adjectives, animals, NumberDictionary } from 'unique-names-generator';
-import { generateCurrentTimeAPIHeaders, trackEvent } from './Helpers';
+import { generateCurrentTimeAPIHeaders } from './Helpers';
+import { trackEvent } from '@/components/Analytics';
 
 // Local storage column keys
 const DONE_COUNT_KEY = "user_done_count";

@@ -1,7 +1,7 @@
 import { Platform, View, StyleSheet, Text, Pressable, Image, Alert } from "react-native";
 import Animated from "react-native-reanimated";
 import { clearTWEmployee, setTWEmployee } from "./Storage";
-import { trackEvent } from "./Helpers";
+import { trackEvent } from '@/components/Analytics';
 import { useContext } from "react";
 import { AppContext } from "./AppContext";
 

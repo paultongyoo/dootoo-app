@@ -2,6 +2,7 @@ import { Alert, Platform } from "react-native";
 import { DateTime } from 'luxon';
 import uuid from 'react-native-uuid';
 import RNFS from 'react-native-fs';
+import { trackEvent } from '@/components/Analytics';
 
 export const formatNumber = (num) => {
   if (!num) return null;

@@ -5,7 +5,8 @@ import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-
 import { useContext, useRef, useState } from "react";
 import { usePathname } from "expo-router";
 import { AppContext } from "./AppContext";
-import { calculateAndroidButtonScale, deleteFile, insertArrayAfter, trackEvent } from "./Helpers";
+import { calculateAndroidButtonScale, deleteFile, insertArrayAfter } from "./Helpers";
+import { trackEvent } from '@/components/Analytics';
 import Toast from "react-native-toast-message";
 import { Asterisk } from "./svg/asterisk";
 import { hasRecordedBefore, setRecordedBefore } from "./Storage";

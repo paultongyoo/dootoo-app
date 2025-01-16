@@ -1,7 +1,8 @@
 import axios from 'axios';
 import RNFS from 'react-native-fs';
 import { Buffer } from 'buffer';
-import { generateCurrentTimeAPIHeaders, trackEvent } from './Helpers';
+import { generateCurrentTimeAPIHeaders } from './Helpers';
+import { trackEvent } from '@/components/Analytics';
 
 const BACKEND_TRANSCRIPTION_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/transcribeAudioToTasks_Dev'
                                             : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/transcribeAudioToTasks';

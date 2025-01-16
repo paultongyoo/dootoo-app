@@ -1,5 +1,6 @@
 import { AppContext } from "@/components/AppContext";
-import { generateReactionCountObject, isThingOverdue, pluralize, timeAgo, trackEvent } from "@/components/Helpers";
+import { generateReactionCountObject, isThingOverdue, pluralize, timeAgo } from "@/components/Helpers";
+import { trackEvent } from '@/components/Analytics';
 import { blockItem, blockUser, loadCommunityItems, loadItemsReactions, reactToItem, updateItemPublicState } from "@/components/Storage";
 import { CircleUserRound } from "@/components/svg/circle-user-round";
 import { EllipsisVertical } from "@/components/svg/ellipsis-vertical";

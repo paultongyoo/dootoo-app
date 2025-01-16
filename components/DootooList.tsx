@@ -13,7 +13,8 @@ import * as Calendar from 'expo-calendar';
 import Dialog from "react-native-dialog";
 import RNPickerSelect from 'react-native-picker-select';
 import * as Linking from 'expo-linking';
-import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, generateReactionCountObject, getLocalDateObj, insertArrayAfter, isThingOverdue, pluralize, stringizeThingName, trackEvent } from './Helpers';
+import { areDateObjsEqual, calculateTextInputRowHeight, deriveAlertMinutesOffset, extractDateInLocalTZ, extractTimeInLocalTZ, fetchWithRetry, generateCalendarUri, generateEventCreatedMessage, generateNewKeyboardEntry, generateReactionCountObject, getLocalDateObj, insertArrayAfter, isThingOverdue, pluralize, stringizeThingName } from './Helpers';
+import { trackEvent } from '@/components/Analytics';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Bulb } from './svg/bulb';
 import { Clock } from './svg/clock';
@@ -1958,7 +1959,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                 <View style={styles.childItemSpacer}></View>
                             )}
                             {isDoneable && (
-                                <Pressable hitSlop={10} style={[styles.itemCircleOpen, item.is_done && styles.itemCircleOpen_isDone]} onPress={() => handleDoneClick(item)}></Pressable>
+                                <Pressable hitSlop={20} style={({pressed}) => [styles.itemCircleOpen, item.is_done && styles.itemCircleOpen_isDone, pressed && { backgroundColor: '#556B2F50' }]} onPress={() => handleDoneClick(item)}></Pressable>
                             )}
                             {(thingName == 'tip') && (
                                 <Pressable style={styles.tipListIconContainer}
