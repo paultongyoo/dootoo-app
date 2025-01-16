@@ -226,10 +226,20 @@ export default function ListScreen() {
         username: username,
         pathname: pathname,
         uuid: item.uuid,
-        done_state_at_click: item.is_done,
+        done_state_at_click: (item.is_done == true),
         parent_item_uuid: item.parent_item_uuid,
         item_type: (item.parent_item_uuid) ? 'child' : 'adult'
       });
+
+      if (item.newKeyboardEntry && ((item.text?.length || 0) == 0)) {
+        trackEvent("Empty Done Prompt Displayed", { username: username });
+        Alert.alert('', 'Oops! You need to add some text to your item before marking it as done.',
+          [
+            { text: 'OK', onPress: () => trackEvent("Empty Done Prompt Dismissed", { username: username }) }
+          ]);
+        return;
+      }
+
 
       // Check if item has open kids
       const openChildren = openItems.filter((child) => (child.parent_item_uuid == item.uuid) && !child.is_done);
