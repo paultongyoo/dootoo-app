@@ -9,7 +9,7 @@ const AMPLITUDE_KEY_PROD = "ac9cdda8bd0d54ba50553219f407d353";
 import { setJSExceptionHandler } from "react-native-exception-handler";
 import { Alert, AppState, BackHandler, Platform } from "react-native";
 import { checkOpenAPIStatus } from "@/components/BackendServices";
-import { trackEvent } from '@/components/Helpers';
+import { trackEvent } from '@/components/Analytics';
 import { isTWEmployee } from "@/components/Storage";
 
 export default function StackLayout() {

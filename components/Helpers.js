@@ -1,5 +1,4 @@
 import { Alert, Platform } from "react-native";
-import * as amplitude from '@amplitude/analytics-react-native';
 import { DateTime } from 'luxon';
 import uuid from 'react-native-uuid';
 import RNFS from 'react-native-fs';
@@ -419,17 +418,4 @@ export const generateReactionCountObject = (userReactions) => {
     acc[reaction.name] = (acc[reaction.name] || 0) + 1;
     return acc;
   }, {});
-}
-
-export const trackEvent = (eventName, eventProperties) => {
-  const userId = amplitude.getDeviceId();  // TODO Fix -- this is not the desired Amplitude Id
-  if ((userId != '1047743226749') || // Me iOS
-      (userId != '1093493796864') || // Me Android
-      (userId != '1095647595066') || // Dad 
-      (userId != '1095635126298') // Mom 
-    ) {
-    const appendedProps = { ...eventProperties, amplitude_user_id: userId };
-    console.log("Tracking Event: " + eventName + ", properties: " + JSON.stringify(appendedProps));
-    amplitude.track(eventName, appendedProps);
-  }
 }

@@ -6,7 +6,7 @@ import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList, { listStyles } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import { ProfileCountEventEmitter } from "@/components/EventEmitters";
-import { trackEvent } from '@/components/Helpers';
+import { trackEvent } from '@/components/Analytics';
 
 import {
   StyleSheet, Pressable, Alert,
@@ -191,7 +191,7 @@ export default function Index() {
         anonymous_id: anonymousId.current,
         pathname: pathname,
         uuid: item.uuid,
-        done_state_at_click: item.is_done,
+        done_state_at_click: (item.is_done == true),
         parent_item_uuid: item.parent_item_uuid,
         item_type: (item.parent_item_uuid) ? 'child' : 'adult'
       });

@@ -118,6 +118,9 @@ const REACTTOITEM_URL = (__DEV__) ?  'https://jyhwvzzgrg.execute-api.us-east-2.a
 const LOADITEMSREACTIONS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItemsReactions_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadItemsReactions';
 
+const CLICKSTREAM_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/clickStream_Dev'
+                                  : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/clickStream';
+
 
 export const loadCommunityItems = async(requestedPage) => {
   try {
@@ -1204,6 +1207,27 @@ export const clearTWEmployee = async() => {
     await AsyncStorage.removeItem(TW_EMPLOYEE_KEY);
   } catch (e){
     console.warn("Error removing TW_EMPLOYEE_KEY key", e);
+  }
+}
+
+export const trackClickstream = async(event_name, event_properties) => {
+  try {
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return ;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(CLICKSTREAM_URL,
+      {
+        anonymous_id : localAnonId,
+        eventName: event_name,
+        eventProperties: JSON.stringify(event_properties)
+      }
+    );
+  } catch (error) {
+    console.error('Error calling trackClickstream API:', error);
   }
 }
 

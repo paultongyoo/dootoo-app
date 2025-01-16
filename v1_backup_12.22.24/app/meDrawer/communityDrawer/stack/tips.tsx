@@ -21,7 +21,7 @@ import { Trash } from "@/components/svg/trash";
 import { ThumbUp } from "@/components/svg/thumb-up";
 import { ThumbDown } from "@/components/svg/thumb-down";
 import { MoveToTop } from "@/components/svg/move-to-top";
-import { trackEvent } from '@/components/Helpers';
+import { trackEvent } from '@/components/Analytics';
 
 
 export default function ItemTips() {

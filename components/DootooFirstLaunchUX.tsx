@@ -6,7 +6,7 @@ import { AppContext } from './AppContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ArrowDown } from './svg/arrow-down';
 import { check, PERMISSIONS, RESULTS, request } from 'react-native-permissions';
-import { trackEvent } from '@/components/Helpers';
+import { trackEvent } from '@/components/Analytics';
 
 const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
   const { isFirstLaunch, anonymousId, username } = useContext(AppContext);

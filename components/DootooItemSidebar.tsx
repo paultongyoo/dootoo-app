@@ -8,7 +8,7 @@ import { UsersRound } from './svg/users-round';
 import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter } from './EventEmitters';
 import { ReactionsDisplay } from './ReactionsDisplay';
 import { NAVIGATION_SECTION_IDX_COMMUNITY } from './Constants';
-import { trackEvent } from '@/components/Helpers';
+import { trackEvent } from '@/components/Analytics';
 
 
 const DootooItemSidebar = ({ thing, onReactionsPress }) => {

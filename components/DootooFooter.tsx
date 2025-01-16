@@ -6,7 +6,7 @@ import { usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import NavigationSections from "./NavigationSections";
 import { AppContext } from "./AppContext";
-import { trackEvent } from '@/components/Helpers';
+import { trackEvent } from '@/components/Analytics';
 
 const DootooFooter = ({ state, descriptors, navigation }) => {
     const { anonymousId, username } = useContext(AppContext);

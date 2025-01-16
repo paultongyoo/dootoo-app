@@ -14,7 +14,7 @@ import { Bulb } from '@/components/svg/bulb';
 import { ChevronRight } from '@/components/svg/chevron-right';
 import { ArrowRight } from '@/components/svg/arrow-right';
 import { ThumbUp } from '@/components/svg/thumb-up';
-import { trackEvent } from '@/components/Helpers';
+import { trackEvent } from '@/components/Analytics';
 
 const { width: screenWidth } = Dimensions.get('window');
 

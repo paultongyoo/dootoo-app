@@ -5,7 +5,7 @@ import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooList, { listStyles, THINGNAME_DONE_ITEM } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import { ProfileCountEventEmitter } from "@/components/EventEmitters";
-import { trackEvent } from '@/components/Helpers';
+import { trackEvent } from '@/components/Analytics';
 
 import {
   StyleSheet, Pressable,
