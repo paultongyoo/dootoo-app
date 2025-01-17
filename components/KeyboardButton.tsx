@@ -6,7 +6,7 @@ import { View, StyleSheet, Pressable } from "react-native";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { Keyboard } from "./svg/keyboard";
 import { Plus } from "./svg/plus";
-import { trackEvent } from "@/components/Helpers";
+import { trackEvent } from "@/components/Analytics";
 
 
 const KeyboardButton = ({ listArray, listArraySetterFunc }) => {
