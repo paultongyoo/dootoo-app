@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export const handler = async (event) => {
-  //console.log("Event Obj: " + JSON.stringify(event));
+  console.log("Event Obj: " + JSON.stringify(event));
   const postBody = JSON.parse(event.body);
   try {
     const user = await prisma.user.findUnique({
@@ -21,11 +21,13 @@ export const handler = async (event) => {
         anonymous_id: user.anonymous_id,
         username: user.name,
         ip_addr: event.requestContext.identity.sourceIp,
+        env: event.requestContext.stage,
+        platform: postBody.platform,
         event_name: postBody.eventName,
         event_properties: postBody.eventProperties
       }
     });
-    console.log("Click: " + JSON.stringify(click));
+    //console.log("Click: " + JSON.stringify(click));
     if (click) {
       const response = {
         statusCode: 200

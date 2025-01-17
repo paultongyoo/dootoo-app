@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import axios from 'axios';
 import uuid from 'react-native-uuid';
 import { generateCurrentTimeAPIHeaders } from './Helpers';
@@ -1211,6 +1212,7 @@ export const trackClickstream = async(event_name, event_properties) => {
     const response = await axios.post(CLICKSTREAM_URL,
       {
         anonymous_id : localAnonId,
+        platform: Platform.OS,
         eventName: event_name,
         eventProperties: JSON.stringify(event_properties)
       }
