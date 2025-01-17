@@ -109,8 +109,10 @@ export const handler = async (event) => {
             }
         });
 
-        // Update embedding for new text
-        await updateItemEmbedding(textUpdate, updatedItem);
+        // Disabled embedding savings Post 1.7.1 release
+        //
+        // // Update embedding for new text
+        // await updateItemEmbedding(textUpdate, updatedItem);
 
         const response = {
             statusCode: 200,
