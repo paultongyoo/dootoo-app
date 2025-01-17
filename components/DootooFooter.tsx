@@ -91,7 +91,7 @@ const DootooFooter = ({ state, descriptors, navigation }) => {
                         <Text style={styles.bannerAdCopy}>ADVERTISEMENT</Text>
                     </View>
                     <BannerAd ref={bannerRef} unitId={bannerAdId} size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-                        onPaid={() => trackEvent("Banner Ad Paid", {
+                        onPaid={() => (!__DEV__) && trackEvent("Banner Ad Paid", {
                             anonymous_id: anonymousId,
                             username: username
                           })}
