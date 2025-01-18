@@ -1,9 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import axios from 'axios';
 import uuid from 'react-native-uuid';
-import { uniqueNamesGenerator, adjectives, animals, NumberDictionary } from 'unique-names-generator';
 import { generateCurrentTimeAPIHeaders } from './Helpers';
-import * as amplitude from '@amplitude/analytics-react-native';
 
 // Local storage column keys
 const DONE_COUNT_KEY = "user_done_count";
@@ -14,6 +13,8 @@ export const DONE_ITEM_LIST_KEY = "done_item_list";
 const OPEN_ITEM_LIST_LAST_LOADED_PAGE_KEY = "open_item_list_last_page";
 const DONE_ITEM_LIST_LAST_LOADED_PAGE_KEY = "done_item_list_last_page";
 const TIP_LIST_KEY_PREFIX = "tip_list_";    // Append item UUID to key
+const HAS_RECORDED_BEFORE = "has_recorded_before";
+const TW_EMPLOYEE_KEY = "tw_employee";
 
 const CREATEUSER_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/createUser_Dev' 
                                  : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/createUser';
@@ -116,6 +117,12 @@ const REACTTOITEM_URL = (__DEV__) ?  'https://jyhwvzzgrg.execute-api.us-east-2.a
 
 const LOADITEMSREACTIONS_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/loadItemsReactions_Dev'
                                 : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/loadItemsReactions';
+
+const CLICKSTREAM_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/clickStream_Dev'
+                                  : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/clickStream';
+
+const FEEDBACK_URL = (__DEV__) ? 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/dev/feedback_Dev'
+                               : 'https://jyhwvzzgrg.execute-api.us-east-2.amazonaws.com/prod/feedback';
 
 
 export const loadCommunityItems = async(requestedPage) => {
@@ -442,17 +449,7 @@ export const enrichItem = async (item) => {
         utcdatetime : currentTimeAPIHeaders.utcdatetime
       }
     );
-
-    // 1.5 Track AI costs if present in the response
     //console.log("response obj: " + JSON.stringify(response.data.body));
-    if (response.data.body.chat_cost) {
-      amplitude.track("AI Costs Received", {
-        anonymous_id: localAnonId,
-        chat_cost: Number(response.data.body.chat_cost)
-      });
-    } else {
-      //console.log("No chat_cost response in enrichItem response.")
-    }
     return response.data.body;
   } catch (error) {
     console.error('Error calling enrichItem API:', error);
@@ -1156,7 +1153,100 @@ export const loadLocalListLastCachedPage = async(doneFilterString) => {
   }
 }
 
-// ******** BEGIN Non-EXPORTED METHODS *********
+export const hasRecordedBefore = async() => {
+  try {
+    return await AsyncStorage.getItem(HAS_RECORDED_BEFORE) != null
+  } catch (e){
+    console.warn("Error retrieving hasRecordedBefore", e);
+    return false;
+  }
+}
+
+export const setRecordedBefore = async() => {
+  try {
+    await AsyncStorage.setItem(HAS_RECORDED_BEFORE, "yes");
+  } catch (e){
+    console.warn("Error setting HAS_RECORDED_BEFORE key", e);
+  }
+}
+
+export const clearRecordedBefore = async() => {
+  try {
+    await AsyncStorage.removeItem(HAS_RECORDED_BEFORE);
+  } catch (e){
+    console.warn("Error removing HAS_RECORDED_BEFORE key", e);
+  }
+}
+
+export const isTWEmployee = async() => {
+  try {
+    return await AsyncStorage.getItem(TW_EMPLOYEE_KEY) != null
+  } catch (e){
+    console.warn("Error retrieving TW_EMPLOYEE_KEY", e);
+    return false;
+  }
+}
+
+export const setTWEmployee = async() => {
+  try {
+    await AsyncStorage.setItem(TW_EMPLOYEE_KEY, "yes");
+  } catch (e){
+    console.warn("Error setting TW_EMPLOYEE_KEY key", e);
+  }
+}
+
+export const clearTWEmployee = async() => {
+  try {
+    await AsyncStorage.removeItem(TW_EMPLOYEE_KEY);
+  } catch (e){
+    console.warn("Error removing TW_EMPLOYEE_KEY key", e);
+  }
+}
+
+export const trackClickstream = async(event_name, event_properties) => {
+  try {
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return ;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(CLICKSTREAM_URL,
+      {
+        anonymous_id : localAnonId,
+        platform: Platform.OS,
+        eventName: event_name,
+        eventProperties: JSON.stringify(event_properties)
+      }
+    );
+  } catch (error) {
+    console.error('Error calling trackClickstream API:', error);
+  }
+}
+
+export const feedback = async(form_input_json) => {
+  try {
+    const localUserSr = await AsyncStorage.getItem(USER_OBJ_KEY);
+    if (!localUserSr) {
+      //console.log("Received null local anon Id, aborting tipVote!");
+      return ;
+    }
+    const localUser = JSON.parse(localUserSr);
+    const localAnonId = localUser.anonymous_id;
+    const response = await axios.post(FEEDBACK_URL,
+      {
+        anonymous_id : localAnonId,
+        form_input: form_input_json
+      }
+    );
+  } catch (error) {
+    console.error('Error calling feedback API:', error);
+  } 
+}
+
+
+// ******** BEGIN Non-EXPORTED METHODS ***************************************************
 
 const loadLocalUser = async() => {
   //console.log("loadLocalUser");

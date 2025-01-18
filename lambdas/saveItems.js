@@ -163,22 +163,24 @@ const saveItems = async (anonymous_id, items_str) => {
                     }
                 }
 
-                // Retrieve embedding for task and insert into table
-                //console.log(`Begin retrieval and storing of embedding for item ${item.id}...`);
-                const embedding_response = await axios.post(
-                    //"http://ip-172-31-31-53.us-east-2.compute.internal:8000/embed",    // PROD EC2 Instance
-                    "http://ip-172-31-28-150.us-east-2.compute.internal:8000/embed",    // DEV EC2 Instance
-                    { text: array_item.text }
-                );
-                const embedding = embedding_response.data.embedding;
-                //console.log("Embedding: " + embedding);
-                const embeddingArray = embedding.join(',');
-                //console.log("Embedding Array: " + embeddingArray);
-                const query = `UPDATE "Item" SET embedding = '[` +
-                    embeddingArray + `]'::vector WHERE id = ` + item.id + `;`
-                //console.log("Raw query: " + query);
-                await prisma.$executeRawUnsafe(query);
-                //console.log("End retreival and storage complete ..");
+                // Deactivating embeddings post 1.7.1 release
+                //
+                // // Retrieve embedding for task and insert into table
+                // //console.log(`Begin retrieval and storing of embedding for item ${item.id}...`);
+                // const embedding_response = await axios.post(
+                //     //"http://ip-172-31-31-53.us-east-2.compute.internal:8000/embed",    // PROD EC2 Instance
+                //     "http://ip-172-31-28-150.us-east-2.compute.internal:8000/embed",    // DEV EC2 Instance
+                //     { text: array_item.text }
+                // );
+                // const embedding = embedding_response.data.embedding;
+                // //console.log("Embedding: " + embedding);
+                // const embeddingArray = embedding.join(',');
+                // //console.log("Embedding Array: " + embeddingArray);
+                // const query = `UPDATE "Item" SET embedding = '[` +
+                //     embeddingArray + `]'::vector WHERE id = ` + item.id + `;`
+                // //console.log("Raw query: " + query);
+                // await prisma.$executeRawUnsafe(query);
+                // //console.log("End retreival and storage complete ..");
 
                 itemSaveCount += 1;
             } catch (error) {

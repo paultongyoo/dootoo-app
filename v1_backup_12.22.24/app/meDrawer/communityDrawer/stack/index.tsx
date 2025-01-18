@@ -1,12 +1,12 @@
 import { useContext } from "react";
 import { usePathname } from 'expo-router';
-import { saveItems, loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems } from '@/components/Storage';
+import { loadItems, deleteItem, updateItemHierarchy, updateItemText, updateItemOrder, updateItemDoneState, saveNewItems } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooItemEmptyUX from "@/components/DootooItemEmptyUX";
 import DootooList, { listStyles } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import { ProfileCountEventEmitter } from "@/components/EventEmitters";
-import * as amplitude from '@amplitude/analytics-react-native';
+import { trackEvent } from '@/components/Analytics';
 
 import {
   StyleSheet, Pressable, Alert,
@@ -71,7 +71,7 @@ export default function Index() {
 
   const handleMakeParent = (item) => {
 
-    amplitude.track("Item Made Into Parent", {
+    trackEvent("Item Made Into Parent", {
       anonymous_id: anonymousId.current,
       item_uuid: item.uuid
     });
@@ -124,7 +124,7 @@ export default function Index() {
       }
     }
 
-    amplitude.track("Item Made Into Child", {
+    trackEvent("Item Made Into Child", {
       anonymous_id: anonymousId.current,
       item_uuid: item.uuid,
       parent_item_uuid: nearestParentUUID
@@ -187,11 +187,11 @@ export default function Index() {
     */
     try {
 
-      amplitude.track("Item Done Clicked", {
+      trackEvent("Item Done Clicked", {
         anonymous_id: anonymousId.current,
         pathname: pathname,
         uuid: item.uuid,
-        done_state_at_click: item.is_done,
+        done_state_at_click: (item.is_done == true),
         parent_item_uuid: item.parent_item_uuid,
         item_type: (item.parent_item_uuid) ? 'child' : 'adult'
       });
@@ -271,7 +271,7 @@ export default function Index() {
 
             // item has open children, prompt user how to handle them
             if (openChildren.length > 0) {
-              amplitude.track("Doneify With Kids Prompt Displayed", {
+              trackEvent("Doneify With Kids Prompt Displayed", {
                 anonymous_id: anonymousId.current,
                 pathname: pathname,
                 num_open_kids: openChildren.length
@@ -284,7 +284,7 @@ export default function Index() {
                   {
                     text: 'Cancel', // 1.2.3
                     onPress: () => {
-                      amplitude.track("Doneify With Kids Prompt Cancelled", {
+                      trackEvent("Doneify With Kids Prompt Cancelled", {
                         anonymous_id: anonymousId.current,
                         pathname: pathname,
                         num_open_kids: openChildren.length
@@ -295,7 +295,7 @@ export default function Index() {
                   {
                     text: 'Delete Them',
                     onPress: async () => {
-                      amplitude.track("Doneify With Kids Prompt: Delete Chosen", {
+                      trackEvent("Doneify With Kids Prompt: Delete Chosen", {
                         anonymous_id: anonymousId.current,
                         pathname: pathname,
                         num_open_children: openChildren.length
@@ -382,7 +382,7 @@ export default function Index() {
                   {
                     text: 'Complete Them',
                     onPress: async () => {
-                      amplitude.track("Doneify With Kids Prompt: Complete Chosen", {
+                      trackEvent("Doneify With Kids Prompt: Complete Chosen", {
                         anonymous_id: anonymousId.current,
                         pathname: pathname,
                         num_open_children: openChildren.length

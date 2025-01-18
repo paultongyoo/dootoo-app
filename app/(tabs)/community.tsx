@@ -1,5 +1,6 @@
 import { AppContext } from "@/components/AppContext";
 import { generateReactionCountObject, isThingOverdue, pluralize, timeAgo } from "@/components/Helpers";
+import { trackEvent } from '@/components/Analytics';
 import { blockItem, blockUser, loadCommunityItems, loadItemsReactions, reactToItem, updateItemPublicState } from "@/components/Storage";
 import { CircleUserRound } from "@/components/svg/circle-user-round";
 import { EllipsisVertical } from "@/components/svg/ellipsis-vertical";
@@ -10,7 +11,6 @@ import { useFocusEffect, usePathname } from "expo-router";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { StyleSheet, View, ActivityIndicator, FlatList, Text, Alert, Pressable, RefreshControl, Platform } from "react-native";
 import Modal from "react-native-modal";
-import * as amplitude from '@amplitude/analytics-react-native';
 import * as Constants from '@/components/Constants';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import Dialog from "react-native-dialog";
@@ -26,9 +26,10 @@ import Toast from "react-native-toast-message";
 import { Clock } from "@/components/svg/clock";
 import { useIsFocused } from "@react-navigation/native";
 
+
 const CommunityScreen = () => {
     const pathname = usePathname();
-    const { username, anonymousId, setOpenItems, setDoneItems,
+    const { username, anonymousId, affirmation, setOpenItems, setDoneItems,
         communityItems, setCommunityItems, hasMoreCommunityItems, communityLayoutOpacity } = useContext(AppContext);
     const [itemMoreModalVisible, setItemMoreModalVisible] = useState(false);
     const [hideFromCommunityDialogVisible, setHideFromCommunityDialogVisible] = useState(false);
@@ -198,7 +199,7 @@ const CommunityScreen = () => {
                 }
                 setRefreshing(false);
             }
-            amplitude.track("Community Page Loaded", {
+            trackEvent("Community Page Loaded", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
@@ -431,7 +432,7 @@ const CommunityScreen = () => {
         const [reactionModalVisible, setReactionModalVisible] = useState(false);
 
         const handleMoreTap = (item) => {
-            amplitude.track(`User Tapped Post More Icon`, {
+            trackEvent(`Post More Icon Tapped`, {
                 anonymous_id: anonymousId,
                 username: username,
                 uuid: item.uuid
@@ -442,7 +443,7 @@ const CommunityScreen = () => {
         }
 
         const handleReact = async (item, reaction_str = Constants.REACTION_LIKE) => {
-            amplitude.track(`User Reacted to Post`, {
+            trackEvent(`User Reacted to Post`, {
                 anonymous_id: anonymousId,
                 username: username,
                 uuid: item.uuid,
@@ -454,17 +455,17 @@ const CommunityScreen = () => {
                 reactToItem(item.uuid, reaction_str);
                 setCommunityItems(prevItems => prevItems.map(prevItem =>
                     (prevItem.uuid == item.uuid)
-                        ? { ...prevItem, userReactions: [{ reaction: { name: reaction_str }, user: { name: username } }, ...prevItem.userReactions.filter(reaction => reaction.user.name != username)] }
+                        ? { ...prevItem, userReactions: [{ reaction: { name: reaction_str }, user: { name: username, affirmation: affirmation } }, ...prevItem.userReactions.filter(reaction => reaction.user.name != username)] }
                         : prevItem));
                 if (item.is_done) {
                     setDoneItems(prevItems => prevItems.map(prevItem =>
                         (prevItem.uuid == item.uuid)
-                            ? { ...prevItem, userReactions: [{ reaction: { name: reaction_str }, user: { name: username } }, ...prevItem.userReactions.filter(reaction => reaction.user.name != username)] }
+                            ? { ...prevItem, userReactions: [{ reaction: { name: reaction_str }, user: { name: username, affirmation: affirmation } }, ...prevItem.userReactions.filter(reaction => reaction.user.name != username)] }
                             : prevItem));
                 } else {
                     setOpenItems(prevItems => prevItems.map(prevItem =>
                         (prevItem.uuid == item.uuid)
-                            ? { ...prevItem, userReactions: [{ reaction: { name: reaction_str }, user: { name: username } }, ...prevItem.userReactions.filter(reaction => reaction.user.name != username)] }
+                            ? { ...prevItem, userReactions: [{ reaction: { name: reaction_str }, user: { name: username, affirmation: affirmation } }, ...prevItem.userReactions.filter(reaction => reaction.user.name != username)] }
                             : prevItem));
                 }
             } else {
@@ -492,7 +493,7 @@ const CommunityScreen = () => {
         }
 
         const handleUsernameTap = (username) => {
-            amplitude.track(`Username Tapped `, {
+            trackEvent(`Username Tapped `, {
                 anonymous_id: anonymousId,
                 username: username,
                 uuid: item.uuid
@@ -503,7 +504,7 @@ const CommunityScreen = () => {
         }
 
         const handleTimerClick = (thing) => {
-            amplitude.track("Item Timer Icon Tapped", {
+            trackEvent("Item Timer Icon Tapped", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
@@ -668,10 +669,11 @@ const CommunityScreen = () => {
     };
 
     const handleReactionsTap = (item) => {
-        amplitude.track("Post Reactions Tapped", {
+        trackEvent("Post Reactions Tapped", {
             anonymous_id: anonymousId,
             username: username,
-            pathname: pathname
+            pathname: pathname,
+            uuid: item.uuid
         });
         modalItem.current = item;
         modelItemReactionCounts.current = generateReactionCountObject(item.userReactions);
@@ -682,7 +684,7 @@ const CommunityScreen = () => {
     }
 
     const handleHideFromCommunity = () => {
-        amplitude.track("Item Hide from Public Prompt Displayed", {
+        trackEvent("Item Hide from Public Prompt Displayed", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -692,7 +694,7 @@ const CommunityScreen = () => {
     }
 
     const handleHideFromCommunityCancel = () => {
-        amplitude.track("Item Hide from Public Prompt Cancelled", {
+        trackEvent("Item Hide from Public Prompt Cancelled", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -701,7 +703,7 @@ const CommunityScreen = () => {
     }
 
     const handleHideFromCommunitySubmit = () => {
-        amplitude.track("Item Hide from Public Prompt Approved", {
+        trackEvent("Item Hide from Public Prompt Approved", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -723,15 +725,16 @@ const CommunityScreen = () => {
         updateItemPublicState(modalItem.current.uuid, false);
     }
 
-    const submitBlock = async (username, block_reason_str) => {
+    const submitBlock = async (username_to_block, block_reason_str) => {
         const wasBlockSuccessful = await blockUser(username, block_reason_str);
         if (wasBlockSuccessful) {
 
-            amplitude.track("Profile Blocked", {
+            trackEvent("Profile Blocked", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
-                name: username
+                blocked_username: username_to_block,
+                reason: block_reason_str
             });
 
             setItemMoreModalVisible(false);
@@ -742,7 +745,7 @@ const CommunityScreen = () => {
             Alert.alert(
                 "Unexpected error occurred",
                 "An unexpected error occurred when attempting to block the user.  We will fix this issue as soon as possible.");
-            amplitude.track("Block Profile Unexpected Error", {
+            trackEvent("Block Profile Unexpected Error", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
@@ -755,7 +758,7 @@ const CommunityScreen = () => {
         const wasBlockSuccessful = await blockItem(item_uuid, block_reason_str);
         if (wasBlockSuccessful) {
 
-            amplitude.track("Item Blocked", {
+            trackEvent("Item Blocked", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
@@ -770,7 +773,7 @@ const CommunityScreen = () => {
             Alert.alert(
                 "Unexpected error occurred",
                 "An unexpected error occurred when attempting to block the post.  We will fix this issue as soon as possible.");
-            amplitude.track("Block Item Unexpected Error", {
+            trackEvent("Block Item Unexpected Error", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
@@ -780,7 +783,7 @@ const CommunityScreen = () => {
     }
 
     const handleHideUser = () => {
-        amplitude.track("Hide User Prompt Displayed", {
+        trackEvent("Hide User Prompt Displayed", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -790,7 +793,7 @@ const CommunityScreen = () => {
     }
 
     const handleHideUserCancel = () => {
-        amplitude.track("Hide User Prompt Cancelled", {
+        trackEvent("Hide User Prompt Cancelled", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -799,7 +802,7 @@ const CommunityScreen = () => {
     }
 
     const handleHideUserSubmit = async () => {
-        amplitude.track("Hide User Prompt Submitted", {
+        trackEvent("Hide User Prompt Submitted", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -809,7 +812,7 @@ const CommunityScreen = () => {
     }
 
     const handleReportUser = () => {
-        amplitude.track("Report User Prompt Displayed", {
+        trackEvent("Report User Prompt Displayed", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -819,7 +822,7 @@ const CommunityScreen = () => {
     }
 
     const handleReportUserCancel = () => {
-        amplitude.track("Report User Prompt Cancelled", {
+        trackEvent("Report User Prompt Cancelled", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -837,7 +840,7 @@ const CommunityScreen = () => {
     }
 
     const handleReportPost = () => {
-        amplitude.track("Report Post Prompt Displayed", {
+        trackEvent("Report Post Prompt Displayed", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -847,7 +850,7 @@ const CommunityScreen = () => {
     }
 
     const handleReportPostCancel = () => {
-        amplitude.track("Report Post Prompt Cancelled", {
+        trackEvent("Report Post Prompt Cancelled", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname

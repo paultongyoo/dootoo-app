@@ -1,13 +1,12 @@
 import { usePathname } from "expo-router";
 import { useContext, useEffect, useRef, useState } from "react";
-import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Linking, Platform, ScrollView } from "react-native";
+import { Alert, Pressable, View, Image, StyleSheet, Text, ActivityIndicator, Linking, ScrollView } from "react-native";
 import { AppContext } from "@/components/AppContext";
-import * as amplitude from '@amplitude/analytics-react-native';
 import { formatNumber, getDate } from '@/components/Helpers';
+import { trackEvent } from '@/components/Analytics';
 import { overrideUserAnonId as overrideUser, saveUserLocally, updateAffirmation, updateUsername } from "@/components/Storage";
 import { NAVIGATION_EVENT__GO_TO_SECTION, NavigationEventEmitter, ProfileCountEventEmitter } from "@/components/EventEmitters";
 import Dialog from "react-native-dialog";
-import { Bulb } from "@/components/svg/bulb";
 import { Edit } from "@/components/svg/edit";
 import { NAVIGATION_SECTION_IDX_DONE } from "@/components/Constants";
 import { useSharedValue } from "react-native-reanimated";
@@ -62,7 +61,7 @@ const ProfileScreen = ({ navigation }) => {
     }, []);
 
     const showConfirmationPrompt = () => {
-        amplitude.track("User Data Deletion Started", {
+        trackEvent("User Data Deletion Started", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -74,7 +73,7 @@ const ProfileScreen = ({ navigation }) => {
                 {
                     text: 'Cancel',
                     onPress: () => {
-                        amplitude.track("User Data Deletion Cancelled", {
+                        trackEvent("User Data Deletion Cancelled", {
                             anonymous_id: anonymousId,
                             username: username,
                             pathname: pathname
@@ -86,7 +85,7 @@ const ProfileScreen = ({ navigation }) => {
                     text: 'OK',
                     onPress: () => {
                         //console.log('Data Deletion OK Pressed');
-                        amplitude.track("User Data Deletion Completed", {
+                        trackEvent("User Data Deletion Completed", {
                             anonymous_id: anonymousId,
                             username: username,
                             pathname: pathname
@@ -106,7 +105,7 @@ const ProfileScreen = ({ navigation }) => {
     }
 
     const sendEmail = () => {
-        amplitude.track("Email Feedback Link Clicked", {
+        trackEvent("Email Feedback Link Clicked", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -122,7 +121,7 @@ const ProfileScreen = ({ navigation }) => {
         // Use Linking API to open email client
         Linking.openURL(url).catch(err => console.error('Error opening email client:', err));
 
-        amplitude.track("Email Feedback Link Opened", {
+        trackEvent("Email Feedback Link Opened", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -286,7 +285,7 @@ const ProfileScreen = ({ navigation }) => {
     });
 
     const handleEditUsername = () => {
-        amplitude.track("Edit Username Started", {
+        trackEvent("Edit Username Started", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -332,7 +331,7 @@ const ProfileScreen = ({ navigation }) => {
             await saveUserLocally(updatedUserObj);
             setLoadingNewUsername(false);
 
-            amplitude.track("Edit Username Completed", {
+            trackEvent("Edit Username Completed", {
                 anonymous_id: anonymousId,
                 pathname: pathname,
                 username: usernameTextInputValue.current
@@ -341,7 +340,7 @@ const ProfileScreen = ({ navigation }) => {
             setLoadingNewUsername(false);
             setDupeUsernameDialogVisible(true);
 
-            amplitude.track("Edit Username Submission Invalid", {
+            trackEvent("Edit Username Submission Invalid", {
                 anonymous_id: anonymousId,
                 pathname: pathname,
                 error_type: 'dupe',
@@ -351,7 +350,7 @@ const ProfileScreen = ({ navigation }) => {
             setLoadingNewUsername(false);
             setUsernameModerationFailedDialogVisible(true);
 
-            amplitude.track("Edit Username Submission Invalid", {
+            trackEvent("Edit Username Submission Invalid", {
                 anonymous_id: anonymousId,
                 pathname: pathname,
                 error_type: 'moderation_failed',
@@ -361,7 +360,7 @@ const ProfileScreen = ({ navigation }) => {
             setLoadingNewUsername(false);
             setUsernameSpammingFailedDialogVisible(true);
 
-            amplitude.track("Edit Username Submission Invalid", {
+            trackEvent("Edit Username Submission Invalid", {
                 anonymous_id: anonymousId,
                 pathname: pathname,
                 error_type: 'spam',
@@ -371,7 +370,7 @@ const ProfileScreen = ({ navigation }) => {
             setLoadingNewUsername(false);
             setUsernameUnexpectedDialogVisible(true);
 
-            amplitude.track("Edit Username Submission Invalid", {
+            trackEvent("Edit Username Submission Invalid", {
                 anonymous_id: anonymousId,
                 pathname: pathname,
                 error_type: 'unexpected',
@@ -382,7 +381,7 @@ const ProfileScreen = ({ navigation }) => {
     }
 
     const handleDeleteAffirmation = () => {
-        amplitude.track("Delete Headline Started", {
+        trackEvent("Delete Headline Started", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -394,7 +393,7 @@ const ProfileScreen = ({ navigation }) => {
                 {
                     text: 'Cancel',
                     onPress: async () => {
-                        amplitude.track("Delete Headline Cancelled", {
+                        trackEvent("Delete Headline Cancelled", {
                             anonymous_id: anonymousId,
                             username: username,
                             pathname: pathname
@@ -405,7 +404,7 @@ const ProfileScreen = ({ navigation }) => {
                 {
                     text: 'Yes',
                     onPress: async () => {
-                        amplitude.track("Delete Headline Approved", {
+                        trackEvent("Delete Headline Approved", {
                             anonymous_id: anonymousId,
                             username: username,
                             pathname: pathname
@@ -419,7 +418,7 @@ const ProfileScreen = ({ navigation }) => {
     }
 
     const handleEditAffirmation = () => {
-        amplitude.track("Edit Headline Started", {
+        trackEvent("Edit Headline Started", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -445,7 +444,7 @@ const ProfileScreen = ({ navigation }) => {
             await saveUserLocally(updatedUserObj);
             setLoadingNewAffirmation(false);
 
-            amplitude.track("Edit Headline Completed", {
+            trackEvent("Edit Headline Completed", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
@@ -455,7 +454,7 @@ const ProfileScreen = ({ navigation }) => {
             setLoadingNewAffirmation(false);
             setAffirmationModerationFailedDialogVisible(true);
 
-            amplitude.track("Edit Headline Submission Invalid", {
+            trackEvent("Edit Headline Submission Invalid", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
@@ -466,7 +465,7 @@ const ProfileScreen = ({ navigation }) => {
             setLoadingNewAffirmation(false);
             setAffirmationSpammingFailedDialogVisible(true);
 
-            amplitude.track("Edit Headline Submission Invalid", {
+            trackEvent("Edit Headline Submission Invalid", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
@@ -478,7 +477,7 @@ const ProfileScreen = ({ navigation }) => {
             affirmationInvalidReason.current = body;
             setAffirmationInvalidOtherDialogVisible(true);
 
-            amplitude.track("Edit Headline Submission Invalid", {
+            trackEvent("Edit Headline Submission Invalid", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,
@@ -490,7 +489,7 @@ const ProfileScreen = ({ navigation }) => {
             setLoadingNewAffirmation(false);
             setAffirmationUnexpectedDialogVisible(true);
 
-            amplitude.track("Edit Headline Submission Invalid", {
+            trackEvent("Edit Headline Submission Invalid", {
                 anonymous_id: anonymousId,
                 username: username,
                 pathname: pathname,

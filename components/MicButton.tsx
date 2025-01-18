@@ -3,15 +3,16 @@ import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import { Microphone } from "./svg/microphone";
 import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useContext, useRef, useState } from "react";
-import * as amplitude from '@amplitude/analytics-react-native';
 import { usePathname } from "expo-router";
 import { AppContext } from "./AppContext";
 import { calculateAndroidButtonScale, deleteFile, insertArrayAfter } from "./Helpers";
+import { trackEvent } from '@/components/Analytics';
 import Toast from "react-native-toast-message";
 import { Asterisk } from "./svg/asterisk";
+import { hasRecordedBefore, setRecordedBefore } from "./Storage";
 
-const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle, 
-                    selectedThing = null, listArray, listArraySetterFunc, transcribeFunc, saveNewThingsFunc }) => {
+const MicButton = ({ buttonHeight, buttonUnderlayStyle, buttonStyle,
+    selectedThing = null, listArray, listArraySetterFunc, transcribeFunc, saveNewThingsFunc }) => {
     const { anonymousId, username, lastRecordedCount, emptyListCTAFadeOutAnimation } = useContext(AppContext);
     const pathname = usePathname();
     const [permissionResponse, requestPermission] = Audio.usePermissions();
@@ -28,6 +29,43 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
     var retryCount = 0;
     const recorderProcessLocked = useRef(false);
 
+    const handleRecordButtonPress = async (selectedThing = null) => {
+        const hasRecdBefore = await hasRecordedBefore();
+        if (!hasRecdBefore) {
+            trackEvent("Recording Tips Prompt Displayed", { username: username });
+            Alert.alert("Tips For Your First Recording!",
+                `Because we use AI to process your recordings, you can:\n
+1. Say all your things to do at once and we'll create an item for each\n
+2. Speak to groups of items and we'll try to create subitems from them\n
+3. Include time or date info for any items and we'll add schedule features\n
+To protect your privacy, we delete your voice recording immediately after it is processed.  Read our Privacy Policy for more info.\n
+When ideal for you, using your voice can help you easily capture more items and speak to important things you wouldn't have done when typing.  Try it out and let us know what you think!`,
+                [
+                    {
+                        text: 'Cancel',
+                        onPress: () => { 
+                            trackEvent("Recording Tips Prompt: Cancel Pressed", { 
+                                anonymous_id: anonymousId, username: username 
+                            });
+                        },
+                        style: 'cancel'
+                    },
+                    {
+                        text: 'Start Recording',
+                        onPress: () => { 
+                            trackEvent("Recording Tips Prompt: Start Recording Pressed", { 
+                                anonymous_id: anonymousId, username: username 
+                            });
+                            setRecordedBefore();
+                            startRecording(selectedThing);
+                        }
+                    },
+                ]
+            );
+        } else {
+            startRecording(selectedThing);
+        }
+    }
 
     const startRecording = async (selectedThing = null) => {
 
@@ -46,7 +84,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
 
         recordingTimeStart.current = performance.now();
         //console.log("Logging start time: " + new Date(recordingTimeStart.current).toLocaleString());
-        amplitude.track("Recording Started", {
+        trackEvent("Recording Started", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname
@@ -54,12 +92,12 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
         try {
             if (permissionResponse!.status !== 'granted') {
                 //console.log('Requesting permission..');
-                amplitude.track("Recording Permission Prompt Started", {
+                trackEvent("Recording Permission Prompt Started", {
                     anonymous_id: anonymousId,
                     username: username
                 });
                 const result = await requestPermission();
-                amplitude.track("Recording Permission Prompt Completed", {
+                trackEvent("Recording Permission Prompt Completed", {
                     anonymous_id: anonymousId,
                     username: username,
                     result: (result) ? result.status : '(null)'
@@ -129,7 +167,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                 retryCount += 1;
             } else {
                 //console.error('Failed to start recording', err);
-                amplitude.track("Recording Error Occurred", {
+                trackEvent("Recording Error Occurred", {
                     anonymous_id: anonymousId,
                     username: username,
                     pathname: pathname,
@@ -192,7 +230,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
             if (hasBreachedThreshold.current) {
                 recorderProcessLocked.current = true;
 
-                amplitude.track("Recording Processing Started", {
+                trackEvent("Recording Processing Started", {
                     anonymous_id: anonymousId,
                     username: username,
                     pathname: pathname,
@@ -204,7 +242,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
 
                 const numScheduledItems = (response) ? response.filter((thing) => thing.scheduled_datetime_utc).length : 0
                 //console.log("Number of scheduled items recorded: " + numScheduledItems);
-                amplitude.track("Recording Processing Completed", {
+                trackEvent("Recording Processing Completed", {
                     anonymous_id: anonymousId,
                     username: username,
                     flagged: (response == "flagged"),
@@ -215,12 +253,12 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
 
                 if (response == "flagged") {
                     //console.log(`Audio flagged, displaying alert prompt`);
-                    amplitude.track("Recording Flagged", {
+                    trackEvent("Recording Flagged", {
                         anonymous_id: anonymousId,
                         username: username,
                         pathname: pathname
                     });
-                    amplitude.track("Recording Flagged Prompt Displayed", {
+                    trackEvent("Recording Flagged Prompt Displayed", {
                         anonymous_id: anonymousId,
                         username: username,
                         pathname: pathname
@@ -233,7 +271,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                                 text: 'I Understand',
                                 onPress: () => {
                                     //console.log('Audio Content Advisory Acknowledgement button Pressed');
-                                    amplitude.track("Recording Flagged Prompt Dismissed", {
+                                    trackEvent("Recording Flagged Prompt Dismissed", {
                                         anonymous_id: anonymousId,
                                         username: username,
                                         pathname: pathname
@@ -250,7 +288,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                         lastRecordedCount.current = response.length;  // Set for future toast undo potential
 
                         // Append default field(s) not appended by transcription service (currently just userReactions);
-                        response = response.map(thing => ({...thing, userReactions: []}));
+                        response = response.map(thing => ({ ...thing, userReactions: [] }));
 
                         // If list is empty, we ASSume that the empty CTA is visible so we first
                         // fade it out before displaying the list to user.
@@ -324,7 +362,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
 
                     } else {
                         //console.log("Did not call setter with updated list, attempting to show toast.");
-                        amplitude.track("Empty Recording Toast Displayed", {
+                        trackEvent("Empty Recording Toast Displayed", {
                             anonymous_id: anonymousId,
                             username: username,
                             pathname: pathname
@@ -370,7 +408,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
     const stopRecording = async (localRecordingObject = null, isAutoStop = false) => {
         const recordingDurationEnd = performance.now();
         const recordingDuration = (recordingDurationEnd - recordingTimeStart.current) / 1000;
-        amplitude.track("Recording Stopped", {
+        trackEvent("Recording Stopped", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname,
@@ -411,7 +449,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
     //     if (recording) {
     //         const { fileUri, duration } = await stopRecording();
     //         deleteFile(fileUri);
-    //         amplitude.track("Recording Processing Cancelled", {
+    //         trackEvent("Recording Processing Cancelled", {
     //             anonymous_id: anonymousId,
     //             pathname: pathname,
     //             durationSeconds: duration
@@ -461,7 +499,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
     }));
 
     return (
-        <View style={{height: buttonHeight}}>
+        <View style={{ height: buttonHeight }}>
             <View style={buttonUnderlayStyle}></View>
             <Reanimated.View style={[buttonStyle, scaleAnimatedStyle,
                 ((recording || isRecordingProcessing)
@@ -475,7 +513,7 @@ const MicButton = ({buttonHeight, buttonUnderlayStyle, buttonStyle,
                             if (recording) {
                                 processRecording();
                             } else {
-                                startRecording(selectedThing);
+                                handleRecordButtonPress(selectedThing);
                             }
                         }
                     }}

@@ -9,14 +9,13 @@ const AMPLITUDE_KEY_PROD = "ac9cdda8bd0d54ba50553219f407d353";
 import { setJSExceptionHandler } from "react-native-exception-handler";
 import { Alert, AppState, BackHandler, Platform } from "react-native";
 import { checkOpenAPIStatus } from "@/components/BackendServices";
+import { trackEvent } from '@/components/Analytics';
+import { isTWEmployee } from "@/components/Storage";
 
 export default function StackLayout() {
   const pathname = usePathname();
 
   useEffect(() => {
-
-    // Initialize Analytics Tracking
-    amplitude.init((__DEV__) ? AMPLITUDE_KEY_DEV : AMPLITUDE_KEY_PROD);
 
     // Initialize App State event handlers
     const handleAppStateChange = (nextAppState) => {
@@ -25,8 +24,17 @@ export default function StackLayout() {
       }
     };
     const subscription = AppState.addEventListener("change", handleAppStateChange);
-    checkOpenAPIHealth();
 
+    // Initialize Analytics Tracking
+    const initializeAmplitude = async() => {
+      const twEmployee = await isTWEmployee();
+      const apiKey =  (__DEV__ || twEmployee) ? AMPLITUDE_KEY_DEV : AMPLITUDE_KEY_PROD;
+      console.log("Initializing Amplitude with key: " + ((AMPLITUDE_KEY_DEV == apiKey) ? 'dev' : 'prod'));
+      amplitude.init(apiKey);
+      checkOpenAPIHealth();
+    }
+    initializeAmplitude();
+    
     return () => {
       subscription.remove();
     }
@@ -36,7 +44,7 @@ export default function StackLayout() {
     const status = await checkOpenAPIStatus();
     console.log("OpenAPI Health Status: " + status);
     if (status != "operational") {
-      amplitude.track("OpenAI API Impacted Prompt Displayed");
+      trackEvent("OpenAI API Impacted Prompt Displayed");
       Alert.alert(
         "AI Features May Be Impacted",
         "Please be aware that our AI partner is currently experiencing issues that may impact new voice recordings and text edits.  " +
@@ -45,7 +53,7 @@ export default function StackLayout() {
           {
             text: 'OK',
             onPress: () => {
-              amplitude.track("OpenAI API Impacted Prompt OK'd");
+              trackEvent("OpenAI API Impacted Prompt OK'd");
             },
           },
         ],
@@ -56,11 +64,13 @@ export default function StackLayout() {
 
 
   useEffect(() => {
-    amplitude.track('Screen Viewed', { pathname: pathname });
+    if (pathname && pathname != '/') {
+      trackEvent(`${pathname} Screen Viewed`, { pathname: pathname });
+    }
   }, [pathname]);
 
   const reporter = (error) => {
-    amplitude.track('Unexpected Error Occurred', {
+    trackEvent('Unexpected Error Occurred', {
       pathname: pathname,
       error_name: error.name,
       error_message: error.message,

@@ -1,11 +1,11 @@
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import { usePathname } from 'expo-router';
-import { loadItems, deleteItem, updateItemText, updateItemOrder, updateItemDoneState, saveNewItem, saveNewItems, DONE_ITEM_FILTER_ONLY_DONE_ITEMS, updateItemHierarchy } from '@/components/Storage';
+import { loadItems, deleteItem, updateItemText, updateItemOrder, updateItemDoneState, saveNewItems, DONE_ITEM_FILTER_ONLY_DONE_ITEMS, updateItemHierarchy } from '@/components/Storage';
 import { transcribeAudioToTasks } from '@/components/BackendServices';
 import DootooList, { listStyles, THINGNAME_DONE_ITEM } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
 import { ProfileCountEventEmitter } from "@/components/EventEmitters";
-import * as amplitude from '@amplitude/analytics-react-native';
+import { trackEvent } from '@/components/Analytics';
 
 import {
   StyleSheet, Pressable,
@@ -80,12 +80,12 @@ export default function DoneScreen() {
 
     try {
 
-      amplitude.track("Item Done Clicked", {
+      trackEvent("Item Done Clicked", {
         anonymous_id: anonymousId,
         username: username,
         pathname: pathname,
         uuid: item.uuid,
-        done_state_at_click: item.is_done,
+        done_state_at_click: (item.is_done == true),
         parent_item_uuid: item.parent_item_uuid,
         item_type: (item.parent_item_uuid) ? 'child' : 'adult'
       });
@@ -100,7 +100,7 @@ export default function DoneScreen() {
 
       } else {
 
-        amplitude.track("Item Reopen Prompt Displayed", {
+        trackEvent("Item Reopen Prompt Displayed", {
           anonymous_id: anonymousId.current,
           username: username,
           pathname: pathname
@@ -119,7 +119,7 @@ export default function DoneScreen() {
             {
               text: 'Cancel',
               onPress: () => {
-                amplitude.track("Item Reopen Cancelled", {
+                trackEvent("Item Reopen Cancelled", {
                   anonymous_id: anonymousId.current,
                   username: username,
                   pathname: pathname
@@ -189,7 +189,7 @@ export default function DoneScreen() {
                         }
                         ProfileCountEventEmitter.emit("decr_done");
                         
-                        amplitude.track("Item Reopen Completed", {
+                        trackEvent("Item Reopen Completed", {
                           anonymous_id: anonymousId.current,
                           username: username,
                           pathname: pathname,
@@ -245,7 +245,7 @@ export default function DoneScreen() {
                       }
                       ProfileCountEventEmitter.emit("decr_done");
 
-                      amplitude.track("Item Reopen Completed", {
+                      trackEvent("Item Reopen Completed", {
                         anonymous_id: anonymousId.current,
                         username: username,
                         pathname: pathname,

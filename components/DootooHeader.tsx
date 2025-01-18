@@ -1,7 +1,16 @@
-import { Platform, View, StyleSheet, Text, Pressable, Image } from "react-native";
+import { Platform, View, StyleSheet, Text, Pressable, Image, Alert } from "react-native";
 import Animated from "react-native-reanimated";
+import { clearTWEmployee, setTWEmployee } from "./Storage";
+import { trackEvent } from '@/components/Analytics';
+import { useContext } from "react";
+import { AppContext } from "./AppContext";
 
 const DootooHeader = ({ navigation, route, options }) => {
+
+    const { anonymousId, username } = useContext(AppContext);
+
+    let headerTapCount = 0;
+
     const styles = StyleSheet.create({
         headerContainer: {
             backgroundColor: '#FAF3E0',
@@ -55,13 +64,31 @@ const DootooHeader = ({ navigation, route, options }) => {
         }
     });
 
+    const handleLogoTap = async () => {
+        headerTapCount += 1;
+        if (headerTapCount == 10) {
+            Alert.alert('', "Let's do this!");
+            trackEvent("dootoo Header Activated", { 
+                anonymous_id: anonymousId, username: username 
+            });
+            setTWEmployee();
+        } else if (headerTapCount == 20) {
+            Alert.alert('', "Let's do this!");
+            trackEvent("dootoo Header Reactivated", { 
+                anonymous_id: anonymousId, username: username 
+            });
+            clearTWEmployee();
+        }
+    }
+
     return (
         <Animated.View style={[styles.headerContainer]}>
             <View style={styles.headerLeftContainer}>
-                <View style={styles.mainLogoContainer}>
+                <Pressable style={styles.mainLogoContainer}
+                           onPress={handleLogoTap}>
                     <Text style={[{ fontWeight: 500 }, styles.mainLogoPart]}>doo</Text>
                     <Text style={[styles.mainLogoPart, styles.secondLogoPart]}>too</Text>
-                </View>
+                </Pressable>
             </View>
             {/* <View style={styles.headerRightContainer}>
                 <Pressable style={styles.mainProfileIconContainer}

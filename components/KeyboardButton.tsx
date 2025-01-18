@@ -1,12 +1,12 @@
 import { useContext } from "react";
 import { generateNewKeyboardEntry } from "./Helpers";
-import * as amplitude from '@amplitude/analytics-react-native';
 import { AppContext } from "./AppContext";
 import { usePathname } from "expo-router";
 import { View, StyleSheet, Pressable } from "react-native";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { Keyboard } from "./svg/keyboard";
 import { Plus } from "./svg/plus";
+import { trackEvent } from "@/components/Analytics";
 
 
 const KeyboardButton = ({ listArray, listArraySetterFunc }) => {
@@ -19,7 +19,7 @@ const KeyboardButton = ({ listArray, listArraySetterFunc }) => {
         const newItem = generateNewKeyboardEntry();
         currentlyTappedThing.current = newItem;
 
-        amplitude.track("Keyboard Entry Started", {
+        trackEvent("Keyboard Entry Started", {
             anonymous_id: anonymousId,
             username: username,
             pathname: pathname,

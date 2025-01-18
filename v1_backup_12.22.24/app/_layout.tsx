@@ -8,6 +8,7 @@ const AMPLITUDE_KEY_DEV = "28fd28b2a8714bea3efa4a0bc73fbd0b";
 const AMPLITUDE_KEY_PROD = "ac9cdda8bd0d54ba50553219f407d353";
 import { setJSExceptionHandler } from "react-native-exception-handler";
 import { Alert, BackHandler, Platform } from "react-native";
+import { trackEvent } from '@/components/Analytics';
 
 export default function StackLayout() {
   const pathname = usePathname();
@@ -17,11 +18,13 @@ export default function StackLayout() {
   }, []);
 
   useEffect(() => {
-    amplitude.track('Screen Viewed', { pathname: pathname });
+    if (pathname && pathname != '/') {
+      trackEvent('Screen Viewed', { pathname: pathname });
+    }
   }, [pathname]);
 
   const reporter = (error) => {
-    amplitude.track('Unexpected Error Occurred', {
+    trackEvent('Unexpected Error Occurred', {
       pathname: pathname,
       error_name: error.name,
       error_message: error.message,

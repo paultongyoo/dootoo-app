@@ -3,7 +3,7 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming, Easing } from 'react-native-reanimated';
 
-const DootooItemEmptyUX = ({buttonContainerScaleSV}) => {
+const DootooItemEmptyUX = ({ buttonContainerScaleSV }) => {
 
   const opacity = useSharedValue(0);
 
@@ -44,15 +44,15 @@ const DootooItemEmptyUX = ({buttonContainerScaleSV}) => {
       }))
     });
     await new Promise<void>((resolve) => {
-          buttonContainerScaleSV.value = withDelay(400, withSequence(
-            withTiming(1.2, { duration: 300, easing: Easing.out(Easing.ease) }), 
-            withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) }, 
-            (isFinished) => {
-              if (isFinished) {
-                runOnJS(resolve)();
-              }
+      buttonContainerScaleSV.value = withDelay(400, withSequence(
+        withTiming(1.2, { duration: 300, easing: Easing.out(Easing.ease) }),
+        withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) },
+          (isFinished) => {
+            if (isFinished) {
+              runOnJS(resolve)();
+            }
           })))
-        });
+    });
   }
 
   useFocusEffect(

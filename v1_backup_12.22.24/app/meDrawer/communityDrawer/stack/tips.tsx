@@ -15,15 +15,13 @@ import DootooTipSidebar from "@/components/DootooTipSidebar";
 import DootooTipEmptyUX from "@/components/DootooTipEmptyUX";
 import DootooList, { listStyles } from "@/components/DootooList";
 import DootooItemSidebar from "@/components/DootooItemSidebar";
-import * as amplitude from '@amplitude/analytics-react-native';
 import { ProfileCountEventEmitter } from "@/components/EventEmitters";
 import { Flag } from "@/components/svg/flag";
 import { Trash } from "@/components/svg/trash";
 import { ThumbUp } from "@/components/svg/thumb-up";
 import { ThumbDown } from "@/components/svg/thumb-down";
-import { Microphone } from "@/components/svg/microphone";
-import { ChevronDown } from "@/components/svg/chevron-down";
 import { MoveToTop } from "@/components/svg/move-to-top";
+import { trackEvent } from '@/components/Analytics';
 
 
 export default function ItemTips() {
@@ -41,9 +39,9 @@ export default function ItemTips() {
 
   useEffect(() => {
     if (selectedItem.is_done) {
-      amplitude.track("Owned Tips Section Viewed");
+      trackEvent("Owned Tips Section Viewed");
     } else {
-      amplitude.track("Community Tips Section Viewed");
+      trackEvent("Community Tips Section Viewed");
     }
   }, [pathname]);
 
@@ -77,7 +75,7 @@ export default function ItemTips() {
   }, [tips])
 
   const handleDoneClick = async () => {
-    amplitude.track("Selected Item Done Clicked", {
+    trackEvent("Selected Item Done Clicked", {
       anonymous_id: anonymousId.current
     });
 
@@ -87,7 +85,7 @@ export default function ItemTips() {
 
   const handleTipVote = async (tip, voteValue: number) => {
 
-    amplitude.track("Tip Voted", {
+    trackEvent("Tip Voted", {
       anonymous_id: anonymousId.current,
       tip_uuid: tip.uuid,
       vote_value: voteValue
@@ -139,7 +137,7 @@ export default function ItemTips() {
 
   const handleTipFlag = async (tip) => {
 
-    amplitude.track("Tip Flag Started", {
+    trackEvent("Tip Flag Started", {
       anonymous_id: anonymousId.current,
       tip_uuid: tip.uuid
     });
@@ -152,7 +150,7 @@ export default function ItemTips() {
           text: 'Cancel',
           onPress: () => {
             //console.log('Tip Flag Cancel Pressed');
-            amplitude.track("Tip Flag Cancelled", {
+            trackEvent("Tip Flag Cancelled", {
               anonymous_id: anonymousId.current,
               tip_uuid: tip.uuid
             });
@@ -173,7 +171,7 @@ export default function ItemTips() {
 
   const handleFlagTip = async (tip) => {
 
-    amplitude.track("Tip Flag Completed", {
+    trackEvent("Tip Flag Completed", {
       anonymous_id: anonymousId.current,
       tip_uuid: tip.uuid
     });
@@ -202,7 +200,7 @@ export default function ItemTips() {
 
   const handleTipProfileClick = (tip) => {
 
-    amplitude.track("Tip Profile Tapped", {
+    trackEvent("Tip Profile Tapped", {
       anonymous_id: anonymousId.current,
       username: tip.name
     });
