@@ -25,7 +25,7 @@ const FeedbackTab = ({modalVisible, modalVisibleSetter}) => {
         tabContainer: {
             position: 'absolute',
             //right: 0,                 // Overridden using animated inline style
-            top: '50%',
+            top: '45%',
         },
         tabBackground: {
             width: FEEDBACK_TAB_WIDTH,
