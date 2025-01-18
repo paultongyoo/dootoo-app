@@ -112,7 +112,7 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
             <View style={styles.modalBackground}>
                 <Animated.View style={formAnimatedOpacity}>
                     <View style={styles.formFieldGroup}>
-                        <Text style={styles.formText}>What related apps do you use today?</Text>
+                        <Text style={styles.formText}>Are there any similar apps you’re using right now?</Text>
                         <TextInput ref={relatedAppsInputRef} style={[styles.formField,
                         Platform.OS == 'ios' && { height: FIELD_NUMLINES * 20 }]}
                             value={relatedAppsInput}
