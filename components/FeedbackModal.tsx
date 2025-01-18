@@ -119,7 +119,7 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
                             multiline={true}
                             numberOfLines={FIELD_NUMLINES}
                             maxLength={255}
-                            onChangeText={(text) => setRelatedAppsInput(text.trim())}
+                            onChangeText={(text) => setRelatedAppsInput(text)}
                         />
                     </View>
                     <View style={styles.formFieldGroup}>
@@ -130,7 +130,7 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
                             multiline={true}
                             numberOfLines={FIELD_NUMLINES}
                             maxLength={255}
-                            onChangeText={(text) => setSwitchInput(text.trim())}
+                            onChangeText={(text) => setSwitchInput(text)}
                         />
                     </View>
                     <View style={styles.buttonContainer}>

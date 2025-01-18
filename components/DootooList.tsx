@@ -2019,7 +2019,7 @@ const DootooList = forwardRef(({ thingName = THINGNAME_ITEM, loadingAnimMsg = nu
                                             onChangeInputValue.current = event.nativeEvent.text.trim();
                                         }}
                                         onChangeText={(text) => {
-                                            onChangeInputValue.current = text.trim();
+                                            onChangeInputValue.current = text;
                                         }}
                                         onBlur={() => handleBlur(item)}
                                     />
