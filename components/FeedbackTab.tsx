@@ -13,7 +13,7 @@ const FeedbackTab = ({modalVisible, modalVisibleSetter}) => {
         return { opacity: feedbackTabOpacity.value };
     })
 
-    const TAB_WIDTH = 55;
+    const TAB_WIDTH = 60;
     const positionX = useSharedValue(TAB_WIDTH * -1);
 
     useEffect(() => {
