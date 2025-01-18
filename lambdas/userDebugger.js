@@ -5,22 +5,45 @@ const kms = new AWS.KMS();
 import { Parser } from 'json2csv';
 
 export const handler = async (event) => {
-    const username = 'pt7481';
+    const username = 'OptimisticDoer6032';
     const userItems = await prisma.$queryRawUnsafe(
-        `SELECT *
+        `SELECT 
+            i.uuid, 
+            i.text, 
+            i.rank_idx, 
+            i.is_done,
+            i.is_deleted,
+            i."createdAt",
+            ((i.is_deleted IS false) AND (parent_i.is_deleted IS true)) as is_orphan,
+            parent_i.text as parent_text,
+            parent_i.uuid as parent_uuid,
+            parent_i.is_deleted as parent_is_deleted
      FROM "Item" i
-     LEFT JOIN "USER" u
+     LEFT JOIN "User" u
             ON i.user_id = u.id
+     LEFT JOIN "Item" parent_i
+            ON i.parent_item_id = parent_i.id
      WHERE u.name = '${username}'
-     ORDER BY rank_idx`);
+     ORDER BY i."createdAt" desc
+     LIMIT 100`);
 
     var csvData = [];
     for (const item of userItems) {
         item.text = await decryptText(item.text);
+        if (item.parent_text) {
+            item.parent_text = await decryptText(item.parent_text);
+        }
         csvData.push({ 
             uuid: item.uuid, 
             text: item.text, 
-            rank_idx: item.rank_idx
+            rank_idx: item.rank_idx,
+            is_done: item.is_done,
+            is_deleted: item.is_deleted,
+            created_at: item.createdAt,
+            is_orphan: item.is_orphan,
+            parent_text: item.parent_text,
+            parent_uuid: item.parent_uuid,
+            parent_is_deleted: item.parent_is_deleted
         });
     }
 
@@ -34,8 +57,8 @@ export const handler = async (event) => {
         return {
             statusCode: 200,
             headers: {
-                'Content-Type': 'text/csv',
-                'Content-Disposition': 'attachment; filename="data.csv"',
+                "Content-Type": "text/csv",
+                "Content-Disposition": `attachment; filename=\"${username}.csv\"`,
             },
             body: csv
         };

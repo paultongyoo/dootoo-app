@@ -17,7 +17,7 @@ export const handler = async (event) => {
             data: { 
                 anonymous_id: user.anonymous_id,
                 username: user.name,
-                form_input : event.form_input
+                form_input : JSON.parse(event.form_input)
             }
         });
         console.log("Feedback: " + JSON.stringify(feedback));
