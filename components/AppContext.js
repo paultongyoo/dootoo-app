@@ -4,8 +4,6 @@ import { initalizeUser, resetAllData, loadCommunityItems, loadItems, DONE_ITEM_F
 import { useSharedValue, withTiming, runOnJS } from 'react-native-reanimated';
 import { pluralize } from './Helpers';
 
-const FEEDBACK_TAB_WIDTH = 60;
-
 // Create the context 
 export const AppContext = createContext();
 
@@ -39,7 +37,7 @@ export const AppProvider = ({ children }) => {
     const currentlyTappedThing = useRef(null);   
 
     // Animation related
-    const feedbackPositionRightX = useSharedValue(FEEDBACK_TAB_WIDTH * -1);
+    const feedbackTranslateX = useSharedValue(0);
 
     const emptyListCTAOpacity = useRef(new Animated.Value(0)).current;
     const emptyListCTAFadeInAnimation = Animated.timing(emptyListCTAOpacity, {
@@ -129,7 +127,7 @@ export const AppProvider = ({ children }) => {
 
     return (
         <AppContext.Provider value={{ 
-            feedbackPositionRightX,
+            feedbackTranslateX,
             openItems, setOpenItems, hasMoreOpenItems,
             doneItems, setDoneItems, hasMoreDoneItems, initializeDoneItems,
             communityItems, setCommunityItems,

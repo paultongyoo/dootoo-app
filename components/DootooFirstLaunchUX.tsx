@@ -7,9 +7,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ArrowDown } from './svg/arrow-down';
 import { check, PERMISSIONS, RESULTS, request } from 'react-native-permissions';
 import { trackEvent } from '@/components/Analytics';
+import { FEEDBACK_TAB_WIDTH } from './FeedbackTab';
 
 const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
-  const { isFirstLaunch, anonymousId, username, feedbackPositionRightX } = useContext(AppContext);
+  const { isFirstLaunch, anonymousId, username, feedbackTranslateX } = useContext(AppContext);
 
   const [currentStep, setCurrentStep] = useState(1);
   const skipped = useRef(false);
@@ -222,7 +223,7 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
           }
       })))
     });
-    feedbackPositionRightX.value = withTiming(0, { duration: 300, easing: Easing.inOut(Easing.quad) });
+    feedbackTranslateX.value = withTiming((FEEDBACK_TAB_WIDTH * -1), { duration: 300, easing: Easing.inOut(Easing.quad) });
     trackEvent("Onboarding Step 7 Viewed", {
       anonymous_id: anonymousId,
       username: username
