@@ -88,7 +88,7 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
     })
 
     const handleSubmitTap = () => {
-        if (((relatedAppsInput?.length || 0) == 0) && ((switchInput?.length || 0) == 0)) {
+        if (((relatedAppsInput?.trim().length || 0) == 0) && ((switchInput?.trim().length || 0) == 0)) {
             Alert.alert('', 'Please answer at least one of the questions.  Your responses will help!');
         } else {
             const form_input = JSON.stringify(
