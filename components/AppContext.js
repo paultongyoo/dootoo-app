@@ -3,6 +3,7 @@ import { createContext, useState, useRef } from 'react';
 import { initalizeUser, resetAllData, loadCommunityItems, loadItems, DONE_ITEM_FILTER_ONLY_DONE_ITEMS } from './Storage';
 import { useSharedValue, withTiming, runOnJS } from 'react-native-reanimated';
 import { pluralize } from './Helpers';
+import { FEEDBACK_TAB_WIDTH } from './FeedbackTab';
 
 // Create the context 
 export const AppContext = createContext();
@@ -37,7 +38,7 @@ export const AppProvider = ({ children }) => {
     const currentlyTappedThing = useRef(null);   
 
     // Animation related
-    const feedbackTabOpacity = useSharedValue(1);
+    const feedbackPositionRightX = useSharedValue(FEEDBACK_TAB_WIDTH * -1);
 
     const emptyListCTAOpacity = useRef(new Animated.Value(0)).current;
     const emptyListCTAFadeInAnimation = Animated.timing(emptyListCTAOpacity, {
@@ -127,7 +128,7 @@ export const AppProvider = ({ children }) => {
 
     return (
         <AppContext.Provider value={{ 
-            feedbackTabOpacity,
+            feedbackPositionRightX,
             openItems, setOpenItems, hasMoreOpenItems,
             doneItems, setDoneItems, hasMoreDoneItems, initializeDoneItems,
             communityItems, setCommunityItems,

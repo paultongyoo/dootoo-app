@@ -9,7 +9,7 @@ import { check, PERMISSIONS, RESULTS, request } from 'react-native-permissions';
 import { trackEvent } from '@/components/Analytics';
 
 const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
-  const { isFirstLaunch, anonymousId, username } = useContext(AppContext);
+  const { isFirstLaunch, anonymousId, username, feedbackPositionRightX } = useContext(AppContext);
 
   const [currentStep, setCurrentStep] = useState(1);
   const skipped = useRef(false);
@@ -222,6 +222,7 @@ const DootooFirstLaunchUX = ({buttonContainerScaleSV}) => {
           }
       })))
     });
+    feedbackPositionRightX.value = withTiming(0, { duration: 300, easing: Easing.inOut(Easing.quad) });
     trackEvent("Onboarding Step 7 Viewed", {
       anonymous_id: anonymousId,
       username: username
