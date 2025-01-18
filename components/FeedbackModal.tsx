@@ -89,6 +89,10 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
 
     const handleSubmitTap = () => {
         if (((relatedAppsInput?.trim().length || 0) == 0) && ((switchInput?.trim().length || 0) == 0)) {
+            trackEvent("Feedback Empty Input Displayed", {
+                anonymous_id: anonymousId,
+                username: username
+            });
             Alert.alert('', 'Please answer at least one of the questions.  Your responses will help!');
         } else {
             const form_input = JSON.stringify(
@@ -98,6 +102,10 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
                 }))
             );
             feedback(form_input)
+            trackEvent("Feedback Submitted", {
+                anonymous_id: anonymousId,
+                username: username
+            });
             modalVisibleSetter(false);
             Alert.alert('Thank you for your feedback!');
         }
