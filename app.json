@@ -38,7 +38,7 @@
         "READ_CALENDAR", "WRITE_CALENDAR"
       ],
       "package": "com.thoughtswork.dootoo",
-      "versionCode": 55,
+      "versionCode": 57,
       "manifest": {
         "supportsScreens": {
           "small": false,

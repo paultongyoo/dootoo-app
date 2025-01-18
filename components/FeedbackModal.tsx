@@ -123,7 +123,7 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
                         />
                     </View>
                     <View style={styles.formFieldGroup}>
-                        <Text style={styles.formText}>What app changes would switch you to doo<Text style={{ color: '#A23E48' }}>too</Text>?</Text>
+                        <Text style={styles.formText}>What changes would make doo<Text style={{ color: '#A23E48' }}>too</Text> the perfect app for you?</Text>
                         <TextInput style={[styles.formField,
                         Platform.OS == 'ios' && { height: FIELD_NUMLINES * 20 }]}
                             value={switchInput}
