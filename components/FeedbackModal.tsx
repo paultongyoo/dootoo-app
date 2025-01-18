@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { View, Text, StyleSheet, Pressable, Alert} from "react-native";
+import { View, Text, StyleSheet, Pressable, Alert, Platform} from "react-native";
 import { TextInput } from "react-native-gesture-handler";
 import Modal from "react-native-modal";
 import { trackEvent } from "./Analytics";
@@ -11,6 +11,7 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
     
     const [relatedAppsInput, setRelatedAppsInput] = useState('');
     const [switchInput, setSwitchInput] = useState('');
+    const FIELD_NUMLINES = 3;
 
     useEffect(() => {
         if (modalVisible) {
@@ -126,18 +127,20 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
                 <Animated.View style={formAnimatedOpacity}>
                     <View style={styles.formFieldGroup}>
                         <Text style={styles.formText}>What related apps do you use today?</Text>
-                        <TextInput style={styles.formField} 
+                        <TextInput style={[styles.formField,
+                                           Platform.OS == 'ios' && {height: FIELD_NUMLINES * 20 } ]} 
                                 multiline={true} 
-                                numberOfLines={3}
+                                numberOfLines={FIELD_NUMLINES}
                                 maxLength={255}
                                 onChangeText={(text) => setRelatedAppsInput(text.trim())}
                         />
                     </View>
                     <View style={styles.formFieldGroup}>
                         <Text style={styles.formText}>What app changes would switch you to doo<Text style={{color: '#A23E48'}}>too</Text>?</Text>
-                        <TextInput style={styles.formField} 
+                        <TextInput style={[styles.formField,
+                                           Platform.OS == 'ios' && {height: FIELD_NUMLINES * 20 } ]} 
                                 multiline={true} 
-                                numberOfLines={3}
+                                numberOfLines={FIELD_NUMLINES}
                                 maxLength={255}
                                 onChangeText={(text) => setSwitchInput(text.trim())}
                         />
