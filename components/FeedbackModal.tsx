@@ -1,5 +1,5 @@
-import { useContext, useEffect, useState } from "react";
-import { View, Text, StyleSheet, Pressable, Alert, Platform} from "react-native";
+import { useContext, useEffect, useRef, useState } from "react";
+import { View, Text, StyleSheet, Pressable, Alert, Platform, KeyboardAvoidingView } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
 import Modal from "react-native-modal";
 import { trackEvent } from "./Analytics";
@@ -8,7 +8,8 @@ import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 
 
 const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animationOut }) => {
     const { anonymousId, username } = useContext(AppContext);
-    
+
+    const relatedAppsInputRef = useRef(null);
     const [relatedAppsInput, setRelatedAppsInput] = useState('');
     const [switchInput, setSwitchInput] = useState('');
     const FIELD_NUMLINES = 3;
@@ -16,27 +17,22 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
     useEffect(() => {
         if (modalVisible) {
             formOpacity.value = 1;
-            thanksOpacity.value = 0;
+            setSwitchInput('');
+            setRelatedAppsInput('');
         }
     }, [modalVisible])
 
     const styles = StyleSheet.create({
-        modalBackground: {
-            borderTopLeftRadius: 10,
-            borderBottomLeftRadius: 10,
-            padding: 15,
-            backgroundColor: '#FAF3E0',
-            position: 'absolute',
-            right: -20,
-            width: '50%'
-        },
-        thanksContainer: {
-            position: 'absolute',
-            top: 15,
-            left: 15,
-            height: '100%',
+        modalContainer: {
             justifyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
+            margin: 0
+        },
+        modalBackground: {
+            borderRadius: 10,
+            padding: 20,
+            backgroundColor: '#FAF3E0',
+            width: '75%',
         },
         formFieldGroup: {
 
@@ -69,10 +65,6 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
             fontWeight: 'bold',
             color: 'white',
             textAlign: 'center'
-        },
-        thanksText: {
-            fontWeight: 'bold',
-            fontSize: 14
         }
     })
 
@@ -80,37 +72,21 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
     const formAnimatedOpacity = useAnimatedStyle(() => {
         return { opacity: formOpacity.value }
     })
-    const thanksOpacity = useSharedValue(0);
-    const thanksAnimatedOpacity = useAnimatedStyle(() => {
-        return { opacity: thanksOpacity.value }
-    })
 
     const handleSubmitTap = () => {
-        if (((relatedAppsInput?.length || 0) == 0) && ((relatedAppsInput?.length || 0) == 0)) {
+        if (((relatedAppsInput?.length || 0) == 0) && ((switchInput?.length || 0) == 0)) {
             Alert.alert('', 'Please answer at least one of the questions.  Your responses will help!');
         } else {
             // TODO Save response to backend asynchronously
-            formOpacity.value = withTiming(0, { duration: 500 }, (isFinished) => {
-                if (isFinished) {
-                    runOnJS(thankAnimation)();
-                }
-            })
+            modalVisibleSetter(false);
+            Alert.alert('', 'Thank you for your feedback!');
         }
     }
 
-    const thankAnimation = async () => {
-        await new Promise<void>((resolve) => thanksOpacity.value = withTiming(1, { duration: 500 }, (isFinished) => {
-            if (isFinished) {
-                runOnJS(resolve)();
-            }
-        }));
-        setTimeout(() => {
-            modalVisibleSetter(false)
-        }, 1000);
-    }
 
     return (
         <Modal
+            style={styles.modalContainer}
             isVisible={modalVisible}
             onBackdropPress={() => { modalVisibleSetter(false) }}
             onModalHide={() => trackEvent("Feedback Modal Hidden", {
@@ -119,40 +95,48 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
             })}
             backdropOpacity={0.3}
             animationIn={animationIn}
-            animationOut={animationOut}>
+            animationOut={animationOut}
+            onModalShow={() => {
+                if (relatedAppsInputRef.current) {
+                    relatedAppsInputRef.current.focus();
+                }
+            }}>
+            <KeyboardAvoidingView
+                          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                          keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}>
             <View style={styles.modalBackground}>
-                 <Animated.View style={[styles.thanksContainer, thanksAnimatedOpacity]}>
-                    <Text style={styles.thanksText}>Thank you for your feedback!</Text>
-                </Animated.View>
                 <Animated.View style={formAnimatedOpacity}>
                     <View style={styles.formFieldGroup}>
                         <Text style={styles.formText}>What related apps do you use today?</Text>
-                        <TextInput style={[styles.formField,
-                                           Platform.OS == 'ios' && {height: FIELD_NUMLINES * 20 } ]} 
-                                multiline={true} 
-                                numberOfLines={FIELD_NUMLINES}
-                                maxLength={255}
-                                onChangeText={(text) => setRelatedAppsInput(text.trim())}
+                        <TextInput ref={relatedAppsInputRef} style={[styles.formField,
+                        Platform.OS == 'ios' && { height: FIELD_NUMLINES * 20 }]}
+                            value={relatedAppsInput}
+                            multiline={true}
+                            numberOfLines={FIELD_NUMLINES}
+                            maxLength={255}
+                            onChangeText={(text) => setRelatedAppsInput(text.trim())}
                         />
                     </View>
                     <View style={styles.formFieldGroup}>
-                        <Text style={styles.formText}>What app changes would switch you to doo<Text style={{color: '#A23E48'}}>too</Text>?</Text>
+                        <Text style={styles.formText}>What app changes would switch you to doo<Text style={{ color: '#A23E48' }}>too</Text>?</Text>
                         <TextInput style={[styles.formField,
-                                           Platform.OS == 'ios' && {height: FIELD_NUMLINES * 20 } ]} 
-                                multiline={true} 
-                                numberOfLines={FIELD_NUMLINES}
-                                maxLength={255}
-                                onChangeText={(text) => setSwitchInput(text.trim())}
+                        Platform.OS == 'ios' && { height: FIELD_NUMLINES * 20 }]}
+                            value={switchInput}
+                            multiline={true}
+                            numberOfLines={FIELD_NUMLINES}
+                            maxLength={255}
+                            onChangeText={(text) => setSwitchInput(text.trim())}
                         />
                     </View>
                     <View style={styles.buttonContainer}>
-                        <Pressable onPress={handleSubmitTap} 
-                                style={({pressed}) => [styles.buttonBackground, pressed && { backgroundColor: '#445823'}]}>
-                                    <Text style={styles.buttonText}>Submit</Text>
+                        <Pressable onPress={handleSubmitTap}
+                            style={({ pressed }) => [styles.buttonBackground, pressed && { backgroundColor: '#445823' }]}>
+                            <Text style={styles.buttonText}>Submit</Text>
                         </Pressable>
                     </View>
                 </Animated.View>
             </View>
+            </KeyboardAvoidingView>
         </Modal>
     )
 }

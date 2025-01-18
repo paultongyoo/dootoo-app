@@ -37,7 +37,7 @@ export default function TabLayout() {
           <Tabs.Screen name="profile" />
         </Tabs>
         <FeedbackModal modalVisible={feedbackModalVisible} modalVisibleSetter={setFeedbackModalVisible} 
-                       animationIn={"slideInRight"} animationOut={"slideOutRight"} />
+                       animationIn={"slideInRight"} animationOut={"fadeOut"} />
         <FeedbackTab modalVisible={feedbackModalVisible} modalVisibleSetter={setFeedbackModalVisible} />
       </Animated.View>
       <Toast config={toastConfig} />
