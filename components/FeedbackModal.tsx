@@ -5,6 +5,7 @@ import Modal from "react-native-modal";
 import { trackEvent } from "./Analytics";
 import { AppContext } from "./AppContext";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { feedback } from "./Storage";
 
 const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animationOut }) => {
     const { anonymousId, username } = useContext(AppContext);
@@ -77,9 +78,13 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
         if (((relatedAppsInput?.length || 0) == 0) && ((switchInput?.length || 0) == 0)) {
             Alert.alert('', 'Please answer at least one of the questions.  Your responses will help!');
         } else {
-            // TODO Save response to backend asynchronously
+            const form_input = JSON.stringify({
+                relatedApps: relatedAppsInput,
+                neededToSwitch: switchInput
+            });
+            feedback(form_input)
             modalVisibleSetter(false);
-            Alert.alert('', 'Thank you for your feedback!');
+            Alert.alert('Thank you for your feedback!');
         }
     }
 
