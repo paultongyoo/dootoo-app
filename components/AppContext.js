@@ -3,7 +3,8 @@ import { createContext, useState, useRef } from 'react';
 import { initalizeUser, resetAllData, loadCommunityItems, loadItems, DONE_ITEM_FILTER_ONLY_DONE_ITEMS } from './Storage';
 import { useSharedValue, withTiming, runOnJS } from 'react-native-reanimated';
 import { pluralize } from './Helpers';
-import { FEEDBACK_TAB_WIDTH } from './FeedbackTab';
+
+const FEEDBACK_TAB_WIDTH = 60;
 
 // Create the context 
 export const AppContext = createContext();

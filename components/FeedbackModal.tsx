@@ -15,6 +15,19 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
     const [switchInput, setSwitchInput] = useState('');
     const FIELD_NUMLINES = 3;
 
+    const form_questions = [
+        {
+            text: 'Are there any similar apps you’re using right now?',
+            inputVar: relatedAppsInput,
+            inputVarSetter: setRelatedAppsInput
+        },
+        {
+            text: 'What changes would make dootoo the perfect app for you?',
+            inputVar: switchInput,
+            inputVarSetter: setSwitchInput
+        }
+    ];
+
     useEffect(() => {
         if (modalVisible) {
             formOpacity.value = 1;
@@ -78,10 +91,12 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
         if (((relatedAppsInput?.length || 0) == 0) && ((switchInput?.length || 0) == 0)) {
             Alert.alert('', 'Please answer at least one of the questions.  Your responses will help!');
         } else {
-            const form_input = JSON.stringify({
-                relatedApps: relatedAppsInput,
-                neededToSwitch: switchInput
-            });
+            const form_input = JSON.stringify(
+                form_questions.map(question => ({ 
+                    question: question.text, 
+                    answer: question.inputVar 
+                }))
+            );
             feedback(form_input)
             modalVisibleSetter(false);
             Alert.alert('Thank you for your feedback!');
@@ -107,40 +122,31 @@ const FeedbackModal = ({ modalVisible, modalVisibleSetter, animationIn, animatio
                 }
             }}>
             <KeyboardAvoidingView
-                          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                          keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}>
-            <View style={styles.modalBackground}>
-                <Animated.View style={formAnimatedOpacity}>
-                    <View style={styles.formFieldGroup}>
-                        <Text style={styles.formText}>Are there any similar apps you’re using right now?</Text>
-                        <TextInput ref={relatedAppsInputRef} style={[styles.formField,
-                        Platform.OS == 'ios' && { height: FIELD_NUMLINES * 20 }]}
-                            value={relatedAppsInput}
-                            multiline={true}
-                            numberOfLines={FIELD_NUMLINES}
-                            maxLength={255}
-                            onChangeText={(text) => setRelatedAppsInput(text)}
-                        />
-                    </View>
-                    <View style={styles.formFieldGroup}>
-                        <Text style={styles.formText}>What changes would make doo<Text style={{ color: '#A23E48' }}>too</Text> the perfect app for you?</Text>
-                        <TextInput style={[styles.formField,
-                        Platform.OS == 'ios' && { height: FIELD_NUMLINES * 20 }]}
-                            value={switchInput}
-                            multiline={true}
-                            numberOfLines={FIELD_NUMLINES}
-                            maxLength={255}
-                            onChangeText={(text) => setSwitchInput(text)}
-                        />
-                    </View>
-                    <View style={styles.buttonContainer}>
-                        <Pressable onPress={handleSubmitTap}
-                            style={({ pressed }) => [styles.buttonBackground, pressed && { backgroundColor: '#445823' }]}>
-                            <Text style={styles.buttonText}>Submit</Text>
-                        </Pressable>
-                    </View>
-                </Animated.View>
-            </View>
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}>
+                <View style={styles.modalBackground}>
+                    <Animated.View style={formAnimatedOpacity}>
+                        { form_questions.map((question, index) => 
+                            <View key={index} style={styles.formFieldGroup}>
+                                <Text style={styles.formText}>{question.text}</Text>
+                                <TextInput ref={(index == 0) ? relatedAppsInputRef : null} style={[styles.formField,
+                                    Platform.OS == 'ios' && { height: FIELD_NUMLINES * 20 }]}
+                                    value={question.inputVar}
+                                    multiline={true}
+                                    numberOfLines={FIELD_NUMLINES}
+                                    maxLength={255}
+                                    onChangeText={(text) => question.inputVarSetter(text)}
+                                />
+                        </View>
+                        )}
+                        <View style={styles.buttonContainer}>
+                            <Pressable onPress={handleSubmitTap}
+                                style={({ pressed }) => [styles.buttonBackground, pressed && { backgroundColor: '#445823' }]}>
+                                <Text style={styles.buttonText}>Submit</Text>
+                            </Pressable>
+                        </View>
+                    </Animated.View>
+                </View>
             </KeyboardAvoidingView>
         </Modal>
     )
