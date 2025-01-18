@@ -15,6 +15,8 @@ export const handler = async (event) => {
        
         const feedback = await prisma.feedback.create({
             data: { 
+                anonymous_id: user.anonymous_id,
+                username: user.name,
                 form_input : event.form_input
             }
         });
@@ -25,6 +27,7 @@ export const handler = async (event) => {
         };
         return response;
     } catch (error) {   
+        console.log("Error creating feedback!", error);
         return {
             statusCode: 500,
             body: `Error occurred: ${error}`
