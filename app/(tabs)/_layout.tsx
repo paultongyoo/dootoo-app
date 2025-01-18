@@ -4,10 +4,14 @@ import { Tabs } from 'expo-router';
 import Toast from "react-native-toast-message";
 import toastConfig from "@/components/ToastConfig";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import FeedbackTab from '@/components/FeedbackTab';
+import FeedbackModal from '@/components/FeedbackModal';
 
 export default function TabLayout() {
+
+  const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
 
   const opacity = useSharedValue(1);
   const opacityAnimatedStyle = useAnimatedStyle(() => {
@@ -32,6 +36,9 @@ export default function TabLayout() {
           <Tabs.Screen name="done" />
           <Tabs.Screen name="profile" />
         </Tabs>
+        <FeedbackModal modalVisible={feedbackModalVisible} modalVisibleSetter={setFeedbackModalVisible} 
+                       animationIn={"slideInRight"} animationOut={"slideOutRight"} />
+        <FeedbackTab modalVisible={feedbackModalVisible} modalVisibleSetter={setFeedbackModalVisible} />
       </Animated.View>
       <Toast config={toastConfig} />
     </>

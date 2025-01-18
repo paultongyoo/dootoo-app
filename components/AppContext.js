@@ -37,6 +37,8 @@ export const AppProvider = ({ children }) => {
     const currentlyTappedThing = useRef(null);   
 
     // Animation related
+    const feedbackTabOpacity = useSharedValue(1);
+
     const emptyListCTAOpacity = useRef(new Animated.Value(0)).current;
     const emptyListCTAFadeInAnimation = Animated.timing(emptyListCTAOpacity, {
         toValue: 1,
@@ -125,6 +127,7 @@ export const AppProvider = ({ children }) => {
 
     return (
         <AppContext.Provider value={{ 
+            feedbackTabOpacity,
             openItems, setOpenItems, hasMoreOpenItems,
             doneItems, setDoneItems, hasMoreDoneItems, initializeDoneItems,
             communityItems, setCommunityItems,
