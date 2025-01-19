@@ -5,9 +5,9 @@ import { AppContext } from "./AppContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { trackEvent } from "./Analytics";
 
-export  const FEEDBACK_TAB_WIDTH = 60;
+export const FEEDBACK_TAB_WIDTH = 60;
 const FeedbackTab = ({modalVisible, modalVisibleSetter}) => {
-    const { username, anonymousId, feedbackPositionRightX } = useContext(AppContext);
+    const { username, anonymousId, feedbackTranslateX } = useContext(AppContext);
 
     useEffect(() => {
         const checkFirstLaunch = async () => {
@@ -15,7 +15,7 @@ const FeedbackTab = ({modalVisible, modalVisibleSetter}) => {
 
             // If this isn't the first launch, animate the tab into view immediately
             if (launchStatus != null) {
-                feedbackPositionRightX.value = withTiming(0, { duration: 300, easing: Easing.inOut(Easing.quad) });
+                feedbackTranslateX.value = withTiming((FEEDBACK_TAB_WIDTH * -1), { duration: 300, easing: Easing.inOut(Easing.quad) });
             }
           };
           checkFirstLaunch();       
@@ -24,8 +24,8 @@ const FeedbackTab = ({modalVisible, modalVisibleSetter}) => {
     const styles = StyleSheet.create({
         tabContainer: {
             position: 'absolute',
-            //right: 0,                 // Overridden using animated inline style
-            top: '45%',
+            right: (FEEDBACK_TAB_WIDTH * -1),     
+            top: '60%',
         },
         tabBackground: {
             width: FEEDBACK_TAB_WIDTH,
@@ -57,7 +57,7 @@ const FeedbackTab = ({modalVisible, modalVisibleSetter}) => {
     }
 
     return (
-        <Animated.View style={[styles.tabContainer, { right: feedbackPositionRightX }]}>
+        <Animated.View style={[styles.tabContainer, { transform: [{ translateX: feedbackTranslateX }] }]}>
             <Pressable  style={({pressed}) => [styles.tabBackground, pressed && { backgroundColor: '#445823' }]}
                         onPress={handleFeedbackTabTap}>
                 <Text style={styles.tabText}>Make App Better</Text>
