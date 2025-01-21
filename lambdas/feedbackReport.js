@@ -11,7 +11,7 @@ export const handler = async (event) => {
             "createdAt"
         FROM "Feedback", 
             jsonb_array_elements(form_input) AS elem
-        order by username, "createdAt"
+        order by "createdAt" desc
         LIMIT 100`);
 
     var csvData = [];
