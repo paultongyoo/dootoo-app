@@ -2,7 +2,7 @@
   "expo": {
     "name": "dootoo",
     "slug": "dootoo",
-    "version": "1.7.2",
+    "version": "1.7.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "dootoo",
@@ -38,7 +38,7 @@
         "READ_CALENDAR", "WRITE_CALENDAR"
       ],
       "package": "com.thoughtswork.dootoo",
-      "versionCode": 60,
+      "versionCode": 61,
       "manifest": {
         "supportsScreens": {
           "small": false,

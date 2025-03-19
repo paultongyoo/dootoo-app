@@ -1,4 +1,4 @@
-import { View, Pressable, ActivityIndicator, StyleSheet, Platform, Alert } from "react-native";
+import { View, Pressable, ActivityIndicator, StyleSheet, Platform, Alert, Linking } from "react-native";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import { Microphone } from "./svg/microphone";
 import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -43,18 +43,18 @@ When ideal for you, using your voice can help you easily capture more items and 
                 [
                     {
                         text: 'Cancel',
-                        onPress: () => { 
-                            trackEvent("Recording Tips Prompt: Cancel Pressed", { 
-                                anonymous_id: anonymousId, username: username 
+                        onPress: () => {
+                            trackEvent("Recording Tips Prompt: Cancel Pressed", {
+                                anonymous_id: anonymousId, username: username
                             });
                         },
                         style: 'cancel'
                     },
                     {
                         text: 'Start Recording',
-                        onPress: () => { 
-                            trackEvent("Recording Tips Prompt: Start Recording Pressed", { 
-                                anonymous_id: anonymousId, username: username 
+                        onPress: () => {
+                            trackEvent("Recording Tips Prompt: Start Recording Pressed", {
+                                anonymous_id: anonymousId, username: username
                             });
                             setRecordedBefore();
                             startRecording(selectedThing);
@@ -102,6 +102,24 @@ When ideal for you, using your voice can help you easily capture more items and 
                     username: username,
                     result: (result) ? result.status : '(null)'
                 });
+                if (result.status == 'denied') {
+                    Alert.alert('Microphone Permission Needed',
+                        'In order to transcribe your voice into items, please allow microphone access in the Settings app.',
+                        [
+                            {
+                                text: "Cancel",
+                                style: "cancel",
+                            },
+                            {
+                                text: "Go to Settings",
+                                onPress: () => {
+                                    Linking.openSettings();
+                                },
+                            },
+                        ]
+                    );
+                    return;
+                }
             }
             await Audio.setAudioModeAsync({
                 allowsRecordingIOS: true,
