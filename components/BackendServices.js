@@ -143,7 +143,7 @@ export const checkOpenAPIStatus = async() => {
     const openAIComponentsArray = response.data.components;
     let status = '';
     openAIComponentsArray.forEach((component) => {
-      if (component.name == "Chat") {
+      if (component.name == "Chat Completions") {
         status = component.status;
       }
     })
