@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { toFile } from "openai/uploads";
+import { extractTasks } from "./lib/extractTasks.mjs";
 
 const openai = new OpenAI();
 
@@ -46,53 +47,15 @@ export const handler = async (event) => {
       };
     }
 
-    // Note: Lambda lowercases all header keys
-    let currentDateStringPrompt = '';
-    const userLocalTime = event.headers['userlocaltime'];
-    const userTimeZone = event.headers['usertimezone'];
-    const utcDateTime = event.headers['utcdatetime'];
-    let durationSeconds = event.headers['durationseconds'];
-    console.log("All Headers: " + JSON.stringify(event.headers));
-    if (userLocalTime && userTimeZone && utcDateTime) {
-      currentDateStringPrompt = `The user's current local date and time is ${userLocalTime} (timezone: ${userTimeZone}). The current UTC time is ${utcDateTime}.`;
-      console.log("Generated date/time string: " + currentDateStringPrompt);
-    } else {
-      console.log(`Skipping date/time prompt generation as we're missing one or more components: userLocalTime (${userLocalTime}) userTimeZone (${userTimeZone}) utcDateTime (${utcDateTime})`);
-    }
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          "role": "system",
-          "content": `
-                ${currentDateStringPrompt}
-                Your role is to identify the main tasks and sub-tasks described in the user's input.
-                Only consider a task as a sub-task if it is described as part of another task.
-                If the task includes time, date, and/or temporal adverb information, translate the info into the scheduled_datetime_utc field below.
-                If the task only contains time info, assume the date is the current date in the user's timezone.
-                If the task only contains a date or temporal adverbs, assume the time is 6:00AM in the user's timezone.
-                Do NOT guess tasks beyond what the user stays in their input.
-                Respond only in English.
-                Return your analysis in the following JSON format:
-                {
-                  "tasks": [
-                    {
-                      "uuid": "<RFC-compliant UUID>",
-                      "text": "<task name (include schedule info if specified) (capitalize its first letter of task name, not necessarily every word)>", 
-                      "parent_item_uuid": <UUID of parent task if this is a subtask>,
-                      "scheduled_datetime_utc": <ISO 8601 formatted string in UTC timezone per rules above, or null if no date or time info provided>
-                  ]
-                }`
-        },
-        { "role": "user", "content": `User-provided input: ${transcribedText}` }
-      ], 
-      response_format: { "type": "json_object" },
-      user: event.headers['anonymous_id']
+    const { tasks: item_array, usage } = await extractTasks({
+      client: openai,
+      transcript: transcribedText,
+      userLocalTime: event.headers['userlocaltime'],
+      userTimeZone: event.headers['usertimezone'],
+      utcDateTime: event.headers['utcdatetime'],
+      anonymousId: event.headers['anonymous_id'],
     });
-
-    var object_from_chat = JSON.parse(completion.choices[0].message.content);
-    var item_array = object_from_chat.tasks;
+    let durationSeconds = event.headers['durationseconds'];
 
     let audioCost = 0;
     if (durationSeconds) {
@@ -103,7 +66,6 @@ export const handler = async (event) => {
       console.log("Audio transcription costs not included yet.");
     }
 
-    const usage = completion.usage;
     const inputTokens = usage.prompt_tokens;
     const inputCost = inputTokens * (0.15 / 1000000);
     const outputTokens = usage.completion_tokens;
