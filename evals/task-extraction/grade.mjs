@@ -1,3 +1,4 @@
+import { passRate, isFailedOutput, isFullyPassed } from './metrics.mjs';
 import { createHash } from 'node:crypto';
 
 export const outputHash = tasks => createHash('sha256')
@@ -147,15 +148,14 @@ export function grade(testCase, tasks, review) {
 
 export function summarize(records) {
   const count = predicate => records.filter(predicate).length;
-  const deterministicPassed = count(record => record.grade?.deterministicPass);
 
   return {
     total: records.length,
+    passRate: passRate(records),
+    failedOutputs: count(isFailedOutput),
     apiErrors: count(record => record.error?.kind === 'api'),
     outputErrors: count(record => record.error?.kind === 'output'),
-    deterministicPassed,
-    deterministicPassRate: records.length ? deterministicPassed / records.length : 0,
     semanticPending: count(record => record.grade?.semantic === 'pending'),
-    fullyPassed: count(record => record.grade?.deterministicPass && record.grade.semantic === 'pass'),
+    fullyPassed: count(isFullyPassed),
   };
 }

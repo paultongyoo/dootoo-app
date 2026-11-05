@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { buildMessages, extractTasks, DEFAULT_MODEL, PROMPT_VERSION } from '../../lambdas/lib/extractTasks.mjs';
 import { grade, summarize, isUtc, outputHash } from './grade.mjs';
 import { getPrompt } from '../../lambdas/lib/promptVersions.mjs';
+import { createAdapter, modelOption } from './models.mjs';
+import { formatRate, PASS_RATE_NOTE, isFullyPassed } from './metrics.mjs';
 
 const baseDirectory = dirname(fileURLToPath(import.meta.url));
 const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
@@ -58,8 +60,8 @@ export function compare(records, baseline) {
       return { id: record.key, change: 'case changed; not comparable' };
     }
 
-    const passedBefore = Boolean(previous.grade?.deterministicPass);
-    const passedAfter = Boolean(record.grade?.deterministicPass);
+    const passedBefore = isFullyPassed(previous);
+    const passedAfter = isFullyPassed(record);
     let change = 'unchanged';
     if (passedBefore !== passedAfter) {
       change = passedAfter ? 'improved' : 'regressed';
@@ -73,6 +75,7 @@ export async function main(args = process.argv.slice(2), hooks = {}) {
     args,
     options: {
     model: { type: 'string', default: DEFAULT_MODEL },
+    provider: { type: 'string', default: 'openai' },
     'prompt-version': { type: 'string', default: PROMPT_VERSION },
     case: { type: 'string' },
     tag: { type: 'string' },
@@ -89,7 +92,7 @@ export async function main(args = process.argv.slice(2), hooks = {}) {
     },
   });
   if (opts.help) {
-    console.log('Usage: npm run eval -- [--model MODEL] [--prompt-version VERSION] [--case ID] [--tag TAG] [--repeats N] [--concurrency N] [--label NAME] [--baseline REPORT.json] [--reviews REVIEWS.json] [--replay REPORT.json] [--validate-only]');
+    console.log('Usage: npm run eval -- [--provider openai|anthropic|google|mistral|xai] [--model MODEL] [--prompt-version VERSION] [--case ID] [--tag TAG] [--repeats N] [--concurrency N] [--label NAME] [--baseline REPORT.json] [--reviews REVIEWS.json] [--replay REPORT.json] [--validate-only]');
     return;
   }
   const repeats = Number(opts.repeats);
@@ -119,7 +122,7 @@ export async function main(args = process.argv.slice(2), hooks = {}) {
   const reviews = opts.reviews ? await readJson(opts.reviews) : {};
   const baseline = opts.baseline ? await readJson(opts.baseline) : null;
   const replay = opts.replay ? await readJson(opts.replay) : null;
-  if (!replay) getPrompt(opts['prompt-version']);
+  if (!replay) { getPrompt(opts['prompt-version']); modelOption(opts.provider, opts.model); }
   let records;
   if (replay) {
     records = replay.records
@@ -131,9 +134,7 @@ export async function main(args = process.argv.slice(2), hooks = {}) {
       }));
     if (!records.length) throw new Error('No replay records selected');
   } else {
-    if (!process.env.OPENAI_API_KEY) throw new Error('Set OPENAI_API_KEY before running live evals (or use --validate-only / --replay).');
-    const { default: OpenAI } = await import('openai');
-    const client = new OpenAI({ maxRetries: 2, timeout: 60000 });
+    const adapter = hooks.adapter ?? createAdapter(opts.provider);
     const jobs = selected.flatMap(testCase =>
       Array.from({ length: repeats }, (_, index) => ({ case: testCase, repeat: index + 1 })),
     );
@@ -150,7 +151,7 @@ export async function main(args = process.argv.slice(2), hooks = {}) {
           const start = performance.now();
           try {
             const result = await extractTasks({
-              client,
+              adapter,
               captureOutputErrors: true,
               model: opts.model,
               promptVersion: opts['prompt-version'],
@@ -170,19 +171,25 @@ export async function main(args = process.argv.slice(2), hooks = {}) {
             // Avoid storing provider error messages, which may contain request data.
             if (error.rawContent !== undefined) record.rawContent = error.rawContent;
             if (error.usage) record.usage = error.usage;
+            if (error.providerUsage) record.providerUsage = error.providerUsage;
+            if (error.finishReason) record.finishReason = error.finishReason;
+            if (error.model) record.model = error.model;
           }
           record.latencyMs = Math.round(performance.now() - start);
           records[index] = record;
           await hooks.onRecord?.(record, { completed: records.filter(Boolean).length, total: jobs.length });
-          console.log(`${key}: ${record.error?.kind ?? (record.grade.deterministicPass ? 'checks passed' : 'checks failed / matching pending')}`);
+          console.log(`${key}: ${record.error?.kind ?? (isFullyPassed(record) ? 'fully passed' : record.grade.semantic === 'pending' ? 'not fully passed / review pending' : 'not fully passed')}`);
         }
       }),
     );
   }
+  const modelSnapshot = replay ? (replay.modelSnapshot ?? null) : modelOption(opts.provider, opts.model);
   const report = {
     createdAt: new Date().toISOString(),
     label: opts.label,
     model: replay?.model ?? opts.model,
+    provider: replay?.provider ?? (replay ? 'openai' : opts.provider),
+    modelSnapshot,
     promptVersion: replay?.promptVersion ?? opts['prompt-version'],
     promptSnapshot: replay ? (replay.promptSnapshot ?? null) : getPrompt(opts['prompt-version']),
     promptHash: replay?.promptHash ?? hash(buildMessages({ transcript: '', promptVersion: opts['prompt-version'] })[0].content),
@@ -211,19 +218,23 @@ export async function main(args = process.argv.slice(2), hooks = {}) {
   const stem = resolve(folder, `${report.createdAt.replaceAll(/[:.]/g, '-')}-${opts.label}`);
   let markdown = `# Task extraction eval: ${opts.label}
 
-Model: ${report.model}; prompt: ${report.promptVersion} (${report.promptHash})
+Provider: ${report.provider}; model: ${report.model}; prompt: ${report.promptVersion} (${report.promptHash})
 
-Deterministic checks: ${report.summary.deterministicPassed}/${report.summary.total}. Fully passed with semantic review: ${report.summary.fullyPassed}/${report.summary.total}. Semantic reviews pending: ${report.summary.semanticPending}. API errors: ${report.summary.apiErrors}; output errors: ${report.summary.outputErrors}.
+Fully passed with semantic review: ${report.summary.fullyPassed}/${report.summary.total}. Semantic reviews pending: ${report.summary.semanticPending}. API errors: ${report.summary.apiErrors}; output errors: ${report.summary.outputErrors}.
+
+Pass Rate: ${formatRate(report.summary.passRate)}.
+
+${PASS_RATE_NOTE}
 
 Pattern matches are hints. Review task meaning, omissions, invented tasks, and grouping before treating a run as accepted.
 
 ## Categories
 
-| Category | Deterministic passes |
-|---|---|
+| Category | Fully passed | Pass Rate |
+|---|---|---|
 `;
   for (const [tag, summary] of Object.entries(report.categories)) {
-    markdown += `| ${tag} | ${summary.deterministicPassed}/${summary.total} |\n`;
+    markdown += `| ${tag} | ${summary.fullyPassed}/${summary.total} | ${formatRate(summary.passRate)} |\n`;
   }
   if (report.comparison) {
     markdown += `\n## Baseline comparison\n${fenced(report.comparison)}`;

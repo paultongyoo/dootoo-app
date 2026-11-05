@@ -8,6 +8,7 @@ import { grade, summarize, outputHash } from './grade.mjs';
 import { DEFAULT_MODEL, PROMPT_VERSION, buildMessages } from '../../lambdas/lib/extractTasks.mjs';
 import { listPrompts, getPrompt, createPrompt } from '../../lambdas/lib/promptVersions.mjs';
 import { createHash } from 'node:crypto';
+import { listModels, modelOption, createAdapter } from './models.mjs';
 
 const base = dirname(fileURLToPath(import.meta.url));
 const results = process.env.EVAL_STUDIO_RESULTS || join(base, 'results');
@@ -33,6 +34,7 @@ async function initialize() {
     if (!job.id || !Array.isArray(job.records) || !job.reviews) continue;
     if (job.deletedAt) { deleted.add(job.id); continue; }
     if (job.status === 'running') { job.status = 'interrupted'; await save(job); }
+    refresh(job);
     jobs.set(job.id, job);
   }
   // Bring existing CLI reports into the same review workflow without changing originals.
@@ -44,7 +46,7 @@ async function initialize() {
       if (jobs.has(id) || deleted.has(id)) continue;
       const reviews = report.reviews ?? Object.fromEntries(report.records.filter(r => r.grade?.semantic === 'pass' || r.grade?.semantic === 'fail').map(r => [r.key, { outputHash: outputHash(r.tasks), semanticPass: r.grade.semantic === 'pass', matches: r.grade.matches ?? {} }]));
       const job = { ...report, id, status: 'completed', reviews, total: report.records.length, source: file };
-      jobs.set(id, job); await save(job);
+      refresh(job); jobs.set(id, job); await save(job);
     } catch { /* Review files are not reports. */ }
   }
 }
@@ -55,13 +57,14 @@ async function start(input) {
   if (!selected.length) throw new Error('No cases selected');
   const repeats = Number(input.repeats ?? 1), concurrency = Number(input.concurrency ?? 2);
   if (![repeats, concurrency].every(n => Number.isInteger(n) && n >= 1 && n <= 100)) throw new Error('Repeats and concurrency must be 1–100');
-  if (!process.env.OPENAI_API_KEY) throw new Error('Set OPENAI_API_KEY in the shell or evals/task-extraction/.env, then restart the server');
+  const model = modelOption(input.provider || 'openai', input.model || DEFAULT_MODEL);
+  createAdapter(model.provider);
   if (!/^[\w-]+$/.test(input.label ?? 'run')) throw new Error('Label must use letters, numbers, underscores or hyphens');
   const prompt = getPrompt(input.promptVersion || PROMPT_VERSION);
   const baseline = input.baseline ? await get(safeId(input.baseline)) : null;
-  const job = { id: randomUUID(), label: input.label || 'run', model: input.model || DEFAULT_MODEL, promptVersion: prompt.version, promptSnapshot: prompt, createdAt: new Date().toISOString(), status: 'running', records: [], reviews: {}, total: selected.length * repeats, baseline: baseline?.id ?? null };
+  const job = { id: randomUUID(), label: input.label || 'run', model: model.model, provider: model.provider, modelSnapshot: model, promptVersion: prompt.version, promptSnapshot: prompt, createdAt: new Date().toISOString(), status: 'running', records: [], reviews: {}, total: selected.length * repeats, baseline: baseline?.id ?? null };
   refresh(job); jobs.set(job.id, job); await save(job); active = true;
-  const args = ['--label', job.label, '--model', job.model, '--repeats', String(repeats), '--concurrency', String(concurrency), '--output-dir', results, '--prompt-version', prompt.version];
+  const args = ['--label', job.label, '--model', job.model, '--provider', job.provider, '--repeats', String(repeats), '--concurrency', String(concurrency), '--output-dir', results, '--prompt-version', prompt.version];
   if (input.case) args.push('--case', input.case);
   if (input.tag) args.push('--tag', input.tag);
   // Serialize disk writes, including reviews arriving during a live run.
@@ -89,9 +92,10 @@ export async function createStudio() {
         let raw = ''; for await (const chunk of req) { raw += chunk; if (raw.length > 100000) throw new Error('Request too large'); }
         body = JSON.parse(raw || '{}');
       }
+      if (req.method === 'GET' && url.pathname === '/api/models') return send(res, listModels());
       if (req.method === 'POST' && url.pathname === '/api/prompts') return send(res, createPrompt(body), 201);
       if (req.method === 'GET' && url.pathname === '/api/prompts') return send(res, listPrompts().map(prompt => ({ ...prompt, promptHash: createHash('sha256').update(JSON.stringify(buildMessages({ transcript: '', promptVersion: prompt.version })[0].content)).digest('hex') })));
-      if (req.method === 'GET' && url.pathname === '/api/config') return send(res, { cases: await cases(), model: DEFAULT_MODEL, promptVersion: PROMPT_VERSION, prompts: listPrompts().map(({version,name,latest})=>({version,name,latest})), keyAvailable: Boolean(process.env.OPENAI_API_KEY) });
+      if (req.method === 'GET' && url.pathname === '/api/config') return send(res, { cases: await cases(), models: listModels(), provider: 'openai', model: DEFAULT_MODEL, promptVersion: PROMPT_VERSION, prompts: listPrompts().map(({version,name,latest})=>({version,name,latest})), keyAvailable: Boolean(process.env.OPENAI_API_KEY) });
       if (req.method === 'GET' && url.pathname === '/api/runs') return send(res, [...jobs.values()].map(({ records, reviews, enqueue, ...j }) => j).sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
       if (req.method === 'POST' && url.pathname === '/api/runs') return send(res, await start(body), 201);
       if (parts[0] === 'api' && parts[1] === 'runs' && parts[2]) {
@@ -141,10 +145,10 @@ export async function createStudio() {
           return res.end(await readFile(`${job.finalStem}.${parts[4]}`));
         }
       }
-      if (req.method === 'GET' && ['/', '/app.js', '/style.css', '/compare.mjs', '/comparison-view.js'].includes(url.pathname)) {
+      if (req.method === 'GET' && ['/', '/app.js', '/style.css', '/compare.mjs', '/comparison-view.js', '/model-history.js', '/metrics.mjs'].includes(url.pathname)) {
         const name = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
-        res.writeHead(200, { 'Content-Type': { 'index.html': 'text/html', 'app.js': 'text/javascript', 'compare.mjs': 'text/javascript', 'comparison-view.js': 'text/javascript', 'style.css': 'text/css' }[name], 'Content-Security-Policy': "default-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'" });
-        return res.end(await readFile(join(base, 'web', name)));
+        res.writeHead(200, { 'Content-Type': { 'index.html': 'text/html', 'app.js': 'text/javascript', 'compare.mjs': 'text/javascript', 'comparison-view.js': 'text/javascript', 'model-history.js': 'text/javascript', 'metrics.mjs': 'text/javascript', 'style.css': 'text/css' }[name], 'Content-Security-Policy': "default-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'" });
+        return res.end(await readFile(name === 'metrics.mjs' ? join(base, name) : join(base, 'web', name)));
       }
       send(res, { error: 'Not found' }, 404);
     } catch (error) { send(res, { error: error.message }, 400); }

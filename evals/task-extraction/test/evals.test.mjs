@@ -161,7 +161,7 @@ test('baseline compares only identical cases', () => {
     case: testCase,
     key: 'case#1',
     repeat: 1,
-    grade: { deterministicPass: true },
+    grade: { deterministicPass: true, semantic: 'pass' },
   };
   const failingBaseline = {
     records: [{ ...record, grade: { deterministicPass: false } }],

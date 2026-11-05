@@ -19,11 +19,17 @@ test('studio imports reports, persists bound reviews, exports replay, and blocks
   try {
     const list = await (await request('/api/runs')).json();
     const id=list[0].id;
+    assert.equal(list[0].summary.passRate,0);
+    assert.equal((await request('/metrics.mjs')).status,200);
     assert.equal((await request('/')).status,200);
     const prompts=await (await request('/api/prompts')).json();
     assert.equal(prompts.filter(p=>p.latest).length,1);
     assert.ok(prompts[0].systemTemplate.includes('{{timeContext}}'));
     assert.equal(prompts[0].promptHash.length,64);
+    const models=await (await request('/api/models')).json();
+    assert.equal(new Set(models.map(m=>m.provider)).size,5);
+    assert.equal(models.filter(m=>m.provider!=='openai').length,4);
+    assert.ok(models.every(m=>typeof m.credentialAvailable==='boolean' && !('apiKey' in m)));
     assert.equal((await request('/api/prompts',{}, {Origin:'https://example.com'})).status,403);
     assert.equal((await request('/api/prompts',{version:'../invalid'})).status,400);
     assert.equal((await request('/api/runs',{}, {Origin:'https://example.com'})).status,403);
@@ -36,6 +42,7 @@ test('studio imports reports, persists bound reviews, exports replay, and blocks
     assert.equal(response.status,200);
     const finalized=await response.json();
     assert.equal(finalized.finalReport.summary.fullyPassed,1);
+    assert.equal(finalized.finalReport.summary.passRate,1);
     assert.equal((await request(`/api/runs/${id}/export/md`)).status,200);
     const disk=JSON.parse(await readFile(join(dir,'studio',`${id}.json`),'utf8'));
     assert.equal(disk.reviews[record.key].notes,'Correct meaning');

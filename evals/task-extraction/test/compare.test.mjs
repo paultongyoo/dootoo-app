@@ -8,11 +8,11 @@ test('comparison pairs identical cases, excludes changed and missing cases, and 
  const report=compareRuns({records:[a,b,c,record('removed')]},{records:candidate});
  assert.equal(report.paired,2);assert.equal(report.excluded,3);
  const metric=name=>report.metrics.find(m=>m.name===name);
- assert.equal(metric('Deterministic pass rate').delta,0);
- assert.equal(metric('Semantic approval rate (both reviewed)').samples,1);
- assert.equal(metric('Semantic approval rate (both reviewed)').delta,-100);
+ assert.equal(metric('Pass Rate').delta,0);
+ assert.equal(metric('Semantic review coverage').samples,2);
+ assert.equal(metric('Semantic review coverage').delta,50);
  assert.equal(metric('Mean latency').delta,50);
- assert.equal(report.rows[0].deterministic,'regressed');assert.equal(report.rows[1].deterministic,'improved');
+ assert.equal(report.rows[0].fullyPassed,'regressed');assert.equal(report.rows[1].fullyPassed,'improved');
  assert.equal(report.categories.basic[0].samples,2);
 });
 test('no overlap and missing telemetry produce unavailable metrics rather than zero',()=>{

@@ -13,7 +13,7 @@ export OPENAI_API_KEY='your-key'
 npm run eval -- --label baseline
 ```
 
-Only live evals need the SDK installed and an API key. Live requests incur API usage. Tests, dataset validation, and replay use no network or API key. Keep the key in your shell or a local `.env` file; for the latter run `node --env-file=.env run.mjs --label baseline`.
+Live evals use native Node fetch and need the selected provider API key. Live requests incur API usage. Tests, dataset validation, and replay use no network or API key. Keep the key in your shell or a local `.env` file; for the latter run `node --env-file=.env run.mjs --label baseline`.
 
 Reports are written to the ignored `results/` directory as JSON and Markdown. Reports contain transcripts, time context, model output, checks, latency, and token usage. The supplied dataset is synthetic; keep any real user transcripts and review files inside ignored `results/`. No fixed pricing estimate is used.
 
@@ -25,9 +25,9 @@ npm run eval -- --tag scheduling --repeats 3 --concurrency 2 --label schedule-ch
 npm run eval -- --label candidate --baseline results/BASELINE.json
 ```
 
-`--case` selects an exact ID; `--tag` selects a category. Requests use bounded concurrency, a 60-second request timeout, and up to two SDK retries. Repeats and concurrency accept integers from 1 to 100. `--model MODEL` overrides the extraction model for the run without changing the Lambda. `--cases PATH` supplies another JSONL dataset. Paths supplied as arguments resolve from the current working directory. `--output-dir PATH` overrides report location.
+`--case` selects an exact ID; `--tag` selects a category. Requests use bounded concurrency, a 60-second request timeout, and up to two provider-request retries. Repeats and concurrency accept integers from 1 to 100. `--model MODEL` overrides the extraction model for the run without changing the Lambda. `--cases PATH` supplies another JSONL dataset. Paths supplied as arguments resolve from the current working directory. `--output-dir PATH` overrides report location.
 
-Save prompt changes as new named JSON versions in `../../lambdas/lib/prompts/`, register them in `manifest.json`, and set its `latest` version. Every report also captures a prompt hash. No deployment occurs when running evals. Baseline comparisons show deterministic improvements/regressions for identical case inputs and expectations; modified cases are marked as not comparable. API errors count as unsuccessful checks, but are also reported separately.
+Save prompt changes as new named JSON versions in `../../lambdas/lib/prompts/`, register them in `manifest.json`, and set its `latest` version. Every report also captures a prompt hash. No deployment occurs when running evals. Baseline comparisons show fully-passed improvements/regressions for identical case inputs and expectations; modified cases are marked as not comparable. API errors count as unsuccessful checks, but are also reported separately.
 
 Exit code 1 means an API/output error, failed or incomplete deterministic checks, or rejected semantic review. Exit code 0 can still include pending semantic reviews; inspect `fullyPassed` before accepting a prompt. This is deliberately a manual workflow, with no paid runs wired into CI.
 
@@ -108,12 +108,12 @@ Create a new prompt JSON version, update its manifest, and restart the studio be
 ### Comparing saved experiments
 
 The Overview offers New experiment and Compare runs. New experiment contains
-all live-run configuration; run history remains available in the sidebar.
+all live-run configuration; Run history has its own sidebar section, with Compare runs in its header.
 Compare runs selects any two saved runs as Baseline and Candidate without API
 calls. Metrics use identical saved case definitions at the same repeat index;
 changed cases and missing records are listed separately and excluded from deltas.
-Semantic approval rates use only pairs reviewed on both sides. Review coverage
-and fully passed rates are shown separately. Latency and token metrics exclude
+Pass Rate requires both checks and semantic approval. Pending reviews count as
+not fully passed; review coverage is shown separately. Latency and token metrics exclude
 pairs missing either side's telemetry. Category tables and expandable per-output
 results help identify regressions. Download the comparison as JSON or Markdown.
 These are descriptive comparisons, not statistical significance tests.
@@ -147,3 +147,68 @@ new version selected; launching the live run remains a separate action. Versions
 are saved to the local JSON registry immediately without restarting. The optional
 “Use as latest default” checkbox is off by default so a candidate can be evaluated
 before it becomes the default. Existing saved versions cannot be overwritten.
+
+### Models, provider adapters and Model History
+
+New experiment selects Provider, Model and Prompt version independently. The
+catalog contains the original GPT-4o mini baseline, GPT-5.4 mini, and four
+alternatives: Claude Sonnet 5.5, Gemini 3.6 Flash, Mistral Large 4 and Grok 4.7.
+This is a configured comparison set, not a universal quality ranking. Model IDs
+and availability change; the catalog has a checked date and official references.
+An existing local key does not guarantee account entitlement or model availability.
+
+Set credentials in the local `.env` or shell and restart:
+
+| Provider | Environment variable |
+|---|---|
+| OpenAI | `OPENAI_API_KEY` |
+| Anthropic | `ANTHROPIC_API_KEY` |
+| Google | `GEMINI_API_KEY` |
+| Mistral | `MISTRAL_API_KEY` |
+| xAI | `XAI_API_KEY` |
+
+```bash
+npm run eval -- --provider anthropic --model claude-sonnet-5-5 --prompt-version task-extraction-v1 --label claude-v1
+npm run eval -- --provider google --model gemini-3.6-flash --prompt-version task-extraction-v1 --label gemini-v1
+npm run eval -- --provider mistral --model mistral-large-4 --prompt-version task-extraction-v1 --label mistral-v1
+npm run eval -- --provider xai --model grok-4.7 --prompt-version task-extraction-v1 --label grok-v1
+```
+
+`--provider` defaults to OpenAI for backward compatibility. Pass `--model` explicitly
+when choosing another provider. Custom native IDs supported by an adapter can be
+used from the CLI; add them to `models.json` for selection in the UI.
+
+Model History lists configured models and historical models found in saved runs.
+It shows per-run fully-passed scores, pending reviews, API/output
+errors, latency, tokens, category scores, prompt and dataset hashes. Unmeasured
+models are explicitly “Not yet evaluated”; no external accuracy values are
+invented. Provider documentation and published evaluation references are separate
+from local task scores. Use Compare runs to control for saved case differences.
+
+New reports capture provider, requested model, model/adapter snapshot, and the
+provider-returned model ID on each output. Replay retains these values and needs
+no credentials. Reports from before provider support are treated as OpenAI.
+Credential values never reach the browser or reports. Provider output modes and
+reasoning defaults differ; adapter settings and native usage are saved so these
+differences remain inspectable. Token counts do not estimate cross-provider cost.
+
+See [adapters/README.md](adapters/README.md) for the standardized adapter contract,
+provider mappings, error policy and extension guide. Every provider has a separate,
+short source file. The deployed Lambda keeps its existing OpenAI SDK call path;
+this change enables the alternative adapters in the local eval harness only.
+
+### Pass Rate and failed-output highlighting
+
+All quality metric views and new JSON/Markdown reports show **Pass Rate**:
+fully passed outputs divided by total outputs. Fully passed requires every
+deterministic check and semantic approval. Errors, incomplete matching and
+pending/rejected reviews count as not fully passed; an empty run is shown as —. Comparisons use
+comparable paired outputs, categories use their own outputs, and the dashboard
+shows the latest run rather than pooling unrelated experiments. Existing saved
+runs receive updated summaries when loaded; regenerate old final exports to
+include Pass Rate.
+
+Run history marks runs containing failed outputs in light pink. Inside a run,
+failed/incomplete deterministic checks, semantic rejection, and API/output errors
+highlight the affected output in the task queue. Pending semantic review alone
+does not produce a pink highlight.
