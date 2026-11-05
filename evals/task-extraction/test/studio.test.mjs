@@ -1,0 +1,50 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, writeFile, readFile, readdir, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { outputHash } from '../grade.mjs';
+
+test('studio imports reports, persists bound reviews, exports replay, and blocks foreign origins', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'eval-studio-'));
+  process.env.EVAL_STUDIO_RESULTS = dir;
+  const tasks = [{uuid:'12345678-1234-4234-8234-123456789abc',text:'Buy milk',scheduled_datetime_utc:null}];
+  const record = { key:'milk#1', repeat:1, case:{id:'milk',transcript:'Buy milk',context:{},tags:['basic'],expected:[{id:'milk',meaning:'Buy milk',match:'milk',parentId:null,scheduledDatetimeUtc:null}]}, tasks, outputHash:outputHash(tasks) };
+  await writeFile(join(dir,'baseline.json'),JSON.stringify({label:'baseline',model:'test',createdAt:new Date().toISOString(),records:[record]}));
+  const { createStudio } = await import('../server.mjs');
+  const server = await createStudio();
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  const root = `http://127.0.0.1:${server.address().port}`;
+  const request = async (path, body, headers={}) => fetch(root+path, body===undefined?{headers}:{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify(body)});
+  try {
+    const list = await (await request('/api/runs')).json();
+    const id=list[0].id;
+    assert.equal((await request('/')).status,200);
+    const prompts=await (await request('/api/prompts')).json();
+    assert.equal(prompts.filter(p=>p.latest).length,1);
+    assert.ok(prompts[0].systemTemplate.includes('{{timeContext}}'));
+    assert.equal(prompts[0].promptHash.length,64);
+    assert.equal((await request('/api/prompts',{}, {Origin:'https://example.com'})).status,403);
+    assert.equal((await request('/api/prompts',{version:'../invalid'})).status,400);
+    assert.equal((await request('/api/runs',{}, {Origin:'https://example.com'})).status,403);
+    assert.equal((await request(`/api/runs/${id}/review`,{key:record.key,outputHash:'stale',semanticPass:true})).status,400);
+    const review={key:record.key,outputHash:record.outputHash,semanticPass:true,notes:'Correct meaning',matches:{milk:tasks[0].uuid}};
+    let response=await request(`/api/runs/${id}/review`,review);
+    assert.equal(response.status,200);
+    assert.equal((await response.json()).summary.fullyPassed,1);
+    response=await request(`/api/runs/${id}/finalize`,{});
+    assert.equal(response.status,200);
+    const finalized=await response.json();
+    assert.equal(finalized.finalReport.summary.fullyPassed,1);
+    assert.equal((await request(`/api/runs/${id}/export/md`)).status,200);
+    const disk=JSON.parse(await readFile(join(dir,'studio',`${id}.json`),'utf8'));
+    assert.equal(disk.reviews[record.key].notes,'Correct meaning');
+    await request(`/api/runs/${id}/review`,{...review,semanticPass:false});
+    assert.equal((await request(`/api/runs/${id}/export/md`)).status,404);
+    assert.ok((await readdir(dir)).some(f=>f.endsWith('.md')));
+    assert.equal((await request(`/api/runs/${id}/delete`,{})).status,200);
+    assert.equal((await (await request('/api/runs')).json()).some(r=>r.id===id),false);
+    assert.equal((await request(`/api/runs/${id}`)).status,400);
+    assert.ok(JSON.parse(await readFile(join(dir,'studio',`${id}.json`),'utf8')).deletedAt);
+  } finally { await new Promise(resolve=>server.close(resolve)); await rm(dir,{recursive:true,force:true}); delete process.env.EVAL_STUDIO_RESULTS; }
+});

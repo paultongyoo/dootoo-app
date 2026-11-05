@@ -5,6 +5,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildMessages, extractTasks, DEFAULT_MODEL, PROMPT_VERSION } from '../../lambdas/lib/extractTasks.mjs';
 import { grade, summarize, isUtc, outputHash } from './grade.mjs';
+import { getPrompt } from '../../lambdas/lib/promptVersions.mjs';
 
 const baseDirectory = dirname(fileURLToPath(import.meta.url));
 const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
@@ -67,11 +68,12 @@ export function compare(records, baseline) {
   });
 }
 
-export async function main(args = process.argv.slice(2)) {
+export async function main(args = process.argv.slice(2), hooks = {}) {
   const { values: opts } = parseArgs({
     args,
     options: {
     model: { type: 'string', default: DEFAULT_MODEL },
+    'prompt-version': { type: 'string', default: PROMPT_VERSION },
     case: { type: 'string' },
     tag: { type: 'string' },
     repeats: { type: 'string', default: '1' },
@@ -87,7 +89,7 @@ export async function main(args = process.argv.slice(2)) {
     },
   });
   if (opts.help) {
-    console.log('Usage: npm run eval -- [--model MODEL] [--case ID] [--tag TAG] [--repeats N] [--concurrency N] [--label NAME] [--baseline REPORT.json] [--reviews REVIEWS.json] [--replay REPORT.json] [--validate-only]');
+    console.log('Usage: npm run eval -- [--model MODEL] [--prompt-version VERSION] [--case ID] [--tag TAG] [--repeats N] [--concurrency N] [--label NAME] [--baseline REPORT.json] [--reviews REVIEWS.json] [--replay REPORT.json] [--validate-only]');
     return;
   }
   const repeats = Number(opts.repeats);
@@ -117,6 +119,7 @@ export async function main(args = process.argv.slice(2)) {
   const reviews = opts.reviews ? await readJson(opts.reviews) : {};
   const baseline = opts.baseline ? await readJson(opts.baseline) : null;
   const replay = opts.replay ? await readJson(opts.replay) : null;
+  if (!replay) getPrompt(opts['prompt-version']);
   let records;
   if (replay) {
     records = replay.records
@@ -150,6 +153,7 @@ export async function main(args = process.argv.slice(2)) {
               client,
               captureOutputErrors: true,
               model: opts.model,
+              promptVersion: opts['prompt-version'],
               transcript: job.case.transcript,
               ...job.case.context,
             });
@@ -169,6 +173,7 @@ export async function main(args = process.argv.slice(2)) {
           }
           record.latencyMs = Math.round(performance.now() - start);
           records[index] = record;
+          await hooks.onRecord?.(record, { completed: records.filter(Boolean).length, total: jobs.length });
           console.log(`${key}: ${record.error?.kind ?? (record.grade.deterministicPass ? 'checks passed' : 'checks failed / matching pending')}`);
         }
       }),
@@ -178,8 +183,9 @@ export async function main(args = process.argv.slice(2)) {
     createdAt: new Date().toISOString(),
     label: opts.label,
     model: replay?.model ?? opts.model,
-    promptVersion: replay?.promptVersion ?? PROMPT_VERSION,
-    promptHash: replay?.promptHash ?? hash(buildMessages({ transcript: '' })[0].content),
+    promptVersion: replay?.promptVersion ?? opts['prompt-version'],
+    promptSnapshot: replay ? (replay.promptSnapshot ?? null) : getPrompt(opts['prompt-version']),
+    promptHash: replay?.promptHash ?? hash(buildMessages({ transcript: '', promptVersion: opts['prompt-version'] })[0].content),
     datasetHash: hash(records.map(record => record.case)),
     replayOf: opts.replay ?? null,
     summary: summarize(records),
@@ -197,6 +203,7 @@ export async function main(args = process.argv.slice(2)) {
       { prompt_tokens: 0, completion_tokens: 0 },
     ),
     comparison: baseline ? compare(records, baseline) : null,
+    reviews: Object.fromEntries(records.filter(record => reviews[record.key]?.outputHash === record.outputHash).map(record => [record.key, reviews[record.key]])),
     records,
   };
   const folder = resolve(opts['output-dir']);
@@ -230,17 +237,19 @@ Pattern matches are hints. Review task meaning, omissions, invented tasks, and g
       outputHash: record.outputHash,
       rawContent: record.error ? record.rawContent : undefined,
       grade: record.grade,
+      review: report.reviews[record.key],
       error: record.error,
     })}`;
   }
   await writeFile(`${stem}.json`, JSON.stringify(report, null, 2));
   await writeFile(`${stem}.md`, markdown);
+  await hooks.onReport?.(report, stem);
   console.log(JSON.stringify(report.summary, null, 2));
   console.log(`Reports: ${stem}.{json,md}`);
   const hasFailedGrades = records.some(record =>
     record.grade && (!record.grade.deterministicPass || record.grade.semantic === 'fail'),
   );
-  if (report.summary.apiErrors || report.summary.outputErrors || hasFailedGrades) {
+  if (!hooks.embedded && (report.summary.apiErrors || report.summary.outputErrors || hasFailedGrades)) {
     process.exitCode = 1;
   }
   return report;
