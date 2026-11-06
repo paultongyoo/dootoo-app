@@ -2,8 +2,8 @@ import { postJson, usageCounts } from './http.mjs';
 // Mistral uses Chat Completions too, but has its own endpoint and credentials.
 export function mistralAdapter({ apiKey, ...transport }) {
   return {
-    async generate({ model, messages }) {
-      const response = await postJson({ ...transport, url: 'https://api.mistral.ai/v1/chat/completions',
+    async generate({ model, messages, onTrace }) {
+      const response = await postJson({ ...transport, onTrace, url: 'https://api.mistral.ai/v1/chat/completions',
         headers: { Authorization: `Bearer ${apiKey}` },
         body: { model, messages, response_format: { type: 'json_object' }, max_tokens: 8192 },
       });

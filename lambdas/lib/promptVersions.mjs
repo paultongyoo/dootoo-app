@@ -52,8 +52,9 @@ export const getPrompt=version=>registry.get(version);
 export const listPrompts=()=>registry.list();
 export function createPrompt(input) { const prompt=registry.create(input);LATEST_PROMPT_VERSION=registry.latest;return prompt; }
 const render = (template, values) => template.replace(/\{\{(\w+)\}\}/g, (slot, key) => Object.hasOwn(values,key) ? String(values[key]) : slot);
-export function promptMessages({ transcript, userLocalTime, userTimeZone, utcDateTime }, version = LATEST_PROMPT_VERSION) {
-  const prompt = getPrompt(version);
+export function promptMessages({ transcript, userLocalTime, userTimeZone, utcDateTime }, version = LATEST_PROMPT_VERSION, snapshot) {
+  const prompt = snapshot ?? getPrompt(version);
+  if (snapshot) validatePrompt(snapshot, version);
   const timeContext = userLocalTime && userTimeZone && utcDateTime
     ? render(prompt.contextTemplate, {userLocalTime,userTimeZone,utcDateTime}) : '';
   return [

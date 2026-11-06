@@ -1,3 +1,4 @@
+import { showErrorAnalysis } from './error-analysis.js';
 import { formatRate, isFailedOutput, isFullyPassed, PASS_RATE_NOTE } from '../metrics.mjs';
 import { showModelHistory } from './model-history.js';
 import { showComparison } from './comparison-view.js';
@@ -27,13 +28,44 @@ async function history() {
 }
 async function open(id) { showWorkspace(); $('#nav-history').classList.add('current'); selected = id; key = null; dirty = false; notice(); run = await api(`/api/runs/${id}`); render(); await history(); }
 const semantic = r => r.error ? 'error' : r.grade?.semantic ?? 'pending';
+// Navigate only the visible run queue, leaving editing and native controls alone.
+document.addEventListener('keydown', event => {
+  if (!['ArrowUp', 'ArrowDown'].includes(event.key) || event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (!selected || !run || !$('#detail') || !$('#nav-history').classList.contains('current') || dirty) return;
+  if (event.target.closest('input, textarea, select, [role="textbox"], [contenteditable]:not([contenteditable="false"])')) return;
+  const buttons = [...document.querySelectorAll('#workspace [data-key]')];
+  if (!buttons.length) return;
+  event.preventDefault();
+  const index = buttons.findIndex(button => button.dataset.key === key);
+  const next = buttons[index + (event.key === 'ArrowDown' ? 1 : -1)];
+  if (!next) return; // Stop at the first/last result rather than wrapping.
+  const scrollTop = $('.queue').scrollTop;
+  next.click();
+  $('.queue').scrollTop = scrollTop;
+  const active = document.querySelector('#workspace .record.active');
+  active?.focus({ preventScroll: true });
+  active?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+});
+
 function render() {
   const s = run.summary, records = run.records.filter(r => filter === 'all' || (filter === 'checks' ? !r.grade?.deterministicPass : semantic(r) === filter));
   const semanticComplete=run.status!=='running' && run.records.length>0 && run.records.every(r=>r.grade?.semantic==='pass' || r.grade?.semantic==='fail');
   if (!records.some(r => r.key === key)) key = records[0]?.key;
-  $('#workspace').innerHTML = `<div class="toolbar"><div><span class="eyebrow">RUN WORKSPACE</span><h2>${esc(run.label)}</h2><span class="run-review-status ${semanticComplete?'completed':'pending'}" role="status">${semanticComplete?'Semantic review completed':'Pending semantic review'}</span></div><div class="actions"><button id="finalize" ${run.status === 'running' ? 'disabled' : ''}>Generate reviewed report</button>${run.finalStem ? `<a class="download" href="/api/runs/${selected}/export/json">JSON ↓</a><a class="download" href="/api/runs/${selected}/export/md">Markdown ↓</a>` : ''}<button id="delete-run" class="delete-run" ${run.status === 'running' ? 'disabled' : ''}>Delete run</button></div></div><div class="meta muted">${esc(run.provider??'openai')} / ${esc(run.model)} · ${esc(run.promptVersion)} · ${esc(run.status)} · ${run.records.length}/${run.total} outputs<br>Prompt hash: ${esc(run.promptHash ?? 'Captured when run finishes')}</div>${run.error ? `<p class="warning">${esc(run.error)}</p>` : ''}<div class="stats run-metrics">${[[`${s.fullyPassed}/${s.total}`,'Fully passed'],[s.semanticPending,'Awaiting semantic review'],[s.apiErrors+s.outputErrors,'API / output errors'],[formatRate(s.passRate),'Pass Rate']].map(([n,t])=>`<div class="stat"><strong>${n}</strong><span>${t}</span></div>`).join('')}</div>${run.finalizedAt ? `<p class="status-line">Reviewed report generated ${new Date(run.finalizedAt).toLocaleString()}. ${run.finalReport.summary.semanticPending} reviews pending. Available as a baseline in new experiments.</p>` : ''}<p class="muted">${esc(PASS_RATE_NOTE)} Light pink marks failed or incomplete checks, semantic rejection, or errors.</p><div class="review-layout"><nav><select id="filter">${[['all','All outputs'],['pending','Review pending'],['fail','Semantic rejected'],['checks','Checks / matching failed'],['pass','Semantic approved'],['error','Errors']].map(([v,t])=>option(v,t)).join('')}</select><div class="queue">${records.map(r=>`<button class="record ${r.key===key?'active':''} ${isFailedOutput(r)?'failed-output':''}" data-key="${esc(r.key)}">${esc(r.key)}<span class="badge">${isFullyPassed(r)?'fully passed':r.error?'error':r.grade?.semantic==='pending'?'not fully passed · review pending':'not fully passed'}</span></button>`).join('') || '<p class="muted">No outputs in this queue.</p>'}</div></nav><div id="detail"></div></div><details><summary>Categories, usage & baseline comparison</summary><pre>${pretty({categories:run.categories,usage:run.usage,comparison:run.comparison})}</pre></details>`;
+  const failedResults=run.records.filter(isFailedOutput);
+  $('#workspace').innerHTML = `<div class="toolbar"><div><span class="eyebrow">RUN WORKSPACE</span><h2>${esc(run.label)}</h2><span class="run-review-status ${semanticComplete?'completed':'pending'}" role="status">${semanticComplete?'Semantic review completed':'Pending semantic review'}</span></div><div class="actions">${failedResults.length||run.rerunning?`<button id="rerun-task" ${run.status==='running'||run.rerunning?'disabled':''} title="Retries all failed results in this run using the saved model and prompt; incurs API usage for each result">${run.rerunning?`Re-running ${run.rerunning.completed??0}/${run.rerunning.total??failedResults.length}…`:'Re-run all errored tasks'}</button>`:''}<button id="finalize" ${run.status === 'running'||run.rerunning ? 'disabled' : ''}>Generate reviewed report</button>${run.finalStem ? `<a class="download" href="/api/runs/${selected}/export/json">JSON ↓</a><a class="download" href="/api/runs/${selected}/export/md">Markdown ↓</a>` : ''}<button id="delete-run" class="delete-run" ${run.status === 'running' ? 'disabled' : ''}>Delete run</button></div></div><div class="meta muted">${esc(run.provider??'openai')} / ${esc(run.model)} · ${esc(run.promptVersion)} · ${esc(run.status)} · ${run.records.length}/${run.total} outputs<br>Prompt hash: ${esc(run.promptHash ?? 'Captured when run finishes')}</div>${run.error ? `<p class="warning">${esc(run.error)}</p>` : ''}<div class="stats run-metrics">${[[`${s.fullyPassed}/${s.total}`,'Fully passed'],[s.semanticPending,'Awaiting semantic review'],[s.apiErrors+s.outputErrors,'API / output errors'],[formatRate(s.passRate),'Pass Rate']].map(([n,t])=>`<div class="stat"><strong>${n}</strong><span>${t}</span></div>`).join('')}</div>${run.finalizedAt ? `<p class="status-line">Reviewed report generated ${new Date(run.finalizedAt).toLocaleString()}. ${run.finalReport.summary.semanticPending} reviews pending. Available as a baseline in new experiments.</p>` : ''}<p class="muted">${esc(PASS_RATE_NOTE)} Light pink marks failed or incomplete checks, semantic rejection, or errors.</p><div class="review-layout"><nav><select id="filter">${[['all','All outputs'],['pending','Review pending'],['fail','Semantic rejected'],['checks','Checks / matching failed'],['pass','Semantic approved'],['error','Errors']].map(([v,t])=>option(v,t)).join('')}</select><p class="muted">↑ / ↓ navigate results. Save edits first; form controls keep their normal keys.</p><div class="queue">${records.map(r=>`<button class="record ${r.key===key?'active':''} ${isFailedOutput(r)?'failed-output':''}" data-key="${esc(r.key)}">${esc(r.key)}<span class="badge">${isFullyPassed(r)?'fully passed':r.error?'error':r.grade?.semantic==='pending'?'not fully passed · review pending':'not fully passed'}</span></button>`).join('') || '<p class="muted">No outputs in this queue.</p>'}</div></nav><div id="detail"></div></div><details><summary>Categories, usage & baseline comparison</summary><pre>${pretty({categories:run.categories,usage:run.usage,comparison:run.comparison})}</pre></details>`;
   $('#filter').value = filter; $('#filter').onchange = e => {filter=e.target.value; render();};
   document.querySelectorAll('[data-key]').forEach(b => b.onclick = () => { key=b.dataset.key;dirty=false;render(); });
+  if($('#rerun-task'))$('#rerun-task').onclick=async()=>{
+    if(dirty){notice(new Error('Save review edits before re-running errored tasks'));return;}
+    const runId=selected;
+    const button=$('#rerun-task');button.disabled=true;button.textContent='Re-running errored tasks…';
+    run.rerunning={keys:failedResults.map(r=>r.key),completed:0,total:failedResults.length};render();
+    try{
+      const updated=await api(`/api/runs/${runId}/rerun-errors`,{});
+      if(selected===runId&&!dirty){run=updated;filter='all';render();notice();}
+      await history();
+    }catch(error){notice(error);if(selected===runId&&!dirty){delete run.rerunning;render();}}
+  };
   $('#finalize').onclick = async () => { try { $('#finalize').disabled=true; run=await api(`/api/runs/${selected}/finalize`,{});render();notice(); } catch(e){notice(e);$('#finalize').disabled=false;} };
   $('#delete-run').onclick = async () => {
     if (!confirm(`Delete run "${run.label}"? It will be removed from run history and baseline choices. Saved files remain on disk for recovery.`)) return;
@@ -52,10 +84,11 @@ function detail() {
   const review=run.reviews[r.key]??{};
   const decision=semantic(r);
   const decisionLabel=decision==='pass'?'Approved':decision==='fail'?'Rejected':'Pending';
-  $('#detail').innerHTML=`<div class="card"><span class="eyebrow">${esc(r.key)} · ${r.latencyMs ?? '—'} MS</span><p class="transcript">${esc(r.case.transcript)}</p><details><summary>Time context</summary><pre>${pretty(r.case.context)}</pre></details><div class="columns"><div><h3>Expected meaning</h3>${r.case.expected.map(t=>`<div class="task"><strong>${esc(t.id)}</strong> · ${esc(t.meaning)}<small>Parent: ${esc(t.parentId??'none')}<br>UTC: ${esc(t.scheduledDatetimeUtc??'none')}</small></div>`).join('')||'<p>No tasks expected.</p>'}</div><div><h3>Extracted tasks</h3>${(Array.isArray(r.tasks)?r.tasks:[]).map(t=>`<div class="task"><strong>${esc(t?.text)}</strong><small>UUID: ${esc(t?.uuid)}<br>Parent: ${esc(t?.parent_item_uuid??'none')}<br>UTC: ${esc(t?.scheduled_datetime_utc??'none')}</small></div>`).join('')||'<p>No tasks returned.</p>'}</div></div>${r.error?`<p class="warning">${pretty(r.error)}</p>`:`<p class="${isFullyPassed(r)?'good':'warning'}">${r.grade.deterministicPass?(isFullyPassed(r)?'Fully passed':r.grade.semantic==='pending'?'Semantic review pending':'Not fully passed'):esc([...r.grade.failures,...(r.grade.matchingPending?['Matching is incomplete; assign expected tasks below.']:[])].join('\n'))}</p><form id="review"><h3>Semantic review</h3><p class="semantic-status" role="status">Assigned category: <strong>${decisionLabel}</strong></p><p class="muted">Check meaning, omissions, invented tasks, English, schedule wording, capitalization and grouping. Mappings associate tasks; approval records your semantic judgment.</p>${r.case.expected.map(t=>`<label>${esc(t.id)} → generated task<select data-match="${esc(t.id)}">${option('','Use automatic hint')}${(r.tasks??[]).filter(t=>t?.uuid).map(t=>option(t.uuid,t.text)).join('')}</select></label>`).join('')}<label>Review notes<textarea id="notes" placeholder="What worked? What should the next prompt improve?">${esc(review.notes??'')}</textarea></label><div class="review-actions">${decision!=='pass'?'<button type="submit" name="decision" value="pass">Approve</button>':''}${decision!=='fail'?'<button type="submit" name="decision" value="fail">Reject</button>':''}</div><hr class="review-divider"><div class="review-actions metadata-actions"><button type="submit" class="save-metadata" name="decision" value="skip">Save review & next</button><span class="muted">Save notes and task mappings without changing the semantic category.</span></div></form>`}<details><summary>Raw output, checks & provenance</summary><pre>${pretty(r)}</pre></details></div>`;
+  $('#detail').innerHTML=`<div class="card"><span class="eyebrow">${esc(r.key)} · ${r.latencyMs ?? '—'} MS</span><p class="transcript">${esc(r.case.transcript)}</p><details><summary>Time context</summary><pre>${pretty(r.case.context)}</pre></details><div class="columns"><div><h3>Expected meaning</h3>${r.case.expected.map(t=>`<div class="task"><strong>${esc(t.id)}</strong> · ${esc(t.meaning)}<small>Parent: ${esc(t.parentId??'none')}<br>UTC: ${esc(t.scheduledDatetimeUtc??'none')}</small></div>`).join('')||'<p>No tasks expected.</p>'}</div><div><h3>Extracted tasks</h3>${(Array.isArray(r.tasks)?r.tasks:[]).map(t=>`<div class="task"><strong>${esc(t?.text)}</strong><small>UUID: ${esc(t?.uuid)}<br>Parent: ${esc(t?.parent_item_uuid??'none')}<br>UTC: ${esc(t?.scheduled_datetime_utc??'none')}</small></div>`).join('')||'<p>No tasks returned.</p>'}</div></div>${r.error?`<p class="warning">${pretty(r.error)}</p>`:`<p class="${isFullyPassed(r)?'good':'warning'}">${r.grade.deterministicPass?(isFullyPassed(r)?'Fully passed':r.grade.semantic==='pending'?'Semantic review pending':'Not fully passed'):esc([...r.grade.failures,...(r.grade.matchingPending?['Matching is incomplete; assign expected tasks below.']:[])].join('\n'))}</p><form id="review"><h3>Semantic review</h3><p class="semantic-status" role="status">Assigned category: <strong>${decisionLabel}</strong></p><p class="muted">Check meaning, omissions, invented tasks, English, schedule wording, capitalization and grouping. Mappings associate tasks; approval records your semantic judgment.</p>${r.case.expected.map(t=>`<label>${esc(t.id)} → generated task<select data-match="${esc(t.id)}">${option('','Use automatic hint')}${(r.tasks??[]).filter(t=>t?.uuid).map(t=>option(t.uuid,t.text)).join('')}</select></label>`).join('')}<label>Review notes<textarea id="notes" placeholder="What worked? What should the next prompt improve?">${esc(review.notes??'')}</textarea></label><div class="review-actions">${decision!=='pass'?'<button type="submit" name="decision" value="pass">Approve</button>':''}${decision!=='fail'?'<button type="submit" name="decision" value="fail">Reject</button>':''}</div><hr class="review-divider"><div class="review-actions metadata-actions"><button type="submit" class="save-metadata" name="decision" value="skip">Save review & next</button><span class="muted">Save notes and task mappings without changing the semantic category.</span></div></form>`}${r.previousAttempts?.length?`<details><summary>Previous attempts (${r.previousAttempts.length})</summary><p class="muted">Re-runs use the saved model, prompt and input with the current provider adapter. Previous reviews are archived, not transferred.</p><pre>${pretty(r.previousAttempts)}</pre></details>`:''}<details><summary>Raw output, checks & provenance</summary><pre>${pretty(r)}</pre></details></div>`;
   if (r.error) return;
 
   document.querySelectorAll('[data-match]').forEach(el=> {el.value=review.matches?.[el.dataset.match]??'';});
+  if(run.rerunning?.keys?.includes(r.key))$('#review').querySelectorAll('input,select,textarea,button').forEach(control=>{control.disabled=true;});
   $('#review').oninput=()=>{dirty=true;};
   $('#review').onsubmit=async e=>{e.preventDefault();try {
     const matches=Object.fromEntries([...document.querySelectorAll('[data-match]')].filter(el=>el.value).map(el=>[el.dataset.match,el.value]));
@@ -160,6 +193,11 @@ async function modelHistory() {
   }); }catch(e){notice(e);}
 }
 
+async function errorAnalysis() {
+  showWorkspace();selected=null;run=null;dirty=false;notice();$('#nav-errors').classList.add('current');
+  $('#workspace').innerHTML='<p class="muted">Loading error analysis…</p>';
+  try{await showErrorAnalysis({api,workspace:$('#workspace'),isCurrent:()=>$('#nav-errors').classList.contains('current'),notice,openRun:id=>{filter='all';open(id);}});}catch(error){notice(error);}
+}
 async function runHistory() {
   showWorkspace();selected=null;run=null;dirty=false;notice();$('#nav-history').classList.add('current');
   $('#workspace').innerHTML='<div class="toolbar"><div><span class="eyebrow">SAVED EXPERIMENTS</span><h2>Run history</h2></div><button id="history-compare">Compare runs</button></div><p class="muted">Open a run to inspect outputs, continue semantic review, or generate a report. Compare saved runs to evaluate model and prompt changes.</p><p class="muted" id="history-metrics-note"></p><div id="history"><p class="muted">Loading saved runs…</p></div>';
@@ -181,6 +219,7 @@ try {
   $('#nav-home').onclick=home;$('#nav-experiment').onclick=experiment;$('#nav-history').onclick=runHistory;
   $('#nav-prompts').onclick=promptHistory;
   $('#nav-models').onclick=modelHistory;
+  $('#nav-errors').onclick=errorAnalysis;
   home();
   config=await api('/api/config');
   $('[name=promptVersion]').innerHTML=config.prompts.map(p=>option(p.version, p.version+(p.latest?' · Latest':''))).join('');
@@ -194,5 +233,5 @@ try {
   const estimate=()=> { const f=new FormData($('#new-run')); const n=config.cases.filter(c=>(!f.get('case')||c.id===f.get('case'))&&(!f.get('tag')||c.tags.includes(f.get('tag')))).length; $('#estimate').textContent=`${n} cases × ${f.get('repeats')} repeats = ${n*Number(f.get('repeats'))} API requests`; };
   $('#new-run').oninput=estimate;estimate();await history();
   $('#new-run').onsubmit=async e=>{e.preventDefault();try {$('#launch').disabled=true;const j=await api('/api/runs',Object.fromEntries(new FormData(e.target)));await open(j.id);notice();}catch(err){notice(err);}finally{$('#launch').disabled=false;}};
-  setInterval(async()=>{try {if(selected&&run?.status==='running'&&!dirty){run=await api(`/api/runs/${selected}`);render();}await history();}catch(e){notice(e);}},2500);
+  setInterval(async()=>{try {if(selected&&(run?.status==='running'||run?.rerunning)&&!dirty){run=await api(`/api/runs/${selected}`);render();}await history();}catch(e){notice(e);}},2500);
 } catch(e){notice(e);}

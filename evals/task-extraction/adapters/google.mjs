@@ -2,8 +2,8 @@ import { postJson, usageCounts } from './http.mjs';
 // Gemini's native generateContent API uses parts, systemInstruction and usageMetadata.
 export function googleAdapter({ apiKey, ...transport }) {
   return {
-    async generate({ model, messages }) {
-      const response = await postJson({ ...transport,
+    async generate({ model, messages, onTrace }) {
+      const response = await postJson({ ...transport, onTrace,
         url: `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
         headers: { 'x-goog-api-key': apiKey },
         body: { systemInstruction: { parts: messages.filter(m => m.role === 'system').map(m => ({ text: m.content })) },

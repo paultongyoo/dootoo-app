@@ -32,7 +32,7 @@ input remains supported for the deployed Lambda, whose model call is unchanged.
 | Adapter | Provider API | JSON behavior | Token accounting |
 |---|---|---|---|
 | OpenAI | Chat Completions | `json_object` (original baseline behavior) | prompt/completion counts |
-| Anthropic | Messages | JSON requested by saved prompt | input + cache creation + cache read; output |
+| Anthropic | Messages | Native `output_config.format` JSON schema | input + cache creation + cache read; output |
 | Google | generateContent | `application/json` MIME type | prompt; candidate + thought tokens |
 | Mistral | Chat Completions | `json_object` | prompt/completion counts |
 | xAI | Responses | JSON requested by saved prompt | input/output counts |
@@ -46,13 +46,18 @@ GPT-4o mini keeps its original unspecified output cap. Other models set an 8192
 token cap, including reasoning where the provider counts it that way. Temperature
 and reasoning settings use provider defaults. These differences are captured in
 `modelSnapshot.adapter`; do not interpret cross-provider latency as identical
-compute budgets. A fixed stricter task schema is not added, to preserve the prompt
-and keep schema failures visible to the grader.
+compute budgets. Anthropic adapter v2 requests a native tasks-envelope JSON schema to prevent
+Markdown code fences. It constrains field types but leaves UUID validity, UTC
+schedules, relationships and task meaning to the grader/reviewer. The schema is
+captured in the adapter snapshot because it differs from plain JSON-object mode.
+Prompt text and raw responses remain unchanged. Earlier prompt-only Anthropic v1
+runs are preserved as historical results.
 
 Transport uses native Node fetch with a 60-second timeout per attempt and at most
 two retries for network errors, HTTP 429 and HTTP 5xx. HTTP auth/validation failures
 are not retried. Retries can add latency and API usage. Provider error bodies are
-never saved or logged, because they can echo input or secrets.
+captured only as bounded, sanitized diagnostic copies; credentials and recognized
+echoed-input fields are redacted. Cookies and unrelated headers are excluded.
 
 ## Study / extend
 
@@ -78,3 +83,14 @@ module, prompt registry and JSON versions, with its existing OpenAI SDK client.
 Catalog model references live in `../models.json`. Model pages and general
 published evaluations are supporting context; the local suite provides the
 actual task-extraction measurements. API contracts were checked 2026-11-05.
+
+## Local tracing
+
+`generate` also accepts `onTrace(name, attributes)`. Every adapter forwards it to
+`postJson` per call (never via shared mutable adapter state), so concurrent cases
+keep distinct traces. Transport emits request start/completion and retry events;
+the shared extractor emits prompt, generation and parse events; the runner adds
+grading and final outcome. Trace attributes are allowlisted in `../trace.mjs`.
+A bounded, sanitized provider error response is recorded on each failed attempt. Record error reasons use
+stable technical codes, such as `invalid_json`, `missing_output`, `timeout` or
+`http_429`, for grouping alongside the retained provider diagnostics.

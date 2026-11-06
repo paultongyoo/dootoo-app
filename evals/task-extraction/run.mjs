@@ -1,9 +1,11 @@
+import { executeRecord } from './execute-record.mjs';
+import { analysisForRun } from './error-analysis.mjs';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { parseArgs } from 'node:util';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildMessages, extractTasks, DEFAULT_MODEL, PROMPT_VERSION } from '../../lambdas/lib/extractTasks.mjs';
+import { buildMessages, DEFAULT_MODEL, PROMPT_VERSION } from '../../lambdas/lib/extractTasks.mjs';
 import { grade, summarize, isUtc, outputHash } from './grade.mjs';
 import { getPrompt } from '../../lambdas/lib/promptVersions.mjs';
 import { createAdapter, modelOption } from './models.mjs';
@@ -147,35 +149,7 @@ export async function main(args = process.argv.slice(2), hooks = {}) {
           const index = next++;
           const job = jobs[index];
           const key = `${job.case.id}#${job.repeat}`;
-          const record = { ...job, key };
-          const start = performance.now();
-          try {
-            const result = await extractTasks({
-              adapter,
-              captureOutputErrors: true,
-              model: opts.model,
-              promptVersion: opts['prompt-version'],
-              transcript: job.case.transcript,
-              ...job.case.context,
-            });
-            Object.assign(record, result, {
-              outputHash: outputHash(result.tasks),
-              grade: grade(job.case, result.tasks, reviews[key]),
-            });
-          } catch (error) {
-            record.error = {
-              kind: error.name === 'ExtractionOutputError' ? 'output' : 'api',
-              name: error.name,
-              status: error.status ?? null,
-            };
-            // Avoid storing provider error messages, which may contain request data.
-            if (error.rawContent !== undefined) record.rawContent = error.rawContent;
-            if (error.usage) record.usage = error.usage;
-            if (error.providerUsage) record.providerUsage = error.providerUsage;
-            if (error.finishReason) record.finishReason = error.finishReason;
-            if (error.model) record.model = error.model;
-          }
-          record.latencyMs = Math.round(performance.now() - start);
+          const record = await executeRecord({testCase:job.case,repeat:job.repeat,key,adapter,provider:opts.provider,model:opts.model,promptVersion:opts['prompt-version'],review:reviews[key]});
           records[index] = record;
           await hooks.onRecord?.(record, { completed: records.filter(Boolean).length, total: jobs.length });
           console.log(`${key}: ${record.error?.kind ?? (isFullyPassed(record) ? 'fully passed' : record.grade.semantic === 'pending' ? 'not fully passed / review pending' : 'not fully passed')}`);
@@ -211,8 +185,11 @@ export async function main(args = process.argv.slice(2), hooks = {}) {
     ),
     comparison: baseline ? compare(records, baseline) : null,
     reviews: Object.fromEntries(records.filter(record => reviews[record.key]?.outputHash === record.outputHash).map(record => [record.key, reviews[record.key]])),
+    errorAnalysis: replay?.errorAnalysis ?? {},
+    errorCategories: replay?.errorCategories ?? [],
     records,
   };
+  report.errorAnalysisSummary = analysisForRun(report, report.errorCategories);
   const folder = resolve(opts['output-dir']);
   await mkdir(folder, { recursive: true });
   const stem = resolve(folder, `${report.createdAt.replaceAll(/[:.]/g, '-')}-${opts.label}`);
@@ -227,6 +204,9 @@ Pass Rate: ${formatRate(report.summary.passRate)}.
 ${PASS_RATE_NOTE}
 
 Pattern matches are hints. Review task meaning, omissions, invented tasks, and grouping before treating a run as accepted.
+
+## Error analysis
+${fenced(report.errorAnalysisSummary)}
 
 ## Categories
 
@@ -248,6 +228,9 @@ Pattern matches are hints. Review task meaning, omissions, invented tasks, and g
       outputHash: record.outputHash,
       rawContent: record.error ? record.rawContent : undefined,
       grade: record.grade,
+      trace: record.trace,
+      errorCategories: report.errorCategories,
+      errorAnalysis: report.errorAnalysis[record.key],
       review: report.reviews[record.key],
       error: record.error,
     })}`;

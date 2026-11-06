@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createAdapter,listModels,modelOption} from '../models.mjs';
 import {postJson} from '../adapters/http.mjs';
+import {ANTHROPIC_OUTPUT_SCHEMA} from '../adapters/anthropic.mjs';
 import {extractTasks,buildMessages} from '../../../lambdas/lib/extractTasks.mjs';
 import {main} from '../run.mjs';
 const tasks=[{uuid:'11111111-1111-4111-8111-111111111111',text:'Buy milk',scheduled_datetime_utc:null}];
@@ -28,7 +29,7 @@ for(const provider of Object.keys(fixtures))test(`${provider} maps exact prompt,
  if(provider==='google')assert.ok(request.url.endsWith(`/${encodeURIComponent(option.model)}:generateContent`));else assert.equal(request.body.model,option.model);
  assert.ok(request.signal instanceof AbortSignal);
  if(['openai','mistral'].includes(provider)) {assert.deepEqual(request.body.messages,messages);assert.equal(request.body.response_format.type,'json_object');assert.equal(request.headers.Authorization,'Bearer test-only-secret');}
- if(provider==='anthropic'){assert.equal(request.body.system,messages[0].content);assert.deepEqual(request.body.messages,[messages[1]]);assert.equal(request.headers['x-api-key'],'test-only-secret');assert.equal(request.body.max_tokens,8192);}
+ if(provider==='anthropic'){assert.equal(request.body.system,messages[0].content);assert.deepEqual(request.body.messages,[messages[1]]);assert.equal(request.headers['x-api-key'],'test-only-secret');assert.equal(request.body.max_tokens,8192);assert.equal(request.body.output_config.format.type,'json_schema');assert.deepEqual(request.body.output_config.format.schema,ANTHROPIC_OUTPUT_SCHEMA);assert.equal(option.adapter.id,'anthropic-v2');assert.deepEqual(option.adapter.outputSchema,ANTHROPIC_OUTPUT_SCHEMA);}
  if(provider==='google'){assert.equal(request.body.systemInstruction.parts[0].text,messages[0].content);assert.equal(request.body.contents[0].parts[0].text,messages[1].content);assert.equal(request.headers['x-goog-api-key'],'test-only-secret');assert.equal(request.body.generationConfig.responseMimeType,'application/json');}
  if(provider==='xai'){assert.deepEqual(request.body.input,messages);assert.equal(request.body.store,false);assert.equal(request.url,'https://api.x.ai/v1/responses');}
 });
@@ -56,11 +57,14 @@ for(const provider of Object.keys(fixtures))test(`offline ${provider} run saves 
   const option=listModels().find(m=>m.provider===provider);
   const adapter=createAdapter(provider,{apiKey:'test-only-secret',fetchImpl:async()=>Response.json(fixtures[provider])});
   const report=await main(['--provider',provider,'--model',option.model,'--prompt-version','task-extraction-v1','--case','simple','--output-dir',dir],{embedded:true,adapter});
-  assert.equal(report.provider,provider);assert.equal(report.model,option.model);assert.equal(report.modelSnapshot.adapter.id,`${provider}-v1`);assert.equal(report.promptSnapshot.version,'task-extraction-v1');
+  assert.equal(report.provider,provider);assert.equal(report.model,option.model);assert.equal(report.modelSnapshot.adapter.id,`${provider}-v${provider==='anthropic'?2:1}`);assert.equal(report.promptSnapshot.version,'task-extraction-v1');
+  assert.equal(report.records[0].trace.version,1);assert.equal(report.records[0].trace.outcome,'review_pending');
+  assert.ok(report.records[0].trace.events.some(e=>e.name==='request.completed'));
+  assert.ok(report.records[0].trace.events.some(e=>e.name==='grading.completed'));
   assert.equal(report.records[0].model,`resolved-${provider}`);assert.deepEqual(report.records[0].tasks,tasks);
   assert.ok(!JSON.stringify(report).includes('test-only-secret'));
   const {readdir}=await import('node:fs/promises');const file=(await readdir(dir)).find(f=>f.endsWith('.json'));
   const replay=await main(['--replay',join(dir,file),'--case','simple','--output-dir',dir],{embedded:true});
-  assert.equal(replay.provider,provider);assert.deepEqual(replay.modelSnapshot,report.modelSnapshot);
+  assert.equal(replay.provider,provider);assert.deepEqual(replay.records[0].trace,report.records[0].trace);assert.deepEqual(replay.modelSnapshot,report.modelSnapshot);
  }finally{await rm(dir,{recursive:true,force:true});}
 });

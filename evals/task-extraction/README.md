@@ -212,3 +212,85 @@ Run history marks runs containing failed outputs in light pink. Inside a run,
 failed/incomplete deterministic checks, semantic rejection, and API/output errors
 highlight the affected output in the task queue. Pending semantic review alone
 does not produce a pink highlight.
+
+### Traces and Error Analysis
+
+New live outputs contain a local `trace` with a trace ID, UTC event timestamps,
+elapsed times, provider request attempts, HTTP statuses/request IDs when supplied,
+retry reasons/delays, prompt/generation/parse/grading events, and final execution
+outcome. Raw generated text and native usage remain in the output record. Traces
+exclude credentials and request payloads. HTTP error responses are retained as
+bounded, sanitized diagnostics, with only selected response headers. Technical
+attributes remain allowlisted. There is no external telemetry
+service. Traces persist with completed outputs and survive offline replay; an
+interrupted in-flight request cannot be reconstructed after server termination.
+
+Error Analysis has a landing page with per-run Pass Rate, failures, categorization
+coverage, trace coverage and the most common assigned error categories. Choose a
+run, inspect each failing case/repeat with expected/actual tasks, raw output,
+review notes and trace timeline, select existing categories or create new ones,
+then Save categories & next. Multiple categories may apply to one output. Pending
+semantic review by itself is not treated as a failure. Older outputs are explicitly
+marked as having no captured trace rather than synthesizing execution events.
+
+Categories are shared across runs in ignored `results/studio/error-categories.json`.
+Assignments and notes live in each run's saved state, bound to a hash of the exact
+input/output/error evidence. Changes invalidate cached final exports; regenerate
+the report to include assignments, category definitions, error-analysis summary
+and trace data. Assigning a category does not alter semantic approval or Pass Rate.
+The analysis detail view can also download a standalone JSON evidence report.
+
+Live-run reports already managed by studio state are not re-imported as duplicate
+experiments. Older duplicate auto-import state files remain on disk for recovery
+but are excluded from run lists and analysis totals.
+
+### Re-running errored results
+
+In a run workspace, choose **Re-run all errored tasks** in the upper-right header.
+This retries every result with an API/output error, failed/incomplete check, or
+rejected semantic review, independent of selection or queue filter. Results that
+only await semantic review are excluded. Requests execute sequentially with
+progress and a checkpoint after every replacement. Each request can use the
+existing bounded transport retries and incurs provider usage.
+
+Each replacement uses its saved input/expectations, the run's requested provider
+and model, and the saved prompt snapshot. Legacy reports without a snapshot must
+match their saved prompt hash. The current provider adapter is used and recorded
+on each replacement. Previous attempts, traces, semantic reviews and error
+categories remain in Previous attempts. Replacements require fresh semantic
+review; successful results remain unchanged. Metrics and current-output usage are
+updated as results finish, and final exports must be regenerated. Concurrent
+execution and deletion during execution are blocked. If interrupted, completed
+replacements remain saved and remaining failures can be retried later.
+
+### Provider API error diagnostics
+
+New HTTP errors retain a bounded, sanitized response under `record.error.response`
+for the terminal failure, and under each failed request trace event's
+`attributes.providerResponse`. Responses from failed attempts remain available
+when a subsequent retry succeeds. Error Analysis exposes these details alongside
+status, request IDs and retry history; run raw-output views and JSON/Markdown
+exports include them as well.
+
+Capture reads at most 32 KiB per error response, limits long strings/nesting and
+marks truncation/redaction/read failures explicitly. JSON error envelopes retain
+provider fields such as message, type, code and structured details. Non-JSON
+responses retain a sanitized text excerpt. Credentials, recognized echoed request
+fields and known request text are redacted; only content type, request IDs,
+retry-after and rate-limit response headers are retained. This is not a raw wire
+dump. Some 503 responses contain only a generic service-unavailable message.
+Previously discarded error bodies cannot be recovered; re-running failures can
+capture details from new responses.
+
+The Error Analysis landing page includes a category insights panel. Choose a model, then all of its
+runs or an individual run to see ranked categories, shares of categorized failing
+outputs, categorization coverage, and the largest contributing runs. Select a
+category and open a contributing run to review its filtered failure queue.
+Percentages can total more than 100% because outputs can carry multiple labels.
+The uncategorized action opens the run with the largest outstanding classification
+backlog in the selected scope. These counts identify review workload, not a model
+quality ranking across different datasets or review coverage.
+
+Error Analysis uses separate provider/model tabs. Its top-line metrics, category
+rankings, review backlog and run choices are scoped to the selected model; labels
+remain reusable across models. Returning from a failure queue retains that model.

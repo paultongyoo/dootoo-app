@@ -2,8 +2,8 @@ import { postJson, usageCounts } from './http.mjs';
 // xAI recommends Responses for its newer reasoning models. Reasoning is not task output.
 export function xaiAdapter({ apiKey, ...transport }) {
   return {
-    async generate({ model, messages }) {
-      const response = await postJson({ ...transport, url: 'https://api.x.ai/v1/responses',
+    async generate({ model, messages, onTrace }) {
+      const response = await postJson({ ...transport, onTrace, url: 'https://api.x.ai/v1/responses',
         headers: { Authorization: `Bearer ${apiKey}` },
         body: { model, input: messages, max_output_tokens: 8192, store: false },
       });
