@@ -1,6 +1,25 @@
 {
   "latest": "task-extraction-v1",
   "versions": [
-    "task-extraction-v1"
+    "task-extraction-v1",
+    "task-extraction-v2",
+    "task-extraction-v3",
+    "task-extraction-v4",
+    "task-extraction-v5",
+    "task-extraction-v6",
+    "task-extraction-v7",
+    "task-extraction-v8",
+    "task-extraction-v9",
+    "task-extraction-v10",
+    "task-extraction-v11",
+    "task-extraction-v12",
+    "task-extraction-v13",
+    "task-extraction-v14",
+    "task-extraction-v15",
+    "task-extraction-v16",
+    "task-extraction-v17",
+    "task-extraction-v18",
+    "task-extraction-v19",
+    "task-extraction-v20"
   ]
 }

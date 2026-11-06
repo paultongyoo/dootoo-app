@@ -30,7 +30,19 @@ const json = async path => JSON.parse(await readFile(path, 'utf8'));
 const cases = () => readFile(join(base, 'cases.jsonl'), 'utf8').then(s => s.trim().split('\n').map(JSON.parse));
 const safeId = id => { if (!/^[\w.-]+$/.test(id)) throw new Error('Invalid run ID'); return id; };
 const statePath = id => join(store, `${safeId(id)}.json`);
-const save = async job => { const path = statePath(job.id); await writeFile(`${path}.tmp`, JSON.stringify(job, null, 2)); await rename(`${path}.tmp`, path); };
+const save = async job => {
+  const path = statePath(job.id);
+  await writeFile(`${path}.tmp`, JSON.stringify(job, null, 2));
+  // Windows/WSL sharing can briefly deny replacing a file while a reader has it
+  // open. Keep the atomic replacement, and retry only transient sharing errors.
+  for (let attempt = 0; ; attempt++) {
+    try { await rename(`${path}.tmp`, path); break; }
+    catch (error) {
+      if (!['EPERM', 'EACCES', 'EBUSY'].includes(error.code) || attempt >= 7) throw error;
+      await new Promise(resolve => setTimeout(resolve, 50 * 2 ** attempt));
+    }
+  }
+};
 const get = async id => { if (deleted.has(id)) throw new Error('Run has been deleted'); return jobs.get(id) ?? json(statePath(id)); };
 const refresh = job => {
   for (const r of job.records) if (!r.error) r.grade = grade(r.case, r.tasks, job.reviews[r.key]);

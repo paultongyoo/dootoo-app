@@ -10,9 +10,12 @@ test('saved named prompt versions include the latest and reproduce original base
   assert.equal(prompts.filter(p=>p.latest).length,1);
   for(const prompt of prompts) {
     assert.deepEqual(getPrompt(prompt.version),JSON.parse(await readFile(new URL(`../../../lambdas/lib/prompts/${prompt.version}.json`,import.meta.url),'utf8')));
-    assert.equal(buildMessages({transcript:'test',promptVersion:prompt.version})[1].content,'User-provided input: test');
+    // Candidate versions may revise the user template as well as the system
+    // template; only v1 promises the original baseline wording.
+    assert.equal(buildMessages({transcript:'test',promptVersion:prompt.version})[1].content,prompt.userTemplate.replaceAll('{{transcript}}','test'));
   }
   const without=buildMessages({transcript:'Buy milk',promptVersion:'task-extraction-v1'});
+  assert.equal(without[1].content,'User-provided input: Buy milk');
   assert.equal(without[0].content.startsWith('\n                \n                Your role'),true);
   const withContext=buildMessages({transcript:'Buy milk',userLocalTime:'LOCAL',userTimeZone:'ZONE',utcDateTime:'UTC',promptVersion:'task-extraction-v1'});
   assert.equal(withContext[0].content,without[0].content.replace('\n                \n',"\n                The user's current local date and time is LOCAL (timezone: ZONE). The current UTC time is UTC.\n"));
